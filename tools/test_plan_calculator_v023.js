@@ -79,6 +79,6 @@ for(let j=0;j<100;j++)check('invariant_'+j,()=>{
  }
 });
 const out={version:'0.23',cases:cases.length,passed:good,failed:cases.length-good,results:cases,syntheticSample:{high:run(),low:run({meter:{ts:NOW,mmol:3.5},cgm:null})}};
-fs.writeFileSync(process.env.OUTPUT_JSON||'/mnt/data/ГлюкоПапа_023_результаты_тестов.json',JSON.stringify(out,null,2));
+fs.writeFileSync(process.env.OUTPUT_JSON||require('node:path').join(require('node:os').tmpdir(),'glucopapa_023_test_results.json'),JSON.stringify(out,null,2));
 console.log(JSON.stringify({tests:cases.length,passed:good,failed:cases.length-good}));
 if(good!==cases.length)process.exit(1);
