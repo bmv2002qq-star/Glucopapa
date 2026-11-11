@@ -5,7 +5,10 @@ const html=fs.readFileSync(base+'assets/index.html','utf8');
 const activity=fs.readFileSync(base+'java/ru/family/glucodiary/MainActivity.java','utf8');
 const model=fs.readFileSync(base+'java/ru/family/glucodiary/LocalLlm.java','utf8');
 const cpp=fs.readFileSync(base+'cpp/local_llm.cpp','utf8');
+const gradle=fs.readFileSync('app/build.gradle','utf8');
+const debugManifest=fs.readFileSync('app/src/debug/AndroidManifest.xml','utf8');
 const cases=[
+['debug apk installs side-by-side',gradle.includes("applicationIdSuffix '.test'")&&debugManifest.includes('Глюкопапа ТЕСТ')],
 ['preflight before native analyze',html.includes('localAiDiagnostics()')&&html.includes('!d.nativeLoaded')&&html.includes('!d.modelPresent')],
 ['status distinguishes readiness',html.includes('inferenceVerified')&&html.includes('GGUF обнаружен')],
 ['correct timeout units',html.includes('за 120 секунд')&&html.includes('},120000')&&!html.includes('за 35 секунд')],

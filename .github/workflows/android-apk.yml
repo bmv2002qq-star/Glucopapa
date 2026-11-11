@@ -1,4 +1,4 @@
-name: Build GlucoPapa 0.26.1 APK
+name: Build GlucoPapa 0.26.1 TEST APK
 
 on:
   workflow_dispatch:
@@ -58,7 +58,7 @@ jobs:
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: GlucoPapa-v0.26.1-arm64-debug-APK
+          name: GlucoPapa-v0.26.1-TEST-arm64-debug-APK
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
