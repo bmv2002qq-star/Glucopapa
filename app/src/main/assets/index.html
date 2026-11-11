@@ -3376,17 +3376,49 @@ function gf012SavePlan(){
  if(!persistProfile())return;notify('Запись плана сохранена');render();
 }
 
+// v0.26.1 — real preflight, duplicate protection and honest timeout diagnostics.
+let gf026LocalWorking=false, gf026LocalTimeout=null;
 function gf012RunLocal(){
  const box=document.getElementById('gf012LocalResult');if(!box)return;
- if(!native||!window.GlucoBridge?.runLocalAnalysis){box.textContent='В HTML-превью Qwen GGUF не запускается. Для настоящего инференса нужна Android-сборка, импорт модели и исправный llama.cpp; это не ответ нейросети.';return}
+ if(!native||!window.GlucoBridge?.runLocalAnalysis){box.textContent='Нужен установленный Android APK с локальным llama.cpp; HTML не запускает GGUF.';return}
  if(!gfEnginePrefs().localML){box.textContent='Включите локальный ИИ в настройках';return}
- box.textContent='Запуск Android Qwen… (не заменяем ожидание вымышленным выводом)';
- try{window.GlucoBridge.runLocalAnalysis();}catch(e){box.textContent='Ошибка вызова Android Qwen: '+e.message;return}
+ if(gf026LocalWorking){box.textContent='Qwen уже обрабатывает запрос. Подожди его завершения; повторный запуск не отправлен.';return}
+ if(window.GlucoBridge?.localAiDiagnostics){
+  try{
+   const d=JSON.parse(window.GlucoBridge.localAiDiagnostics());
+   if(!d.nativeLoaded){box.textContent='Нативная библиотека Qwen не загружена: '+(d.nativeError||'неизвестная ошибка')+'. Открой «Ещё» → диагностика Qwen.';return}
+   if(!d.modelPresent || !d.modelCandidate){box.textContent=d.modelPresent?'Импортированный файл не прошёл проверку GGUF. Проверь модель в «Ещё» → Автономный ИИ.':'Сначала импортируй Qwen GGUF: «Ещё» → Автономный ИИ → Импортировать GGUF.';return}
+   if(!d.inferenceVerified)box.textContent='GGUF обнаружен, но генерация ещё не подтверждена. Для проверки используй «Ещё» → самотест Qwen.';
+  }catch(e){box.textContent='Диагностика Qwen недоступна: '+e.message+'. Проверь модуль в «Ещё».';return}
+ }
+ gf026LocalWorking=true;
  const token=++gf012LocalWait;
- setTimeout(()=>{if(token===gf012LocalWait&&box.textContent.startsWith('Запуск'))box.textContent='Не получен ответ Qwen за 35 секунд. Проверьте импорт GGUF, библиотеку llama.cpp, объём памяти и журнал ошибок APK. Запрос мог продолжить работу; повторять его автоматически нельзя.'},120000);
+ box.textContent='Запрос передан Android. Подготовка дневника, загрузка GGUF и генерация могут занять больше минуты…';
+ gf026LocalTimeout=setTimeout(()=>{
+  if(token===gf012LocalWait && gf026LocalWorking){
+   box.textContent='Ответ Qwen не получен за 120 секунд. Запрос МОЖЕТ продолжать выполняться; это ещё не ошибка модели. Не запускай второй запрос. Открой «Ещё» → диагностика и самотест Qwen.';
+  }
+ },120000);
+ try{window.GlucoBridge.runLocalAnalysis()}catch(e){
+  gf026LocalWorking=false;clearTimeout(gf026LocalTimeout);gf026LocalTimeout=null;gf012LocalWait++;
+  box.textContent='Ошибка Android-моста Qwen: '+e.message;
+ }
 }
 const gf012PreviousLocalCallback=window.gfLocalAiResult;
-window.gfLocalAiResult=function(message){gf012PreviousLocalCallback?.(message);const box=document.getElementById('gf012LocalResult');if(box){gf012LocalWait++;box.textContent=String(message).slice(0,7500)}};
+window.gfLocalAiResult=function(message){
+ gf026LocalWorking=false;
+ if(gf026LocalTimeout!==null){clearTimeout(gf026LocalTimeout);gf026LocalTimeout=null}
+ gf012LocalWait++;
+ gf012PreviousLocalCallback?.(message);
+ const box=document.getElementById('gf012LocalResult');if(box)box.textContent=String(message).slice(0,7500);
+};
+window.gf026LocalProgress=function(message){
+ const status=String(message).slice(0,500);
+ const box=document.getElementById('gf012LocalResult');
+ if(box && gf026LocalWorking)box.textContent=status;
+ const settings=document.getElementById('gfLocalAiStatus');
+ if(settings)settings.textContent=status;
+};
 async function gf012Send(){
  const input=document.getElementById('gf012Input'),out=document.getElementById('gf012Messages');const question=(input?.value||'').trim();
  if(gf012ChatBusy)return;

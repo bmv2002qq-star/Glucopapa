@@ -40,6 +40,7 @@ public class MainActivity extends Activity {
     private static final int PICK_LOCAL_MODEL=102;
     private LocalLlm localLlm;
     private final java.util.concurrent.ExecutorService aiIo=Executors.newSingleThreadExecutor();
+    private final java.util.concurrent.atomic.AtomicBoolean llmInferenceBusy=new java.util.concurrent.atomic.AtomicBoolean(false);
     private static final String XDRIP="http://127.0.0.1:17580/sgv.json?count=288";
     private static final double MGDL_PER_MMOL=18.0182;
     private WebView page;
@@ -331,10 +332,18 @@ public class MainActivity extends Activity {
         @JavascriptInterface public String localAiStatus(){return localLlm.status();}
         @JavascriptInterface public String localAiDiagnostics(){return localLlm.diagnosticJson();}
         @JavascriptInterface public void runLocalSelfTest(){
+            if(!llmInferenceBusy.compareAndSet(false,true)){
+                script("window.gf026SelfTestResult("+JSONObject.quote("Qwen уже выполняет другой запрос. Дождись ответа.")+");");
+                return;
+            }
             aiIo.execute(()->{
-                try {String message=localLlm.selfTest();
-                    script("window.gf026SelfTestResult("+JSONObject.quote(message)+");");}
-                catch(Exception ex){script("window.gf026SelfTestResult("+JSONObject.quote("Ошибка самотеста: "+ex.getMessage())+");");}
+                try {
+                    script("window.gf026LocalProgress("+JSONObject.quote("Самотест: загрузка модели GGUF и генерация ответа…")+");");
+                    String message=localLlm.selfTest();
+                    script("window.gf026SelfTestResult("+JSONObject.quote(message)+");");
+                }catch(Throwable ex){
+                    script("window.gf026SelfTestResult("+JSONObject.quote("Ошибка самотеста: "+ex.getMessage())+");");
+                }finally {llmInferenceBusy.set(false);}
             });
         }
 
@@ -349,17 +358,27 @@ public class MainActivity extends Activity {
             localLlm.clear();script("window.gfLocalAiResult("+JSONObject.quote("Модель удалена с устройства")+");");
         });}
         @JavascriptInterface public void runLocalAnalysis(){
-            aiIo.execute(()->{try{
-                try(java.io.InputStream in=getAssets().open("insulin_action_reference_v0.11.1.json")) {
-                    java.io.ByteArrayOutputStream bytes=new java.io.ByteArrayOutputStream();
-                    byte[] buf=new byte[8192];int read;
-                    while((read=in.read(buf))!=-1)bytes.write(buf,0,read);
-                    InsulinActionProfiles.setReference(new JSONObject(bytes.toString("UTF-8")));
-                }
-                String context=AiObservationContext.build(database.getSnapshot(),System.currentTimeMillis());
-                String result=localLlm.analyze(context);
-                script("window.gfLocalAiResult("+JSONObject.quote(result)+");");
-            }catch(Exception ex){script("window.gfLocalAiResult("+JSONObject.quote("Локальная модель: "+ex.getMessage())+");");}});
+            if(!llmInferenceBusy.compareAndSet(false,true)){
+                script("window.gfLocalAiResult("+JSONObject.quote("Qwen уже выполняет запрос. Второй запрос не ставится в очередь.")+");");
+                return;
+            }
+            aiIo.execute(()->{
+                try {
+                    script("window.gf026LocalProgress("+JSONObject.quote("Qwen: подготовка контекста дневника…")+");");
+                    try(java.io.InputStream in=getAssets().open("insulin_action_reference_v0.11.1.json")) {
+                        java.io.ByteArrayOutputStream bytes=new java.io.ByteArrayOutputStream();
+                        byte[] buf=new byte[8192];int read;
+                        while((read=in.read(buf))!=-1)bytes.write(buf,0,read);
+                        InsulinActionProfiles.setReference(new JSONObject(bytes.toString("UTF-8")));
+                    }
+                    String context=AiObservationContext.build(database.getSnapshot(),System.currentTimeMillis());
+                    script("window.gf026LocalProgress("+JSONObject.quote("Qwen: контекст готов. Загрузка GGUF и генерация на телефоне…")+");");
+                    String result=localLlm.analyze(context);
+                    script("window.gfLocalAiResult("+JSONObject.quote(result)+");");
+                }catch(Throwable ex){
+                    script("window.gfLocalAiResult("+JSONObject.quote("Локальная модель: "+ex.getClass().getSimpleName()+": "+ex.getMessage())+");");
+                }finally {llmInferenceBusy.set(false);}
+            });
         }
         @JavascriptInterface public void exportPdf(){requestPdf();}
     }

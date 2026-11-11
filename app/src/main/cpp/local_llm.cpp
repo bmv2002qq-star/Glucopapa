@@ -1,4 +1,6 @@
 #include <jni.h>
+#include <android/log.h>
+#include <chrono>
 #include "llama.h"
 #include <algorithm>
 #include <cstdio>
@@ -31,10 +33,14 @@ Java_ru_family_glucodiary_LocalLlm_nativeGenerate(JNIEnv* env,jclass,jstring pat
     env->ReleaseStringUTFChars(promptJava,promptC);
     if(file.empty() || prompt.empty() || prompt.size()>18000)return result(env,"ОШИБКА: неверный запрос");
     int outputLimit=std::clamp((int)maxTokens,16,360);
+    const auto llmStart=std::chrono::steady_clock::now();
+    __android_log_print(ANDROID_LOG_INFO,"GlucoQwen","GGUF load start; prompt_chars=%zu",prompt.size());
     llama_backend_init();
     llama_model_params mp=llama_model_default_params();mp.n_gpu_layers=0;
     llama_model* model=llama_model_load_from_file(file.c_str(),mp);
-    if(!model)return result(env,"ОШИБКА: не удалось загрузить GGUF");
+    if(!model){__android_log_print(ANDROID_LOG_ERROR,"GlucoQwen","GGUF load failed");return result(env,"ОШИБКА: не удалось загрузить GGUF");}
+    const auto loadMs=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()-llmStart).count();
+    __android_log_print(ANDROID_LOG_INFO,"GlucoQwen","GGUF loaded; duration_ms=%lld",(long long)loadMs);
     const llama_vocab* vocab=llama_model_get_vocab(model);
     int required=-llama_tokenize(vocab,prompt.c_str(),prompt.size(),nullptr,0,false,true);
     if(required<=0||required>3100){llama_model_free(model);return result(env,"ОШИБКА: запрос слишком длинный");}
@@ -65,6 +71,8 @@ Java_ru_family_glucodiary_LocalLlm_nativeGenerate(JNIEnv* env,jclass,jstring pat
     llama_batch_ext_free(batch);
     llama_free(ctx);
     llama_model_free(model);
+    const auto totalMs=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()-llmStart).count();
+    __android_log_print(ANDROID_LOG_INFO,"GlucoQwen","generation complete; duration_ms=%lld; output_bytes=%zu",(long long)totalMs,output.size());
     if(output.rfind("ОШИБКА:",0)==0)return result(env,output);
     return result(env,output);
 }

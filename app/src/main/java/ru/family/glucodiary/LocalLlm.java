@@ -101,7 +101,7 @@ public final class LocalLlm {
           "Отмечай, если инъекция или еда могла быть не записана, CGM устарел или ряд неполон. " +
           "Напиши 3–5 кратких наблюдений и что ещё стоит записывать для полноты дневника. Не повторяй весь ряд CGM.\n<|im_end|>\n" +
           "<|im_start|>user\n"+observations+"<|im_end|>\n<|im_start|>assistant\n";
-        String answer=nativeGenerate(modelFile().getAbsolutePath(),prompt,300);
+        String answer=nativeGenerate(modelFile().getAbsolutePath(),prompt,180);
         if(answer==null||answer.trim().isEmpty())throw new Exception("Модель вернула пустой ответ");
         if(answer.startsWith("ОШИБКА:"))throw new Exception(answer);
         modelProbed=true;

@@ -28,6 +28,7 @@ jobs:
           test -f app/src/main/java/ru/family/glucodiary/LocalLlm.java
       - name: Run JS and local-AI source checks
         run: |
+          node tools/test_qwen_bridge_v0261.js
           node tools/test_medical_ui.js
           node tools/test_local_ai_ui.js
           node tools/test_v010.js
