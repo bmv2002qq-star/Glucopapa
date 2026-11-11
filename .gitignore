@@ -1,0 +1,33 @@
+# Android and Gradle
+.gradle/
+.gradle-cache/
+build/
+app/build/
+.idea/
+local.properties
+*.iml
+.DS_Store
+# Native dependencies fetched by CI
+app/src/main/cpp/llama.cpp/
+# Binary artifacts and models
+*.apk
+*.aab
+*.gguf
+*.ggml
+*.jks
+*.keystore
+*.p12
+# Sensitive local data and keys
+.env
+.env.*
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+*.log
+logcat*.txt
+secrets.properties
+# Python/test caches
+__pycache__/
+.pytest_cache/
+node_modules/

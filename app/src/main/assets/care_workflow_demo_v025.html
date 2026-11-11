@@ -1,0 +1,1025 @@
+<!DOCTYPE html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ГлюкоПапа · v0.25 глобальная проверка</title><style>
+:root{font-family:Arial,'Helvetica Neue',sans-serif;color:#203149;background:#f3f6f9}*{box-sizing:border-box}
+body{margin:0}header{background:#153e49;color:white;padding:24px max(18px,calc((100vw - 1100px)/2))}
+header h1{font-size:25px;margin:0 0 7px}header p{margin:0;color:#d2e6e9;max-width:850px;line-height:1.5}
+main{max-width:1100px;margin:20px auto;padding:0 16px 40px}section,.panel{background:white;border:1px solid #dce4e9;border-radius:15px;padding:18px;margin-bottom:16px}
+h2{margin:0 0 13px;font-size:19px}h3{font-size:16px;margin:7px 0 12px}
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:11px}
+.metric{background:#f4f7f9;padding:13px;border-radius:11px;border:1px solid #e4ebef}.small{font-size:12px;color:#596c79}.number{font-size:21px;font-weight:750;margin:5px 0}
+.controls{display:flex;gap:12px;align-items:center;flex-wrap:wrap}select{font:inherit;padding:10px;border-radius:10px;border:1px solid #aac0c8;min-width:260px}button{padding:10px 14px;background:#125f64;color:white;border:0;border-radius:10px;font-weight:700;cursor:pointer}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:10px;border-bottom:1px solid #e6edf0;text-align:left;vertical-align:top}th{background:#f5f8fa}table td:first-child{font-weight:600}
+.badge{padding:4px 8px;border-radius:6px;background:#ebf0f2;font-size:12px;display:inline-block}.warn{border-left:4px solid #d78340;background:#fff8ee;padding:12px;margin:12px 0;color:#68411d}.alert{border-left:4px solid #ba3c38;background:#fff3f2;padding:12px;margin:12px 0;color:#812b28}.note{color:#596c79;font-size:13px;line-height:1.5}.chart{width:100%;height:auto;display:block;background:white;border:1px solid #edf1f4;border-radius:10px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media(max-width:720px){.two{display:block}header{padding:20px}main{padding:0 10px}table{font-size:12px}td,th{padding:8px 5px}}
+</style></head><body>
+<header><h1>ГлюкоПапа · 0.25</h1><p>Глобальная симуляция на пятидневном вымышленном дневнике: полный автоматический расчёт коэффициентов и воспроизведение числовых алгоритмов только на искусственных данных. Не медицинское назначение.</p></header>
+<main><section><h2>1. Пятидневный дневник</h2><div id="metrics" class="metrics"></div><div id="trend"></div><div id="chart"></div></section>
+<section><h2>2. Сравнение начальных и наблюдаемых коэффициентов с тестовым планом</h2><div id="compare"></div><p class="note">СДИ — средняя зарегистрированная суточная доза; наблюдаемые коэффициенты получены по искусственному CGM и не означают клиническую потребность.</p></section>
+<section><h2>3. Числовая проверка действий · только синтетические примеры</h2><div class="controls"><label for="scenario">Тестовый сценарий</label><select id="scenario"></select><button id="run">Пересчитать</button></div><div id="result"></div></section>
+<section><h2>4. Аудит качества и ограничений</h2><div id="audit"></div><p class="warn">Числа ниже — результат исполнения алгоритма над вымышленным индивидуальным планом, не инструкция по лечению ребёнка. При реальной гипогликемии следует действовать по согласованному медицинскому плану, не ожидая эксперимента с прогнозом.</p></section>
+</main>
+<script>
+/* GlucoFamily 0.13 medical OBSERVATION engine.
+ * No therapeutic dose, ICR/ISF determination, bolus timing or insulin titration.
+ * Clinical safety checks are deliberately outside selectable 'AI' providers.
+ */
+(function(global){'use strict';
+ const MINUTE=60000,DAY=86400000;
+ const valid=(x)=>Number.isFinite(Number(x));
+ function closest(rows,time,margin){let hit=null,d=margin+1;for(const r of rows){const dt=Math.abs(Number(r.ts)-time);if(dt<d&&valid(r.mmol)&&Number(r.mmol)>1.5&&Number(r.mmol)<35){hit=r;d=dt}}return hit;}
+ function goodReadings(data,now){const map=new Map();for(const r of data||[]){if(!valid(r.ts)||!valid(r.mmol))continue;const t=Number(r.ts),n=Number(r.mmol);if(n<=1.5||n>=35||t>now+2*MINUTE||t<now-90*DAY)continue;map.set(t,{ts:t,mmol:n,direction:String(r.direction||'')});}return [...map.values()].sort((a,b)=>a.ts-b.ts);}
+ function checkData(input,now=Date.now()){
+  const rows=goodReadings(input.readings,now),events=input.events||[],latest=rows.at(-1)||null;
+  const missing=[];
+  if(!latest)missing.push('Нет показаний xDrip+');
+  else if(now-latest.ts>10*MINUTE)missing.push('Последнее показание старше 10 минут');
+  if(!events.some(e=>e.type==='insulin'))missing.push('Нет записей о фактических инъекциях');
+  if(!events.some(e=>e.type==='meal'&&e.status==='eaten'))missing.push('Нет подтверждённых порций еды');
+  return {latest,readings:rows.length,events:events.length,dataFresh:!!latest&&now-latest.ts<=10*MINUTE,missing};
+ }
+ function insulinOverlap(input,now=Date.now()){
+  const rows=(input.events||[]).filter(e=>e.type==='insulin'&&e.insulinType==='short'&&valid(e.ts)&&Number(e.ts)<=now&&now-Number(e.ts)<=4*60*MINUTE).sort((a,b)=>b.ts-a.ts);
+  return {count:rows.length,hasRecentMultiple:rows.length>=2,mostRecentAt:rows[0]?.ts||null,explanation:'В журнале есть несколько коротких инъекций в пределах четырёх часов. Их действие может перекрываться. Это не расчёт остаточного инсулина (IOB) и не инструкция по дозированию.'};
+ }
+ function mealEpisodes(input,now=Date.now()){
+  const rows=goodReadings(input.readings,now);
+  return (input.events||[]).filter(e=>e.type==='meal'&&e.status==='eaten'&&valid(e.ts)&&now-Number(e.ts)<60*DAY&&now-Number(e.ts)>2*60*MINUTE).map(e=>{
+   const before=closest(rows,Number(e.ts)-5*MINUTE,15*MINUTE);
+   const after=closest(rows,Number(e.ts)+120*MINUTE,25*MINUTE);
+   if(!before||!after||after.ts<=before.ts||!valid(e.carbs))return null;
+   return {ts:Number(e.ts),carbs:Number(e.carbs),fat:Number(e.fat||0),protein:Number(e.protein||0),delta:+(after.mmol-before.mmol).toFixed(2),name:String(e.name||''),hour:new Date(e.ts).getHours()};
+  }).filter(Boolean);
+ }
+ const median=xs=>{if(!xs.length)return null;const s=[...xs].sort((a,b)=>a-b);return (s[Math.floor((s.length-1)/2)]+s[Math.floor(s.length/2)])/2;};
+ function similarMeals(input,meal,now=Date.now()){
+  const episodes=mealEpisodes(input,now),carbs=Number(meal.carbs||0),fat=Number(meal.fat||0),hour=Number(meal.hour||new Date(now).getHours());
+  if(!Number.isFinite(carbs)||carbs<=0)return {status:'missing',total:episodes.length,message:'Для сравнения укажи количество углеводов.'};
+  const ranked=episodes.map(e=>({e,d:Math.abs(e.carbs-carbs)/Math.max(12,carbs)+0.15*Math.abs(e.fat-fat)/Math.max(8,fat)+Math.min(12,Math.abs(e.hour-hour))*0.04})).filter(x=>x.d<=1.2).sort((a,b)=>a.d-b.d).slice(0,7);
+  if(ranked.length<3)return {status:'few',total:episodes.length,similar:ranked.length,message:'Для локального ML-анализа пока мало похожих приёмов пищи с CGM до и через 2 часа.'};
+  const deltas=ranked.map(x=>x.e.delta),s=[...deltas].sort((a,b)=>a-b);
+  return {status:'observed',total:episodes.length,similar:ranked.length,medianDelta:median(deltas),low:s[0],high:s.at(-1),message:'Медиана изменения CGM через ~2 часа в похожих прошлых эпизодах. Это ассоциация, а не прогноз дозы или самостоятельный совет менять инсулин.'};
+ }
+ function basalWindow(input,now=Date.now()){
+  const rows=goodReadings(input.readings,now),events=input.events||[],groups=new Map();
+  for(const r of rows){const d=new Date(r.ts),h=d.getHours();if(h>7)continue;const key=[d.getFullYear(),d.getMonth(),d.getDate()].join('-');if(!groups.has(key))groups.set(key,[]);groups.get(key).push(r);}
+  const obs=[];
+  for(const pts of groups.values()){
+   const early=pts.filter(x=>new Date(x.ts).getHours()<1),late=pts.filter(x=>new Date(x.ts).getHours()>=5&&new Date(x.ts).getHours()<7);
+   if(!early.length||!late.length)continue;
+   const a=early[0],b=late.at(-1);if(b.ts-a.ts<4*60*MINUTE)continue;
+   const confound=events.some(e=>(e.type==='insulin'&&e.insulinType==='short'&&Number(e.ts)>a.ts-4*60*MINUTE&&Number(e.ts)<b.ts)||(e.type==='activity'&&Number(e.ts)>a.ts-12*60*MINUTE&&Number(e.ts)<b.ts));
+   obs.push({start:a.ts,end:b.ts,delta:b.mmol-a.mmol,confounded:confound});
+  }
+  const pure=obs.filter(x=>!x.confounded);
+  return {nights:obs.length,unconfounded:pure.length,medianChange:median(pure.map(x=>x.delta)),message:pure.length>=3?'Ночной тренд найден. Даже без зарегистрированного болюса остаются неучтённые факторы; нельзя использовать это для изменения базальной дозы.':'Для сравнения ночных тенденций пока недостаточно независимых наблюдений. Наличие вечерней еды, болюсов, активности и болезни может менять результат.'};
+ }
+ function summary(input,now=Date.now()){
+  const quality=checkData(input,now),overlap=insulinOverlap(input,now),basal=basalWindow(input,now);
+  return {quality,overlap,basal,mealEpisodes:mealEpisodes(input,now).length};
+ }
+
+  // v0.13 — retrospective trend only; never use as a 15-minute clinical forecast.
+  function cgmTrend(input,now=Date.now()){
+   const all=goodReadings(input.readings,now);
+   const latest=all.at(-1);
+   if(!latest||now-latest.ts>10*MINUTE)return {status:'stale',rate:null,delta:null};
+   const recent=all.filter(r=>r.ts>=latest.ts-30*MINUTE&&r.ts<=latest.ts);
+   const span=recent.length>=2?(latest.ts-recent[0].ts)/MINUTE:0;
+   if(recent.length<3||span<10)return {status:'insufficient',rate:null,delta:null,count:recent.length};
+   const xs=recent.map(r=>(r.ts-recent[0].ts)/MINUTE),ys=recent.map(r=>r.mmol);
+   const xm=xs.reduce((a,b)=>a+b,0)/xs.length,ym=ys.reduce((a,b)=>a+b,0)/ys.length;
+   const den=xs.reduce((a,x)=>a+(x-xm)*(x-xm),0);
+   const rate=den?xs.reduce((a,x,i)=>a+(x-xm)*(ys[i]-ym),0)/den:NaN;
+   if(!Number.isFinite(rate)||Math.abs(rate)>0.5)return {status:'unreliable',rate:null,delta:null};
+   return {status:'observed',rate:+rate.toFixed(3),delta:+(latest.mmol-recent[0].mmol).toFixed(2),minutes:+span.toFixed(1),count:recent.length,source:'retrospective-regression'};
+  }
+  // Time window classification from reference profiles, not a pharmacokinetic IOB.
+  function shortInsulinWindow(input,now=Date.now()){
+   const recent=(input.events||[]).filter(e=>e.type==='insulin'&&e.insulinType==='short'&&valid(e.ts)&&Number(e.ts)<=now&&Number(e.ts)>now-12*60*MINUTE&&valid(e.units)&&Number(e.units)>0);
+   const items=recent.map(e=>{
+    const n=String(e.insulinName||'').toLowerCase();
+    const regular=/актрапид|actrapid|regular|хумулин.*р|insuman.*rapid|инсуман.*рапид|ринсулин.*р/.test(n);
+    const rapid=/ново.?рапид|novorapid|novolog|аспарт|aspart|фиасп|fiasp|хумалог|humalog|apidra|апидра|lispro|лизпро|glulisine|глулизин/.test(n);
+    const minH=regular?5:rapid?3:null,maxH=regular?8:rapid?5:null;
+    const minutesAgo=(now-Number(e.ts))/MINUTE;
+    return {name:String(e.insulinName||'Без названия'),units:Number(e.units),minutesAgo:+minutesAgo.toFixed(1),windowMinHours:minH,windowMaxHours:maxH,
+      possibleAction:maxH===null?null:minutesAgo<=maxH*60,
+      uncertainty:minH===null?'unknown':minutesAgo<=minH*60?'in-window':'variable-tail'};
+   }).sort((a,b)=>a.minutesAgo-b.minutesAgo);
+   const possible=items.filter(x=>x.possibleAction===true);
+   return {items,possibleCount:possible.length,overlapPossible:possible.length>=2,unknownCount:items.filter(x=>x.possibleAction===null).length,
+      knownUnits:+items.reduce((sum,x)=>sum+x.units,0).toFixed(2),
+      message:'Время после введения сопоставлено с диапазонами длительности действия из справочника препаратов. Остаточный IOB в ЕД НЕ рассчитан. Отсутствие записи не доказывает отсутствие инсулина.'};
+  }
+  // Patient state is transient form data. No cloud transfer and no dose selection.
+  function triage(input,exam={},now=Date.now()){
+   const q=checkData(input,now),v=valid(exam.meter)&&exam.meter!==''&&Number(exam.meter)>=1.5&&Number(exam.meter)<=35?Number(exam.meter):null;
+   const measured=v!==null?v:q.dataFresh&&q.latest?Number(q.latest.mmol):null;
+   const source=v!==null?'glucometer':measured!==null?'CGM':'none';
+   const low=measured!==null&&measured<3.9,high=measured!==null&&measured>10;
+   const severe=(exam.conscious==='no'||exam.swallow==='no'||exam.neuro==='yes');
+   const dkaSigns=exam.dkaSigns==='yes';
+   const ketones=valid(exam.ketones)&&exam.ketones!==''&&Number(exam.ketones)>=0&&Number(exam.ketones)<20?Number(exam.ketones):null;
+   const dangerKetones=ketones!==null&&ketones>=3;
+   const urgentKetones=ketones!==null&&ketones>=1.5;
+   const context=(input.profile||{});
+   let status=low&&severe?'emergency-low':severe?'emergency-general':low?'low':(dkaSigns||dangerKetones)?'emergency-dka':high?'high':measured===null?'unknown':'in-range';
+   let action=low&&severe?'Не давать пищу или питьё через рот. Применить назначенный глюкагон по инструкции и вызвать экстренную помощь.':
+       severe?'Нарушено сознание или глотание. Не давать ничего через рот; срочно вызвать экстренную помощь, проверить глюкозу и следовать плану на случай тяжёлой гипогликемии при её наличии.':
+       (dkaSigns||dangerKetones)?'Срочная медицинская оценка на предмет кетоацидоза. При тяжёлых симптомах вызвать экстренную помощь.':
+       low?'Не задерживать помощь. Если ребёнок в сознании и безопасно глотает, применить индивидуальный план быстрых углеводов; проверить глюкозу примерно через 15 минут.':
+       high?'Проверить длительность повышения, кетоны, симптомы и введённый инсулин по индивидуальному плану; не повторять болюс без проверки.':
+       measured===null?'Нет свежих данных: проверить CGM и состояние, при необходимости измерить глюкометром.':'Показатель в основном диапазоне CGM; оценить динамику и самочувствие.';
+   if(urgentKetones&&!dangerKetones&&!severe&&!dkaSigns)action+=' Кетоны повышены: незамедлительно связаться с диабетологической командой по плану болезни.';
+   const allowPlan=low&&!severe&&exam.conscious==='yes'&&exam.swallow==='yes'&&source!=='none';
+   return {status,actual:measured,source,stale:!q.dataFresh,low,high,severe,ketones,urgentKetones,dangerKetones,allowPlan,action,
+      needsMeter:q.latest===null||!q.dataFresh||(v!==null&&q.latest&&Math.abs(Number(q.latest.mmol)-v)>1.5),
+      patientContext:{age:context.age??null,weight:context.weight??null}};
+  }
+  // Research-only demo of a triangular action curve, opt-in for synthetic tests only.
+  // Not calibrated to insulin type/person, not usable for medication decisions.
+  function researchCurve(input,now=Date.now(),research=false){
+   if(!research)return {status:'disabled',value:null};
+   const shots=(input.events||[]).filter(e=>e.type==='insulin'&&e.insulinType==='short'&&valid(e.ts)&&valid(e.units)&&Number(e.units)>0&&Number(e.ts)<=now);
+   if(!shots.length)return {status:'missing',value:null};
+   const onset=15,peak=90,end=300;
+   let v=0;
+   for(const e of shots){const m=(now-Number(e.ts))/MINUTE;let f;
+    if(m<=onset)f=1;else if(m>=end)f=0;
+    else if(m<=peak)f=1-(m-onset)**2/((peak-onset)*(end-onset));
+    else f=(end-m)**2/((end-peak)*(end-onset));
+    v+=Number(e.units)*f;
+   }
+   return {status:'research-only',value:+v.toFixed(3),formula:'triangular residual integral; onset 15, peak 90, end 300 min',warning:'НЕ медицинский IOB; НЕ использовать для дозирования'};
+  }
+
+  global.GFMedical={checkData,insulinOverlap,mealEpisodes,similarMeals,basalWindow,summary,cgmTrend,shortInsulinWindow,triage,researchCurve};
+})(typeof window!=='undefined'?window:globalThis);
+
+
+/* v0.14: deterministic, non-prescriptive pharmacology timeline + exercise context.
+   Reference windows are population descriptions and must NOT be treated as measured IOB,
+   a glucose forecast, or bolus recommendations. */
+(function(global){'use strict';
+ const MIN=60000,HOUR=60*MIN;
+ const fin=(x)=>typeof x==='number'?Number.isFinite(x):(x!==null&&x!==''&&Number.isFinite(Number(x)));
+ function detect(name,type){
+  const n=String(name||'').toLowerCase().replace(/ё/g,'е');
+  if(/ново.?рапид|novorapid|novolog|insulin aspart|инсулин аспарт/.test(n))return {key:'novorapid',name:'НовоРапид',kind:'short',onset:[10,20],peak:[60,180],duration:[180,300],source:'официальная инструкция NovoRapid'};
+  if(/левемир|levemir|insulin detemir|детемир/.test(n))return {key:'levemir',name:'Левемир',kind:'long',onset:null,peak:null,duration:[0,1440],source:'официальная инструкция Levemir; до 24 часов, зависит от дозы'};
+  return {key:'unknown',name:String(name||'Препарат не указан'),kind:type||'unknown',onset:null,peak:null,duration:null,source:'препарат не распознан: использовать индивидуальную инструкцию'};
+ }
+ function labelPhase(profile,minutes){
+  if(profile.key==='unknown')return 'профиль неизвестен';
+  if(profile.kind==='long')return minutes<=1440?'возможное базальное действие; индивидуальная длительность неизвестна':'за пределами справочного окна; нельзя утверждать, что действие закончилось';
+  if(minutes<profile.onset[0])return 'ранее типичного начала действия';
+  if(minutes<profile.onset[1])return 'период начала действия';
+  if(minutes<profile.peak[0])return 'нарастание действия';
+  if(minutes<=profile.peak[1])return 'период типичного максимума';
+  if(minutes<=profile.duration[0])return 'после типичного максимума; действие возможно';
+  if(minutes<=profile.duration[1])return 'вариабельное остаточное действие возможно';
+  return 'за пределами типичной длительности; нулевой IOB не доказан';
+ }
+ function insulinTimeline(input,now=Date.now()){
+  const events=Array.isArray(input?.events)?input.events:[];
+  const items=events.filter(e=>e.type==='insulin'&&['short','long'].includes(e.insulinType)&&fin(e.ts)&&fin(e.units)&&Number(e.units)>0&&Number(e.ts)<=now&&Number(e.ts)>=now-36*HOUR)
+   .map(e=>{
+     const p=detect(e.insulinName,e.insulinType),ageMin=(now-Number(e.ts))/MIN;
+     // Wrong metadata is not silently corrected: flag inconsistent insulin class.
+     const mismatch=p.key!=='unknown'&&p.kind!==e.insulinType;
+     return {name:p.name,originalName:String(e.insulinName||''),type:e.insulinType,units:Number(e.units),ageMinutes:+ageMin.toFixed(1),ageHours:+(ageMin/60).toFixed(2),phase:mismatch?'Несовпадение типа инсулина в журнале':labelPhase(p,ageMin),mismatch,profile:p.key,typicalDurationMinutes:p.duration,source:p.source,possible:!mismatch&&p.duration!==null&&ageMin<=p.duration[1]};
+   }).sort((a,b)=>a.ageMinutes-b.ageMinutes);
+  const long=items.filter(x=>x.type==='long'),short=items.filter(x=>x.type==='short');
+  return {status:items.length?'observed':'missing',items,short,long,possibleShort:short.filter(x=>x.possible).length,possibleLong:long.filter(x=>x.possible).length,
+   overlaps:short.filter(x=>x.possible).length>1,unknown:items.filter(x=>x.profile==='unknown').length,mismatches:items.filter(x=>x.mismatch).length,
+   iobUnits:null,basalActiveUnits:null,warning:'Время и характер действия — справочная информация. Ни «активные ЕД», ни эффективную дозу базального инсулина из этого получить нельзя. Неполный журнал не подтверждает отсутствие инсулина.'};
+ }
+ const levels={rest:'Спокойный отдых',walk:'Прогулка или легкая аэробная нагрузка',aerobic:'Умеренная аэробная нагрузка',intense:'Интенсивный / силовой спорт',mixed:'Смешанная нагрузка',unknown:'Не указано'};
+ function classifyActivity(a){
+  const raw=String(a||'').toLowerCase();
+  if(/^(rest)$|низк|спокой|отдых|пассив/.test(raw))return 'rest';
+  if(/^(walk)$|прогул|гуля|ходьб|самокат/.test(raw))return 'walk';
+  if(/^(aerobic)$|средн|умерен|бег|плаван/.test(raw))return 'aerobic';
+  if(/^(intense)$|высок|спорт|силов|спринт|батут/.test(raw))return 'intense';
+  if(/^(mixed)$|смешан/.test(raw))return 'mixed';
+  return 'unknown';
+ }
+ function mealActivityContext(input,exam={},now=Date.now()){
+  const events=Array.isArray(input?.events)?input.events:[];
+  const meals=events.filter(e=>e.type==='meal'&&e.status!=='planned'&&e.status!=='started'&&fin(e.ts)&&Number(e.ts)<=now).sort((a,b)=>b.ts-a.ts);
+  const lastMeal=meals[0]||null;
+  const mealActivity=classifyActivity(lastMeal?.activityLevel);
+  const current=classifyActivity(exam.activityNow);
+  const planned=String(exam.activityPlan||'unknown');
+  const recent=events.filter(e=>e.type==='activity'&&fin(e.ts)&&Number(e.ts)<=now&&now-Number(e.ts)<=12*HOUR).sort((a,b)=>b.ts-a.ts).slice(0,5);
+  const label=levels[current];
+  const flags=[];
+  if(['walk','aerobic'].includes(current))flags.push('Аэробная активность может способствовать снижению глюкозы, особенно при продолжающемся действии инсулина.');
+  if(current==='intense'||current==='mixed')flags.push('Интенсивная и смешанная нагрузка иногда временно повышает глюкозу, а позднее может увеличивать риск снижения.');
+  if(planned==='soon')flags.push('Планируется нагрузка в ближайшие 2 часа после еды: требуется индивидуальный план для спорта и наблюдение за CGM.');
+  if(recent.length)flags.push('В журнале отмечена физическая активность за последние 12 часов: риск отсроченного снижения может сохраняться.');
+  if(!flags.length)flags.push('Данных недостаточно, чтобы оценивать влияние нагрузки на глюкозу; отсутствие активности в журнале не доказывает ее отсутствия.');
+  return {current,activityText:label,planned,meal: lastMeal?{ageMinutes:+((now-Number(lastMeal.ts))/MIN).toFixed(0),carbs:fin(lastMeal.carbs)?Number(lastMeal.carbs):null,activity:mealActivity,activityText:levels[mealActivity],status:lastMeal.status||''}:null,
+   activityEvents:recent.length,flags,correctionFactor:null,insulinAdjustment:null,warning:'Множитель дозы по «активен/пассивен» без индивидуально проверенного протокола не вычисляется.'};
+ }
+ // Only a theory benchmark using user-specified, explicitly synthetic TDD. No therapy output.
+ function educationalCoefficients(tdd,xeGrams=12){
+  if(!fin(tdd)||!(Number(tdd)>0)||Number(tdd)>200||!fin(xeGrams)||!(Number(xeGrams)>0)||Number(xeGrams)>20)return {status:'invalid'};
+  const v=Number(tdd),xe=Number(xeGrams),isf=100/v,icr=500/v;
+  return {status:'educational-only',tdd:v,xe,referenceISF:+isf.toFixed(3),referenceICR:+icr.toFixed(3),unitsPerXE:+(xe/icr).toFixed(3),
+   warning:'Это грубые учебные оценки по правилу 100 и 500; не являются персональным ФЧИ, УК, назначенной дозой или указанием для введения.'};
+ }
+ // Five fully observed calendar days: never count days with no records as zero insulin.
+ function observedTdd(input,now=Date.now()){
+   const events=Array.isArray(input?.events)?input.events:[];
+   const daily=[];
+   for(let day=1;day<=5;day++){
+     const d=new Date(now);d.setHours(0,0,0,0);d.setDate(d.getDate()-day);
+     const start=d.getTime(),end=start+24*HOUR;
+     const entries=events.filter(e=>e.type==='insulin'&&fin(e.ts)&&Number(e.ts)>=start&&Number(e.ts)<end&&fin(e.units)&&Number(e.units)>0);
+     if(!entries.length)return {status:'insufficient',reason:'Отсутствуют записи инсулина для всех пяти завершенных суток',daysRecorded:daily.length,mean:null};
+     daily.push({day:d.toISOString().slice(0,10),total:+entries.reduce((a,e)=>a+Number(e.units),0).toFixed(2),count:entries.length});
+   }
+   const mean=+(daily.reduce((a,x)=>a+x.total,0)/5).toFixed(2);
+   return {status:'observed-not-verified',daysRecorded:5,mean,daily,warning:'Это среднее по записям, а не подтвержденная СДИ; неполный дневник исказит результат.'};
+ }
+ Object.assign(global.GFMedical,{insulinTimeline,mealActivityContext,educationalCoefficients,observedTdd});
+})(typeof window!=='undefined'?window:globalThis);
+
+/* v0.15: validated arithmetic for nutrition descriptions and theoretical reference factors.
+ Clinical applicability is NOT established by these simple equations. */
+(function(global){'use strict';
+const finite=(x)=>x!==null&&x!==undefined&&x!==''&&Number.isFinite(Number(x));
+const round=(x,p=2)=>Number(x.toFixed(p));
+function macroUnits(data){
+ const carbs=data?.carbs,protein=data?.protein,fat=data?.fat,kcal=data?.kcal;
+ for(const [k,x] of Object.entries({carbs,protein,fat,kcal}))if(finite(x)&&(Number(x)<0||Number(x)>3000))return {status:'invalid',reason:'Недопустимое значение '+k};
+ if(!finite(carbs))return {status:'insufficient',reason:'Не указаны углеводы'};
+ const c=Number(carbs),xe=finite(data?.xeGrams)?Number(data.xeGrams):12;
+ if(!(xe>0&&xe<=20))return {status:'invalid',reason:'Размер ХЕ должен быть в пределах 0–20 г'};
+ const hasP=finite(protein),hasF=finite(fat),hasEnergy=finite(kcal);
+ const result={status:'observed',carbs:c,xeGrams:xe,xe:round(c/xe,3),protein:hasP?Number(protein):null,fat:hasF?Number(fat):null,kcalLabel:hasEnergy?Number(kcal):null,method:'missing',fpu:null,nonCarbKcal:null,macroKcal:null,energyDifference:null,flags:[],possibleLateImpact:false};
+ if(hasP&&hasF){
+  const non=4*Number(protein)+9*Number(fat);result.nonCarbKcal=round(non,2);result.fpu=round(non/100,3);result.method='4P+9F';result.macroKcal=round(4*c+non,2);
+  if(hasEnergy){result.energyDifference=round(Number(kcal)-result.macroKcal,2);if(Math.abs(result.energyDifference)>Math.max(25,result.macroKcal*.12))result.flags.push('Калории этикетки заметно отличаются от расчёта 4/4/9: проверьте клетчатку, округления и состав');}
+ }else if(hasEnergy){
+  const est=Number(kcal)-4*c;
+  if(est>=0){result.nonCarbKcal=round(est,2);result.fpu=round(est/100,3);result.method='kcalMinusCarbs';result.flags.push('БЖЕ получена косвенно из калорийности: это менее надёжно, чем белки и жиры отдельно');}
+  else{result.flags.push('Калорийность меньше 4×углеводы: исходные данные противоречивы');result.status='conflict';}
+ }else{result.status='partial';result.flags.push('Нужны граммы белков и жиров или достоверная общая калорийность для БЖЕ');}
+ if(result.fpu!==null&&result.fpu>=2){result.possibleLateImpact=true;result.flags.push('Состав еды может давать отсроченную динамику глюкозы — проверять по CGM примерно через 2–6 часов');}
+ return result;
+}
+function estimatedReferenceFactors(input){
+ const tdd=input?.tdd,xe=input?.xeGrams??12;
+ if(!finite(tdd)||Number(tdd)<=0||Number(tdd)>200||!finite(xe)||Number(xe)<=0||Number(xe)>20)return {status:'invalid',reason:'Неверная суточная доза или размер ХЕ'};
+ const d=Number(tdd),g=Number(xe),fast=100/d,regular=83/d,ratio=500/d;
+ return {status:'theoretical-only',tdd:d,xeGrams:g,isfRapidMmolPerUnit:round(fast,4),isfRegularMmolPerUnit:round(regular,4),icrGramsPerUnit:round(ratio,4),unitsPerXE:round(g/ratio,4),limits:'Грубые популяционные формулы. Не применяются как персональные дозы, время введения и коррекции.'};
+}
+function observedCarbRatio(input){
+ const dose=input?.dailyMealBolusUnits,units=input?.dailyCarbXE,grams=input?.dailyCarbGrams,xe=input?.xeGrams??12;
+ if(!finite(dose)||Number(dose)<=0||!finite(xe)||Number(xe)<=0)return {status:'invalid'};
+ const g=finite(grams)?Number(grams):finite(units)?Number(units)*Number(xe):NaN;
+ if(!Number.isFinite(g)||g<=0)return {status:'invalid'};
+ return {status:'descriptive-only',bolusUnits:Number(dose),carbGrams:round(g,2),carbXE:round(g/Number(xe),2),gramsPerUnit:round(g/Number(dose),3),unitsPerXE:round(Number(dose)*Number(xe)/g,3),warning:'Это наблюдаемое отношение суммарных записей, не индивидуальный лечебный УК: могли учитываться коррекции, перекусы, IOB и другие факторы.'};
+}
+function mealCompositionContext(input,now=Date.now()){
+ const events=Array.isArray(input?.events)?input.events:[];
+ const meals=events.filter(x=>x.type==='meal'&&x.status!=='planned'&&x.status!=='started'&&finite(x.ts)&&Number(x.ts)<=now).sort((a,b)=>Number(b.ts)-Number(a.ts));
+ const x=meals[0];if(!x)return {status:'missing',message:'Приём пищи не зарегистрирован'};
+ let nutrients={carbs:x.carbs,protein:x.protein,fat:x.fat,kcal:x.kcal};
+ // A null/absent meal aggregate must never be interpreted as zero nutrient content.
+ let detail=macroUnits(nutrients);
+ const ageMinutes=Math.round((now-Number(x.ts))/60000);
+ let stage=ageMinutes<90?'0–90 минут: ранняя динамика, важны время инсулина и тип углеводов':ageMinutes<120?'90–120 минут: часто заметен вклад углеводов':ageMinutes<=360?'120–360 минут: возможно влияние белков, жиров и состава еды':'Позднее 6 часов: нельзя приписывать изменения только этому приёму пищи';
+ return {status:'observed',name:String(x.name||'Приём пищи'),ageMinutes,stage,macros:detail,notes:detail.possibleLateImpact?['Есть предпосылки проверить отсроченный подъём глюкозы, но это не его доказательство']:[],noExtraBolus:true};
+}
+Object.assign(global.GFMedical,{macroUnits,estimatedReferenceFactors,observedCarbRatio,mealCompositionContext});
+})(typeof window!=='undefined'?window:globalThis);
+
+/* GlucoPapa v0.16: retrospective 3-day log audit and descriptive insulin coefficients.
+   All values derived from recorded doses and food. They are NOT clinical dosing advice. */
+(function(global){'use strict';
+const MS_DAY=86400000,MS_MIN=60000,ROUND=(v,n=2)=>Number(v.toFixed(n));
+const ok=(x)=>x!==null&&x!==undefined&&x!==''&&Number.isFinite(Number(x));
+function period(e){const s=String(e.mealSlot||'').toLowerCase();if(['breakfast','lunch','dinner'].includes(s))return s;
+ const h=new Date(Number(e.ts)).getHours();return h>=5&&h<11?'breakfast':h>=11&&h<16?'lunch':h>=16&&h<=23?'dinner':null;}
+function replayThreeDays(input,now=Date.now()){
+ const events=Array.isArray(input?.events)?input.events:[];
+ const readings=Array.isArray(input?.readings)?input.readings:[];
+ const tz=String(input?.profile?.timeZone||Intl.DateTimeFormat().resolvedOptions().timeZone||'UTC');
+ let dayFormatter;try{dayFormatter=new Intl.DateTimeFormat('en-US',{timeZone:tz,year:'numeric',month:'2-digit',day:'2-digit'});}catch(e){return {status:'invalid-timezone',reason:'Неверная часовая зона профиля: '+tz};}
+ function dayKey(ts){const parts=dayFormatter.formatToParts(new Date(Number(ts)));const get=(k)=>parts.find(x=>x.type===k)?.value;return get('year')+'-'+get('month')+'-'+get('day');}
+ const todayKey=dayKey(now);const last3=[3,2,1].map(d=>{const date=new Date(todayKey+'T12:00:00Z');date.setUTCDate(date.getUTCDate()-d);return date.toISOString().slice(0,10);});
+ const daily=[],flags=[],slots={breakfast:{grams:0,units:0,n:0,deltas:[]},lunch:{grams:0,units:0,n:0,deltas:[]},dinner:{grams:0,units:0,n:0,deltas:[]}};
+ let severeDataError=false;
+ const doseEntries=events.filter(e=>e.type==='insulin'&&ok(e.ts)&&ok(e.units)&&Number(e.units)>0);
+ const seen=[];
+ for(const e of doseEntries){
+  // Suspicious double-entry is not silently removed: two actual injections can be recorded close together.
+  const similar=seen.find(z=>Math.abs(Number(z.ts)-Number(e.ts))<MS_MIN&&z.insulinType===e.insulinType&&String(z.insulinName||'')===String(e.insulinName||'')&&Number(z.units)===Number(e.units));
+  if(similar){flags.push('Подозрение на повторную запись инъекции '+new Date(Number(e.ts)).toISOString()); severeDataError=true;}
+  seen.push(e);
+ }
+ const expectedBasal=Number(input?.profile?.expectedBasalInjectionsPerDay||0);
+ for(let d=3;d>=1;d--){
+  const key=last3[3-d];
+  const meds=doseEntries.filter(e=>dayKey(e.ts)===key);
+  const meals=events.filter(e=>e.type==='meal'&&e.status==='eaten'&&ok(e.ts)&&dayKey(e.ts)===key);
+  const basal=meds.filter(e=>e.insulinType==='long');const short=meds.filter(e=>e.insulinType==='short');
+  const mealBolus=short.filter(e=>e.doseReason==='meal');
+  const dayFlags=[];if(basal.length===0)dayFlags.push('Нет базальных инъекций');
+  if(expectedBasal>0&&basal.length!==expectedBasal)dayFlags.push('Количество базальных инъекций не соответствует настроенному графику ('+expectedBasal+')');
+  for(const p of ['breakfast','lunch','dinner']){
+   const ms=meals.filter(e=>period(e)===p);
+   const ins=mealBolus.filter(e=>period(e)===p);
+   if(ms.length!==1||ins.length!==1){dayFlags.push('Неоднозначный или отсутствующий '+p+' (еда='+ms.length+', пищевой инсулин='+ins.length+')');continue;}
+   const m=ms[0],dose=ins[0];
+   if(!ok(m.carbs)||Number(m.carbs)<0){dayFlags.push('Нет достоверных граммов углеводов: '+p);continue;}
+   // Avoid guessing which dose was intended for which meal.
+   if(Math.abs(Number(m.ts)-Number(dose.ts))>90*MS_MIN){dayFlags.push('Инъекция не связана по времени с приёмом пищи: '+p);continue;}
+   slots[p].grams+=Number(m.carbs);slots[p].units+=Number(dose.units);slots[p].n++;
+  }
+  const cgm=readings.filter(r=>ok(r.ts)&&ok(r.mmol)&&dayKey(r.ts)===key&&Number(r.mmol)>1.5&&Number(r.mmol)<35);
+  const coverage=ROUND(cgm.length/288*100,1);
+  if(coverage<80)dayFlags.push('Покрытие CGM менее 80%: '+coverage+'%');
+  if(meds.length===0||meals.length<3||mealBolus.length<3)dayFlags.push('Не полностью заполнен дневник инсулина и еды');
+  const day={date:key,totalUnits:ROUND(meds.reduce((s,e)=>s+Number(e.units),0),2),basalUnits:ROUND(basal.reduce((s,e)=>s+Number(e.units),0),2),mealBolusUnits:ROUND(mealBolus.reduce((s,e)=>s+Number(e.units),0),2),otherShortUnits:ROUND(short.reduce((s,e)=>s+Number(e.units),0)-mealBolus.reduce((s,e)=>s+Number(e.units),0),2),carbGrams:ROUND(meals.reduce((s,e)=>s+(ok(e.carbs)?Number(e.carbs):0),0),2),mealCount:meals.length,basalCount:basal.length,shortCount:short.length,cgmPoints:cgm.length,cgmCoveragePercent:coverage,flags:dayFlags};
+  if(dayFlags.length){flags.push(key+': '+dayFlags.join('; '));severeDataError=true;}
+  daily.push(day);
+ }
+ const daysWithSufficientData=daily.filter(d=>!d.flags.length).length;
+ const mean=daily.every(d=>d.totalUnits>0)&&!severeDataError?ROUND(daily.reduce((s,d)=>s+d.totalUnits,0)/3,4):null;
+ const theo=mean!==null?global.GFMedical.estimatedReferenceFactors({tdd:mean}):null;
+ const slotOut={};let anyMismatch=false;
+ for(const [k,x] of Object.entries(slots)){
+  const ratio=x.n===3&&x.units>0?ROUND(x.grams/x.units,3):null;
+  const deviation=ratio!==null&&theo?ROUND((ratio/theo.icrGramsPerUnit-1)*100,1):null;
+  if(deviation!==null&&Math.abs(deviation)>30){flags.push('Наблюдаемое отношение для '+k+' отличается от формулы 500/СДИ на '+deviation+'%; требуется проверка контекста и журнала');anyMismatch=true;}
+  slotOut[k]={meals:x.n,carbGrams:ROUND(x.grams,2),recordedMealInsulinUnits:ROUND(x.units,2),observedGramsPerUnit:ratio,deviationFromReferencePercent:deviation,status:ratio===null?'insufficient':'descriptive-only'};
+ }
+ const validCgm=readings.filter(r=>ok(r.ts)&&last3.includes(dayKey(r.ts))&&ok(r.mmol)&&Number(r.mmol)>1.5&&Number(r.mmol)<35);
+ const counts={below:0,inRange:0,above:0};for(const r of validCgm){if(r.mmol<3.9)counts.below++;else if(r.mmol<=10)counts.inRange++;else counts.above++;}
+ const n=validCgm.length;
+ const mealData=events.filter(e=>e.type==='meal'&&e.status==='eaten'&&ok(e.ts)&&last3.includes(dayKey(e.ts)));
+ const nonCarbKcal=mealData.reduce((s,e)=>s+((ok(e.protein)?4*Number(e.protein):0)+(ok(e.fat)?9*Number(e.fat):0)),0);
+ const activity=events.filter(e=>e.type==='activity'&&ok(e.ts)&&last3.includes(dayKey(e.ts)));
+ const illness=events.filter(e=>e.type==='illness'&&ok(e.ts)&&last3.includes(dayKey(e.ts))&&e.isActive===true);
+ if(illness.length)flags.push('В журнале болезнь: коэффициенты по трём дням могут быть нерепрезентативны для здорового состояния');
+ if(activity.length)flags.push('Есть физическая активность: простое отношение пищевых доз к граммам углеводов не устраняет её влияние');
+ return {timeZone:tz,status:severeDataError?'needs-review':anyMismatch?'provisional-disagreement':'provisional',dayCount:3,daysWithSufficientData:daysWithSufficientData,daily,tddMean:mean,reference:theo?{isfRapidMmolPerUnit:theo.isfRapidMmolPerUnit,isfRegularMmolPerUnit:theo.isfRegularMmolPerUnit,icrGramsPerUnit:theo.icrGramsPerUnit}:null,observedByMeal:slotOut,cgm:{points:n,belowPercent:n?ROUND(100*counts.below/n,2):null,inRangePercent:n?ROUND(100*counts.inRange/n,2):null,abovePercent:n?ROUND(100*counts.above/n,2):null},food:{mealCount:mealData.length,nonCarbKcal:ROUND(nonCarbKcal,1)},activityEpisodes:activity.length,illnessEpisodes:illness.length,flags,explanation:'Предварительный расчёт по зарегистрированным событиям за 3 завершённых дня. Не учитывает точно IOB, коррекции, стресс, болезнь, нагрузку и задержку усвоения. Не является проверенной моделью для назначения доз.'};
+}
+Object.assign(global.GFMedical,{replayThreeDays});
+})(typeof window!=='undefined'?window:globalThis);
+
+
+/* GlucoPapa v0.17: strict historical 5-calendar-day coefficient audit.
+ * No dose advice. Can be run in Node.js (with medical_engine.js) or browser.
+ * The 500/100/83 rules are descriptive initial hypotheses only. */
+(function(global){'use strict';
+const round=(x,n=3)=>Number(x.toFixed(n));
+const valid=(x)=>x!==null&&x!==undefined&&x!==''&&Number.isFinite(Number(x));
+function replayFiveDays(input,now=Date.now()){
+ const events=Array.isArray(input?.events)?input.events:[],readings=Array.isArray(input?.readings)?input.readings:[];
+ const tz=String(input?.profile?.timeZone||'UTC');let fmt;
+ try{fmt=new Intl.DateTimeFormat('en-CA',{timeZone:tz,year:'numeric',month:'2-digit',day:'2-digit'});}catch(e){return {status:'invalid-timezone',flags:['В профиле неверный часовой пояс']};}
+ const key=(ts)=>{const p=fmt.formatToParts(new Date(Number(ts)));const get=k=>p.find(x=>x.type===k)?.value;return `${get('year')}-${get('month')}-${get('day')}`};
+ const today=key(now),base=new Date(today+'T12:00:00Z'),keys=[5,4,3,2,1].map(n=>{const d=new Date(base);d.setUTCDate(d.getUTCDate()-n);return d.toISOString().slice(0,10)});
+ const flags=[],daily=[],mealTotals={breakfast:{carbs:0,dose:0,n:0},lunch:{carbs:0,dose:0,n:0},dinner:{carbs:0,dose:0,n:0}};
+ const doses=events.filter(e=>e.type==='insulin');const seen=[];
+ for(const e of doses){
+  if(!valid(e.ts)||!valid(e.units)||!(Number(e.units)>0)) {flags.push('Некорректная запись инсулина');continue;}
+  if(seen.some(a=>Math.abs(Number(e.ts)-Number(a.ts))<60000&&e.insulinType===a.insulinType&&String(e.insulinName||'')===String(a.insulinName||'')&&Number(e.units)===Number(a.units)))flags.push('Подозрение на дублирующую инъекцию '+new Date(Number(e.ts)).toISOString());
+  seen.push(e);
+ }
+ const expected=Number(input?.profile?.expectedBasalInjectionsPerDay||0);
+ const slot=(e)=>{if(['breakfast','lunch','dinner'].includes(e.mealSlot))return e.mealSlot;const hour=new Date(Number(e.ts)).getUTCHours();return hour<11?'breakfast':hour<17?'lunch':'dinner'};
+ for(const k of keys){
+  const meds=doses.filter(e=>valid(e.ts)&&key(e.ts)===k),
+        basal=meds.filter(e=>e.insulinType==='long'),rapid=meds.filter(e=>e.insulinType==='short'),
+        food=events.filter(e=>e.type==='meal'&&e.status==='eaten'&&valid(e.ts)&&key(e.ts)===k),
+        pBolus=rapid.filter(e=>e.doseReason==='meal');
+  const issues=[];
+  if(expected&&basal.length!==expected)issues.push('Базальных инъекций '+basal.length+' (ожидается '+expected+')');
+  if(!expected&&basal.length===0)issues.push('Не зарегистрирована базальная инъекция');
+  const cgm=readings.filter(r=>valid(r.ts)&&key(r.ts)===k&&valid(r.mmol)&&Number(r.mmol)>1.5&&Number(r.mmol)<35).sort((a,b)=>Number(a.ts)-Number(b.ts));
+  const unique=new Set(cgm.map(r=>Number(r.ts))).size;
+  if(cgm.length!==unique)issues.push('Повторные показания CGM');
+  const coverage=round(100*unique/288,1);
+  if(coverage<80)issues.push('Покрытие CGM ниже 80%');
+  if(cgm.some((r,i)=>i&&Number(r.ts)-Number(cgm[i-1].ts)>20*60*1000))issues.push('Разрыв CGM больше 20 мин');
+  for(const s of ['breakfast','lunch','dinner']){
+   const mf=food.filter(e=>slot(e)===s),mb=pBolus.filter(e=>slot(e)===s);
+   if(mf.length!==1||mb.length!==1){issues.push('Пропущена/дублирована еда или пищевой инсулин: '+s);continue;}
+   if(!valid(mf[0].carbs)||Number(mf[0].carbs)<0||!valid(mb[0].units)) {issues.push('Некорректны граммы или доза для '+s);continue;}
+   if(Math.abs(Number(mf[0].ts)-Number(mb[0].ts))>90*60000) {issues.push('Инсулин не связан по времени с едой '+s);continue;}
+   mealTotals[s].carbs+=Number(mf[0].carbs);mealTotals[s].dose+=Number(mb[0].units);mealTotals[s].n++;
+  }
+  if(issues.length)flags.push(`${k}: ${issues.join('; ')}`);
+  daily.push({date:k,levemirUnits:round(basal.reduce((s,e)=>s+Number(e.units||0),0),2),novorapidUnits:round(rapid.reduce((s,e)=>s+Number(e.units||0),0),2),totalUnits:round(meds.reduce((s,e)=>s+Number(e.units||0),0),2),carbGrams:round(food.reduce((s,e)=>s+Number(e.carbs||0),0),1),meals:food.length,basalCount:basal.length,shortCount:rapid.length,cgmPoints:unique,cgmCoveragePercent:coverage,issues});
+ }
+ const validDays=daily.filter(x=>x.issues.length===0).length;const invalid=flags.length>0;
+ const tdd=invalid?null:round(daily.reduce((s,d)=>s+d.totalUnits,0)/5,4);
+ const formula=tdd===null?null:global.GFMedical.estimatedReferenceFactors({tdd});
+ const reference=formula?{isfNovorapidMmolPerUnit:formula.isfRapidMmolPerUnit,isfRegularMmolPerUnit:formula.isfRegularMmolPerUnit,carbGramsPerUnit:formula.icrGramsPerUnit}:null;
+ const byMeal={};let disagreement=false;
+ for(const [s,tot] of Object.entries(mealTotals)){
+  const x=tot.n===5&&tot.dose>0?round(tot.carbs/tot.dose,3):null;
+  const dev=x!==null&&reference?round(100*(x/reference.carbGramsPerUnit-1),1):null;
+  if(dev!==null&&Math.abs(dev)>30)disagreement=true;
+  byMeal[s]={count:tot.n,carbGrams:tot.carbs,recordedInsulinUnits:tot.dose,observedGramsPerUnit:x,deviationFrom500RulePct:dev};
+ }
+ const active=events.filter(e=>valid(e.ts)&&keys.includes(key(e.ts)));
+ const mealList=active.filter(e=>e.type==='meal'&&e.status==='eaten');
+ const illness=active.filter(e=>e.type==='illness'&&e.isActive===true).length;
+ const activity=active.filter(e=>e.type==='activity').length;
+ if(illness)flags.push('Отмечена болезнь: коэффициенты могут измениться');
+ if(activity)flags.push('Отмечена физическая активность: влияет на сравнение с формулой');
+ if(disagreement)flags.push('Наблюдаемое г/ЕД отличается от 500/СДИ >30% хотя бы для одного приёма пищи');
+ const cgm=readings.filter(r=>valid(r.ts)&&keys.includes(key(r.ts))&&valid(r.mmol)&&Number(r.mmol)>1.5&&Number(r.mmol)<35),counts={low:0,target:0,high:0};
+ for(const r of cgm){if(Number(r.mmol)<3.9)counts.low++;else if(Number(r.mmol)<=10)counts.target++;else counts.high++}
+ return {version:'0.17-test',source:'v0.16 GFMedical + strict five-day audit',synthetic:true,status:invalid?'needs-review':disagreement?'provisional-disagreement':'provisional',timeZone:tz,dayCount:5,validDays,daily,tddMean:tdd,reference,byMeal,cgm:{total:cgm.length,lowPercent:cgm.length?round(counts.low*100/cgm.length,2):null,targetPercent:cgm.length?round(counts.target*100/cgm.length,2):null,highPercent:cgm.length?round(counts.high*100/cgm.length,2):null},nutrition:{meals:mealList.length,proteinGrams:round(mealList.reduce((s,e)=>s+Number(e.protein||0),0),1),fatGrams:round(mealList.reduce((s,e)=>s+Number(e.fat||0),0),1),nonCarbKcal:round(mealList.reduce((s,e)=>s+4*Number(e.protein||0)+9*Number(e.fat||0),0),1)},activityEpisodes:activity,illnessEpisodes:illness,flags,warning:'Числа 100/83/500 — справочные популяционные оценки. Отношение г/ЕД из журнала описывает назначенные/введённые дозы и не является подтверждённой физиологической потребностью.'};
+}
+Object.assign(global.GFMedical,{replayFiveDays});
+})(typeof window!=='undefined'?window:globalThis);
+
+</script>
+<script>
+/* GlucoPapa temporal engine v0.18 -- research / synthetic validation ONLY.
+ * Based on source event times, with sign-constrained temporal kernels.
+ * No bolus recommendation; IOB is modeled remaining effect, not measured insulin.
+ * Model coefficients were fit on synthetic 2026-11-08..10 fixture only.
+ */
+(function(root){'use strict';
+ const KERNELS={"carb":{"step":5,"cdf":[0.0,0.00313744,0.01213535,0.0263866,0.04531188,0.06835925,0.09500394,0.12474788,0.15711947,0.19167313,0.22798902,0.26567262,0.30435436,0.34368928,0.3833566,0.42305934,0.4625239,0.50149965,0.53975851,0.5770945,0.61332329,0.64828175,0.68182746,0.71383822,0.74421155,0.77286418,0.79973148,0.82476691,0.84794146,0.86924302,0.88867574,0.90625941,0.9220287,0.93603251,0.94833312,0.95900543,0.96813606,0.97582241,0.98217166,0.98729966,0.99132971,0.99439125,0.99661827,0.99814761,0.99911685,0.99966177,0.99991302,0.99999145,1.0],"duration":240},"fat":{"step":5,"cdf":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.00040173,0.00180972,0.00434177,0.00804139,0.01292209,0.01897998,0.02619953,0.03455694,0.04402219,0.05456043,0.06613306,0.07869846,0.0922126,0.1066295,0.12190166,0.13798033,0.15481583,0.17235775,0.19055518,0.20935688,0.22871145,0.24856743,0.26887349,0.28957851,0.3106317,0.33198268,0.3535816,0.3753792,0.39732691,0.4193769,0.44148218,0.46359665,0.48567518,0.50767363,0.52954896,0.55125927,0.57276383,0.59402318,0.61499914,0.63565489,0.65595498,0.67586545,0.69535381,0.71438912,0.73294203,0.75098483,0.76849152,0.78543781,0.80180121,0.81756106,0.8326986,0.84719699,0.86104139,0.87421898,0.88671907,0.8985331,0.90965474,0.92007992,0.92980693,0.93883645,0.94717167,0.95481832,0.96178479,0.96808221,0.97372456,0.97872875,0.98311481,0.98690595,0.99012882,0.99281362,0.99499438,0.99670923,0.99800076,0.99891654,0.99950975,0.99984027,0.99997652,1.0],"duration":460},"rapid":{"step":5,"cdf":[0.0,0.0,0.0,0.00061324,0.00293161,0.00726025,0.01371867,0.02234433,0.03312499,0.04601443,0.06094187,0.0778181,0.0965398,0.11699278,0.1390545,0.16259606,0.18748388,0.21358104,0.24074848,0.26884601,0.2977332,0.32727019,0.35731836,0.387741,0.41840385,0.44917568,0.47992874,0.51053919,0.54088757,0.57085916,0.60034433,0.62923891,0.65744448,0.68486871,0.71142562,0.73703588,0.76162704,0.78513381,0.80749827,0.82867013,0.84860691,0.8672742,0.88464582,0.90070403,0.91543972,0.9288526,0.94095138,0.9517539,0.96128736,0.96958843,0.97670343,0.98268848,0.98760964,0.99154307,0.99457515,0.99680264,0.99833278,0.99928349,0.9997834,0.99997205,1.0],"duration":300},"basal":{"step":5,"cdf":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,9.912e-05,0.00034626,0.00071785,0.00120305,0.00179467,0.0024873,0.00327663,0.00415906,0.00513147,0.00619115,0.00733565,0.00856277,0.0098705,0.01125695,0.0127204,0.01425923,0.0158719,0.01755696,0.01931305,0.02113886,0.02303312,0.02499464,0.02702227,0.0291149,0.03127144,0.03349086,0.03577215,0.03811433,0.04051646,0.04297759,0.04549684,0.04807332,0.05070616,0.05339452,0.05613758,0.05893453,0.06178458,0.06468694,0.06764085,0.07064556,0.07370034,0.07680444,0.07995716,0.08315778,0.08640562,0.08969999,0.0930402,0.09642558,0.09985549,0.10332925,0.10684624,0.1104058,0.11400731,0.11765015,0.12133368,0.12505731,0.12882042,0.13262242,0.1364627,0.14034068,0.14425578,0.1482074,0.15219497,0.15621793,0.16027571,0.16436773,0.16849345,0.1726523,0.17684374,0.18106722,0.18532219,0.18960811,0.19392444,0.19827065,0.20264621,0.20705058,0.21148325,0.21594368,0.22043136,0.22494577,0.22948639,0.23405271,0.23864421,0.2432604,0.24790076,0.25256479,0.25725198,0.26196184,0.26669387,0.27144756,0.27622244,0.28101799,0.28583373,0.29066918,0.29552383,0.30039721,0.30528883,0.31019821,0.31512486,0.3200683,0.32502805,0.33000364,0.33499458,0.3400004,0.34502062,0.35005477,0.35510237,0.36016296,0.36523606,0.3703212,0.37541791,0.38052572,0.38564416,0.39077277,0.39591108,0.40105862,0.40621493,0.41137954,0.41655199,0.42173182,0.42691855,0.43211174,0.43731091,0.4425156,0.44772536,0.45293972,0.45815822,0.46338039,0.46860579,0.47383394,0.4790644,0.48429669,0.48953036,0.49476495,0.5,0.50523505,0.51046964,0.51570331,0.5209356,0.52616606,0.53139421,0.53661961,0.54184178,0.54706028,0.55227464,0.5574844,0.56268909,0.56788826,0.57308145,0.57826818,0.58344801,0.58862046,0.59378507,0.59894138,0.60408892,0.60922723,0.61435584,0.61947428,0.62458209,0.6296788,0.63476394,0.63983704,0.64489763,0.64994523,0.65497938,0.6599996,0.66500542,0.66999636,0.67497195,0.6799317,0.68487514,0.68980179,0.69471117,0.69960279,0.70447617,0.70933082,0.71416627,0.71898201,0.72377756,0.72855244,0.73330613,0.73803816,0.74274802,0.74743521,0.75209924,0.7567396,0.76135579,0.76594729,0.77051361,0.77505423,0.77956864,0.78405632,0.78851675,0.79294942,0.79735379,0.80172935,0.80607556,0.81039189,0.81467781,0.81893278,0.82315626,0.8273477,0.83150655,0.83563227,0.83972429,0.84378207,0.84780503,0.8517926,0.85574422,0.85965932,0.8635373,0.86737758,0.87117958,0.87494269,0.87866632,0.88234985,0.88599269,0.8895942,0.89315376,0.89667075,0.90014451,0.90357442,0.9069598,0.91030001,0.91359438,0.91684222,0.92004284,0.92319556,0.92629966,0.92935444,0.93235915,0.93531306,0.93821542,0.94106547,0.94386242,0.94660548,0.94929384,0.95192668,0.95450316,0.95702241,0.95948354,0.96188567,0.96422785,0.96650914,0.96872856,0.9708851,0.97297773,0.97500536,0.97696688,0.97886114,0.98068695,0.98244304,0.9841281,0.98574077,0.9872796,0.98874305,0.9901295,0.99143723,0.99266435,0.99380885,0.99486853,0.99584094,0.99672337,0.9975127,0.99820533,0.99879695,0.99928215,0.99965374,0.99990088,1.0],"duration":1440},"aerobic":{"step":5,"cdf":[0.0,0.00208593,0.00766156,0.01625573,0.0275588,0.04131555,0.05730098,0.07531005,0.09515243,0.11664931,0.1396314,0.16393751,0.18941364,0.21591217,0.24329137,0.27141496,0.30015179,0.32937556,0.35896462,0.38880184,0.41877442,0.44877383,0.47869574,0.50843992,0.53791024,0.56701463,0.59566507,0.6237776,0.65127232,0.67807348,0.70410943,0.72931275,0.75362029,0.77697327,0.79931736,0.82060281,0.84078458,0.85982251,0.87768148,0.89433165,0.90974869,0.92391406,0.93681539,0.94844684,0.95880961,0.96791254,0.97577285,0.98241705,0.98788223,0.99221767,0.9954872,0.99777278,0.99918047,0.99985214,1.0],"duration":270},"illness":{"step":5,"cdf":[0.0,0.00112417,0.00342568,0.00652805,0.01028527,0.01460629,0.01942578,0.02469312,0.03036715,0.03641331,0.0428018,0.04950653,0.05650423,0.06377399,0.07129678,0.07905518,0.0870331,0.09521564,0.1035889,0.11213988,0.12085635,0.12972679,0.13874031,0.14788661,0.15715587,0.16653878,0.17602644,0.18561036,0.19528242,0.20503485,0.21486018,0.22475127,0.23470124,0.24470348,0.25475162,0.26483953,0.27496132,0.28511128,0.29528392,0.30547394,0.31567621,0.32588579,0.33609789,0.34630789,0.35651132,0.36670385,0.3768813,0.38703963,0.39717492,0.40728337,0.41736134,0.42740525,0.43741169,0.44737733,0.45729895,0.46717345,0.4769978,0.48676912,0.49648456,0.50614143,0.51573708,0.52526898,0.53473468,0.54413179,0.55345804,0.56271121,0.57188919,0.58098991,0.59001141,0.59895178,0.60780919,0.6165819,0.6252682,0.63386648,0.64237519,0.65079284,0.65911801,0.66734934,0.67548553,0.68352535,0.69146763,0.69931125,0.70705516,0.71469835,0.72223988,0.72967887,0.73701449,0.74424596,0.75137255,0.75839359,0.76530848,0.77211663,0.77881753,0.78541072,0.79189577,0.79827232,0.80454005,0.81069868,0.81674798,0.82268779,0.82851795,0.83423839,0.83984905,0.84534995,0.85074112,0.85602264,0.86119466,0.86625735,0.87121091,0.87605561,0.88079174,0.88541964,0.88993969,0.89435231,0.89865796,0.90285713,0.90695037,0.91093824,0.91482137,0.9186004,0.92227602,0.92584896,0.92931998,0.93268989,0.93595951,0.93912972,0.94220144,0.94517559,0.94805317,0.95083518,0.95352268,0.95611674,0.95861849,0.96102907,0.96334967,0.96558151,0.96772584,0.96978394,0.97175712,0.97364675,0.97545419,0.97718087,0.97882823,0.98039775,0.98189093,0.98330932,0.98465448,0.98592802,0.98713157,0.98826679,0.98933538,0.99033907,0.99127959,0.99215874,0.99297833,0.9937402,0.99444622,0.9950983,0.99569835,0.99624835,0.99675027,0.99720614,0.99761799,0.9979879,0.99831797,0.99861032,0.99886711,0.99909052,0.99928276,0.99944607,0.99958272,0.999695,0.99978522,0.99985573,0.9999089,0.99994713,0.99997285,0.99998851,0.99999658,0.99999956,1.0],"duration":900}};
+ const COEFFICIENTS={"15":[1.0,0.012489,0.009302,-0.032839,0.006,0.006813,0.553238,0.016844,0.0,0.01751],"30":[1.0,0.143813,-0.03419,-0.123899,0.006,0.006439,1.054788,0.041814,0.0,0.103696],"60":[0.983073,0.56815,-0.178621,-0.402133,0.006,0.00457,1.614127,0.079937,0.0,0.571043],"120":[0.627385,1.447093,-0.412767,-0.958522,0.006,0.0004,1.952331,0.065566,0.0,1.921445]};
+ function f(name,age){
+  const k=KERNELS[name],x=Number(age);if(!Number.isFinite(x)||x<=0)return 0;
+  if(x>=k.duration)return 1;
+  let index=Math.floor(x/k.step),q=(x-index*k.step)/k.step;
+  return k.cdf[index]*(1-q)+k.cdf[index+1]*q;
+ }
+ function gramsPerUnit(tdd){if(!(tdd>0))return null;return 500/tdd;}
+ function isfRapid(tdd){if(!(tdd>0))return null;return 100/tdd;}
+ function isfRegular(tdd){if(!(tdd>0))return null;return 83/tdd;}
+ function iob(now,events){let amount=0,items=[];
+   for(const e of events||[]){if(e?.type!=='insulin'||e?.insulinType!=='short')continue;
+    const dt=(now-Number(e.ts))/60000,units=Number(e.units);
+    if(!Number.isFinite(dt)||!Number.isFinite(units)||units<=0||dt<0||dt>=300)continue;
+    const remaining=units*(1-f('rapid',dt));amount+=remaining;
+    items.push({name:String(e.insulinName||''),units,minutesAgo:dt,estimatedRemainingActionUnits:remaining});
+   }
+   return {estimatedRemainingActionUnits:amount,items,warning:'Экспериментальная доля оставшегося действия быстрого инсулина, не измеренный инсулин в крови. Левемир исключён. Не использовать для дозировки.'};
+ }
+ function eventEffects(now,h,events){const out=[0,0,0,0,0,0];
+  for(const e of events||[]){if(!Number.isFinite(Number(e.ts)))continue;
+   const age=(now-Number(e.ts))/60000;if(age<0)continue;
+   const delta=name=>f(name,age+h)-f(name,age);
+   if(e.type==='meal'){
+    out[0]+=Number(e.carbs||0)*delta('carb');
+    out[1]+=(4*Number(e.protein||0)+9*Number(e.fat||0))*delta('fat');
+   }else if(e.type==='insulin'){
+    if(e.insulinType==='short')out[2]-=Number(e.units||0)*delta('rapid');
+    else if(e.insulinType==='long')out[3]-=Number(e.units||0)*delta('basal');
+   }else if(e.type==='activity'){
+    if(['walk','aerobic','cycling','run'].includes(String(e.typeOfActivity||'').toLowerCase()))
+     out[4]-=Number(e.durationMin||0)*delta('aerobic');
+   }else if(e.type==='illness'&&e.isActive)out[5]+=delta('illness');
+  }
+  return out;
+ }
+ function recentRate(rows,now){const a=(rows||[]).filter(r=>Number(r.ts)<=now&&Number(r.ts)>=now-20*60000&&Number.isFinite(Number(r.mmol))).sort((a,b)=>a.ts-b.ts);
+  if(a.length<3)return 0;
+  const xs=a.map(x=>(x.ts-a[0].ts)/60000),ys=a.map(x=>Number(x.mmol));const xm=xs.reduce((a,b)=>a+b,0)/xs.length,ym=ys.reduce((a,b)=>a+b,0)/ys.length;
+  const d=xs.reduce((s,x)=>s+(x-xm)**2,0);return d?xs.reduce((s,x,i)=>s+(x-xm)*(ys[i]-ym),0)/d:0;
+ }
+ function forecast(readings,events,now,h,overrideCoefficients){
+  if(![15,30,60,120].includes(h))return {status:'invalid-horizon'};
+  const last=(readings||[]).filter(r=>Number.isFinite(Number(r.mmol))&&Number(r.ts)<=now).sort((a,b)=>a.ts-b.ts).at(-1);
+  if(!last||now-last.ts>10*60000||last.mmol<=1.5||last.mmol>=35)return {status:'missing-fresh-CGM'};
+  const c=overrideCoefficients||COEFFICIENTS[String(h)];if(!c||c.length!==10)return {status:'missing-model-coefficients'};
+  const hour=((Math.floor(now/3600000)%24)+24)%24,phase=hour*2*Math.PI/24;
+  const trend=recentRate(readings,now)*40*(1-Math.exp(-h/40));
+  const X=[trend,1,Math.sin(phase),Math.cos(phase),...eventEffects(now,h,events)];
+  const y=Number(last.mmol)+X.reduce((s,v,i)=>s+v*c[i],0);
+  return {status:'experimental',horizonMin:h,nowMmol:Number(last.mmol),forecastMmol:y,estimatedIob:iob(now,events).estimatedRemainingActionUnits,eventsUsed:(events||[]).filter(e=>e.ts<=now).length,warning:'Исследовательский прогноз, коэффициенты получены на искусственных данных. Не применять для лечения.'};
+ }
+ root.GFTemporal18={version:'0.18',f,iob,eventEffects,recentRate,forecast,gramsPerUnit,isfRapid,isfRegular,coefficients:COEFFICIENTS};
+ if(typeof module!=='undefined'&&module.exports)module.exports=root.GFTemporal18;
+})(typeof window==='undefined'?globalThis:window);
+
+</script>
+<script>
+/* GlucoPapa 0.19: research-only retrospective estimates, not insulin prescribing.
+   Requires independently audited time-stamped records. Estimates are observational
+   and may be biased by CGM lag, remaining insulin, basal variations and missing events. */
+(function(root){'use strict';
+const finite=v=>v!==null&&v!==''&&Number.isFinite(Number(v));
+const med=a=>{if(!a.length)return null;const b=[...a].sort((x,y)=>x-y),i=Math.floor(b.length/2);return b.length%2?b[i]:(b[i-1]+b[i])/2};
+const rd=(v,n=3)=>v===null?null:+v.toFixed(n);
+function factorFromValues(vals,minCount=3){
+ const n=vals.length,values=vals.map(z=>z.estimate),center=med(values),mad=center===null?null:med(values.map(x=>Math.abs(x-center))),scatter=center?mad/center:null;
+ const maxDeviation=center?Math.max(0,...values.map(v=>Math.abs(v-center)/center)):null;
+ const outlierCount=center?values.filter(v=>Math.abs(v-center)/center>.25).length:0;
+ return {status:n<minCount?'insufficient':(scatter>.25||maxDeviation>.30)?'unstable':'provisional',n,median:rd(center),mad:rd(mad),relativeMADPercent:rd(scatter===null?null:scatter*100,1),maxDeviationPercent:rd(maxDeviation===null?null:maxDeviation*100,1),outlierCount,samples:vals.map(x=>({time:new Date(x.ts).toISOString(),estimate:rd(x.estimate)}))};
+}
+function statsCGM(readings,t0,t1){const a=readings.filter(r=>finite(r.ts)&&finite(r.mmol)&&r.ts>=t0&&r.ts<=t1).sort((a,b)=>a.ts-b.ts);const unique=new Set(a.map(x=>x.ts)).size;let maxGap=0;for(let i=1;i<a.length;i++)maxGap=Math.max(maxGap,(a[i].ts-a[i-1].ts)/60000);return {coverage:unique/(1+Math.floor((t1-t0)/300000)),maxGap};}
+function nearest(readings,t,dist=8){let best=null;for(const r of readings){const d=Math.abs(r.ts-t);if(d<=(dist*60000)&&(!best||d<best.dist))best={value:Number(r.mmol),dist:d};}return best?.value??null;}
+function reasonExcluded(evt,events,t0,t1){let reason=null;
+ const illness=events.filter(x=>x.type==='illness'&&finite(x.ts)).sort((a,b)=>a.ts-b.ts);
+ let onset=null;for(const x of illness){
+   if(x.isActive===true){if(onset===null)onset=Number(x.ts);}
+   else if(x.isActive===false&&onset!==null){const end=Number(x.ts);if(onset<=t1&&end>=t0-240*60000)return 'болезнь';onset=null;}
+ }
+ if(onset!==null&&onset<=t1)return 'болезнь';
+ for(const x of events){if(x===evt||!finite(x.ts))continue;const ts=Number(x.ts);
+  if(x.type==='meal'&&ts>=t0-240*60000&&ts<=t1+10*60000)return 'другая еда или углеводы';
+  if(x.type==='insulin'&&x.insulinType==='short'&&ts>=t0-300*60000&&ts<=t1+10*60000)return 'перекрытие короткого инсулина';
+  if(x.type==='activity'&&ts>=t0-150*60000&&ts<=t1)return 'физическая активность';
+
+ }
+ return reason;
+}
+function starterFactors(tdd){
+ const n=Number(tdd);if(!Number.isFinite(n)||n<=0)return {status:'missing-tdd'};
+ return {status:'population-rule',tdd:n,isfRapidMmolPerUnit:rd(100/n,4),isfRegularMmolPerUnit:rd(83/n,4),carbGramsPerUnit:rd(500/n,4),warning:'Стартовые приближения, не индивидуальные назначения.'};
+}
+// Distinct auditing of a full 5-day set is delegated to existing GFMedical.replayFiveDays.
+function estimate(input,now,medical){
+ const audit=medical.replayFiveDays(input,now),out={version:'0.19-research',audit,reference:audit.reference||null,corrections:null,meals:{},excluded:[],status:'not-validated-for-treatment'};
+ if(audit.tddMean===null||audit.tddMean===undefined)return {...out,corrections:{status:'journal-invalid',n:0},warning:'Журнал не прошёл аудит пяти суток. Персональные коэффициенты не рассчитываются.'};
+ const events=input.events||[],R=input.readings||[];
+ const excluded=(e,reason,kind)=>out.excluded.push({event:kind,time:new Date(e.ts).toISOString(),reason});
+ const corrections=[];
+ for(const e of events){if(e.type!=='insulin'||e.insulinType!=='short'||e.doseReason!=='correction')continue;
+  const t=e.ts,t1=t+240*60000;if(t1>now){excluded(e,'ещё нет 4 ч наблюдения','correction');continue;}
+  const reason=reasonExcluded(e,events,t,t1);if(reason){excluded(e,reason,'correction');continue;}
+  const s=statsCGM(R,t,t1),pre=nearest(R,t),post=nearest(R,t1);if(s.coverage<.8||s.maxGap>20||pre===null||post===null){excluded(e,'недостоверные CGM','correction');continue;}
+  const prior=nearest(R,t-30*60000);if(prior===null||Math.abs(prior-pre)>.75){excluded(e,'быстрое изменение глюкозы до события','correction');continue;}
+  const est=(pre-post)/Number(e.units);if(!(est>0.1&&est<20)){excluded(e,'нет интерпретируемого снижения','correction');continue;}
+  corrections.push({ts:t,estimate:est});
+ }
+ out.corrections=factorFromValues(corrections);
+ // Meal endpoint method deliberately has strict clean-window requirements.
+ const mealResults={breakfast:[],lunch:[],dinner:[]};
+ const isf=out.corrections.status==='provisional'?out.corrections.median:audit.reference?.isfNovorapidMmolPerUnit;
+ for(const m of events){if(m.type!=='meal'||m.status!=='eaten')continue;
+  const t=m.ts,t1=t+240*60000,slot=m.mealSlot;if(!mealResults[slot])continue;
+  if(t1>now){excluded(m,'ещё нет 4 ч наблюдения','meal');continue;}
+  const matching=events.filter(b=>b.type==='insulin'&&b.insulinType==='short'&&b.doseReason==='meal'&&b.mealSlot===slot&&Math.abs(b.ts-t)<=45*60000);
+  if(matching.length!==1){excluded(m,'нет однозначной пищевой инъекции','meal');continue;}
+  const b=matching[0];
+  const conflicts=events.filter(x=>x!==m&&x!==b);
+  const conf=reasonExcluded(m,conflicts,t,t1);if(conf){excluded(m,conf,'meal');continue;}
+  if(4*Number(m.protein||0)+9*Number(m.fat||0)>320){excluded(m,'высокие белки/жиры — поздняя абсорбция','meal');continue;}
+  const s=statsCGM(R,t,t1),pre=nearest(R,t),post=nearest(R,t1);if(s.coverage<.8||s.maxGap>20||pre===null||post===null){excluded(m,'недостоверные CGM','meal');continue;}
+  if(!isf||isf<=0){excluded(m,'нет даже стартовой ФЧИ','meal');continue;}
+  const denominator=Number(b.units)+(post-pre)/isf;
+  const est=Number(m.carbs)/denominator;
+  if(!(est>3&&est<80)){excluded(m,'отклик непригоден для оценки','meal');continue;}
+  mealResults[slot].push({ts:t,estimate:est});
+ }
+ for(const slot of Object.keys(mealResults)){
+  const base=factorFromValues(mealResults[slot]);
+  if(base.status==='provisional'&&out.corrections.status!=='provisional')base.status='reference-dependent';
+  out.meals[slot]={...base,isfSource:out.corrections.status==='provisional'?'наблюдаемая ФЧИ':'популяционная стартовая ФЧИ'};
+ }
+ out.warning='Исследовательская ретроспективная оценка, не назначение доз. Простой 4-часовой отклик не отделяет все физиологические влияния и не валидирован у ребёнка.';
+ return out;
+}
+root.GFPersonal19={estimate,starterFactors,factorFromValues,nearest,statsCGM};if(typeof module!=='undefined'&&module.exports)module.exports=root.GFPersonal19;
+})(typeof window==='undefined'?globalThis:window);
+
+</script>
+<script>
+/* GlucoPapa v0.23 — plan-constrained numerical calculator, research/verification build.
+ * All numeric outputs are for SYNTHETIC fixtures only. NEVER a patient instruction.
+ * Individual clinical use requires independent clinical validation and a release process.
+ * No AI model may change approved treatment-plan parameters.
+ */
+(function(root){'use strict';
+ const temporal=(typeof require==='function')?require('./temporal_engine_v018.js'):root.GFTemporal18;
+ const OK_NUM=x=>typeof x==='number'&&Number.isFinite(x);
+ const MS=60000;
+ const round=(x,n=3)=>Number(x.toFixed(n));
+ const result=(status,codes,extra={})=>({version:'0.23-research',status,codes,...extra,patientDoseUnits:null,patientRescueCarbsGrams:null,validatedForTreatment:false});
+ const hardFail=(code)=>result('blocked',[code]);
+ const validNumber=(x,min,max)=>OK_NUM(x)&&x>=min&&x<=max;
+ function validatePlan(plan,now){
+  if(!plan||typeof plan!=='object')return ['NO_INDIVIDUAL_PLAN'];
+  const issues=[];
+  if(plan.reviewedByClinician!==true)issues.push('PLAN_NOT_CLINICIAN_REVIEWED');
+  if(typeof plan.planId!=='string'||!plan.planId.trim())issues.push('NO_PLAN_ID');
+  if(!validNumber(plan.validUntilTs,now+1,now+1000*86400000))issues.push('EXPIRED_OR_INVALID_PLAN');
+  const f=plan.factors||{};
+  if(!validNumber(f.isfMmolPerUnit,0.1,40))issues.push('BAD_ISF');
+  if(!f.icrGramsPerUnit||['breakfast','lunch','dinner'].some(x=>!validNumber(f.icrGramsPerUnit[x],1,150)))issues.push('BAD_ICR');
+  if(!validNumber(plan.targetMmol,3.9,12))issues.push('BAD_TARGET');
+  if(!validNumber(plan.bolusStepUnits,0.1,1)||![0.1,0.5,1].includes(plan.bolusStepUnits))issues.push('BAD_PEN_STEP');
+  if(!validNumber(plan.maxBolusUnits,0.5,50))issues.push('BAD_MAX_BOLUS');
+  if(!validNumber(plan.maxCorrectionUnits,0.5,30))issues.push('BAD_MAX_CORRECTION');
+  if(!validNumber(plan.minCorrectionSpacingMinutes,0,600))issues.push('BAD_INTERVAL');
+  if(!validNumber(plan.minRoutineGlucoseMmol,3.9,15))issues.push('BAD_MIN_GLUCOSE');
+  if(!validNumber(plan.maxKetonesForRoutineMmol,0,3))issues.push('BAD_KETONE_CUTOFF');
+  if(!validNumber(plan.hypo?.fastCarbsGrams,1,60))issues.push('BAD_HYPO_PLAN');
+  if(!validNumber(plan.hypo?.recheckMin,5,30))issues.push('BAD_RECHECK');
+  if(!validNumber(plan.hypo?.triggerBelowMmol,2.5,5))issues.push('BAD_HYPO_THRESHOLD');
+  return issues;
+ }
+ function slot(ts,timezone='UTC'){
+  let hour=0;try{hour=Number(new Intl.DateTimeFormat('en-US',{timeZone:timezone,hour:'2-digit',hourCycle:'h23'}).format(new Date(ts)))}catch{return null}
+  return hour<11?'breakfast':hour<17?'lunch':'dinner';
+ }
+ function validateInput(input,plan){
+  const now=input?.nowTs;if(!validNumber(now,946684800000,4102444800000))return {codes:['INVALID_TIME']};
+  if(!['synthetic','patient'].includes(input.mode))return {codes:['INVALID_MODE']};
+  const g=input.meter||input.cgm;
+  if(!g||!validNumber(g.mmol,1.5,35)||!OK_NUM(g.ts)||g.ts>now||now-g.ts>10*MS)return {codes:['NO_FRESH_GLUCOSE']};
+  if(input.cgm&&input.meter){
+   if(!validNumber(input.cgm.mmol,1.5,35)||!OK_NUM(input.cgm.ts)||Math.abs(input.cgm.mmol-input.meter.mmol)>1.7)
+    return {codes:['SENSOR_METER_MISMATCH']};
+  }
+  const hist=input.history;
+  if(!Array.isArray(hist))return {codes:['MISSING_INSULIN_HISTORY']};
+  if(input.historyComplete!==true)return {codes:['HISTORY_NOT_CONFIRMED_COMPLETE']};
+  const seen=new Set();
+  for(const e of hist){
+   if(!e||e.type!=='insulin'||!OK_NUM(e.ts)||e.ts>now||!validNumber(e.units,0.01,100)||!['short','long'].includes(e.insulinType))
+    return {codes:['BAD_INSULIN_RECORD']};
+   const key=`${e.ts}:${e.insulinType}:${e.units}:${e.insulinName||''}`;
+   if(seen.has(key))return {codes:['POSSIBLE_DUPLICATE_INJECTION']};
+   seen.add(key);
+   if(e.insulinType==='short'&&!['correction','meal','mixed'].includes(e.purpose))return {codes:['UNKNOWN_BOLUS_PURPOSE']};
+  }
+  if(input.mealCarbs!=null&&!validNumber(input.mealCarbs,0,250))return {codes:['BAD_MEAL_CARBS']};
+  if(input.rescueProduct!=null){const p=input.rescueProduct;
+   if(!validNumber(p.carbsPer100,0.1,100)||!['g','ml'].includes(p.unit))return {codes:['BAD_RESCUE_FOOD_LABEL']};}
+  return {codes:[],g:input.meter||input.cgm,now};
+ }
+ function iobBreakdown(now,history){
+  let total=0;const items=[];
+  for(const x of history){if(x.insulinType!=='short')continue;
+   const age=(now-x.ts)/MS;
+   if(age<0||age>=300)continue;
+   const remaining=x.units*(1-temporal.f('rapid',age));
+   total+=remaining;items.push({ageMinutes:round(age,1),purpose:x.purpose,remainingUnits:round(remaining,4)});
+  }
+  return {totalUnits:round(total,4),items,method:'v0.18 experimental nonlinear rapid kernel; 300min; excludes Levemir'};
+ }
+ function evaluate(input,plan,release={}){
+  // Patient mode NEVER exposes a numerical treatment amount: no clinical release exists.
+  // A product team may only change this after independent clinical validation.
+  if(!input)return hardFail('INVALID_TIME');
+  // Emergency triage must not depend on a valid plan, CGM, or diary.
+  if(input.unconscious||input.canSwallow===false||input.seizure){
+   return result('emergency',['SEVERE_HYPO_OR_CANNOT_SWALLOW'],{action:'EMERGENCY_HELP_AND_PRESCRIBED_GLUCOGON_NO_ORAL_FOOD'});
+  }
+  if(input.vomiting||input.confusion||input.rapidBreathing){
+   return result('urgent-evaluation',['URGENT_SYMPTOMS_NO_ROUTINE_BOLUS']);
+  }
+  if(!validNumber(input.nowTs,946684800000,4102444800000))return hardFail('INVALID_TIME');
+  const earlyGlucose=input.meter||input.cgm;
+  const lowNow=earlyGlucose&&OK_NUM(earlyGlucose.mmol)&&earlyGlucose.mmol<3.9&&
+   OK_NUM(earlyGlucose.ts)&&earlyGlucose.ts<=input.nowTs&&input.nowTs-earlyGlucose.ts<=10*MS;
+  if(input.sick===true&&!lowNow)return result('sick-day-plan',['ILLNESS_USE_APPROVED_SICK_DAY_PLAN']);
+  const errors=validatePlan(plan,input.nowTs);
+  if(errors.length)return lowNow
+    ?result('immediate-hypo-plan',['LOW_GLUCOSE_DO_NOT_DELAY_FOR_PLAN',...errors])
+    :result('blocked',errors);
+  const checked=validateInput(input,plan);
+  if(checked.codes.length)return lowNow
+    ?result('immediate-hypo-plan',['LOW_GLUCOSE_DO_NOT_DELAY_FOR_DIARY',...checked.codes])
+    :result('blocked',checked.codes);
+  const g=checked.g.mmol,now=checked.now;
+  const main=input.mode==='synthetic'?'synthetic-only':'blocked-not-clinically-validated';
+  const facts={glucoseMmol:g,source:input.meter?'meter':'cgm',planId:plan.planId,planReviewed:true,
+    tddReference:OK_NUM(input.observedTddUnits)?input.observedTddUnits:null,
+    isfUsed:plan.factors.isfMmolPerUnit,icrUsed:plan.factors.icrGramsPerUnit,
+    activeRapidIob:iobBreakdown(now,input.history),researchOnly:true,
+    note:'The patient plan is an unverified test object. No clinical release/authorization is implemented.'};
+  if(g<plan.hypo.triggerBelowMmol){
+   if(input.mode!=='synthetic')return result('blocked-not-clinically-validated',['HYPOTHETICAL_CALCULATION_NOT_PATIENT_INSTRUCTION'],{...facts,triage:'LOW_GLUCOSE_FOLLOW_EXISTING_PLAN_IMMEDIATELY'});
+   const grams=plan.hypo.fastCarbsGrams;
+   const food=input.rescueProduct||null;
+   const servings=food?round(grams*100/food.carbsPer100,1):null;
+   return result(main,['LOW_GLUCOSE','FOLLOW_PREENTERED_PLAN'],{...facts,demoOnly:{quickCarbsGrams:grams,productQuantity:servings,productUnit:food?.unit||null,recheckMin:plan.hypo.recheckMin},
+    predictedPostTreatmentMmol:null,warning:'Demo only. No reliable individual post-treatment glucose is asserted.'});
+  }
+  if(input.sick||input.ketonesMmol!=null&&(!OK_NUM(input.ketonesMmol)||input.ketonesMmol>=plan.maxKetonesForRoutineMmol)){
+   return result('sick-day-plan',['ILLNESS_OR_KETONES_USE_SPECIAL_PLAN'],{...facts});
+  }
+  if(input.activityRecent==='intense'||input.activityPlanned==='intense'){
+   return result('blocked',['EXERCISE_REQUIRES_SPECIAL_PLAN'],{...facts});
+  }
+  if(input.mode!=='synthetic')return result('blocked-not-clinically-validated',['NO_CLINICAL_RELEASE_FOR_NUMERIC_BOLUS'],{...facts});
+  if(g<plan.minRoutineGlucoseMmol)return result('blocked',['GLUCOSE_BELOW_ROUTINE_BOLUS_MIN'],{...facts});
+  const rapidHistory=input.history.filter(x=>x.insulinType==='short');
+  const lastRapid=Math.max(...rapidHistory.map(x=>x.ts),-Infinity);
+  const elapsed=(now-lastRapid)/MS;
+  if(g>plan.targetMmol&&Number.isFinite(elapsed)&&elapsed<plan.minCorrectionSpacingMinutes)
+   return result('blocked',['RECENT_RAPID_BOLUS_NO_ROUTINE_CORRECTION'],{...facts,minutesSinceRapid:round(elapsed)});
+  const mealCarbs=Number(input.mealCarbs||0),timeSlot=input.mealSlot||slot(now,input.timeZone||'UTC');
+  if(!['breakfast','lunch','dinner'].includes(timeSlot))return result('blocked',['BAD_MEAL_SLOT'],{...facts});
+  const mealComponent=mealCarbs/plan.factors.icrGramsPerUnit[timeSlot];
+  const correctionBeforeIob=Math.max(0,(g-plan.targetMmol)/plan.factors.isfMmolPerUnit);
+  // Whole-bolus IOB can have overlap with meal coverage. If any significant
+  // meal/mixed IOB, refuse routine correction rather than double accounting.
+  const iob=facts.activeRapidIob;
+  if(correctionBeforeIob>0&&iob.items.some(x=>['meal','mixed'].includes(x.purpose)&&x.remainingUnits>0.05))
+   return result('blocked',['MEAL_OR_MIXED_IOB_NOT_SAFE_TO_SUBTRACT'],{...facts});
+  const correctionIob=iob.items.filter(x=>x.purpose==='correction').reduce((s,x)=>s+x.remainingUnits,0);
+  const correction=Math.max(0,correctionBeforeIob-correctionIob);
+  if(correction>plan.maxCorrectionUnits)return result('blocked',['CORRECTION_EXCEEDS_APPROVED_MAX'],{...facts});
+  const raw=correction+mealComponent;
+  if(raw>plan.maxBolusUnits)return result('blocked',['TOTAL_EXCEEDS_APPROVED_MAX'],{...facts});
+  const step=plan.bolusStepUnits;
+  const rounded=Math.floor((raw+1e-9)/step)*step;
+  return result(main,['PLAN_REPRODUCTION_ONLY'],{...facts,demoOnly:{rawTotalUnits:round(raw,4),mealUnits:round(mealComponent,4),correctionBeforeIobUnits:round(correctionBeforeIob,4),correctionIobUnits:round(correctionIob,4),correctionAfterIobUnits:round(correction,4),roundedTotalUnits:round(rounded,2),stepUnits:step,slot:timeSlot},
+   predictedPostTreatmentMmol:null,warning:'Synthetic demonstration only. Neither dose nor final glucose has been clinically validated.'});
+ }
+ root.GFPlan23={version:'0.23-research',validatePlan,validateInput,iobBreakdown,evaluate,slot};
+ if(typeof module!=='undefined'&&module.exports)module.exports=root.GFPlan23;
+})(typeof window==='undefined'?globalThis:window);
+
+</script>
+<script>
+/* GlucoPapa 0.24 — automatic retrospective data pipeline. Research only.
+ * Reads existing diary data, checks provenance, links unambiguous meal injections,
+ * computes population starters and conditional retrospective estimates.
+ * It NEVER approves a clinical plan or emits a patient treatment amount.
+ */
+(function(root){'use strict';
+const MS=60000,DAY=86400000;
+if(typeof require==='function'&&!root.GFMedical)require('./medical_engine.js');
+const med=root.GFMedical;
+const personal=(typeof require==='function')?require('./personal_factors_v019.js'):root.GFPersonal19;
+const plan=(typeof require==='function')?require('./plan_calculator_v023.js'):root.GFPlan23;
+const finite=x=>typeof x==='number'&&Number.isFinite(x);
+const num=x=>(x===null||x===undefined||x==='')?NaN:Number(x);
+const rd=(x,n=3)=>Number(Number(x).toFixed(n));
+function mealSlot(ts,timeZone){
+  const h=Number(new Intl.DateTimeFormat('en-US',{timeZone,hour:'2-digit',hourCycle:'h23'}).format(new Date(ts)));
+  return h<11?'breakfast':h<17?'lunch':'dinner';
+}
+function normalize(raw,now){
+  const events=Array.isArray(raw?.events)?raw.events:[];
+  const readings=Array.isArray(raw?.readings)?raw.readings:[];
+  const tz=raw?.profile?.timeZone||'UTC';
+  const flags=[],linked=[],inferredNames=[];const list=[];
+  try{new Intl.DateTimeFormat('en-US',{timeZone:tz}).format(new Date(now));}catch{return {events:[],readings:[],flags:['INVALID_TIMEZONE'],fatal:true,linked,inferredNames}};
+  let fatal=false;
+  for(const [i,e] of events.entries()){
+    if(!e||!['meal','insulin','activity','illness'].includes(e.type))continue;
+    const x={...e};x.ts=num(e.ts);
+    // Recompute on a rolling window; old events must not poison the new 5-day audit.
+    if(finite(x.ts)&&x.ts<now-7.5*DAY&&x.type!=='illness')continue;
+    // Planned future meals are proposals, not consumed food or diary errors.
+    if(x.type==='meal'&&e.status==='planned')continue;
+    if(!finite(x.ts)||x.ts<946684800000||x.ts>now+120000){flags.push(`BAD_EVENT_TIME:${i}`);fatal=true;continue;}
+    if(x.type==='insulin'){
+      x.units=num(e.units);
+      if(!finite(x.units)||x.units<=0||x.units>100){flags.push(`BAD_INSULIN_UNITS:${i}`);fatal=true;continue;}
+      // Never guess insulin type from an unfamiliar name.
+      if(!['short','long'].includes(x.insulinType)){
+        const name=String(x.insulinName||'').toLowerCase().replace(/ё/g,'е').trim();
+        if(['novorapid','novo rapid','новорапид','novolog'].includes(name))x.insulinType='short';
+        else if(['левемир','levemir','insulin detemir'].includes(name))x.insulinType='long';
+        if(['short','long'].includes(x.insulinType)){inferredNames.push(i);flags.push(`INSULIN_TYPE_INFERRED_FROM_NAME:${i}`)}
+        else {flags.push(`UNKNOWN_INSULIN_TYPE:${i}`);fatal=true;continue;}
+      }
+    }
+    if(x.type==='meal'){
+      if(e.status!=='eaten'){flags.push(`MEAL_NOT_CONFIRMED_EATEN:${i}`);if(e.status==='planned')continue;fatal=true;continue;}
+      x.carbs=num(e.carbs);
+      if(!finite(x.carbs)||x.carbs<0||x.carbs>500){flags.push(`BAD_MEAL_CARBS:${i}`);fatal=true;continue;}
+      const snack= e.mealSlot==='snack'||e.mealKind==='snack'||/^\s*перекус\s*:/i.test(String(e.name||''));
+      x.mealSlot=snack?'snack':(['breakfast','lunch','dinner'].includes(e.mealSlot)?e.mealSlot:mealSlot(x.ts,tz));
+      x.protein=finite(num(e.protein))?num(e.protein):0;
+      x.fat=finite(num(e.fat))?num(e.fat):0;
+      if(x.protein<0||x.fat<0){flags.push(`BAD_MACRO:${i}`);fatal=true;continue;}
+    }
+    list.push(x);
+  }
+  // Duplicate detection must happen before any linking.
+  const injections=list.filter(e=>e.type==='insulin').sort((a,b)=>a.ts-b.ts);
+  for(let j=1;j<injections.length;j++){
+    const a=injections[j-1],b=injections[j];
+    if(Math.abs(b.ts-a.ts)<=MS&&a.insulinType===b.insulinType&&a.units===b.units&&String(a.insulinName||'')===String(b.insulinName||'')){
+      flags.push('POSSIBLE_DUPLICATE_INSULIN');fatal=true;
+    }
+  }
+  // A meal is unambiguously linkable only when it has exactly one rapid shot in
+  // the -45..+45 minute window and that shot is not linked to another meal.
+  const meals=list.filter(e=>e.type==='meal');
+  for(const shot of injections){
+    if(shot.insulinType!=='short')continue;
+    if(shot.doseReason==='correction'||shot.doseReason==='mixed')continue;
+    const candidateMeals=meals.filter(m=>Math.abs(m.ts-shot.ts)<=45*MS);
+    const candidateShots=candidateMeals.length===1?injections.filter(s=>s.insulinType==='short'&&Math.abs(s.ts-candidateMeals[0].ts)<=45*MS):[];
+    if(candidateMeals.length===1&&candidateShots.length===1){
+      const explicitlyMeal=shot.doseReason==='meal';
+      shot.doseReason='meal';shot.purpose='meal';shot.mealSlot=candidateMeals[0].mealSlot;
+      linked.push({insulinTime:shot.ts,mealTime:candidateMeals[0].ts,slot:shot.mealSlot,method:explicitlyMeal?'recorded-purpose-and-time-match':'inferred-time-association;unverified'});
+    }else{flags.push(`UNCLASSIFIED_RAPID_BOLUS:${shot.ts}`);
+      if(shot.doseReason==='meal')shot.doseReason='unknown';
+    }
+  }
+  // These links are hypotheses, not proof of injection intent.
+  const rows=readings.filter(r=>finite(num(r?.ts))&&finite(num(r?.mmol))&&num(r.ts)<=now&&num(r.ts)>=now-7.5*DAY).map(r=>({ts:num(r.ts),mmol:num(r.mmol)}));
+  if(rows.some(r=>r.mmol<1.5||r.mmol>35)){flags.push('INVALID_CGM_VALUES');fatal=true;}
+  rows.sort((a,b)=>a.ts-b.ts);
+  for(let i=1;i<rows.length;i++){
+    if(rows[i].ts===rows[i-1].ts){flags.push('DUPLICATE_CGM_TIMESTAMP');fatal=true;break;}
+  }
+  for(let i=1;i<rows.length;i++){
+    if(rows[i].ts-rows[i-1].ts<=10*MS&&Math.abs(rows[i].mmol-rows[i-1].mmol)>5){flags.push('POSSIBLE_CGM_SPIKE');fatal=true;break;}
+  }
+  return {events:list,readings:rows,flags:[...new Set(flags)],fatal,linked,inferredNames,timeZone:tz};
+}
+function analyze(raw,now=Date.now()){
+  if(!finite(now))return {version:'0.24-research',status:'blocked',flags:['INVALID_NOW'],patientTreatmentAmount:null};
+  const n=normalize(raw,now);
+  const observed={version:'0.24-research',flags:n.flags,linkedMealInjections:n.linked,sourceEvents:n.events.length,
+    sourceReadings:n.readings.length,patientTreatmentAmount:null,autoApprovedTreatmentPlan:false};
+  if(n.fatal)return {...observed,status:'needs-review',reason:'INPUT_NOT_TRUSTWORTHY',audit:null,personal:null,proposals:null};
+  const snacks=n.events.filter(e=>e.type==='meal'&&e.mealSlot==='snack');
+  const inp={profile:raw?.profile||{},events:n.events,readings:n.readings};
+  // Three main meals required for the historical 5-day audit; snacks remain in
+  // the personal estimator as interfering food and are never silently discarded.
+  const audit=med.replayFiveDays({...inp,events:n.events.filter(e=>e.type!=='meal'||e.mealSlot!=='snack')},now);
+  const tddValid=audit.tddMean!==null&&audit.tddMean!==undefined&&audit.validDays===5&&audit.status!=='needs-review';
+  const personalResult=tddValid?personal.estimate(inp,now,{replayFiveDays:()=>audit}):null;
+  const status=tddValid?'provisional-profile':'needs-review';
+  const observations=personalResult?.corrections;
+  const factor=(slot)=>personalResult?.meals?.[slot];
+  const f=audit.reference;
+  const proposals=tddValid?{
+    provenance:'UNVALIDATED_DIARY_ESTIMATE',
+    tddUnitsPerDay:audit.tddMean,
+    isfRapid:{population:f.isfNovorapidMmolPerUnit,observed:observations?.status==='provisional'?observations.median:null,
+      observedStatus:observations?.status||'insufficient',unit:'mmol/L per unit'},
+    isfRegular:{population:f.isfRegularMmolPerUnit,unit:'mmol/L per unit'},
+    icrGramsPerUnit:Object.fromEntries(['breakfast','lunch','dinner'].map(slot=>[slot,{
+      population:f.carbGramsPerUnit,observed:factor(slot)?.status==='provisional'?factor(slot).median:null,
+      observedStatus:factor(slot)?.status||'insufficient',ratioFromLoggedDoses:audit.byMeal?.[slot]?.observedGramsPerUnit??null}])),
+    warnings:['Не использовать для назначения доз без независимой проверки.','Наблюдаемые отношения описывают зарегистрированные инъекции, а не доказанные индивидуальные потребности.']
+  }:null;
+  const latest=n.readings.at(-1)||null;
+  const cgm=latest&&now-latest.ts<=10*MS?{status:'fresh',mmol:latest.mmol,ageMinutes:rd((now-latest.ts)/MS,1)}:
+    {status:'stale-or-absent',mmol:null};
+  const iob=latest?plan.iobBreakdown(now,n.events.filter(e=>e.type==='insulin'&&e.ts<=now)):{totalUnits:null,items:[]};
+  const notes=[];
+  if(n.inferredNames.length)notes.push('Тип отдельных инсулинов определён по названию; требуется ручное подтверждение.');
+  if(n.linked.length)notes.push('Связи инъекций с едой определены по времени; назначение укола не подтверждено.');
+  if(observations?.status!=='provisional')notes.push('Для индивидуальной ФЧИ нет достаточного числа чистых коррекций.');
+  if(!tddValid)notes.push('Нет пяти завершённых достоверных суток для расчёта СДИ.');
+  if(snacks.length)notes.push(`Дополнительных перекусов: ${snacks.length}; не используются как основные приёмы пищи, но исключают загрязнённые эпизоды калибровки.`);
+  return {...observed,status,audit,personal:personalResult,proposals,cgm,modelIob:iob,notes,snackCount:snacks.length,
+    careCalculatorEligibility:'NOT_ELIGIBLE_AUTOMATICALLY',
+    clinicalReason:'На основании самих данных дневника нельзя автоматически утверждать лечебный план.'};
+}
+function evaluatePatient(raw,now,individualPlan,clinicalContext={}){
+  const profile=analyze(raw,now);
+  const n=normalize(raw,now);
+  const r=n.readings.filter(x=>x.ts<=now).at(-1)||null;
+  const history=n.events.filter(e=>e.type==='insulin'&&e.ts<=now).map(e=>({type:'insulin',ts:e.ts,units:e.units,
+    insulinType:e.insulinType,insulinName:e.insulinName,purpose:e.doseReason||'unknown'}));
+  const input={...clinicalContext,nowTs:now,mode:'patient',cgm:r,history,historyComplete:false};
+  // Never claim that a diary alone verifies the complete injection history.
+  const clinical=plan.evaluate(input,individualPlan||null);
+  return {profile,clinical,patientDoseUnits:null,patientRescueCarbsGrams:null};
+}
+root.GFAuto24={version:'0.24-research',normalize,analyze,evaluatePatient};
+if(typeof module!=='undefined'&&module.exports)module.exports=root.GFAuto24;
+})(typeof window==='undefined'?globalThis:window);
+
+</script>
+<script>
+/* GlucoPapa 0.25 — auditable automatic journal workflow.
+ * Research-only numerical replay; does not prescribe medication to a child.
+ * Patient mode shows evidence, comparison with an EXPLICIT plan, safety triage,
+ * but never converts observational coefficients into patient treatment amounts.
+ */
+(function(root){'use strict';
+const Auto = typeof require==='function'?require('./auto_profile_v024.js'):root.GFAuto24;
+const Plan = typeof require==='function'?require('./plan_calculator_v023.js'):root.GFPlan23;
+const N=x=>typeof x==='number'&&Number.isFinite(x);
+const R=(x,n=3)=>N(x)?Number(x.toFixed(n)):null;
+const SLOTS=['breakfast','lunch','dinner'];
+function pct(estimate,reference){return N(estimate)&&N(reference)&&reference>0?R((estimate/reference-1)*100,2):null;}
+function compare(profile,individualPlan){
+ const rec=profile?.proposals;
+ const okay=individualPlan?.reviewedByClinician===true;
+ if(!rec)return {status:'no-trusted-five-day-record',fields:[],approvedAutomatically:false};
+ const supplied=okay&&individualPlan.factors||null;
+ const fields=[{key:'isf',label:'ФЧИ НовоРапида',unit:'ммоль/л на ЕД',starter:rec.isfRapid.population,
+    observed:rec.isfRapid.observed,quality:rec.isfRapid.observedStatus,plan: N(supplied?.isfMmolPerUnit)?supplied.isfMmolPerUnit:null}];
+ for(const slot of SLOTS){const o=rec.icrGramsPerUnit[slot];
+   fields.push({key:slot,label:({breakfast:'Завтрак',lunch:'Обед',dinner:'Ужин'})[slot],unit:'г/ЕД',starter:o.population,
+    observed:o.observed,quality:o.observedStatus,
+    plan:N(supplied?.icrGramsPerUnit?.[slot])?supplied.icrGramsPerUnit[slot]:null});
+ }
+ for(const v of fields){v.vsStartPct=pct(v.observed,v.starter);v.vsPlanPct=pct(v.observed,v.plan);v.changeMayAffectDosing=v.vsPlanPct!=null&&Math.abs(v.vsPlanPct)>=20;
+  v.verdict=v.observed===null?'insufficient-evidence':v.vsPlanPct===null?'unreviewed-observational-estimate':v.changeMayAffectDosing?'material-disagreement-needs-clinician-review':'observational-agreement-not-validation';
+ }
+ return {status:okay?'compare-with-declared-plan':'preliminary-without-verified-plan',fields,
+   tddUnitsPerDay:rec.tddUnitsPerDay,approvedAutomatically:false,
+   provenance:'Observations are associations, not confirmed treatment coefficients',
+   alertCount:fields.filter(x=>x.changeMayAffectDosing).length};
+}
+function assess(raw,now,declaredPlan){
+ const profile=Auto.analyze(raw,now),comparison=compare(profile,declaredPlan);
+ const problems=[...(profile.flags||[]),...(profile.audit?.flags||[])];
+ if(profile.status!=='provisional-profile')problems.push('FIVE_COMPLETE_DAYS_NOT_VERIFIED');
+ if(profile.cgm?.status!=='fresh')problems.push('NO_FRESH_CGM');
+ if(comparison.alertCount>0)problems.push('OBSERVATIONAL_FACTOR_DISAGREEMENT');
+ if(profile.linkedMealInjections?.some(x=>x.method.includes('unverified')))problems.push('MEAL_BOLUS_LINK_INFERRED_NOT_CONFIRMED');
+ const unreviewedPlan=declaredPlan&&declaredPlan.reviewedByClinician!==true;
+ if(unreviewedPlan)problems.push('PLAN_UNVERIFIED');
+ const warnings=[...new Set(problems)];
+ return {version:'0.25-research',status:profile.status,profile,comparison,warnings,
+  provenance:{analysis:'retrospective synthetic/diary',forecast:'not clinically validated',patientPrescription:'not available'},
+  tddUnitsPerDay:profile.proposals?.tddUnitsPerDay??null,
+  iobUnits:profile.modelIob?.totalUnits??null,
+  numericDemoAvailable:profile.status==='provisional-profile',
+  autoApproveFactors:false,autoPrescriptionUnits:null,autoRescueCarbsGrams:null};
+}
+function historyFromNormalized(raw,now){const n=Auto.normalize(raw,now);
+ if(n.fatal)return {valid:false,codes:n.flags,history:[]};
+ const history=n.events.filter(e=>e.type==='insulin'&&e.ts<=now).map(e=>({type:'insulin',insulinName:e.insulinName,
+  insulinType:e.insulinType,ts:e.ts,units:e.units,purpose:e.doseReason||e.purpose||'unknown'}));
+ return {valid:true,codes:n.flags,history};
+}
+// Explicit synthetic test cases. NEVER activated from patient data by a mode switch.
+// An artificial source marker AND a synthetic-only plan identity are required.
+function simulateSynthetic(fixture,scenario,syntheticPlan){
+ if(fixture?.source!=='GF_SYNTHETIC_FIXTURE_V025'||fixture?.raw?.syntheticTag!=='GF_SYNTHETIC_FIXTURE_V025'||
+    !String(syntheticPlan?.planId||'').startsWith('SYNTHETIC-'))
+  return {status:'not-a-synthetic-fixture',patientPrescriptionUnits:null,patientRescueCarbsGrams:null};
+ const now=fixture.now,assessment=assess(fixture.raw,now,syntheticPlan);
+ if(assessment.status!=='provisional-profile')return {status:'invalid-synthetic-diary',assessment,patientPrescriptionUnits:null};
+ const h=historyFromNormalized(fixture.raw,now);
+ if(!h.valid)return {status:'invalid-synthetic-record',assessment,patientPrescriptionUnits:null};
+ const input={mode:'synthetic',nowTs:now,timeZone:fixture.raw.profile?.timeZone||'UTC',
+  meter:{ts:now,mmol:scenario.glucoseMmol},cgm:{ts:now,mmol:scenario.glucoseMmol},
+  history:h.history,historyComplete:true,
+  mealCarbs:scenario.mealCarbs||0,mealSlot:scenario.mealSlot||'lunch',
+  rescueProduct:scenario.rescueProduct||{carbsPer100:10,unit:'ml'},
+  ketonesMmol:scenario.ketonesMmol??null,sick:scenario.sick||false,
+  activityRecent:scenario.activityRecent||null,
+  unconscious:scenario.unconscious||false,canSwallow:scenario.canSwallow!==false,
+  vomiting:scenario.vomiting||false,confusion:scenario.confusion||false};
+ if(scenario.additionalHistory)input.history=[...input.history,...scenario.additionalHistory];
+ const calculation=Plan.evaluate(input,syntheticPlan);
+ return {status:calculation.status==='synthetic-only'?'synthetic-numerical-result':calculation.status,
+  assessment,calculation,researchNumbers:calculation.demoOnly||null,
+  patientPrescriptionUnits:null,patientRescueCarbsGrams:null,
+  finalGlucosePredictionMmol:null,
+  notTreatment:'Numbers are a synthetic protocol-replay demonstration, not a patient instruction.'};
+}
+function emergency(raw,now,caseInput){
+ const input={mode:'patient',nowTs:now,unconscious:!!caseInput?.unconscious,
+  canSwallow:caseInput?.canSwallow!==false,seizure:!!caseInput?.seizure,
+  vomiting:!!caseInput?.vomiting,confusion:!!caseInput?.confusion};
+ const v=Plan.evaluate(input,null);
+ return {status:v.status,codes:v.codes,action:v.action||null};
+}
+root.GFCare25={version:'0.25-research',assess,compare,simulateSynthetic,historyFromNormalized,emergency,pct};
+if(typeof module!=='undefined'&&module.exports)module.exports=root.GFCare25;
+})(typeof window==='undefined'?globalThis:window);
+
+</script>
+<script>const demoFixture={"source":"GF_SYNTHETIC_FIXTURE_V025","now":1794398400000,"raw":{"profile":{"timeZone":"UTC","expectedBasalInjectionsPerDay":1},"events":[{"type":"insulin","insulinType":"long","insulinName":"Левемир","ts":1793998800000,"units":12},{"type":"meal","status":"eaten","ts":1793952000000,"carbs":46,"protein":9,"fat":6},{"type":"insulin","insulinType":"short","insulinName":"НовоРапид","ts":1793951700000,"units":2},{"type":"meal","status":"eaten","ts":1793970000000,"carbs":64,"protein":20,"fat":12},{"type":"insulin","insulinType":"short","insulinName":"НовоРапид","ts":1793969700000,"units":3},{"type":"meal","status":"eaten","ts":1793991600000,"carbs":54,"protein":14,"fat":16},{"type":"insulin","insulinType":"short","insulinName":"НовоРапид","ts":1793991300000,"units":3},{"type":"insulin","insulinType":"short","insulinName":"НовоРапид","ts":1793930400000,"units":0.5,"doseReason":"correction"},{"type":"insulin","insulinType":"long","insulinName":"Левемир","ts":1794085200000,"units":12},{"type":"meal","status":"eaten","ts":1794038400000,"carbs":46,"protein":9,"fat":6},{"type":"insulin","insulinType":"short","insulinName":"НовоРапид","ts":1794038100000,"units":2},{"type":"meal","status":"eaten","ts":1794056400000,"carbs":64,"protein":20,"fat":12},{"type":"insulin","insulinType":"short","insulinName":"НовоРапид","ts":1794056100000,"units":3},{"type":"meal","status":"eaten","ts":1794078000000,"carbs":54,"protein":14,"fat":16},{"type":"insulin","insulinType":"short","insulinName":"НовоРапид","ts":1794077700000,"units":3},{"type":"insulin","insulinType":"short","insulinName":"НовоРапид","ts":1794016800000,"units":0.5,"doseReason":"correction"},{"type":"insulin","insulinType":"long","insulinName":"Левемир","ts":1794171600000,"units":12},{"type":"meal","status":"eaten","ts":1794124800000,"carbs":46,"protein":9,"fat":6},{"type":"insulin","insulinType":"short","insulinName":"НовоРапид","ts":1794124500000,"units":2},{"type":"meal","status":"eaten","ts":1794142800000,"carbs":64,"protein":20,"fat":12},{"type":"insulin","insulinType":"short","insulinName":"НовоРапид","ts":1794142500000,"units":3},{"type":"meal","status":"eaten","ts":1794164400000,"carbs":54,"protein":14,"fat":16},{"type":"insulin","insulinType":"short","insulinName":"НовоРапид","ts":1794164100000,"units":3},{"type":"insulin","insulinType":"short","insulinName":"НовоРапид","ts":1794103200000,"units":0.5,"doseReason":"correction"},{"type":"insulin","insulinType":"long","insulinName":"Левемир","ts":1794258000000,"units":12},{"type":"meal","status":"eaten","ts":1794211200000,"carbs":46,"protein":9,"fat":6},{"type":"insulin","insulinType":"short","insulinName":"НовоРапид","ts":1794210900000,"units":2},{"type":"meal","status":"eaten","ts":1794229200000,"carbs":64,"protein":20,"fat":12},{"type":"insulin","insulinType":"short","insulinName":"НовоРапид","ts":1794228900000,"units":3},{"type":"meal","status":"eaten","ts":1794250800000,"carbs":54,"protein":14,"fat":16},{"type":"insulin","insulinType":"short","insulinName":"НовоРапид","ts":1794250500000,"units":3},{"type":"insulin","insulinType":"long","insulinName":"Левемир","ts":1794344400000,"units":12},{"type":"meal","status":"eaten","ts":1794297600000,"carbs":46,"protein":9,"fat":6},{"type":"insulin","insulinType":"short","insulinName":"НовоРапид","ts":1794297300000,"units":2},{"type":"meal","status":"eaten","ts":1794315600000,"carbs":64,"protein":20,"fat":12},{"type":"insulin","insulinType":"short","insulinName":"НовоРапид","ts":1794315300000,"units":3},{"type":"meal","status":"eaten","ts":1794337200000,"carbs":54,"protein":14,"fat":16},{"type":"insulin","insulinType":"short","insulinName":"НовоРапид","ts":1794336900000,"units":3}],"readings":[{"ts":1793923200000,"mmol":9.7},{"ts":1793923500000,"mmol":9.706},{"ts":1793923800000,"mmol":9.712},{"ts":1793924100000,"mmol":9.718},{"ts":1793924400000,"mmol":9.724},{"ts":1793924700000,"mmol":9.73},{"ts":1793925000000,"mmol":9.737},{"ts":1793925300000,"mmol":9.743},{"ts":1793925600000,"mmol":9.749},{"ts":1793925900000,"mmol":9.755},{"ts":1793926200000,"mmol":9.761},{"ts":1793926500000,"mmol":9.767},{"ts":1793926800000,"mmol":9.772},{"ts":1793927100000,"mmol":9.778},{"ts":1793927400000,"mmol":9.784},{"ts":1793927700000,"mmol":9.79},{"ts":1793928000000,"mmol":9.796},{"ts":1793928300000,"mmol":9.801},{"ts":1793928600000,"mmol":9.807},{"ts":1793928900000,"mmol":9.813},{"ts":1793929200000,"mmol":9.818},{"ts":1793929500000,"mmol":9.824},{"ts":1793929800000,"mmol":9.829},{"ts":1793930100000,"mmol":9.835},{"ts":1793930400000,"mmol":9.84},{"ts":1793930700000,"mmol":9.788},{"ts":1793931000000,"mmol":9.736},{"ts":1793931300000,"mmol":9.684},{"ts":1793931600000,"mmol":9.631},{"ts":1793931900000,"mmol":9.579},{"ts":1793932200000,"mmol":9.527},{"ts":1793932500000,"mmol":9.474},{"ts":1793932800000,"mmol":9.422},{"ts":1793933100000,"mmol":9.369},{"ts":1793933400000,"mmol":9.316},{"ts":1793933700000,"mmol":9.263},{"ts":1793934000000,"mmol":9.21},{"ts":1793934300000,"mmol":9.157},{"ts":1793934600000,"mmol":9.104},{"ts":1793934900000,"mmol":9.051},{"ts":1793935200000,"mmol":8.998},{"ts":1793935500000,"mmol":8.944},{"ts":1793935800000,"mmol":8.891},{"ts":1793936100000,"mmol":8.837},{"ts":1793936400000,"mmol":8.784},{"ts":1793936700000,"mmol":8.73},{"ts":1793937000000,"mmol":8.676},{"ts":1793937300000,"mmol":8.622},{"ts":1793937600000,"mmol":8.567},{"ts":1793937900000,"mmol":8.513},{"ts":1793938200000,"mmol":8.459},{"ts":1793938500000,"mmol":8.404},{"ts":1793938800000,"mmol":8.35},{"ts":1793939100000,"mmol":8.295},{"ts":1793939400000,"mmol":8.24},{"ts":1793939700000,"mmol":8.185},{"ts":1793940000000,"mmol":8.13},{"ts":1793940300000,"mmol":8.075},{"ts":1793940600000,"mmol":8.019},{"ts":1793940900000,"mmol":7.964},{"ts":1793941200000,"mmol":7.908},{"ts":1793941500000,"mmol":7.852},{"ts":1793941800000,"mmol":7.796},{"ts":1793942100000,"mmol":7.74},{"ts":1793942400000,"mmol":7.684},{"ts":1793942700000,"mmol":7.628},{"ts":1793943000000,"mmol":7.571},{"ts":1793943300000,"mmol":7.515},{"ts":1793943600000,"mmol":7.458},{"ts":1793943900000,"mmol":7.401},{"ts":1793944200000,"mmol":7.344},{"ts":1793944500000,"mmol":7.287},{"ts":1793944800000,"mmol":7.23},{"ts":1793945100000,"mmol":7.345},{"ts":1793945400000,"mmol":7.459},{"ts":1793945700000,"mmol":7.573},{"ts":1793946000000,"mmol":7.687},{"ts":1793946300000,"mmol":7.801},{"ts":1793946600000,"mmol":7.915},{"ts":1793946900000,"mmol":8.029},{"ts":1793947200000,"mmol":8.142},{"ts":1793947500000,"mmol":8.256},{"ts":1793947800000,"mmol":8.369},{"ts":1793948100000,"mmol":8.482},{"ts":1793948400000,"mmol":8.595},{"ts":1793948700000,"mmol":8.708},{"ts":1793949000000,"mmol":8.821},{"ts":1793949300000,"mmol":8.934},{"ts":1793949600000,"mmol":9.046},{"ts":1793949900000,"mmol":9.159},{"ts":1793950200000,"mmol":9.271},{"ts":1793950500000,"mmol":9.383},{"ts":1793950800000,"mmol":9.495},{"ts":1793951100000,"mmol":9.607},{"ts":1793951400000,"mmol":9.719},{"ts":1793951700000,"mmol":9.831},{"ts":1793952000000,"mmol":9.942},{"ts":1793952300000,"mmol":9.949},{"ts":1793952600000,"mmol":9.974},{"ts":1793952900000,"mmol":10.017},{"ts":1793953200000,"mmol":10.077},{"ts":1793953500000,"mmol":10.153},{"ts":1793953800000,"mmol":10.244},{"ts":1793954100000,"mmol":10.349},{"ts":1793954400000,"mmol":10.464},{"ts":1793954700000,"mmol":10.59},{"ts":1793955000000,"mmol":10.722},{"ts":1793955300000,"mmol":10.859},{"ts":1793955600000,"mmol":10.998},{"ts":1793955900000,"mmol":11.137},{"ts":1793956200000,"mmol":11.274},{"ts":1793956500000,"mmol":11.406},{"ts":1793956800000,"mmol":11.53},{"ts":1793957100000,"mmol":11.645},{"ts":1793957400000,"mmol":11.748},{"ts":1793957700000,"mmol":11.838},{"ts":1793958000000,"mmol":11.913},{"ts":1793958300000,"mmol":11.972},{"ts":1793958600000,"mmol":12.013},{"ts":1793958900000,"mmol":12.036},{"ts":1793959200000,"mmol":12.04},{"ts":1793959500000,"mmol":12.025},{"ts":1793959800000,"mmol":11.992},{"ts":1793960100000,"mmol":11.94},{"ts":1793960400000,"mmol":11.871},{"ts":1793960700000,"mmol":11.785},{"ts":1793961000000,"mmol":11.685},{"ts":1793961300000,"mmol":11.571},{"ts":1793961600000,"mmol":11.446},{"ts":1793961900000,"mmol":11.311},{"ts":1793962200000,"mmol":11.169},{"ts":1793962500000,"mmol":11.022},{"ts":1793962800000,"mmol":10.872},{"ts":1793963100000,"mmol":10.723},{"ts":1793963400000,"mmol":10.576},{"ts":1793963700000,"mmol":10.434},{"ts":1793964000000,"mmol":10.299},{"ts":1793964300000,"mmol":10.173},{"ts":1793964600000,"mmol":10.059},{"ts":1793964900000,"mmol":9.958},{"ts":1793965200000,"mmol":9.872},{"ts":1793965500000,"mmol":9.802},{"ts":1793965800000,"mmol":9.75},{"ts":1793966100000,"mmol":9.716},{"ts":1793966400000,"mmol":9.7},{"ts":1793966700000,"mmol":9.694},{"ts":1793967000000,"mmol":9.688},{"ts":1793967300000,"mmol":9.682},{"ts":1793967600000,"mmol":9.676},{"ts":1793967900000,"mmol":9.67},{"ts":1793968200000,"mmol":9.663},{"ts":1793968500000,"mmol":9.657},{"ts":1793968800000,"mmol":9.651},{"ts":1793969100000,"mmol":9.645},{"ts":1793969400000,"mmol":9.639},{"ts":1793969700000,"mmol":9.633},{"ts":1793970000000,"mmol":9.628},{"ts":1793970300000,"mmol":9.631},{"ts":1793970600000,"mmol":9.653},{"ts":1793970900000,"mmol":9.694},{"ts":1793971200000,"mmol":9.752},{"ts":1793971500000,"mmol":9.826},{"ts":1793971800000,"mmol":9.915},{"ts":1793972100000,"mmol":10.018},{"ts":1793972400000,"mmol":10.132},{"ts":1793972700000,"mmol":10.255},{"ts":1793973000000,"mmol":10.386},{"ts":1793973300000,"mmol":10.522},{"ts":1793973600000,"mmol":10.66},{"ts":1793973900000,"mmol":10.798},{"ts":1793974200000,"mmol":10.934},{"ts":1793974500000,"mmol":11.065},{"ts":1793974800000,"mmol":11.189},{"ts":1793975100000,"mmol":11.304},{"ts":1793975400000,"mmol":11.407},{"ts":1793975700000,"mmol":11.497},{"ts":1793976000000,"mmol":11.573},{"ts":1793976300000,"mmol":11.632},{"ts":1793976600000,"mmol":11.673},{"ts":1793976900000,"mmol":11.697},{"ts":1793977200000,"mmol":11.702},{"ts":1793977500000,"mmol":11.688},{"ts":1793977800000,"mmol":11.656},{"ts":1793978100000,"mmol":11.606},{"ts":1793978400000,"mmol":11.538},{"ts":1793978700000,"mmol":11.454},{"ts":1793979000000,"mmol":11.356},{"ts":1793979300000,"mmol":11.244},{"ts":1793979600000,"mmol":11.121},{"ts":1793979900000,"mmol":10.988},{"ts":1793980200000,"mmol":10.849},{"ts":1793980500000,"mmol":10.704},{"ts":1793980800000,"mmol":10.558},{"ts":1793981100000,"mmol":10.411},{"ts":1793981400000,"mmol":10.267},{"ts":1793981700000,"mmol":10.128},{"ts":1793982000000,"mmol":9.996},{"ts":1793982300000,"mmol":9.874},{"ts":1793982600000,"mmol":9.763},{"ts":1793982900000,"mmol":9.666},{"ts":1793983200000,"mmol":9.584},{"ts":1793983500000,"mmol":9.519},{"ts":1793983800000,"mmol":9.47},{"ts":1793984100000,"mmol":9.441},{"ts":1793984400000,"mmol":9.43},{"ts":1793984700000,"mmol":9.428},{"ts":1793985000000,"mmol":9.427},{"ts":1793985300000,"mmol":9.425},{"ts":1793985600000,"mmol":9.424},{"ts":1793985900000,"mmol":9.423},{"ts":1793986200000,"mmol":9.422},{"ts":1793986500000,"mmol":9.422},{"ts":1793986800000,"mmol":9.421},{"ts":1793987100000,"mmol":9.421},{"ts":1793987400000,"mmol":9.42},{"ts":1793987700000,"mmol":9.42},{"ts":1793988000000,"mmol":9.42},{"ts":1793988300000,"mmol":9.42},{"ts":1793988600000,"mmol":9.42},{"ts":1793988900000,"mmol":9.421},{"ts":1793989200000,"mmol":9.421},{"ts":1793989500000,"mmol":9.422},{"ts":1793989800000,"mmol":9.422},{"ts":1793990100000,"mmol":9.423},{"ts":1793990400000,"mmol":9.424},{"ts":1793990700000,"mmol":9.425},{"ts":1793991000000,"mmol":9.427},{"ts":1793991300000,"mmol":9.428},{"ts":1793991600000,"mmol":9.43},{"ts":1793991900000,"mmol":9.441},{"ts":1793992200000,"mmol":9.47},{"ts":1793992500000,"mmol":9.519},{"ts":1793992800000,"mmol":9.584},{"ts":1793993100000,"mmol":9.666},{"ts":1793993400000,"mmol":9.763},{"ts":1793993700000,"mmol":9.874},{"ts":1793994000000,"mmol":9.996},{"ts":1793994300000,"mmol":10.128},{"ts":1793994600000,"mmol":10.267},{"ts":1793994900000,"mmol":10.411},{"ts":1793995200000,"mmol":10.558},{"ts":1793995500000,"mmol":10.704},{"ts":1793995800000,"mmol":10.849},{"ts":1793996100000,"mmol":10.988},{"ts":1793996400000,"mmol":11.121},{"ts":1793996700000,"mmol":11.244},{"ts":1793997000000,"mmol":11.356},{"ts":1793997300000,"mmol":11.454},{"ts":1793997600000,"mmol":11.538},{"ts":1793997900000,"mmol":11.606},{"ts":1793998200000,"mmol":11.656},{"ts":1793998500000,"mmol":11.688},{"ts":1793998800000,"mmol":11.702},{"ts":1793999100000,"mmol":11.697},{"ts":1793999400000,"mmol":11.673},{"ts":1793999700000,"mmol":11.632},{"ts":1794000000000,"mmol":11.573},{"ts":1794000300000,"mmol":11.497},{"ts":1794000600000,"mmol":11.407},{"ts":1794000900000,"mmol":11.304},{"ts":1794001200000,"mmol":11.189},{"ts":1794001500000,"mmol":11.065},{"ts":1794001800000,"mmol":10.934},{"ts":1794002100000,"mmol":10.798},{"ts":1794002400000,"mmol":10.66},{"ts":1794002700000,"mmol":10.522},{"ts":1794003000000,"mmol":10.386},{"ts":1794003300000,"mmol":10.255},{"ts":1794003600000,"mmol":10.132},{"ts":1794003900000,"mmol":10.018},{"ts":1794004200000,"mmol":9.915},{"ts":1794004500000,"mmol":9.826},{"ts":1794004800000,"mmol":9.752},{"ts":1794005100000,"mmol":9.694},{"ts":1794005400000,"mmol":9.653},{"ts":1794005700000,"mmol":9.631},{"ts":1794006000000,"mmol":9.628},{"ts":1794006300000,"mmol":9.633},{"ts":1794006600000,"mmol":9.639},{"ts":1794006900000,"mmol":9.645},{"ts":1794007200000,"mmol":9.651},{"ts":1794007500000,"mmol":9.657},{"ts":1794007800000,"mmol":9.663},{"ts":1794008100000,"mmol":9.67},{"ts":1794008400000,"mmol":9.676},{"ts":1794008700000,"mmol":9.682},{"ts":1794009000000,"mmol":9.688},{"ts":1794009300000,"mmol":9.694},{"ts":1794009600000,"mmol":9.901},{"ts":1794009900000,"mmol":9.905},{"ts":1794010200000,"mmol":9.909},{"ts":1794010500000,"mmol":9.913},{"ts":1794010800000,"mmol":9.917},{"ts":1794011100000,"mmol":9.921},{"ts":1794011400000,"mmol":9.925},{"ts":1794011700000,"mmol":9.928},{"ts":1794012000000,"mmol":9.932},{"ts":1794012300000,"mmol":9.935},{"ts":1794012600000,"mmol":9.938},{"ts":1794012900000,"mmol":9.941},{"ts":1794013200000,"mmol":9.945},{"ts":1794013500000,"mmol":9.947},{"ts":1794013800000,"mmol":9.95},{"ts":1794014100000,"mmol":9.953},{"ts":1794014400000,"mmol":9.955},{"ts":1794014700000,"mmol":9.958},{"ts":1794015000000,"mmol":9.96},{"ts":1794015300000,"mmol":9.962},{"ts":1794015600000,"mmol":9.964},{"ts":1794015900000,"mmol":9.966},{"ts":1794016200000,"mmol":9.968},{"ts":1794016500000,"mmol":9.97},{"ts":1794016800000,"mmol":9.971},{"ts":1794017100000,"mmol":9.916},{"ts":1794017400000,"mmol":9.86},{"ts":1794017700000,"mmol":9.804},{"ts":1794018000000,"mmol":9.747},{"ts":1794018300000,"mmol":9.691},{"ts":1794018600000,"mmol":9.634},{"ts":1794018900000,"mmol":9.578},{"ts":1794019200000,"mmol":9.521},{"ts":1794019500000,"mmol":9.464},{"ts":1794019800000,"mmol":9.407},{"ts":1794020100000,"mmol":9.35},{"ts":1794020400000,"mmol":9.292},{"ts":1794020700000,"mmol":9.235},{"ts":1794021000000,"mmol":9.177},{"ts":1794021300000,"mmol":9.12},{"ts":1794021600000,"mmol":9.062},{"ts":1794021900000,"mmol":9.004},{"ts":1794022200000,"mmol":8.946},{"ts":1794022500000,"mmol":8.888},{"ts":1794022800000,"mmol":8.829},{"ts":1794023100000,"mmol":8.771},{"ts":1794023400000,"mmol":8.712},{"ts":1794023700000,"mmol":8.653},{"ts":1794024000000,"mmol":8.594},{"ts":1794024300000,"mmol":8.535},{"ts":1794024600000,"mmol":8.476},{"ts":1794024900000,"mmol":8.417},{"ts":1794025200000,"mmol":8.358},{"ts":1794025500000,"mmol":8.298},{"ts":1794025800000,"mmol":8.238},{"ts":1794026100000,"mmol":8.179},{"ts":1794026400000,"mmol":8.119},{"ts":1794026700000,"mmol":8.059},{"ts":1794027000000,"mmol":7.999},{"ts":1794027300000,"mmol":7.938},{"ts":1794027600000,"mmol":7.878},{"ts":1794027900000,"mmol":7.817},{"ts":1794028200000,"mmol":7.757},{"ts":1794028500000,"mmol":7.696},{"ts":1794028800000,"mmol":7.635},{"ts":1794029100000,"mmol":7.574},{"ts":1794029400000,"mmol":7.513},{"ts":1794029700000,"mmol":7.452},{"ts":1794030000000,"mmol":7.391},{"ts":1794030300000,"mmol":7.33},{"ts":1794030600000,"mmol":7.268},{"ts":1794030900000,"mmol":7.207},{"ts":1794031200000,"mmol":7.145},{"ts":1794031500000,"mmol":7.255},{"ts":1794031800000,"mmol":7.365},{"ts":1794032100000,"mmol":7.475},{"ts":1794032400000,"mmol":7.585},{"ts":1794032700000,"mmol":7.695},{"ts":1794033000000,"mmol":7.805},{"ts":1794033300000,"mmol":7.914},{"ts":1794033600000,"mmol":8.024},{"ts":1794033900000,"mmol":8.133},{"ts":1794034200000,"mmol":8.243},{"ts":1794034500000,"mmol":8.352},{"ts":1794034800000,"mmol":8.461},{"ts":1794035100000,"mmol":8.571},{"ts":1794035400000,"mmol":8.68},{"ts":1794035700000,"mmol":8.789},{"ts":1794036000000,"mmol":8.898},{"ts":1794036300000,"mmol":9.007},{"ts":1794036600000,"mmol":9.116},{"ts":1794036900000,"mmol":9.225},{"ts":1794037200000,"mmol":9.334},{"ts":1794037500000,"mmol":9.442},{"ts":1794037800000,"mmol":9.551},{"ts":1794038100000,"mmol":9.66},{"ts":1794038400000,"mmol":9.769},{"ts":1794038700000,"mmol":9.772},{"ts":1794039000000,"mmol":9.794},{"ts":1794039300000,"mmol":9.834},{"ts":1794039600000,"mmol":9.892},{"ts":1794039900000,"mmol":9.966},{"ts":1794040200000,"mmol":10.055},{"ts":1794040500000,"mmol":10.157},{"ts":1794040800000,"mmol":10.27},{"ts":1794041100000,"mmol":10.393},{"ts":1794041400000,"mmol":10.523},{"ts":1794041700000,"mmol":10.658},{"ts":1794042000000,"mmol":10.796},{"ts":1794042300000,"mmol":10.933},{"ts":1794042600000,"mmol":11.068},{"ts":1794042900000,"mmol":11.199},{"ts":1794043200000,"mmol":11.322},{"ts":1794043500000,"mmol":11.435},{"ts":1794043800000,"mmol":11.537},{"ts":1794044100000,"mmol":11.626},{"ts":1794044400000,"mmol":11.7},{"ts":1794044700000,"mmol":11.758},{"ts":1794045000000,"mmol":11.798},{"ts":1794045300000,"mmol":11.82},{"ts":1794045600000,"mmol":11.824},{"ts":1794045900000,"mmol":11.808},{"ts":1794046200000,"mmol":11.774},{"ts":1794046500000,"mmol":11.722},{"ts":1794046800000,"mmol":11.653},{"ts":1794047100000,"mmol":11.567},{"ts":1794047400000,"mmol":11.467},{"ts":1794047700000,"mmol":11.353},{"ts":1794048000000,"mmol":11.228},{"ts":1794048300000,"mmol":11.093},{"ts":1794048600000,"mmol":10.952},{"ts":1794048900000,"mmol":10.805},{"ts":1794049200000,"mmol":10.656},{"ts":1794049500000,"mmol":10.508},{"ts":1794049800000,"mmol":10.361},{"ts":1794050100000,"mmol":10.22},{"ts":1794050400000,"mmol":10.086},{"ts":1794050700000,"mmol":9.962},{"ts":1794051000000,"mmol":9.849},{"ts":1794051300000,"mmol":9.749},{"ts":1794051600000,"mmol":9.664},{"ts":1794051900000,"mmol":9.596},{"ts":1794052200000,"mmol":9.545},{"ts":1794052500000,"mmol":9.513},{"ts":1794052800000,"mmol":9.499},{"ts":1794053100000,"mmol":9.495},{"ts":1794053400000,"mmol":9.491},{"ts":1794053700000,"mmol":9.487},{"ts":1794054000000,"mmol":9.483},{"ts":1794054300000,"mmol":9.479},{"ts":1794054600000,"mmol":9.475},{"ts":1794054900000,"mmol":9.472},{"ts":1794055200000,"mmol":9.468},{"ts":1794055500000,"mmol":9.465},{"ts":1794055800000,"mmol":9.462},{"ts":1794056100000,"mmol":9.459},{"ts":1794056400000,"mmol":9.455},{"ts":1794056700000,"mmol":9.462},{"ts":1794057000000,"mmol":9.487},{"ts":1794057300000,"mmol":9.531},{"ts":1794057600000,"mmol":9.592},{"ts":1794057900000,"mmol":9.669},{"ts":1794058200000,"mmol":9.762},{"ts":1794058500000,"mmol":9.868},{"ts":1794058800000,"mmol":9.986},{"ts":1794059100000,"mmol":10.113},{"ts":1794059400000,"mmol":10.247},{"ts":1794059700000,"mmol":10.386},{"ts":1794060000000,"mmol":10.529},{"ts":1794060300000,"mmol":10.671},{"ts":1794060600000,"mmol":10.81},{"ts":1794060900000,"mmol":10.946},{"ts":1794061200000,"mmol":11.074},{"ts":1794061500000,"mmol":11.192},{"ts":1794061800000,"mmol":11.3},{"ts":1794062100000,"mmol":11.394},{"ts":1794062400000,"mmol":11.473},{"ts":1794062700000,"mmol":11.537},{"ts":1794063000000,"mmol":11.583},{"ts":1794063300000,"mmol":11.611},{"ts":1794063600000,"mmol":11.62},{"ts":1794063900000,"mmol":11.611},{"ts":1794064200000,"mmol":11.583},{"ts":1794064500000,"mmol":11.537},{"ts":1794064800000,"mmol":11.474},{"ts":1794065100000,"mmol":11.395},{"ts":1794065400000,"mmol":11.301},{"ts":1794065700000,"mmol":11.194},{"ts":1794066000000,"mmol":11.075},{"ts":1794066300000,"mmol":10.947},{"ts":1794066600000,"mmol":10.812},{"ts":1794066900000,"mmol":10.673},{"ts":1794067200000,"mmol":10.531},{"ts":1794067500000,"mmol":10.389},{"ts":1794067800000,"mmol":10.25},{"ts":1794068100000,"mmol":10.115},{"ts":1794068400000,"mmol":9.988},{"ts":1794068700000,"mmol":9.871},{"ts":1794069000000,"mmol":9.765},{"ts":1794069300000,"mmol":9.673},{"ts":1794069600000,"mmol":9.595},{"ts":1794069900000,"mmol":9.534},{"ts":1794070200000,"mmol":9.491},{"ts":1794070500000,"mmol":9.466},{"ts":1794070800000,"mmol":9.46},{"ts":1794071100000,"mmol":9.463},{"ts":1794071400000,"mmol":9.466},{"ts":1794071700000,"mmol":9.469},{"ts":1794072000000,"mmol":9.473},{"ts":1794072300000,"mmol":9.477},{"ts":1794072600000,"mmol":9.48},{"ts":1794072900000,"mmol":9.484},{"ts":1794073200000,"mmol":9.488},{"ts":1794073500000,"mmol":9.492},{"ts":1794073800000,"mmol":9.496},{"ts":1794074100000,"mmol":9.501},{"ts":1794074400000,"mmol":9.505},{"ts":1794074700000,"mmol":9.509},{"ts":1794075000000,"mmol":9.514},{"ts":1794075300000,"mmol":9.518},{"ts":1794075600000,"mmol":9.523},{"ts":1794075900000,"mmol":9.528},{"ts":1794076200000,"mmol":9.533},{"ts":1794076500000,"mmol":9.538},{"ts":1794076800000,"mmol":9.543},{"ts":1794077100000,"mmol":9.548},{"ts":1794077400000,"mmol":9.553},{"ts":1794077700000,"mmol":9.558},{"ts":1794078000000,"mmol":9.564},{"ts":1794078300000,"mmol":9.578},{"ts":1794078600000,"mmol":9.612},{"ts":1794078900000,"mmol":9.664},{"ts":1794079200000,"mmol":9.733},{"ts":1794079500000,"mmol":9.818},{"ts":1794079800000,"mmol":9.919},{"ts":1794080100000,"mmol":10.033},{"ts":1794080400000,"mmol":10.158},{"ts":1794080700000,"mmol":10.293},{"ts":1794081000000,"mmol":10.435},{"ts":1794081300000,"mmol":10.582},{"ts":1794081600000,"mmol":10.731},{"ts":1794081900000,"mmol":10.881},{"ts":1794082200000,"mmol":11.028},{"ts":1794082500000,"mmol":11.17},{"ts":1794082800000,"mmol":11.305},{"ts":1794083100000,"mmol":11.431},{"ts":1794083400000,"mmol":11.545},{"ts":1794083700000,"mmol":11.646},{"ts":1794084000000,"mmol":11.732},{"ts":1794084300000,"mmol":11.802},{"ts":1794084600000,"mmol":11.854},{"ts":1794084900000,"mmol":11.889},{"ts":1794085200000,"mmol":11.904},{"ts":1794085500000,"mmol":11.901},{"ts":1794085800000,"mmol":11.879},{"ts":1794086100000,"mmol":11.839},{"ts":1794086400000,"mmol":11.781},{"ts":1794086700000,"mmol":11.707},{"ts":1794087000000,"mmol":11.618},{"ts":1794087300000,"mmol":11.516},{"ts":1794087600000,"mmol":11.403},{"ts":1794087900000,"mmol":11.28},{"ts":1794088200000,"mmol":11.149},{"ts":1794088500000,"mmol":11.014},{"ts":1794088800000,"mmol":10.876},{"ts":1794089100000,"mmol":10.739},{"ts":1794089400000,"mmol":10.603},{"ts":1794089700000,"mmol":10.473},{"ts":1794090000000,"mmol":10.35},{"ts":1794090300000,"mmol":10.236},{"ts":1794090600000,"mmol":10.133},{"ts":1794090900000,"mmol":10.044},{"ts":1794091200000,"mmol":9.969},{"ts":1794091500000,"mmol":9.911},{"ts":1794091800000,"mmol":9.87},{"ts":1794092100000,"mmol":9.848},{"ts":1794092400000,"mmol":9.844},{"ts":1794092700000,"mmol":9.849},{"ts":1794093000000,"mmol":9.854},{"ts":1794093300000,"mmol":9.859},{"ts":1794093600000,"mmol":9.864},{"ts":1794093900000,"mmol":9.869},{"ts":1794094200000,"mmol":9.874},{"ts":1794094500000,"mmol":9.878},{"ts":1794094800000,"mmol":9.883},{"ts":1794095100000,"mmol":9.888},{"ts":1794095400000,"mmol":9.892},{"ts":1794095700000,"mmol":9.897},{"ts":1794096000000,"mmol":9.98},{"ts":1794096300000,"mmol":9.98},{"ts":1794096600000,"mmol":9.979},{"ts":1794096900000,"mmol":9.979},{"ts":1794097200000,"mmol":9.978},{"ts":1794097500000,"mmol":9.977},{"ts":1794097800000,"mmol":9.976},{"ts":1794098100000,"mmol":9.975},{"ts":1794098400000,"mmol":9.974},{"ts":1794098700000,"mmol":9.973},{"ts":1794099000000,"mmol":9.971},{"ts":1794099300000,"mmol":9.97},{"ts":1794099600000,"mmol":9.968},{"ts":1794099900000,"mmol":9.966},{"ts":1794100200000,"mmol":9.964},{"ts":1794100500000,"mmol":9.962},{"ts":1794100800000,"mmol":9.96},{"ts":1794101100000,"mmol":9.958},{"ts":1794101400000,"mmol":9.955},{"ts":1794101700000,"mmol":9.953},{"ts":1794102000000,"mmol":9.95},{"ts":1794102300000,"mmol":9.947},{"ts":1794102600000,"mmol":9.944},{"ts":1794102900000,"mmol":9.941},{"ts":1794103200000,"mmol":9.938},{"ts":1794103500000,"mmol":9.878},{"ts":1794103800000,"mmol":9.817},{"ts":1794104100000,"mmol":9.756},{"ts":1794104400000,"mmol":9.695},{"ts":1794104700000,"mmol":9.634},{"ts":1794105000000,"mmol":9.573},{"ts":1794105300000,"mmol":9.512},{"ts":1794105600000,"mmol":9.451},{"ts":1794105900000,"mmol":9.389},{"ts":1794106200000,"mmol":9.328},{"ts":1794106500000,"mmol":9.266},{"ts":1794106800000,"mmol":9.205},{"ts":1794107100000,"mmol":9.143},{"ts":1794107400000,"mmol":9.081},{"ts":1794107700000,"mmol":9.019},{"ts":1794108000000,"mmol":8.957},{"ts":1794108300000,"mmol":8.895},{"ts":1794108600000,"mmol":8.833},{"ts":1794108900000,"mmol":8.77},{"ts":1794109200000,"mmol":8.708},{"ts":1794109500000,"mmol":8.646},{"ts":1794109800000,"mmol":8.583},{"ts":1794110100000,"mmol":8.52},{"ts":1794110400000,"mmol":8.458},{"ts":1794110700000,"mmol":8.395},{"ts":1794111000000,"mmol":8.332},{"ts":1794111300000,"mmol":8.27},{"ts":1794111600000,"mmol":8.207},{"ts":1794111900000,"mmol":8.144},{"ts":1794112200000,"mmol":8.081},{"ts":1794112500000,"mmol":8.018},{"ts":1794112800000,"mmol":7.955},{"ts":1794113100000,"mmol":7.892},{"ts":1794113400000,"mmol":7.828},{"ts":1794113700000,"mmol":7.765},{"ts":1794114000000,"mmol":7.702},{"ts":1794114300000,"mmol":7.639},{"ts":1794114600000,"mmol":7.576},{"ts":1794114900000,"mmol":7.512},{"ts":1794115200000,"mmol":7.449},{"ts":1794115500000,"mmol":7.386},{"ts":1794115800000,"mmol":7.322},{"ts":1794116100000,"mmol":7.259},{"ts":1794116400000,"mmol":7.195},{"ts":1794116700000,"mmol":7.132},{"ts":1794117000000,"mmol":7.069},{"ts":1794117300000,"mmol":7.005},{"ts":1794117600000,"mmol":6.942},{"ts":1794117900000,"mmol":7.05},{"ts":1794118200000,"mmol":7.159},{"ts":1794118500000,"mmol":7.267},{"ts":1794118800000,"mmol":7.376},{"ts":1794119100000,"mmol":7.484},{"ts":1794119400000,"mmol":7.593},{"ts":1794119700000,"mmol":7.701},{"ts":1794120000000,"mmol":7.81},{"ts":1794120300000,"mmol":7.919},{"ts":1794120600000,"mmol":8.027},{"ts":1794120900000,"mmol":8.136},{"ts":1794121200000,"mmol":8.245},{"ts":1794121500000,"mmol":8.353},{"ts":1794121800000,"mmol":8.462},{"ts":1794122100000,"mmol":8.571},{"ts":1794122400000,"mmol":8.68},{"ts":1794122700000,"mmol":8.789},{"ts":1794123000000,"mmol":8.898},{"ts":1794123300000,"mmol":9.007},{"ts":1794123600000,"mmol":9.116},{"ts":1794123900000,"mmol":9.225},{"ts":1794124200000,"mmol":9.334},{"ts":1794124500000,"mmol":9.444},{"ts":1794124800000,"mmol":9.553},{"ts":1794125100000,"mmol":9.557},{"ts":1794125400000,"mmol":9.58},{"ts":1794125700000,"mmol":9.621},{"ts":1794126000000,"mmol":9.68},{"ts":1794126300000,"mmol":9.755},{"ts":1794126600000,"mmol":9.845},{"ts":1794126900000,"mmol":9.949},{"ts":1794127200000,"mmol":10.064},{"ts":1794127500000,"mmol":10.188},{"ts":1794127800000,"mmol":10.32},{"ts":1794128100000,"mmol":10.457},{"ts":1794128400000,"mmol":10.596},{"ts":1794128700000,"mmol":10.736},{"ts":1794129000000,"mmol":10.873},{"ts":1794129300000,"mmol":11.005},{"ts":1794129600000,"mmol":11.13},{"ts":1794129900000,"mmol":11.246},{"ts":1794130200000,"mmol":11.351},{"ts":1794130500000,"mmol":11.442},{"ts":1794130800000,"mmol":11.519},{"ts":1794131100000,"mmol":11.579},{"ts":1794131400000,"mmol":11.622},{"ts":1794131700000,"mmol":11.647},{"ts":1794132000000,"mmol":11.654},{"ts":1794132300000,"mmol":11.641},{"ts":1794132600000,"mmol":11.61},{"ts":1794132900000,"mmol":11.562},{"ts":1794133200000,"mmol":11.496},{"ts":1794133500000,"mmol":11.413},{"ts":1794133800000,"mmol":11.316},{"ts":1794134100000,"mmol":11.206},{"ts":1794134400000,"mmol":11.084},{"ts":1794134700000,"mmol":10.953},{"ts":1794135000000,"mmol":10.815},{"ts":1794135300000,"mmol":10.673},{"ts":1794135600000,"mmol":10.528},{"ts":1794135900000,"mmol":10.383},{"ts":1794136200000,"mmol":10.24},{"ts":1794136500000,"mmol":10.103},{"ts":1794136800000,"mmol":9.973},{"ts":1794137100000,"mmol":9.852},{"ts":1794137400000,"mmol":9.744},{"ts":1794137700000,"mmol":9.648},{"ts":1794138000000,"mmol":9.568},{"ts":1794138300000,"mmol":9.504},{"ts":1794138600000,"mmol":9.458},{"ts":1794138900000,"mmol":9.429},{"ts":1794139200000,"mmol":9.42},{"ts":1794139500000,"mmol":9.42},{"ts":1794139800000,"mmol":9.421},{"ts":1794140100000,"mmol":9.421},{"ts":1794140400000,"mmol":9.422},{"ts":1794140700000,"mmol":9.423},{"ts":1794141000000,"mmol":9.424},{"ts":1794141300000,"mmol":9.425},{"ts":1794141600000,"mmol":9.426},{"ts":1794141900000,"mmol":9.427},{"ts":1794142200000,"mmol":9.429},{"ts":1794142500000,"mmol":9.43},{"ts":1794142800000,"mmol":9.432},{"ts":1794143100000,"mmol":9.443},{"ts":1794143400000,"mmol":9.473},{"ts":1794143700000,"mmol":9.521},{"ts":1794144000000,"mmol":9.587},{"ts":1794144300000,"mmol":9.669},{"ts":1794144600000,"mmol":9.767},{"ts":1794144900000,"mmol":9.877},{"ts":1794145200000,"mmol":10},{"ts":1794145500000,"mmol":10.132},{"ts":1794145800000,"mmol":10.271},{"ts":1794146100000,"mmol":10.415},{"ts":1794146400000,"mmol":10.562},{"ts":1794146700000,"mmol":10.709},{"ts":1794147000000,"mmol":10.853},{"ts":1794147300000,"mmol":10.993},{"ts":1794147600000,"mmol":11.125},{"ts":1794147900000,"mmol":11.249},{"ts":1794148200000,"mmol":11.361},{"ts":1794148500000,"mmol":11.46},{"ts":1794148800000,"mmol":11.543},{"ts":1794149100000,"mmol":11.611},{"ts":1794149400000,"mmol":11.662},{"ts":1794149700000,"mmol":11.694},{"ts":1794150000000,"mmol":11.708},{"ts":1794150300000,"mmol":11.703},{"ts":1794150600000,"mmol":11.679},{"ts":1794150900000,"mmol":11.638},{"ts":1794151200000,"mmol":11.579},{"ts":1794151500000,"mmol":11.504},{"ts":1794151800000,"mmol":11.414},{"ts":1794152100000,"mmol":11.311},{"ts":1794152400000,"mmol":11.196},{"ts":1794152700000,"mmol":11.072},{"ts":1794153000000,"mmol":10.941},{"ts":1794153300000,"mmol":10.805},{"ts":1794153600000,"mmol":10.667},{"ts":1794153900000,"mmol":10.529},{"ts":1794154200000,"mmol":10.393},{"ts":1794154500000,"mmol":10.263},{"ts":1794154800000,"mmol":10.139},{"ts":1794155100000,"mmol":10.025},{"ts":1794155400000,"mmol":9.923},{"ts":1794155700000,"mmol":9.833},{"ts":1794156000000,"mmol":9.759},{"ts":1794156300000,"mmol":9.702},{"ts":1794156600000,"mmol":9.661},{"ts":1794156900000,"mmol":9.639},{"ts":1794157200000,"mmol":9.635},{"ts":1794157500000,"mmol":9.641},{"ts":1794157800000,"mmol":9.647},{"ts":1794158100000,"mmol":9.653},{"ts":1794158400000,"mmol":9.659},{"ts":1794158700000,"mmol":9.666},{"ts":1794159000000,"mmol":9.672},{"ts":1794159300000,"mmol":9.678},{"ts":1794159600000,"mmol":9.684},{"ts":1794159900000,"mmol":9.69},{"ts":1794160200000,"mmol":9.696},{"ts":1794160500000,"mmol":9.702},{"ts":1794160800000,"mmol":9.708},{"ts":1794161100000,"mmol":9.714},{"ts":1794161400000,"mmol":9.72},{"ts":1794161700000,"mmol":9.726},{"ts":1794162000000,"mmol":9.733},{"ts":1794162300000,"mmol":9.739},{"ts":1794162600000,"mmol":9.745},{"ts":1794162900000,"mmol":9.751},{"ts":1794163200000,"mmol":9.757},{"ts":1794163500000,"mmol":9.763},{"ts":1794163800000,"mmol":9.769},{"ts":1794164100000,"mmol":9.774},{"ts":1794164400000,"mmol":9.78},{"ts":1794164700000,"mmol":9.796},{"ts":1794165000000,"mmol":9.829},{"ts":1794165300000,"mmol":9.881},{"ts":1794165600000,"mmol":9.951},{"ts":1794165900000,"mmol":10.036},{"ts":1794166200000,"mmol":10.137},{"ts":1794166500000,"mmol":10.251},{"ts":1794166800000,"mmol":10.376},{"ts":1794167100000,"mmol":10.51},{"ts":1794167400000,"mmol":10.652},{"ts":1794167700000,"mmol":10.798},{"ts":1794168000000,"mmol":10.947},{"ts":1794168300000,"mmol":11.096},{"ts":1794168600000,"mmol":11.242},{"ts":1794168900000,"mmol":11.383},{"ts":1794169200000,"mmol":11.517},{"ts":1794169500000,"mmol":11.642},{"ts":1794169800000,"mmol":11.755},{"ts":1794170100000,"mmol":11.854},{"ts":1794170400000,"mmol":11.939},{"ts":1794170700000,"mmol":12.007},{"ts":1794171000000,"mmol":12.058},{"ts":1794171300000,"mmol":12.09},{"ts":1794171600000,"mmol":12.104},{"ts":1794171900000,"mmol":12.098},{"ts":1794172200000,"mmol":12.074},{"ts":1794172500000,"mmol":12.032},{"ts":1794172800000,"mmol":11.972},{"ts":1794173100000,"mmol":11.896},{"ts":1794173400000,"mmol":11.805},{"ts":1794173700000,"mmol":11.7},{"ts":1794174000000,"mmol":11.584},{"ts":1794174300000,"mmol":11.458},{"ts":1794174600000,"mmol":11.325},{"ts":1794174900000,"mmol":11.187},{"ts":1794175200000,"mmol":11.046},{"ts":1794175500000,"mmol":10.906},{"ts":1794175800000,"mmol":10.767},{"ts":1794176100000,"mmol":10.634},{"ts":1794176400000,"mmol":10.507},{"ts":1794176700000,"mmol":10.39},{"ts":1794177000000,"mmol":10.284},{"ts":1794177300000,"mmol":10.191},{"ts":1794177600000,"mmol":10.113},{"ts":1794177900000,"mmol":10.051},{"ts":1794178200000,"mmol":10.007},{"ts":1794178500000,"mmol":9.98},{"ts":1794178800000,"mmol":9.972},{"ts":1794179100000,"mmol":9.974},{"ts":1794179400000,"mmol":9.975},{"ts":1794179700000,"mmol":9.976},{"ts":1794180000000,"mmol":9.977},{"ts":1794180300000,"mmol":9.978},{"ts":1794180600000,"mmol":9.979},{"ts":1794180900000,"mmol":9.979},{"ts":1794181200000,"mmol":9.98},{"ts":1794181500000,"mmol":9.98},{"ts":1794181800000,"mmol":9.98},{"ts":1794182100000,"mmol":9.98},{"ts":1794182400000,"mmol":9.889},{"ts":1794182700000,"mmol":9.885},{"ts":1794183000000,"mmol":9.88},{"ts":1794183300000,"mmol":9.875},{"ts":1794183600000,"mmol":9.87},{"ts":1794183900000,"mmol":9.866},{"ts":1794184200000,"mmol":9.861},{"ts":1794184500000,"mmol":9.856},{"ts":1794184800000,"mmol":9.85},{"ts":1794185100000,"mmol":9.845},{"ts":1794185400000,"mmol":9.84},{"ts":1794185700000,"mmol":9.835},{"ts":1794186000000,"mmol":9.829},{"ts":1794186300000,"mmol":9.824},{"ts":1794186600000,"mmol":9.818},{"ts":1794186900000,"mmol":9.813},{"ts":1794187200000,"mmol":9.807},{"ts":1794187500000,"mmol":9.801},{"ts":1794187800000,"mmol":9.796},{"ts":1794188100000,"mmol":9.79},{"ts":1794188400000,"mmol":9.784},{"ts":1794188700000,"mmol":9.778},{"ts":1794189000000,"mmol":9.772},{"ts":1794189300000,"mmol":9.767},{"ts":1794189600000,"mmol":9.761},{"ts":1794189900000,"mmol":9.755},{"ts":1794190200000,"mmol":9.749},{"ts":1794190500000,"mmol":9.743},{"ts":1794190800000,"mmol":9.736},{"ts":1794191100000,"mmol":9.73},{"ts":1794191400000,"mmol":9.724},{"ts":1794191700000,"mmol":9.718},{"ts":1794192000000,"mmol":9.712},{"ts":1794192300000,"mmol":9.706},{"ts":1794192600000,"mmol":9.7},{"ts":1794192900000,"mmol":9.694},{"ts":1794193200000,"mmol":9.688},{"ts":1794193500000,"mmol":9.682},{"ts":1794193800000,"mmol":9.676},{"ts":1794194100000,"mmol":9.669},{"ts":1794194400000,"mmol":9.663},{"ts":1794194700000,"mmol":9.657},{"ts":1794195000000,"mmol":9.651},{"ts":1794195300000,"mmol":9.645},{"ts":1794195600000,"mmol":9.639},{"ts":1794195900000,"mmol":9.633},{"ts":1794196200000,"mmol":9.627},{"ts":1794196500000,"mmol":9.622},{"ts":1794196800000,"mmol":9.616},{"ts":1794197100000,"mmol":9.61},{"ts":1794197400000,"mmol":9.604},{"ts":1794197700000,"mmol":9.598},{"ts":1794198000000,"mmol":9.593},{"ts":1794198300000,"mmol":9.587},{"ts":1794198600000,"mmol":9.582},{"ts":1794198900000,"mmol":9.576},{"ts":1794199200000,"mmol":9.571},{"ts":1794199500000,"mmol":9.565},{"ts":1794199800000,"mmol":9.56},{"ts":1794200100000,"mmol":9.555},{"ts":1794200400000,"mmol":9.55},{"ts":1794200700000,"mmol":9.544},{"ts":1794201000000,"mmol":9.539},{"ts":1794201300000,"mmol":9.534},{"ts":1794201600000,"mmol":9.53},{"ts":1794201900000,"mmol":9.525},{"ts":1794202200000,"mmol":9.52},{"ts":1794202500000,"mmol":9.515},{"ts":1794202800000,"mmol":9.511},{"ts":1794203100000,"mmol":9.506},{"ts":1794203400000,"mmol":9.502},{"ts":1794203700000,"mmol":9.498},{"ts":1794204000000,"mmol":9.494},{"ts":1794204300000,"mmol":9.489},{"ts":1794204600000,"mmol":9.485},{"ts":1794204900000,"mmol":9.482},{"ts":1794205200000,"mmol":9.478},{"ts":1794205500000,"mmol":9.474},{"ts":1794205800000,"mmol":9.471},{"ts":1794206100000,"mmol":9.467},{"ts":1794206400000,"mmol":9.464},{"ts":1794206700000,"mmol":9.461},{"ts":1794207000000,"mmol":9.457},{"ts":1794207300000,"mmol":9.454},{"ts":1794207600000,"mmol":9.452},{"ts":1794207900000,"mmol":9.449},{"ts":1794208200000,"mmol":9.446},{"ts":1794208500000,"mmol":9.444},{"ts":1794208800000,"mmol":9.441},{"ts":1794209100000,"mmol":9.439},{"ts":1794209400000,"mmol":9.437},{"ts":1794209700000,"mmol":9.435},{"ts":1794210000000,"mmol":9.433},{"ts":1794210300000,"mmol":9.431},{"ts":1794210600000,"mmol":9.43},{"ts":1794210900000,"mmol":9.428},{"ts":1794211200000,"mmol":9.427},{"ts":1794211500000,"mmol":9.435},{"ts":1794211800000,"mmol":9.462},{"ts":1794212100000,"mmol":9.507},{"ts":1794212400000,"mmol":9.57},{"ts":1794212700000,"mmol":9.649},{"ts":1794213000000,"mmol":9.743},{"ts":1794213300000,"mmol":9.851},{"ts":1794213600000,"mmol":9.97},{"ts":1794213900000,"mmol":10.099},{"ts":1794214200000,"mmol":10.235},{"ts":1794214500000,"mmol":10.376},{"ts":1794214800000,"mmol":10.52},{"ts":1794215100000,"mmol":10.664},{"ts":1794215400000,"mmol":10.806},{"ts":1794215700000,"mmol":10.943},{"ts":1794216000000,"mmol":11.072},{"ts":1794216300000,"mmol":11.193},{"ts":1794216600000,"mmol":11.302},{"ts":1794216900000,"mmol":11.398},{"ts":1794217200000,"mmol":11.479},{"ts":1794217500000,"mmol":11.544},{"ts":1794217800000,"mmol":11.592},{"ts":1794218100000,"mmol":11.622},{"ts":1794218400000,"mmol":11.633},{"ts":1794218700000,"mmol":11.625},{"ts":1794219000000,"mmol":11.599},{"ts":1794219300000,"mmol":11.555},{"ts":1794219600000,"mmol":11.494},{"ts":1794219900000,"mmol":11.416},{"ts":1794220200000,"mmol":11.324},{"ts":1794220500000,"mmol":11.219},{"ts":1794220800000,"mmol":11.102},{"ts":1794221100000,"mmol":10.975},{"ts":1794221400000,"mmol":10.842},{"ts":1794221700000,"mmol":10.704},{"ts":1794222000000,"mmol":10.564},{"ts":1794222300000,"mmol":10.424},{"ts":1794222600000,"mmol":10.286},{"ts":1794222900000,"mmol":10.153},{"ts":1794223200000,"mmol":10.028},{"ts":1794223500000,"mmol":9.912},{"ts":1794223800000,"mmol":9.808},{"ts":1794224100000,"mmol":9.717},{"ts":1794224400000,"mmol":9.641},{"ts":1794224700000,"mmol":9.582},{"ts":1794225000000,"mmol":9.54},{"ts":1794225300000,"mmol":9.516},{"ts":1794225600000,"mmol":9.511},{"ts":1794225900000,"mmol":9.515},{"ts":1794226200000,"mmol":9.52},{"ts":1794226500000,"mmol":9.525},{"ts":1794226800000,"mmol":9.53},{"ts":1794227100000,"mmol":9.534},{"ts":1794227400000,"mmol":9.539},{"ts":1794227700000,"mmol":9.544},{"ts":1794228000000,"mmol":9.55},{"ts":1794228300000,"mmol":9.555},{"ts":1794228600000,"mmol":9.56},{"ts":1794228900000,"mmol":9.565},{"ts":1794229200000,"mmol":9.571},{"ts":1794229500000,"mmol":9.586},{"ts":1794229800000,"mmol":9.619},{"ts":1794230100000,"mmol":9.671},{"ts":1794230400000,"mmol":9.74},{"ts":1794230700000,"mmol":9.826},{"ts":1794231000000,"mmol":9.926},{"ts":1794231300000,"mmol":10.04},{"ts":1794231600000,"mmol":10.166},{"ts":1794231900000,"mmol":10.301},{"ts":1794232200000,"mmol":10.443},{"ts":1794232500000,"mmol":10.59},{"ts":1794232800000,"mmol":10.739},{"ts":1794233100000,"mmol":10.889},{"ts":1794233400000,"mmol":11.036},{"ts":1794233700000,"mmol":11.178},{"ts":1794234000000,"mmol":11.314},{"ts":1794234300000,"mmol":11.439},{"ts":1794234600000,"mmol":11.553},{"ts":1794234900000,"mmol":11.654},{"ts":1794235200000,"mmol":11.74},{"ts":1794235500000,"mmol":11.81},{"ts":1794235800000,"mmol":11.863},{"ts":1794236100000,"mmol":11.897},{"ts":1794236400000,"mmol":11.912},{"ts":1794236700000,"mmol":11.909},{"ts":1794237000000,"mmol":11.887},{"ts":1794237300000,"mmol":11.847},{"ts":1794237600000,"mmol":11.789},{"ts":1794237900000,"mmol":11.715},{"ts":1794238200000,"mmol":11.626},{"ts":1794238500000,"mmol":11.524},{"ts":1794238800000,"mmol":11.411},{"ts":1794239100000,"mmol":11.288},{"ts":1794239400000,"mmol":11.157},{"ts":1794239700000,"mmol":11.022},{"ts":1794240000000,"mmol":10.884},{"ts":1794240300000,"mmol":10.746},{"ts":1794240600000,"mmol":10.611},{"ts":1794240900000,"mmol":10.481},{"ts":1794241200000,"mmol":10.357},{"ts":1794241500000,"mmol":10.243},{"ts":1794241800000,"mmol":10.141},{"ts":1794242100000,"mmol":10.051},{"ts":1794242400000,"mmol":9.977},{"ts":1794242700000,"mmol":9.918},{"ts":1794243000000,"mmol":9.878},{"ts":1794243300000,"mmol":9.855},{"ts":1794243600000,"mmol":9.85},{"ts":1794243900000,"mmol":9.856},{"ts":1794244200000,"mmol":9.861},{"ts":1794244500000,"mmol":9.866},{"ts":1794244800000,"mmol":9.87},{"ts":1794245100000,"mmol":9.875},{"ts":1794245400000,"mmol":9.88},{"ts":1794245700000,"mmol":9.885},{"ts":1794246000000,"mmol":9.889},{"ts":1794246300000,"mmol":9.894},{"ts":1794246600000,"mmol":9.898},{"ts":1794246900000,"mmol":9.902},{"ts":1794247200000,"mmol":9.906},{"ts":1794247500000,"mmol":9.911},{"ts":1794247800000,"mmol":9.915},{"ts":1794248100000,"mmol":9.918},{"ts":1794248400000,"mmol":9.922},{"ts":1794248700000,"mmol":9.926},{"ts":1794249000000,"mmol":9.929},{"ts":1794249300000,"mmol":9.933},{"ts":1794249600000,"mmol":9.936},{"ts":1794249900000,"mmol":9.939},{"ts":1794250200000,"mmol":9.943},{"ts":1794250500000,"mmol":9.946},{"ts":1794250800000,"mmol":9.948},{"ts":1794251100000,"mmol":9.961},{"ts":1794251400000,"mmol":9.991},{"ts":1794251700000,"mmol":10.04},{"ts":1794252000000,"mmol":10.106},{"ts":1794252300000,"mmol":10.188},{"ts":1794252600000,"mmol":10.285},{"ts":1794252900000,"mmol":10.396},{"ts":1794253200000,"mmol":10.517},{"ts":1794253500000,"mmol":10.648},{"ts":1794253800000,"mmol":10.786},{"ts":1794254100000,"mmol":10.928},{"ts":1794254400000,"mmol":11.073},{"ts":1794254700000,"mmol":11.218},{"ts":1794255000000,"mmol":11.36},{"ts":1794255300000,"mmol":11.498},{"ts":1794255600000,"mmol":11.628},{"ts":1794255900000,"mmol":11.748},{"ts":1794256200000,"mmol":11.857},{"ts":1794256500000,"mmol":11.952},{"ts":1794256800000,"mmol":12.032},{"ts":1794257100000,"mmol":12.096},{"ts":1794257400000,"mmol":12.143},{"ts":1794257700000,"mmol":12.171},{"ts":1794258000000,"mmol":12.18},{"ts":1794258300000,"mmol":12.17},{"ts":1794258600000,"mmol":12.141},{"ts":1794258900000,"mmol":12.095},{"ts":1794259200000,"mmol":12.03},{"ts":1794259500000,"mmol":11.949},{"ts":1794259800000,"mmol":11.854},{"ts":1794260100000,"mmol":11.744},{"ts":1794260400000,"mmol":11.623},{"ts":1794260700000,"mmol":11.493},{"ts":1794261000000,"mmol":11.355},{"ts":1794261300000,"mmol":11.212},{"ts":1794261600000,"mmol":11.067},{"ts":1794261900000,"mmol":10.922},{"ts":1794262200000,"mmol":10.778},{"ts":1794262500000,"mmol":10.64},{"ts":1794262800000,"mmol":10.509},{"ts":1794263100000,"mmol":10.387},{"ts":1794263400000,"mmol":10.276},{"ts":1794263700000,"mmol":10.178},{"ts":1794264000000,"mmol":10.096},{"ts":1794264300000,"mmol":10.029},{"ts":1794264600000,"mmol":9.98},{"ts":1794264900000,"mmol":9.949},{"ts":1794265200000,"mmol":9.936},{"ts":1794265500000,"mmol":9.933},{"ts":1794265800000,"mmol":9.929},{"ts":1794266100000,"mmol":9.926},{"ts":1794266400000,"mmol":9.922},{"ts":1794266700000,"mmol":9.918},{"ts":1794267000000,"mmol":9.914},{"ts":1794267300000,"mmol":9.91},{"ts":1794267600000,"mmol":9.906},{"ts":1794267900000,"mmol":9.902},{"ts":1794268200000,"mmol":9.898},{"ts":1794268500000,"mmol":9.894},{"ts":1794268800000,"mmol":9.684},{"ts":1794269100000,"mmol":9.678},{"ts":1794269400000,"mmol":9.671},{"ts":1794269700000,"mmol":9.665},{"ts":1794270000000,"mmol":9.659},{"ts":1794270300000,"mmol":9.653},{"ts":1794270600000,"mmol":9.647},{"ts":1794270900000,"mmol":9.641},{"ts":1794271200000,"mmol":9.635},{"ts":1794271500000,"mmol":9.629},{"ts":1794271800000,"mmol":9.624},{"ts":1794272100000,"mmol":9.618},{"ts":1794272400000,"mmol":9.612},{"ts":1794272700000,"mmol":9.606},{"ts":1794273000000,"mmol":9.6},{"ts":1794273300000,"mmol":9.595},{"ts":1794273600000,"mmol":9.589},{"ts":1794273900000,"mmol":9.583},{"ts":1794274200000,"mmol":9.578},{"ts":1794274500000,"mmol":9.572},{"ts":1794274800000,"mmol":9.567},{"ts":1794275100000,"mmol":9.562},{"ts":1794275400000,"mmol":9.556},{"ts":1794275700000,"mmol":9.551},{"ts":1794276000000,"mmol":9.546},{"ts":1794276300000,"mmol":9.541},{"ts":1794276600000,"mmol":9.536},{"ts":1794276900000,"mmol":9.531},{"ts":1794277200000,"mmol":9.526},{"ts":1794277500000,"mmol":9.522},{"ts":1794277800000,"mmol":9.517},{"ts":1794278100000,"mmol":9.512},{"ts":1794278400000,"mmol":9.508},{"ts":1794278700000,"mmol":9.503},{"ts":1794279000000,"mmol":9.499},{"ts":1794279300000,"mmol":9.495},{"ts":1794279600000,"mmol":9.491},{"ts":1794279900000,"mmol":9.487},{"ts":1794280200000,"mmol":9.483},{"ts":1794280500000,"mmol":9.479},{"ts":1794280800000,"mmol":9.475},{"ts":1794281100000,"mmol":9.472},{"ts":1794281400000,"mmol":9.468},{"ts":1794281700000,"mmol":9.465},{"ts":1794282000000,"mmol":9.462},{"ts":1794282300000,"mmol":9.459},{"ts":1794282600000,"mmol":9.455},{"ts":1794282900000,"mmol":9.453},{"ts":1794283200000,"mmol":9.45},{"ts":1794283500000,"mmol":9.447},{"ts":1794283800000,"mmol":9.445},{"ts":1794284100000,"mmol":9.442},{"ts":1794284400000,"mmol":9.44},{"ts":1794284700000,"mmol":9.438},{"ts":1794285000000,"mmol":9.435},{"ts":1794285300000,"mmol":9.434},{"ts":1794285600000,"mmol":9.432},{"ts":1794285900000,"mmol":9.43},{"ts":1794286200000,"mmol":9.428},{"ts":1794286500000,"mmol":9.427},{"ts":1794286800000,"mmol":9.426},{"ts":1794287100000,"mmol":9.425},{"ts":1794287400000,"mmol":9.424},{"ts":1794287700000,"mmol":9.423},{"ts":1794288000000,"mmol":9.422},{"ts":1794288300000,"mmol":9.421},{"ts":1794288600000,"mmol":9.421},{"ts":1794288900000,"mmol":9.42},{"ts":1794289200000,"mmol":9.42},{"ts":1794289500000,"mmol":9.42},{"ts":1794289800000,"mmol":9.42},{"ts":1794290100000,"mmol":9.42},{"ts":1794290400000,"mmol":9.42},{"ts":1794290700000,"mmol":9.421},{"ts":1794291000000,"mmol":9.421},{"ts":1794291300000,"mmol":9.422},{"ts":1794291600000,"mmol":9.423},{"ts":1794291900000,"mmol":9.424},{"ts":1794292200000,"mmol":9.425},{"ts":1794292500000,"mmol":9.426},{"ts":1794292800000,"mmol":9.428},{"ts":1794293100000,"mmol":9.429},{"ts":1794293400000,"mmol":9.431},{"ts":1794293700000,"mmol":9.432},{"ts":1794294000000,"mmol":9.434},{"ts":1794294300000,"mmol":9.436},{"ts":1794294600000,"mmol":9.438},{"ts":1794294900000,"mmol":9.441},{"ts":1794295200000,"mmol":9.443},{"ts":1794295500000,"mmol":9.445},{"ts":1794295800000,"mmol":9.448},{"ts":1794296100000,"mmol":9.451},{"ts":1794296400000,"mmol":9.454},{"ts":1794296700000,"mmol":9.457},{"ts":1794297000000,"mmol":9.46},{"ts":1794297300000,"mmol":9.463},{"ts":1794297600000,"mmol":9.466},{"ts":1794297900000,"mmol":9.479},{"ts":1794298200000,"mmol":9.511},{"ts":1794298500000,"mmol":9.56},{"ts":1794298800000,"mmol":9.628},{"ts":1794299100000,"mmol":9.712},{"ts":1794299400000,"mmol":9.81},{"ts":1794299700000,"mmol":9.923},{"ts":1794300000000,"mmol":10.046},{"ts":1794300300000,"mmol":10.18},{"ts":1794300600000,"mmol":10.32},{"ts":1794300900000,"mmol":10.466},{"ts":1794301200000,"mmol":10.614},{"ts":1794301500000,"mmol":10.762},{"ts":1794301800000,"mmol":10.908},{"ts":1794302100000,"mmol":11.049},{"ts":1794302400000,"mmol":11.183},{"ts":1794302700000,"mmol":11.307},{"ts":1794303000000,"mmol":11.421},{"ts":1794303300000,"mmol":11.521},{"ts":1794303600000,"mmol":11.606},{"ts":1794303900000,"mmol":11.675},{"ts":1794304200000,"mmol":11.726},{"ts":1794304500000,"mmol":11.76},{"ts":1794304800000,"mmol":11.774},{"ts":1794305100000,"mmol":11.77},{"ts":1794305400000,"mmol":11.748},{"ts":1794305700000,"mmol":11.707},{"ts":1794306000000,"mmol":11.649},{"ts":1794306300000,"mmol":11.575},{"ts":1794306600000,"mmol":11.486},{"ts":1794306900000,"mmol":11.384},{"ts":1794307200000,"mmol":11.27},{"ts":1794307500000,"mmol":11.147},{"ts":1794307800000,"mmol":11.016},{"ts":1794308100000,"mmol":10.881},{"ts":1794308400000,"mmol":10.743},{"ts":1794308700000,"mmol":10.606},{"ts":1794309000000,"mmol":10.471},{"ts":1794309300000,"mmol":10.341},{"ts":1794309600000,"mmol":10.218},{"ts":1794309900000,"mmol":10.104},{"ts":1794310200000,"mmol":10.002},{"ts":1794310500000,"mmol":9.913},{"ts":1794310800000,"mmol":9.839},{"ts":1794311100000,"mmol":9.782},{"ts":1794311400000,"mmol":9.742},{"ts":1794311700000,"mmol":9.72},{"ts":1794312000000,"mmol":9.716},{"ts":1794312300000,"mmol":9.722},{"ts":1794312600000,"mmol":9.729},{"ts":1794312900000,"mmol":9.735},{"ts":1794313200000,"mmol":9.741},{"ts":1794313500000,"mmol":9.747},{"ts":1794313800000,"mmol":9.753},{"ts":1794314100000,"mmol":9.759},{"ts":1794314400000,"mmol":9.765},{"ts":1794314700000,"mmol":9.771},{"ts":1794315000000,"mmol":9.776},{"ts":1794315300000,"mmol":9.782},{"ts":1794315600000,"mmol":9.788},{"ts":1794315900000,"mmol":9.803},{"ts":1794316200000,"mmol":9.837},{"ts":1794316500000,"mmol":9.889},{"ts":1794316800000,"mmol":9.958},{"ts":1794317100000,"mmol":10.044},{"ts":1794317400000,"mmol":10.144},{"ts":1794317700000,"mmol":10.258},{"ts":1794318000000,"mmol":10.383},{"ts":1794318300000,"mmol":10.517},{"ts":1794318600000,"mmol":10.659},{"ts":1794318900000,"mmol":10.805},{"ts":1794319200000,"mmol":10.954},{"ts":1794319500000,"mmol":11.103},{"ts":1794319800000,"mmol":11.249},{"ts":1794320100000,"mmol":11.39},{"ts":1794320400000,"mmol":11.524},{"ts":1794320700000,"mmol":11.648},{"ts":1794321000000,"mmol":11.761},{"ts":1794321300000,"mmol":11.86},{"ts":1794321600000,"mmol":11.945},{"ts":1794321900000,"mmol":12.013},{"ts":1794322200000,"mmol":12.063},{"ts":1794322500000,"mmol":12.096},{"ts":1794322800000,"mmol":12.109},{"ts":1794323100000,"mmol":12.104},{"ts":1794323400000,"mmol":12.08},{"ts":1794323700000,"mmol":12.037},{"ts":1794324000000,"mmol":11.977},{"ts":1794324300000,"mmol":11.901},{"ts":1794324600000,"mmol":11.81},{"ts":1794324900000,"mmol":11.705},{"ts":1794325200000,"mmol":11.588},{"ts":1794325500000,"mmol":11.462},{"ts":1794325800000,"mmol":11.329},{"ts":1794326100000,"mmol":11.191},{"ts":1794326400000,"mmol":11.05},{"ts":1794326700000,"mmol":10.909},{"ts":1794327000000,"mmol":10.771},{"ts":1794327300000,"mmol":10.637},{"ts":1794327600000,"mmol":10.51},{"ts":1794327900000,"mmol":10.393},{"ts":1794328200000,"mmol":10.287},{"ts":1794328500000,"mmol":10.194},{"ts":1794328800000,"mmol":10.116},{"ts":1794329100000,"mmol":10.054},{"ts":1794329400000,"mmol":10.009},{"ts":1794329700000,"mmol":9.982},{"ts":1794330000000,"mmol":9.974},{"ts":1794330300000,"mmol":9.975},{"ts":1794330600000,"mmol":9.976},{"ts":1794330900000,"mmol":9.977},{"ts":1794331200000,"mmol":9.978},{"ts":1794331500000,"mmol":9.979},{"ts":1794331800000,"mmol":9.979},{"ts":1794332100000,"mmol":9.98},{"ts":1794332400000,"mmol":9.98},{"ts":1794332700000,"mmol":9.98},{"ts":1794333000000,"mmol":9.98},{"ts":1794333300000,"mmol":9.98},{"ts":1794333600000,"mmol":9.98},{"ts":1794333900000,"mmol":9.979},{"ts":1794334200000,"mmol":9.979},{"ts":1794334500000,"mmol":9.978},{"ts":1794334800000,"mmol":9.977},{"ts":1794335100000,"mmol":9.976},{"ts":1794335400000,"mmol":9.975},{"ts":1794335700000,"mmol":9.974},{"ts":1794336000000,"mmol":9.972},{"ts":1794336300000,"mmol":9.971},{"ts":1794336600000,"mmol":9.969},{"ts":1794336900000,"mmol":9.968},{"ts":1794337200000,"mmol":9.966},{"ts":1794337500000,"mmol":9.973},{"ts":1794337800000,"mmol":9.999},{"ts":1794338100000,"mmol":10.043},{"ts":1794338400000,"mmol":10.104},{"ts":1794338700000,"mmol":10.182},{"ts":1794339000000,"mmol":10.274},{"ts":1794339300000,"mmol":10.38},{"ts":1794339600000,"mmol":10.496},{"ts":1794339900000,"mmol":10.623},{"ts":1794340200000,"mmol":10.756},{"ts":1794340500000,"mmol":10.894},{"ts":1794340800000,"mmol":11.034},{"ts":1794341100000,"mmol":11.174},{"ts":1794341400000,"mmol":11.312},{"ts":1794341700000,"mmol":11.444},{"ts":1794342000000,"mmol":11.57},{"ts":1794342300000,"mmol":11.685},{"ts":1794342600000,"mmol":11.79},{"ts":1794342900000,"mmol":11.88},{"ts":1794343200000,"mmol":11.956},{"ts":1794343500000,"mmol":12.016},{"ts":1794343800000,"mmol":12.058},{"ts":1794344100000,"mmol":12.081},{"ts":1794344400000,"mmol":12.086},{"ts":1794344700000,"mmol":12.072},{"ts":1794345000000,"mmol":12.039},{"ts":1794345300000,"mmol":11.988},{"ts":1794345600000,"mmol":11.92},{"ts":1794345900000,"mmol":11.835},{"ts":1794346200000,"mmol":11.735},{"ts":1794346500000,"mmol":11.622},{"ts":1794346800000,"mmol":11.497},{"ts":1794347100000,"mmol":11.363},{"ts":1794347400000,"mmol":11.221},{"ts":1794347700000,"mmol":11.075},{"ts":1794348000000,"mmol":10.926},{"ts":1794348300000,"mmol":10.777},{"ts":1794348600000,"mmol":10.63},{"ts":1794348900000,"mmol":10.488},{"ts":1794349200000,"mmol":10.353},{"ts":1794349500000,"mmol":10.228},{"ts":1794349800000,"mmol":10.114},{"ts":1794350100000,"mmol":10.013},{"ts":1794350400000,"mmol":9.928},{"ts":1794350700000,"mmol":9.858},{"ts":1794351000000,"mmol":9.806},{"ts":1794351300000,"mmol":9.772},{"ts":1794351600000,"mmol":9.757},{"ts":1794351900000,"mmol":9.751},{"ts":1794352200000,"mmol":9.745},{"ts":1794352500000,"mmol":9.739},{"ts":1794352800000,"mmol":9.732},{"ts":1794353100000,"mmol":9.726},{"ts":1794353400000,"mmol":9.72},{"ts":1794353700000,"mmol":9.714},{"ts":1794354000000,"mmol":9.708},{"ts":1794354300000,"mmol":9.702},{"ts":1794354600000,"mmol":9.696},{"ts":1794354900000,"mmol":9.69},{"ts":1794398400000,"mmol":8.1}],"syntheticTag":"GF_SYNTHETIC_FIXTURE_V025"}};
+const demoPlan={"planId":"SYNTHETIC-ONLY-DO-NOT-TREAT","reviewedByClinician":true,"validUntilTs":1825934400000,"factors":{"isfMmolPerUnit":5,"icrGramsPerUnit":{"breakfast":15,"lunch":20,"dinner":18}},"targetMmol":6,"bolusStepUnits":0.5,"maxBolusUnits":8,"maxCorrectionUnits":4,"minCorrectionSpacingMinutes":180,"minRoutineGlucoseMmol":4.5,"maxKetonesForRoutineMmol":0.6,"hypo":{"fastCarbsGrams":12,"recheckMin":15,"triggerBelowMmol":3.9}};
+const demoCases=[{"id":"high","name":"Высокая глюкоза 12,5","glucoseMmol":12.5},{"id":"meal","name":"Обед 40 г углеводов и рост","glucoseMmol":12.5,"mealCarbs":40,"mealSlot":"lunch"},{"id":"breakfast","name":"Завтрак 30 г, глюкоза 6,0","glucoseMmol":6,"mealCarbs":30,"mealSlot":"breakfast"},{"id":"dinner","name":"Ужин 36 г, глюкоза 6,0","glucoseMmol":6,"mealCarbs":36,"mealSlot":"dinner"},{"id":"low","name":"Низкая глюкоза 3,5","glucoseMmol":3.5},{"id":"recent","name":"Недавний болюс","glucoseMmol":13.2,"additionalHistory":[{"type":"insulin","insulinType":"short","purpose":"correction","units":1,"ts":1794396600000}]},{"id":"ketone","name":"Кетоны 0,7","glucoseMmol":15.2,"ketonesMmol":0.7},{"id":"ill","name":"Болезнь","glucoseMmol":13.3,"sick":true},{"id":"exercise","name":"Интенсивная нагрузка","glucoseMmol":11.5,"activityRecent":"intense"},{"id":"severe","name":"Нельзя глотать","glucoseMmol":2.7,"canSwallow":false},{"id":"vomit","name":"Рвота и рост","glucoseMmol":16,"vomiting":true},{"id":"spoiled","name":"Испорченный журнал","glucoseMmol":12.5,"alter":"duplicate"},{"id":"gap","name":"Пропуск дня CGM","glucoseMmol":12.5,"alter":"gap"}];
+
+(function(){
+const $=x=>document.getElementById(x),num=(x,k=2)=>typeof x==='number'&&Number.isFinite(x)?x.toLocaleString('ru-RU',{maximumFractionDigits:k}):'—',escape=x=>String(x).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+const assessment=GFCare25.assess(demoFixture.raw,demoFixture.now,demoPlan);
+const labels=[['СДИ',num(assessment.tddUnitsPerDay,2)+' ЕД/сут'],['ФЧИ по дневнику',num(assessment.comparison.fields[0].observed,3)+' ммоль/л/ЕД'],['ФЧИ стартовая',num(assessment.comparison.fields[0].starter,3)+' ммоль/л/ЕД'],['Быстрый IOB',num(assessment.iobUnits,3)+' ЕД'],['Завтрак',num(assessment.comparison.fields[1].observed,2)+' г/ЕД'],['Обед',num(assessment.comparison.fields[2].observed,2)+' г/ЕД'],['Ужин',num(assessment.comparison.fields[3].observed,2)+' г/ЕД']];
+$('metrics').innerHTML=labels.map(a=>'<div class="metric"><div class="small">'+a[0]+'</div><div class="number">'+a[1]+'</div></div>').join('');
+$('trend').innerHTML='<p class="note">'+assessment.profile.sourceReadings+' показаний CGM, '+assessment.profile.sourceEvents+' событий. Статус: '+escape(assessment.status)+'. Тестовый план предоставлен искусственно и не подтверждает коэффициенты.</p>';
+const pts=demoFixture.raw.readings.filter(r=>r.ts<demoFixture.now),lo=Math.min(...pts.map(r=>r.mmol)),hi=Math.max(...pts.map(r=>r.mmol)),start=pts[0].ts,end=pts.at(-1).ts;
+const width=1000,height=200,x=t=>20+(t-start)/(end-start)*(width-40),y=v=>height-20-(v-2)/(Math.max(16,hi+1)-2)*(height-40);
+const p=pts.map((r,i)=>(i?'L':'M')+x(r.ts).toFixed(1)+' '+y(r.mmol).toFixed(1)).join(' ');
+let grid='';for(const val of [3.9,6,10,14]){const yy=y(val);grid+='<line x1="20" x2="980" y1="'+yy+'" y2="'+yy+'" stroke="#dce3e8" stroke-dasharray="5,5"/><text x="23" y="'+(yy-4)+'" font-size="12" fill="#516575">'+val+'</text>'}
+$('chart').innerHTML='<svg class="chart" role="img" aria-label="История глюкозы 5 суток" viewBox="0 0 1000 200" xmlns="http://www.w3.org/2000/svg">'+grid+'<path d="'+p+'" fill="none" stroke="#14676d" stroke-width="1.8"/></svg><p class="note">Значения CGM в ммоль/л. График полностью искусственный.</p>';
+$('compare').innerHTML='<table><thead><tr><th>Показатель</th><th>По формуле</th><th>По дневнику</th><th>В тестовом плане</th><th>Отклонение от плана</th></tr></thead><tbody>'+assessment.comparison.fields.map(v=>'<tr><td>'+escape(v.label)+'</td><td>'+num(v.starter,3)+'</td><td>'+num(v.observed,3)+'</td><td>'+num(v.plan,3)+'</td><td>'+num(v.vsPlanPct,1)+'%</td></tr>').join('')+'</tbody></table>';
+$('audit').innerHTML='<p class="note">Выявлено '+assessment.warnings.length+' замечаний по качеству/сопоставлению. Автоподтверждение лечебных коэффициентов: '+(assessment.autoApproveFactors?'да':'нет')+'.</p><ul>'+assessment.warnings.map(v=>'<li>'+escape(v)+'</li>').join('')+'</ul>';
+$('scenario').innerHTML=demoCases.map(v=>'<option value="'+v.id+'">'+escape(v.name)+'</option>').join('');
+function calc(){
+ const c=demoCases.find(x=>x.id===$('scenario').value),f=structuredClone(demoFixture);
+ if(c.alter==='duplicate')f.raw.events.push({...f.raw.events.find(e=>e.type==='insulin')});
+ if(c.alter==='gap')f.raw.readings=f.raw.readings.filter(x=>x.ts<Date.parse('2026-11-09T00:00:00Z')||x.ts>=Date.parse('2026-11-10T00:00:00Z'));
+ const r=GFCare25.simulateSynthetic(f,c,demoPlan),n=r.researchNumbers||{},st=r.status,explain=(r.calculation?.codes||[]).join(' · ');
+ let out='<div class="panel"><p><span class="badge">'+escape(st)+'</span> · Входная глюкоза: <b>'+num(c.glucoseMmol)+' ммоль/л</b></p>';
+ if(n.roundedTotalUnits!=null)out+='<div class="metric"><div class="small">Тестовый математический результат по вымышленному плану — НЕ НАЗНАЧЕНИЕ</div><div class="number">'+num(n.roundedTotalUnits,2)+' ЕД</div><p class="note">Еда: '+num(n.mealUnits,2)+' ЕД · коррекция до IOB: '+num(n.correctionBeforeIobUnits,2)+' ЕД · вычтенное коррекционное IOB: '+num(n.correctionIobUnits,2)+' ЕД · шаг: '+num(n.stepUnits,2)+' ЕД</p></div>';
+ if(n.quickCarbsGrams!=null)out+='<div class="metric"><div class="small">Ровно то количество, которое задано в ВЫМЫШЛЕННОМ плане — НЕ РЕКОМЕНДАЦИЯ</div><div class="number">'+num(n.quickCarbsGrams,1)+' г быстрых углеводов</div><p class="note">Условный сок при 10 г углеводов на 100 мл: '+num(n.productQuantity,1)+' мл. Проверить через '+num(n.recheckMin)+' минут по плану.</p></div>';
+ if(!n.roundedTotalUnits&&!n.quickCarbsGrams&&r.calculation?.action)out+='<p class="alert">'+escape(r.calculation.action)+'</p>';
+ if(!r.researchNumbers)out+='<p class="warn">Числовой результат не рассчитывается в этом варианте: данные или состояние требуют другого алгоритма. '+escape(explain)+'</p>';
+ out+='<p class="note">СДИ из дневника: '+num(r.assessment?.tddUnitsPerDay,2)+' ЕД/сут. Для числового примера использованы параметры фиктивного плана, а не автоматически оцененные коэффициенты.</p><p class="note">Глюкоза после действия: неизвестна, точный конечный уровень не предсказывается.</p></div>';
+ $('result').innerHTML=out;
+}
+$('scenario').addEventListener('change',calc);$('run').addEventListener('click',calc);calc();
+window.GF025DemoReady={assessment,select:(id)=>{$('scenario').value=id;calc();return $('result').textContent;}};
+})();
+</script></body></html>

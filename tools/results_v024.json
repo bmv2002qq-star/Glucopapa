@@ -1,0 +1,164 @@
+{
+  "version": "0.24",
+  "checked": 39,
+  "stressCases": 160,
+  "status": "pass",
+  "cases": [
+    {
+      "name": "source is actual 5 complete calendar days",
+      "status": "pass"
+    },
+    {
+      "name": "auto status provisional",
+      "status": "pass"
+    },
+    {
+      "name": "15 meal injections auto-associated",
+      "status": "pass"
+    },
+    {
+      "name": "TDD reference 20.3 U/day",
+      "status": "pass"
+    },
+    {
+      "name": "rapid ISF starter 100/TDD",
+      "status": "pass"
+    },
+    {
+      "name": "regular ISF starter 83/TDD",
+      "status": "pass"
+    },
+    {
+      "name": "meal ratio starter 500/TDD",
+      "status": "pass"
+    },
+    {
+      "name": "personal ISF from 3 clean corrections",
+      "status": "pass"
+    },
+    {
+      "name": "breakfast personalized, 5 samples",
+      "status": "pass"
+    },
+    {
+      "name": "lunch personalized",
+      "status": "pass"
+    },
+    {
+      "name": "dinner personalized",
+      "status": "pass"
+    },
+    {
+      "name": "no auto clinical plan",
+      "status": "pass"
+    },
+    {
+      "name": "no patient dose in auto profile",
+      "status": "pass"
+    },
+    {
+      "name": "reference only when corrections not recorded",
+      "status": "pass"
+    },
+    {
+      "name": "meal association not guessed when 2 doses overlap",
+      "status": "pass"
+    },
+    {
+      "name": "snack not counted as full lunch",
+      "status": "pass"
+    },
+    {
+      "name": "missing meal causes hold",
+      "status": "pass"
+    },
+    {
+      "name": "missing basal causes hold",
+      "status": "pass"
+    },
+    {
+      "name": "missing CGM day causes hold",
+      "status": "pass"
+    },
+    {
+      "name": "CGM duplicate timestamp rejects",
+      "status": "pass"
+    },
+    {
+      "name": "possible sensor spike rejects",
+      "status": "pass"
+    },
+    {
+      "name": "negative injection rejects",
+      "status": "pass"
+    },
+    {
+      "name": "negative carbohydrates rejects",
+      "status": "pass"
+    },
+    {
+      "name": "negative protein rejects",
+      "status": "pass"
+    },
+    {
+      "name": "duplicate injection rejects",
+      "status": "pass"
+    },
+    {
+      "name": "invalid time zone rejects",
+      "status": "pass"
+    },
+    {
+      "name": "old historic duplicate outside five-day window ignored",
+      "status": "pass"
+    },
+    {
+      "name": "future meal does not enter completed five-day window",
+      "status": "pass"
+    },
+    {
+      "name": "unsupported insulin name without type blocks",
+      "status": "pass"
+    },
+    {
+      "name": "known insulin brand type inference marked",
+      "status": "pass"
+    },
+    {
+      "name": "illness episodes not silently used for clean FCHI",
+      "status": "pass"
+    },
+    {
+      "name": "activity episodes excluded from meal ratio",
+      "status": "pass"
+    },
+    {
+      "name": "no automatically issued dose even with plan",
+      "status": "pass"
+    },
+    {
+      "name": "severe hypo independent of plan",
+      "status": "pass"
+    },
+    {
+      "name": "no-plan patient input cannot prescribe",
+      "status": "pass"
+    },
+    {
+      "name": "current CGM fresh correctly detected",
+      "status": "pass"
+    },
+    {
+      "name": "stale CGM correctly detected",
+      "status": "pass"
+    },
+    {
+      "name": "5d day-based ratio works without XE",
+      "status": "pass"
+    },
+    {
+      "name": "160 malformed histories fail closed",
+      "status": "pass"
+    }
+  ]
+}

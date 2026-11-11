@@ -1,0 +1,39 @@
+name: CI source checks
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  source-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify source files
+        run: |
+          test -f app/build.gradle
+          test -f app/src/main/assets/index.html
+          test -f app/src/main/cpp/local_llm.cpp
+          test -f app/src/main/java/ru/family/glucodiary/LocalLlm.java
+      - name: Run JS and local-AI source checks
+        run: |
+          node tools/test_medical_ui.js
+          node tools/test_local_ai_ui.js
+          node tools/test_v010.js
+          node tools/test_v011.js
+          node tools/test_insulin_profiles.js
+          node tools/test_auto_profile_v024.js
+          node tools/test_plan_calculator_v023.js
+          node tools/test_care_workflow_v025.js
+          python3 tools/check_local_ai.py

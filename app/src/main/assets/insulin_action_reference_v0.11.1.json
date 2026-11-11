@@ -1,0 +1,146 @@
+{
+  "novorapid": {
+    "name": "НовоРапид",
+    "onset": "10–20 мин",
+    "peak": "1–3 ч",
+    "duration": "3–5 ч",
+    "curve": "Быстрый подъём действия, относительно ранний максимум, постепенное угасание.",
+    "sourceUrl": "https://www.medicines.org.uk/emc/product/4779/smpc",
+    "sourceType": "официальная инструкция"
+  },
+  "fiasp": {
+    "name": "Фиасп",
+    "onset": "раньше НовоРапида; в крови определяется примерно через 4 мин (это не начало сахароснижающего эффекта)",
+    "peak": "1–3 ч",
+    "duration": "3–5 ч",
+    "curve": "Более выраженное раннее действие, чем у НовоРапида; затем постепенное снижение.",
+    "sourceUrl": "https://www.medicines.org.uk/emc/product/8108/smpc",
+    "sourceType": "официальная инструкция"
+  },
+  "humalog": {
+    "name": "Хумалог",
+    "onset": "около 15 мин",
+    "peak": "первые 0,5–2 ч (ориентир)",
+    "duration": "2–5 ч",
+    "curve": "Быстрый рост, ранний максимум, короткий спад.",
+    "sourceUrl": "https://www.medicines.org.uk/emc/product/7464/smpc",
+    "sourceType": "официальная инструкция + сводная таблица"
+  },
+  "apidra": {
+    "name": "Апидра",
+    "onset": "10–20 мин",
+    "peak": "ранний, ориентировочно 0,5–1,5 ч",
+    "duration": "около 3–5 ч",
+    "curve": "Быстрый рост, ранний максимум, спад за несколько часов.",
+    "sourceUrl": "https://www.medicines.org.uk/emc/product/2499/smpc",
+    "sourceType": "официальная инструкция + сводная таблица"
+  },
+  "actrapid": {
+    "name": "Актрапид НМ",
+    "onset": "30–60 мин",
+    "peak": "2–4 ч",
+    "duration": "5–8 ч",
+    "curve": "Медленнее нарастает, более поздний максимум и длиннее спад, чем у аналогов.",
+    "sourceUrl": "https://www.merckmanuals.com/professional/multimedia/table/onset-peak-and-duration-of-action-of-human-insulin-preparations",
+    "sourceType": "данные группы растворимого человеческого инсулина"
+  },
+  "humulinr": {
+    "name": "Хумулин Регуляр",
+    "onset": "30–60 мин",
+    "peak": "2–4 ч",
+    "duration": "5–8 ч",
+    "curve": "Медленнее нарастает, более поздний максимум и длиннее спад, чем у аналогов.",
+    "sourceUrl": "https://www.merckmanuals.com/professional/multimedia/table/onset-peak-and-duration-of-action-of-human-insulin-preparations",
+    "sourceType": "данные группы растворимого человеческого инсулина"
+  },
+  "insumanrapid": {
+    "name": "Инсуман Рапид ГТ",
+    "onset": "30–60 мин",
+    "peak": "2–4 ч",
+    "duration": "5–8 ч",
+    "curve": "Медленнее нарастает, более поздний максимум и длиннее спад, чем у аналогов.",
+    "sourceUrl": "https://www.merckmanuals.com/professional/multimedia/table/onset-peak-and-duration-of-action-of-human-insulin-preparations",
+    "sourceType": "данные группы растворимого человеческого инсулина"
+  },
+  "rinsulinr": {
+    "name": "Ринсулин Р",
+    "onset": "30–60 мин",
+    "peak": "2–4 ч",
+    "duration": "5–8 ч",
+    "curve": "Медленнее нарастает, более поздний максимум и длиннее спад, чем у аналогов.",
+    "sourceUrl": "https://www.merckmanuals.com/professional/multimedia/table/onset-peak-and-duration-of-action-of-human-insulin-preparations",
+    "sourceType": "данные группы растворимого человеческого инсулина"
+  },
+  "lantus": {
+    "name": "Лантус",
+    "onset": "постепенно, обычно первые 1–4 ч",
+    "peak": "без выраженного пика",
+    "duration": "около 24 ч",
+    "curve": "Относительно равномерный продлённый профиль; возможна индивидуальная вариабельность.",
+    "sourceUrl": "https://www.merckmanuals.com/professional/multimedia/table/onset-peak-and-duration-of-action-of-human-insulin-preparations",
+    "sourceType": "сводные фармакологические данные"
+  },
+  "toujeo": {
+    "name": "Туджео",
+    "onset": "постепенно, ориентировочно в течение первых 6 ч",
+    "peak": "без выраженного пика",
+    "duration": "примерно 24–36 ч",
+    "curve": "Ровный и более растянутый профиль, чем у гларгина U-100.",
+    "sourceUrl": "https://www.ema.europa.eu/en/documents/product-information/toujeo-epar-product-information_en.pdf",
+    "sourceType": "официальная инструкция"
+  },
+  "tresiba": {
+    "name": "Тресиба",
+    "onset": "постепенно, приблизительно через 1–2 ч",
+    "peak": "без выраженного пика",
+    "duration": "более 42 ч",
+    "curve": "Очень продолжительный и сравнительно ровный профиль.",
+    "sourceUrl": "https://www.ema.europa.eu/en/documents/product-information/tresiba-epar-product-information_en.pdf",
+    "sourceType": "официальная инструкция"
+  },
+  "levemir": {
+    "name": "Левемир",
+    "onset": "постепенно, около 1–2 ч (групповой ориентир)",
+    "peak": "нет выраженного пика; концентрация в крови максимальна примерно через 6–8 ч",
+    "duration": "дозозависимо, до 24 ч",
+    "curve": "Широкий относительно ровный профиль; длительность зависит от дозы. 0,2/0,3/0,4 ЕД/кг в исследованиях: около 12/17/20 ч. Концентрация в крови и сила действия — разные величины.",
+    "sourceUrl": "https://www.ema.europa.eu/en/documents/product-information/levemir-epar-product-information_en.pdf",
+    "sourceType": "официальная инструкция + сводная фармакология"
+  },
+  "protafan": {
+    "name": "Протафан НМ",
+    "onset": "около 1–4 ч",
+    "peak": "около 4–12 ч",
+    "duration": "примерно 12–24 ч",
+    "curve": "Широкий выраженный максимум в середине периода действия, затем снижение.",
+    "sourceUrl": "https://www.merckmanuals.com/professional/multimedia/table/onset-peak-and-duration-of-action-of-human-insulin-preparations",
+    "sourceType": "данные группы НПХ; значительная вариабельность"
+  },
+  "humulinnph": {
+    "name": "Хумулин НПХ",
+    "onset": "около 1–4 ч",
+    "peak": "около 4–12 ч",
+    "duration": "примерно 12–24 ч",
+    "curve": "Широкий выраженный максимум в середине периода действия, затем снижение.",
+    "sourceUrl": "https://www.merckmanuals.com/professional/multimedia/table/onset-peak-and-duration-of-action-of-human-insulin-preparations",
+    "sourceType": "данные группы НПХ; значительная вариабельность"
+  },
+  "insumanbasal": {
+    "name": "Инсуман Базал ГТ",
+    "onset": "около 1–4 ч",
+    "peak": "около 4–12 ч",
+    "duration": "примерно 12–24 ч",
+    "curve": "Широкий выраженный максимум в середине периода действия, затем снижение.",
+    "sourceUrl": "https://www.merckmanuals.com/professional/multimedia/table/onset-peak-and-duration-of-action-of-human-insulin-preparations",
+    "sourceType": "данные группы НПХ; значительная вариабельность"
+  },
+  "rinsulinnph": {
+    "name": "Ринсулин НПХ",
+    "onset": "около 1–4 ч",
+    "peak": "около 4–12 ч",
+    "duration": "примерно 12–24 ч",
+    "curve": "Широкий выраженный максимум в середине периода действия, затем снижение.",
+    "sourceUrl": "https://www.merckmanuals.com/professional/multimedia/table/onset-peak-and-duration-of-action-of-human-insulin-preparations",
+    "sourceType": "данные группы НПХ; значительная вариабельность"
+  }
+}

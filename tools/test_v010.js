@@ -1,0 +1,22 @@
+// Contract tests for diet totals, profile display, cloud provider and meal status.
+const fs=require('fs'),vm=require('vm'),assert=require('assert');
+const code=fs.readFileSync('app/src/main/assets/index.html','utf8').match(/<script>([\s\S]*?)<\/script>/)[1].replace(/init\(\);\s*$/,'');
+const ctx={window:{},document:{addEventListener(){},createElement(){return {style:{},remove(){},querySelectorAll(){return []},innerHTML:''}},body:{appendChild(){}},querySelector(){return {innerHTML:''}},querySelectorAll(){return []},getElementById(){return null}},localStorage:{getItem(){return null},setItem(){}},console,Date,JSON,Math,Number,String,setTimeout(){},clearTimeout(){},navigator:{},confirm(){return true},alert(){},Intl};
+ctx.window=ctx;vm.createContext(ctx);vm.runInContext(code,ctx);
+const run=x=>vm.runInContext(x,ctx),now=Date.now();
+const meal=(status,carbs)=>({type:'meal',status,ts:now-60000,carbs,protein:5,fat:3,kcal:190,grams:200});
+ctx.testEvents=[meal('planned',40),meal('started',50),meal('eaten',30),{type:'insulin',insulinType:'short',ts:now-120000,units:2.5},{type:'insulin',insulinType:'long',ts:now-120000,units:4}];
+run('app.events=testEvents;app.profile={age:7,height:120,weight:24,shortInsulin:"НовоРапид",longInsulin:"Левемир"}');
+const state=run('gf010DayState()');
+assert.equal(state.eaten.length,1);assert.equal(state.started.length,1);assert.equal(state.planned.length,1);
+assert.equal(state.totals.carbs,30);assert.equal(state.short.length,1);assert.equal(state.long.length,1);
+const home=run('renderHome()');
+for(const word of ['Профиль ребёнка','съедено','НовоРапид','Левемир','Запланированная еда','Оценить текущую глюкозу'])assert(home.includes(word),word);
+assert(home.includes('30') && home.includes('2,5') || home.includes('2.5'),'totals');
+assert(!code.includes('id="insDone"'),'redundant injection checkbox still present');
+assert(code.includes('gfMealActivity') && code.includes('activityLevel:app.mealActivity'),'meal activity');
+assert(run('renderSettings()').includes('Облачный ИИ'),'provider');
+assert(run('SEED_FOODS.some(x=>x.name.includes("Красный пищевик"))'),'marshmallow seed');
+assert(run('SEED_FOODS.some(x=>x.name.includes("Сок ABC яблочный"))'),'juice seed');
+assert(run('SEED_FOODS.some(x=>x.category==="Хлебцы")'),'breadcrisp seed');
+console.log('Passed v0.10: profile, meal states, macro totals, insulin distinction, UI, cloud entry and catalog.');

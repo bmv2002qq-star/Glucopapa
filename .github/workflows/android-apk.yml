@@ -1,0 +1,63 @@
+name: Build GlucoPapa 0.26 APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  debug-apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v4
+      - name: Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
+      - name: Install SDK, NDK and CMake
+        run: |
+          sdkmanager 'platforms;android-35' 'build-tools;35.0.0' 'ndk;27.2.12479018' 'cmake;3.22.1'
+          yes | sdkmanager --licenses || true
+      - name: Gradle 8.10.2
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.10.2'
+      - name: Obtain pinned llama.cpp source
+        run: |
+          git clone --filter=blob:none https://github.com/ggml-org/llama.cpp.git app/src/main/cpp/llama.cpp
+          git -C app/src/main/cpp/llama.cpp checkout 08f945f
+          git -C app/src/main/cpp/llama.cpp rev-parse HEAD
+      - name: Check sources before native build
+        run: |
+          node tools/test_medical_ui.js
+          node tools/test_local_ai_ui.js
+          node tools/test_v010.js
+          node tools/test_v011.js
+          node tools/test_insulin_profiles.js
+          node tools/test_auto_profile_v024.js
+          node tools/test_plan_calculator_v023.js
+          node tools/test_care_workflow_v025.js
+          python3 tools/check_local_ai.py
+      - name: Assemble debug APK with CPU backend
+        run: gradle --no-daemon --stacktrace :app:assembleDebug
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: GlucoPapa-v0.26-arm64-debug-APK
+          path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14

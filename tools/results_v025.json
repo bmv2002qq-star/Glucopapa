@@ -1,0 +1,198 @@
+{
+  "version": "0.25-research",
+  "passed": 45,
+  "stressScenarios": 400,
+  "failed": 0,
+  "synthetic": {
+    "tdd": 20.3,
+    "referenceIsf": 4.9261,
+    "observedIsf": 5.652,
+    "observedIcr": {
+      "breakfast": 23.274,
+      "lunch": 21.102,
+      "dinner": 17.798
+    }
+  },
+  "tests": [
+    {
+      "name": "complete 5-day real application event model loads",
+      "ok": true
+    },
+    {
+      "name": "average 5-day TDD",
+      "ok": true
+    },
+    {
+      "name": "reference ISF 100/TDD",
+      "ok": true
+    },
+    {
+      "name": "reference ICR 500/TDD",
+      "ok": true
+    },
+    {
+      "name": "independent recorded CGM FCHI",
+      "ok": true
+    },
+    {
+      "name": "ICR breakfast observed",
+      "ok": true
+    },
+    {
+      "name": "ICR lunch observed",
+      "ok": true
+    },
+    {
+      "name": "ICR dinner observed",
+      "ok": true
+    },
+    {
+      "name": "IOB measured separately from basal",
+      "ok": true
+    },
+    {
+      "name": "all values have explicitly identified provenance",
+      "ok": true
+    },
+    {
+      "name": "plan and diary comparison covers four factors",
+      "ok": true
+    },
+    {
+      "name": "isf difference can be measured",
+      "ok": true
+    },
+    {
+      "name": "deviating breakfast factor warned",
+      "ok": true
+    },
+    {
+      "name": "unconfirmed inferred meal links warned",
+      "ok": true
+    },
+    {
+      "name": "no fake automatic plan approval",
+      "ok": true
+    },
+    {
+      "name": "no automatically authorized patient prescription",
+      "ok": true
+    },
+    {
+      "name": "synthetic high glucose produces transparent numerical example",
+      "ok": true
+    },
+    {
+      "name": "synthetic breakfast changes numerical meal units",
+      "ok": true
+    },
+    {
+      "name": "synthetic lunch with high glucose combines meal and correction",
+      "ok": true
+    },
+    {
+      "name": "hypoglycemia example replays pre-entered plan",
+      "ok": true
+    },
+    {
+      "name": "hypoglycemia has NO asserted final mmol",
+      "ok": true
+    },
+    {
+      "name": "no meal plus target produces zero synthetic units",
+      "ok": true
+    },
+    {
+      "name": "research only with exact artificial input tag",
+      "ok": true
+    },
+    {
+      "name": "cannot switch patient history into synthetic through source flag",
+      "ok": true
+    },
+    {
+      "name": "cannot use patient plan as synthetic",
+      "ok": true
+    },
+    {
+      "name": "unexpected recent bolus refuses synthetic routine correction",
+      "ok": true
+    },
+    {
+      "name": "illness triggers sick-day route",
+      "ok": true
+    },
+    {
+      "name": "ketones trigger separate path",
+      "ok": true
+    },
+    {
+      "name": "exercise triggers separate route",
+      "ok": true
+    },
+    {
+      "name": "unconscious overrides numeric rescue",
+      "ok": true
+    },
+    {
+      "name": "cannot swallow overrides numeric rescue",
+      "ok": true
+    },
+    {
+      "name": "emergency without plan/day history still works",
+      "ok": true
+    },
+    {
+      "name": "vomiting triggers urgent state",
+      "ok": true
+    },
+    {
+      "name": "illness must not produce dose",
+      "ok": true
+    },
+    {
+      "name": "duplicate record stops numerical synthetic replay",
+      "ok": true
+    },
+    {
+      "name": "missing CGM day stops replay",
+      "ok": true
+    },
+    {
+      "name": "negative meal carbs stops replay",
+      "ok": true
+    },
+    {
+      "name": "patient mode assessment does not fabricate any dose",
+      "ok": true
+    },
+    {
+      "name": "no plan reference still exposes observed research factors",
+      "ok": true
+    },
+    {
+      "name": "unreviewed plan never labeled verified",
+      "ok": true
+    },
+    {
+      "name": "stale CGM noted without turning diary into patient dose",
+      "ok": true
+    },
+    {
+      "name": "proportional difference sign",
+      "ok": true
+    },
+    {
+      "name": "zero coefficient never generates infinity",
+      "ok": true
+    },
+    {
+      "name": "400 synthetic scenarios preserve non-prescription bounds",
+      "ok": true
+    },
+    {
+      "name": "synthetic grid has varied numeric calculation outcomes",
+      "ok": true
+    }
+  ]
+}
