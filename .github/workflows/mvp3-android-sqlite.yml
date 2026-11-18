@@ -13,6 +13,29 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  node-regression:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Verify assets and run synthetic Node regressions
+        shell: bash
+        run: |
+          mkdir -p qa-evidence
+          python3 qa/mvp3-full/integrity.py | tee qa-evidence/integrity.json
+          node --test --test-reporter=tap qa/mvp3-full/*.test.cjs > qa-evidence/node.tap
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: GlucoPapa-MVP3-Node-evidence
+          path: qa-evidence/
+          retention-days: 7
+
   android-15:
     uses: ./.github/workflows/mvp3-android-device.yml
     with:

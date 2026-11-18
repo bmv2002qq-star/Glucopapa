@@ -1,7 +1,9 @@
 7a65e1fcd9346f9c3ec5e264cd9395524297d7338b2c148ae2ad2275b72ea546  android-mvp3/.github/workflows/build-apk.yml
 d883e4afc8125dc3f4356efdd0ac09239bfd8259878aa332f06a50ac5b3cb37e  android-mvp3/.gitignore
 0aa6029494d7c9603babdef7b58a04461adeddceb90864d225067dd3a2d1083d  android-mvp3/app/build.gradle
-68eb2fa0f66ffef5ca6c9f7c7fcbd347662ab50812450a4cbcbecb88b61aa917  android-mvp3/app/src/androidTest/java/com/glucopapa/shell/qa/StorageInstrumentation.java
+f1b12176ae6d39aca391060d233c9896be890e8b6525f4b0f270481219641047  android-mvp3/app/src/androidTest/assets/webview-qa.js
+1c687b87826ebbb8e916b3706c2e0d2404dd83a6fc3bfa53febd9e00a893e605  android-mvp3/app/src/androidTest/java/com/glucopapa/shell/qa/StorageInstrumentation.java
+69e3c6ae65dde86175cf96c5c132624623ed2c07ed89a3d2d103f52ae3602808  android-mvp3/app/src/androidTest/java/com/glucopapa/shell/qa/WebViewChecks.java
 5bb7bce222c6a9163851a0de676833a7f72e3847981395eeeb6372d2712493aa  android-mvp3/app/src/main/AndroidManifest.xml
 d7acfbeeb94973faf3976c5c82d9392fe3675f80dc8576ca1ad499c9255a3ae8  android-mvp3/app/src/main/assets/www/app.js
 0abc9b584922377403d2edca6de42f9aea5f31e152415bcda186b6c9f35dc84b  android-mvp3/app/src/main/assets/www/approved-library/CGM_Chart_v0.2A.html

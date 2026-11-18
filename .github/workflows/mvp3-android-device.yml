@@ -55,7 +55,8 @@ jobs:
         shell: bash
         run: |
           mkdir -p "$EVIDENCE"
-          gradle --no-daemon --console=plain -Pandroid.builder.sdkDownload=false :app:assembleDebug :app:assembleDebugAndroidTest | tee "$EVIDENCE/build.log"
+          gradle --no-daemon --console=plain -Pandroid.builder.sdkDownload=false :app:assembleDebug :app:assembleDebugAndroidTest 2>&1 | tee "$EVIDENCE/build.log"
+          python3 ../qa/mvp3-full/integrity.py --apk app/build/outputs/apk/debug/app-debug.apk | tee "$EVIDENCE/assets.json"
           "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose app/build/outputs/apk/debug/app-debug.apk | tee "$EVIDENCE/signature.log"
       - name: Check installed WebView and SQLite
         shell: bash
@@ -67,6 +68,8 @@ jobs:
           name: GlucoPapa-MVP3-API-${{ inputs.api }}-evidence
           path: |
             ${{ runner.temp }}/glucopapa-android-qa/*.log
+            ${{ runner.temp }}/glucopapa-android-qa/*.json
+            ${{ runner.temp }}/glucopapa-android-qa/*.png
             ${{ runner.temp }}/glucopapa-android-qa/checks/result.json
             ${{ runner.temp }}/glucopapa-android-qa/checks/webview.txt
             ${{ runner.temp }}/glucopapa-android-qa/checks/ui-latest.xml

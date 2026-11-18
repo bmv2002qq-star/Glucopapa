@@ -30,3 +30,7 @@ wait "$process" || true
 
 instrument reopen | tee "$evidence/native-reopen.log"
 grep -F 'QA_PASS reopen' "$evidence/native-reopen.log"
+
+instrument web | tee "$evidence/native-web.log"
+grep -F 'QA_PASS web' "$evidence/native-web.log"
+python3 qa/mvp3-android/check_native_meal.py "$1" "$2" "$evidence"
