@@ -1,4 +1,6 @@
 # Runtime MVP3: 42 previous core scripts + 19 read-only research originals and one external UI (61 total).
+# Compatibility prelude before the 61 original scripts.
+runtime/webview-compat.js
 shared/GFNormalizedFacts_v0.1.0.js
 shared/GFTimeGrid_v0.1.0.js
 modules/GFStorage_v0.5.10/src/gfstorage_core.js

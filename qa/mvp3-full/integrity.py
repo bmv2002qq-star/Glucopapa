@@ -46,7 +46,8 @@ def main():
     entry.feed((web / 'index.html').read_text(encoding='utf-8'))
     order = [line.strip() for line in (web / 'runtime/LOAD_ORDER.txt').read_text().splitlines()
              if line.strip() and not line.startswith('#')]
-    assert order == entry.scripts and len(set(order)) == len(order) == 61
+    assert order == entry.scripts and len(set(order)) == len(order) == 62
+    assert order[0] == 'runtime/webview-compat.js'
     core = [name for name in order if re.search(r'GFStorage.*gfstorage_core\.js$', name)]
     assert core == ['modules/GFStorage_v0.5.10/src/gfstorage_core.js']
     assert not any('ReplayLab' in name or 'xDrip' in name for name in order)
@@ -68,10 +69,21 @@ def main():
     assert len(databases) == 1
 
     files = {p.relative_to(web).as_posix(): p.read_bytes() for p in web.rglob('*') if p.is_file()}
-    assert len(files) == 108
+    assert len(files) == 109
+    unchanged = None
     if args.archive_web:
-        assert files == {p.relative_to(args.archive_web).as_posix(): p.read_bytes()
-                         for p in args.archive_web.rglob('*') if p.is_file()}
+        archived = {p.relative_to(args.archive_web).as_posix(): p.read_bytes()
+                    for p in args.archive_web.rglob('*') if p.is_file()}
+        assert set(files) - set(archived) == {'runtime/webview-compat.js'}
+        assert set(archived).issubset(files)
+        changes = [name for name in archived if files[name] != archived[name]]
+        assert set(changes) == {'index.html', 'runtime/LOAD_ORDER.txt'}
+        for name, prefix in {
+            'index.html': b'<script src="runtime/webview-compat.js"></script>\n',
+            'runtime/LOAD_ORDER.txt': b'# Compatibility prelude before the 61 original scripts.\nruntime/webview-compat.js\n',
+        }.items():
+            assert files[name].replace(prefix, b'', 1) == archived[name]
+        unchanged = len(archived) - len(changes)
     if args.apk:
         with ZipFile(args.apk) as apk:
             assert apk.testzip() is None
@@ -81,7 +93,7 @@ def main():
 
     print(json.dumps({'status': 'PASS', 'protected_assets': protected, 'load_order': len(order),
                       'active_storage': core[0], 'native_helpers': len(databases), 'web_assets': len(files),
-                      'archive_mirror': bool(args.archive_web), 'apk_mirror': bool(args.apk),
+                      'archive_verified': bool(args.archive_web), 'archive_unchanged_assets': unchanged, 'apk_mirror': bool(args.apk),
                       'frames': entry.frames}, indent=2))
 
 

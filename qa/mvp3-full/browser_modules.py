@@ -14,8 +14,10 @@ class Handler(SimpleHTTPRequestHandler):
         pass
 
 
-def run(browser, origin, output):
+def run(browser, origin, output, legacy=False):
     page = browser.new_page(viewport={'width': 390, 'height': 850})
+    if legacy:
+        page.add_init_script('delete Object.hasOwn; delete Array.prototype.at;')
     errors = []
     urls = []
     page.on('pageerror', lambda error: errors.append(str(error)))
@@ -85,6 +87,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--chromium', default='/usr/bin/chromium')
     parser.add_argument('--output', required=True, type=Path)
+    parser.add_argument('--legacy', action='store_true', help='Remove APIs missing in the stock WebView before startup')
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=True)
     web = Path(__file__).resolve().parents[2] / 'android-mvp3/app/src/main/assets/www'
@@ -95,7 +98,7 @@ def main():
         with sync_playwright() as engine:
             browser = engine.chromium.launch(executable_path=args.chromium, chromium_sandbox=True, headless=True)
             try:
-                report = run(browser, 'http://127.0.0.1:' + str(server.server_port), args.output)
+                report = run(browser, 'http://127.0.0.1:' + str(server.server_port), args.output, args.legacy)
             finally:
                 browser.close()
     finally:

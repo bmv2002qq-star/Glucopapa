@@ -24,7 +24,7 @@ d4944efb1a4093e5b1a3e5885bf7b3642371650b4ed10bf2db663e5a31bbc8aa  android-mvp3/a
 fbde2baf61372dee40cb8615482032d657d95a0c518eac07f797ac27d59ba742  android-mvp3/app/src/main/assets/www/approved/GFNutrition_v0.4.6_APPROVED_SOURCE.html
 6b9da4dfe3655f4d18fc8e361f050a75127e17eae7399fb3605c222d4c957cfb  android-mvp3/app/src/main/assets/www/approved/GFNutrition_v0.4.6_LIVE.html
 b583f8e3cd16590a4ebdfe76daa50328cac65117c3866d5e16b62cb65f228901  android-mvp3/app/src/main/assets/www/approved/GFSettings_v0.1.4_LIVE.html
-49d24e06f54b54b167ad30ba348add405979e13065b31da3498ab6bfe4d1cd30  android-mvp3/app/src/main/assets/www/index.html
+0cf5e5d0cef0d7a20c1eb929087d3e84413681368632c0887f74e0cbb1158b93  android-mvp3/app/src/main/assets/www/index.html
 9caf15586559ddbb369ffebbe5f7d28d8ffd9ee15ca5e0676e8491504f08e9bb  android-mvp3/app/src/main/assets/www/integration/GFAutoCOBProfile_v0.1.0.js
 357244a1b4f9773db5b3ded142348297078125ae62052c4bdc56fb207a42e107  android-mvp3/app/src/main/assets/www/integration/GFCOBAutoPanel_v0.2.0.js
 b312c5a58bdd60ab9dd8c280045bfd473e30460ac073c4b255c2a6a6ba210033  android-mvp3/app/src/main/assets/www/integration/GFCOBResearch_v0.1.0.js
@@ -108,7 +108,8 @@ d02abd199bc3cdcc9327741af3659384cec9496cef51cdc795a72cfbd59dba38  android-mvp3/a
 7c82f42f1d3a21e8ab6f59aa768d9f5f5dd2859c0709ff64d0321075b2b8ccaa  android-mvp3/app/src/main/assets/www/modules/GFSync_v0.2.2/src/gfsync_core_v0.2.0_UNMODIFIED.js
 440b864267f8600724b76c94b9af7d4fb4d53e0a9bb90331f9bc1f3961985aa8  android-mvp3/app/src/main/assets/www/modules/GFSync_v0.2.2/src/gfsync_storage_adapter.js
 3434ae5a7cb243f25eb83add40b1a51e14b8f29b473c49bedba408d913f859e5  android-mvp3/app/src/main/assets/www/modules/Levemir_v0.1.2/levemir_engine.js
-f254f0526a9278cc386e41da1085efb3b1277262ff30260c8ea3a0291fdae966  android-mvp3/app/src/main/assets/www/runtime/LOAD_ORDER.txt
+b531358cd7639f2dd30fca07b89bb939c9d76c3e001035989043a1715d2958f0  android-mvp3/app/src/main/assets/www/runtime/LOAD_ORDER.txt
+43a79d575ae75d46074dd45670ba61793e00ec1592f7f8fc2304d58dd1494560  android-mvp3/app/src/main/assets/www/runtime/webview-compat.js
 f83fde0ffbacb5de2110d075a0b9c47655fbbd97f00ec20c9f2f3110ce0ec4a5  android-mvp3/app/src/main/assets/www/shared/GFNormalizedFacts_v0.1.0.js
 e8ea5f37150b2d576aa04a39fd81d3f9c0445f63e5ee5666635f981e8022eee8  android-mvp3/app/src/main/assets/www/shared/GFTimeGrid_v0.1.0.js
 9bdc65e84c1ff3930afe554779bd6c7537bac1b04b71fc5095b654d617d5d30f  android-mvp3/app/src/main/assets/www/shared/RinfastEngine_v0.3.0_UNMODIFIED.js
