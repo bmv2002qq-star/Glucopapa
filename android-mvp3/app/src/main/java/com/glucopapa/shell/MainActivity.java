@@ -103,6 +103,7 @@ public class MainActivity extends Activity {
         });
         // Safe only because ALL content is local, fixed assets and all external requests are blocked.
         view.addJavascriptInterface(new LocalExport(), "AndroidExporter");
+        view.addJavascriptInterface(new ShellPreferences(), "GFShellPreferences");
         nativeStorage = new GFNativeStorage(getApplicationContext());
         view.addJavascriptInterface(nativeStorage, "GFNativeStorage");
         nativeXDrip = new GFNativeXDrip(getApplicationContext());
@@ -137,6 +138,28 @@ public class MainActivity extends Activity {
             controller.setSystemBarsAppearance(lightBars, lightBars);
         }
         viewport.requestApplyInsets();
+    }
+
+    /** UI preferences only. All event data remains in GFStorage and SQLite. */
+    public final class ShellPreferences {
+        private final android.content.SharedPreferences preferences =
+            getSharedPreferences("gf_shell_settings", MODE_PRIVATE);
+
+        @JavascriptInterface public String read(String key) {
+            return supported(key) ? preferences.getString(key, null) : null;
+        }
+
+        @JavascriptInterface public boolean write(String key, String value) {
+            if ("GFV2SHELL_MODE_v1".equals(key) && ("demo".equals(value) || "local".equals(value)) ||
+                "GFV2SHELL_XDRIP_LOCAL_v1".equals(key) && ("on".equals(value) || "off".equals(value))) {
+                return preferences.edit().putString(key, value).commit();
+            }
+            return false;
+        }
+
+        private boolean supported(String key) {
+            return "GFV2SHELL_MODE_v1".equals(key) || "GFV2SHELL_XDRIP_LOCAL_v1".equals(key);
+        }
     }
 
     public final class LocalExport {
@@ -254,6 +277,7 @@ public class MainActivity extends Activity {
         if (view != null) {
             view.loadUrl("about:blank");
             view.removeJavascriptInterface("AndroidExporter");
+            view.removeJavascriptInterface("GFShellPreferences");
             view.removeJavascriptInterface("GFNativeStorage");
             view.removeJavascriptInterface("GFNativeXDrip");
             view.destroy();

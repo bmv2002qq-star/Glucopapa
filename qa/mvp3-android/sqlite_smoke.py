@@ -168,6 +168,8 @@ def run(args):
             result = emulator.text('install', '-t', str(args.fixture_test_apk), timeout=180)
             require('Success' in result, 'Synthetic fixture APK installation failed')
             StockWebViewUI(emulator).run('select-demo')
+            if emulator.pid():
+                emulator.stop()
             outcome['checks'].append({'fresh_local_empty_and_demo_opt_in': True})
         if args.automated:
             require(args.fixture_test_apk is not None, 'Automation requires the isolated synthetic fixture APK')

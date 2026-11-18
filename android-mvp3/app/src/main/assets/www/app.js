@@ -11,7 +11,7 @@ const fmt=(n,d=1)=>Number.isFinite(n)?n.toLocaleString('ru-RU',{maximumFractionD
 const uid=p=>p+'-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,10);
 const nowISO=()=>new Date().toISOString();
 const localInputTime=(d=new Date())=>new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,16);
-let mode=localStorage.getItem(MODE_KEY)==='demo'?'demo':'local',host=null,unsub=null,controller=null,bridge=null,settingsService=null,activeMeal=null,lastSafety=null,noticeTimer=null,sportMenuOpen=false;
+let mode=readPreference(MODE_KEY)==='demo'?'demo':'local',host=null,unsub=null,controller=null,bridge=null,settingsService=null,activeMeal=null,lastSafety=null,noticeTimer=null,sportMenuOpen=false;
 let fileOperation=null,xdripStatus='',xdripTimer;
 const MODULES=[
  ['GFStorage v'+(globalThis.GFStorage?.VERSION||'—'),'Android SQLite CAS, спорт и журнал','on'],['GFActionWriter','Единая запись фактических действий','on'],
@@ -25,6 +25,16 @@ const MODULES=[
  ['GFInjectionAnalytics v0.1.1','Реальный модуль подключён только для чтения','on'],['xDrip+ Follower Android','Чтение последнего показания через локальный ContentProvider; проверка с датчиком предстоит','limited'],
  ['GFCOB','Чтение подтверждённой еды и расчёт исследовательских профилей при полной истории','limited'],['Высокий/низкий','Статус исходных данных и запись выполненных действий','limited']
 ];
+function readPreference(key){
+ const native=globalThis.GFShellPreferences;
+ return native?.read(key)??localStorage.getItem(key);
+}
+function savePreference(key,value){
+ const native=globalThis.GFShellPreferences;
+ if(native){
+   if(!native.write(key,value))throw Error('Не удалось сохранить настройку приложения');
+ }else localStorage.setItem(key,value);
+}
 function notify(message,isError=false){const el=$('notice');el.textContent=message;el.className='notice visible'+(isError?' error':'');if(noticeTimer)clearTimeout(noticeTimer);noticeTimer=setTimeout(()=>el.classList.remove('visible'),8500);}
 function dbKey(selectedMode=mode){return DATA_PREFIX+selectedMode;}
 function getDriver(selectedMode){
@@ -92,7 +102,7 @@ function boot(selectedMode=mode){
  const nextJournal=nextHost.connect('journal');
  const nextMeal=nextJournal.read('mealSessions').at(-1)?.id||null;
  const switched=selectedMode!==mode;
- if(switched)localStorage.setItem(MODE_KEY,selectedMode);
+ if(switched)savePreference(MODE_KEY,selectedMode);
  if(unsub)unsub();
  mode=selectedMode;
  host=nextHost;
@@ -292,7 +302,7 @@ function changeMode(next){
  boot(next);
  notify(mode==='demo'?'Открыт тестовый журнал':'Открыт локальный журнал');
 }
-function xdripEnabled(){return mode==='local'&&localStorage.getItem(XDRIP_KEY)==='on';}
+function xdripEnabled(){return mode==='local'&&readPreference(XDRIP_KEY)==='on';}
 function renderXdripStatus(){
  $('refreshXdrip').disabled=!xdripEnabled();
  $('xdripStatus').textContent=xdripEnabled()?xdripStatus||'Поиск локального источника':'Чтение выключено';
@@ -386,7 +396,7 @@ async function consumeFileResult(){
 function setupLocalFilesAndSource(){
  $('xdripEnabled').addEventListener('change',wrap(e=>{
    if(mode!=='local')return;
-   localStorage.setItem(XDRIP_KEY,e.target.checked?'on':'off');
+   savePreference(XDRIP_KEY,e.target.checked?'on':'off');
    xdripStatus='';
    renderXdripStatus();
    requestXDrip();

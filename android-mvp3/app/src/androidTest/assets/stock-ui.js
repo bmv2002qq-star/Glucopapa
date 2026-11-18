@@ -31,6 +31,8 @@
                 click('modeDemo');
             } finally { window.confirm = previous; }
             assert(GPApp.mode() === 'demo' && snapshot().revision === 0, 'Synthetic fixture failed to open');
+            assert(GFShellPreferences.read('GFV2SHELL_MODE_v1') === 'demo' &&
+                !GFShellPreferences.write('GFV2SHELL_DATA_v1_demo', '{}'), 'Preference bridge must be scoped');
             return {status: 'PASS', fixture: 'SYNTHETIC', step: action, fresh_local: true};
         }
         assert(GPApp.mode() === 'demo', 'Expected synthetic journal');

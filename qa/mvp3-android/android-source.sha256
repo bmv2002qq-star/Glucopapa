@@ -1,13 +1,13 @@
 7a65e1fcd9346f9c3ec5e264cd9395524297d7338b2c148ae2ad2275b72ea546  android-mvp3/.github/workflows/build-apk.yml
 d883e4afc8125dc3f4356efdd0ac09239bfd8259878aa332f06a50ac5b3cb37e  android-mvp3/.gitignore
 fed9aa982d1aa1a49a65497b1d02d08173beda824c0421e58e36dfadc06666dc  android-mvp3/app/build.gradle
-b058b097033a4eb8ca1fcc290f50c40126d21d12d55475e5d0bc3a0a9730033c  android-mvp3/app/src/androidTest/assets/stock-ui.js
+004f81aca23d0c47623d6fbf081956c642ca6475e5db34113a1e8b535dad13c8  android-mvp3/app/src/androidTest/assets/stock-ui.js
 68f65b28c76ce8f5e868a469a13c0534cca14e7a382470066c36709da0b07353  android-mvp3/app/src/androidTest/assets/webview-qa.js
 5b7d75572a425a31e4dd8622edef1cf074f3c38af107d5b852150b191180a1af  android-mvp3/app/src/androidTest/java/com/glucopapa/shell/ProviderContractChecks.java
 fa71102cd393dc71bb439833ff5688fb1fd9c1dcd64f70d1a431b8b0160c6545  android-mvp3/app/src/androidTest/java/com/glucopapa/shell/qa/StorageInstrumentation.java
 6ec96f9c295df8e9c75de9290aed5c60131801e14f3bf6220d7369fe1f333662  android-mvp3/app/src/androidTest/java/com/glucopapa/shell/qa/WebViewChecks.java
 b035e34c7c0546cad430b4c79d1c14ae5fe62cac14a33ec79d083af38fa76e79  android-mvp3/app/src/main/AndroidManifest.xml
-03ca93ff079d6a510f1890a39b6b3d2ba69a9ed193f0a0fa412ce0625c6521f9  android-mvp3/app/src/main/assets/www/app.js
+deb30c2c74897143bf000d73a8b3b3227844c3a5d061241e975f9e396a723e7f  android-mvp3/app/src/main/assets/www/app.js
 0abc9b584922377403d2edca6de42f9aea5f31e152415bcda186b6c9f35dc84b  android-mvp3/app/src/main/assets/www/approved-library/CGM_Chart_v0.2A.html
 d78a8ef8d236fc89ecb4776ff5e086fb0202b5b4f522c6290421d6d7ff1ac6a2  android-mvp3/app/src/main/assets/www/approved-library/GFAPSEnhancer_v0.1.1.html
 5cc5433d2d4b340106570360fe325b54cf2c4597c22a31e18e58ad620b016a9e  android-mvp3/app/src/main/assets/www/approved-library/GFAuditExport_v0.1.2.html
@@ -122,7 +122,7 @@ e8ea5f37150b2d576aa04a39fd81d3f9c0445f63e5ee5666635f981e8022eee8  android-mvp3/a
 c4a88ec1250cedf153d529fd852589129769973854e46e422cb9078190efa6c3  android-mvp3/app/src/main/assets/www/styles.css
 2d171455c062108fe47e73ccd12c59a31b1fe4f0d0719dd371469ccc5af875ac  android-mvp3/app/src/main/java/com/glucopapa/shell/GFNativeStorage.java
 224ad99cc6a34f1c030d7aa0da14e45fb5d2ac8b99b2f2c8c06d9f99907bb920  android-mvp3/app/src/main/java/com/glucopapa/shell/GFNativeXDrip.java
-7736797d2771f19c83d4dced1452e6bade556edfcbf3e6ab7bb1dfecaaf65d9a  android-mvp3/app/src/main/java/com/glucopapa/shell/MainActivity.java
+2476c50376c3d9f02014778f04e1c633d47aa1200b130c8d1aa36a04bd5cf939  android-mvp3/app/src/main/java/com/glucopapa/shell/MainActivity.java
 d1bd47ceb68955ed5d99760e0b50e0b0fc48077a8c3370651fc4c2ac12a5de66  android-mvp3/build.gradle
 f9d9433a4345de54bfe367a178cac2af3ddad424291353aa0bb6d0bf2576322c  android-mvp3/build_windows.bat
 bcec3f41f03e1fcecc807afe61c5e1e8c922a1dfd8141bb684431b93b82770fa  android-mvp3/gradle.properties
