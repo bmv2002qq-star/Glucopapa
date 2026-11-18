@@ -141,3 +141,31 @@ class CandidateUI:
         self.tap(captions=('Дневник',))
         self.wait(captions=('РинФаст',), scroll=True)
         self.wait(captions=('Живот',), scroll=True)
+
+
+class StockWebViewUI:
+    """Use installed WebView DOM on stock Chromium 91 where accessibility drops its tree."""
+
+    def __init__(self, emulator):
+        self.emulator = emulator
+
+    def run(self, action):
+        result = self.emulator.text(
+            'shell', 'am', 'instrument', '-w', '-r', '-e', 'fixture', 'SYNTHETIC',
+            '-e', 'phase', 'stock', '-e', 'step', action,
+            'com.glucopapa.shell.test/com.glucopapa.shell.qa.StorageInstrumentation', timeout=110)
+        print(result, flush=True)
+        require('QA_PASS stock' in result, f'Installed stock WebView failed {action}')
+
+    def home(self):
+        self.run('home')
+
+    def injection(self, confirmed):
+        self.run('confirmed' if confirmed else 'unconfirmed')
+
+    def wait(self, captions=()):
+        require(captions == ('База #1',), 'Unexpected stock WebView selector')
+        self.run('restored')
+
+    def journal(self):
+        self.run('journal')

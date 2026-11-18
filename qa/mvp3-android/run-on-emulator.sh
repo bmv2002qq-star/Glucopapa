@@ -45,12 +45,16 @@ printf 'AVD %s on %s booted with hardware acceleration\n' "$avd" "$serial" > "$e
 "$adb" -s "$serial" shell input keyevent KEYCODE_WAKEUP
 "$adb" -s "$serial" shell wm dismiss-keyguard
 
-python3 qa/mvp3-android/sqlite_smoke.py --automated --adb "$adb" --serial "$serial" \
+smoke_options=(--automated)
+if [[ $api == 31 ]]; then
+    smoke_options+=(--stock-test-apk android-mvp3/app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk)
+fi
+python3 qa/mvp3-android/sqlite_smoke.py "${smoke_options[@]}" --adb "$adb" --serial "$serial" \
   --avd "$avd" --apk android-mvp3/app/build/outputs/apk/debug/app-debug.apk --output "$evidence/checks" \
   2>&1 | tee "$evidence/smoke.log"
 
 test "$("$adb" -s "$serial" shell getprop ro.build.version.sdk | tr -d '\r')" = "$api"
 bash qa/mvp3-android/run-native-stress.sh "$adb" "$serial" "$evidence"
-if [[ ${ANDROID_QA_EXTENDED:-false} == true && $api == 35 ]]; then
+if [[ ${ANDROID_QA_EXTENDED:-false} == true && $api != 31 ]]; then
     python3 qa/mvp3-android/gui_sizing.py "$adb" "$serial" "$evidence" 2>&1 | tee "$evidence/android-gui.log"
 fi

@@ -108,7 +108,9 @@ class Emulator:
             time.sleep(0.25)
         raise RuntimeError('Android app process did not stop')
 
-    def capture(self, directory):
+    def capture(self, directory, *, start_if_stopped=False):
+        if start_if_stopped and not self.pid():
+            self.start()
         directory.mkdir(exist_ok=False)
         shot = self.execute('exec-out', 'screencap', '-p').stdout
         require(shot.startswith(b'\x89PNG\r\n\x1a\n'), 'Emulator screenshot is not PNG')
@@ -137,7 +139,10 @@ def run(args):
     emulator.check_fresh()
     args.output.mkdir(parents=True, exist_ok=False)
     ui = None
-    if args.automated:
+    if args.stock_test_apk:
+        from ci_ui import StockWebViewUI
+        ui = StockWebViewUI(emulator)
+    elif args.automated:
         from ci_ui import CandidateUI
         ui = CandidateUI(emulator, args.output)
     outcome = {
@@ -149,12 +154,16 @@ def run(args):
         outcome['android_api'] = emulator.text('shell', 'getprop', 'ro.build.version.sdk')
         (args.output / 'webview.txt').write_text(emulator.text('shell', 'dumpsys', 'webviewupdate'), encoding='utf-8')
         emulator.install(apk)
+        if args.stock_test_apk:
+            result = emulator.text('install', '-t', str(args.stock_test_apk), timeout=180)
+            require('Success' in result, 'Stock WebView test APK installation failed')
+            outcome['ui_driver'] = 'ANDROID_WEBVIEW_INSTRUMENTATION'
         emulator.start()
         if ui:
             ui.home()
         else:
             prompt('Убедитесь, что главная открылась в режиме «Тестовые данные».')
-        baseline, baseline_pid = emulator.capture(args.output / '01_initial')
+        baseline, baseline_pid = emulator.capture(args.output / '01_initial', start_if_stopped=bool(args.stock_test_apk))
         require(not baseline, 'A fresh database already contains a snapshot')
         outcome['checks'].append({'initial_empty_store': True, 'stopped_pid': baseline_pid})
 
@@ -165,7 +174,7 @@ def run(args):
             prompt('Откройте HIGH, затем «Записать выполненный укол». '
                    'Введите тестовый факт РинФаст 0,5 ЕД, место «Живот». '
                    'Нажмите сохранить с пустым флажком подтверждения.')
-        unconfirmed, unconfirmed_pid = emulator.capture(args.output / '02_unconfirmed')
+        unconfirmed, unconfirmed_pid = emulator.capture(args.output / '02_unconfirmed', start_if_stopped=bool(args.stock_test_apk))
         require(unconfirmed == baseline, 'Unconfirmed input changed SQLite')
         outcome['checks'].append({'unconfirmed_injection_no_write': True, 'stopped_pid': unconfirmed_pid})
 
@@ -175,7 +184,7 @@ def run(args):
         else:
             prompt('Введите ту же синтетическую запись, явно отметьте подтверждение и сохраните один раз. '
                    'Проверьте появление записи на экране инъекций.')
-        committed, committed_pid = emulator.capture(args.output / '03_committed')
+        committed, committed_pid = emulator.capture(args.output / '03_committed', start_if_stopped=bool(args.stock_test_apk))
         outcome['checks'].append({'confirmed_injection_sqlite': injection_in(committed), 'stopped_pid': committed_pid})
 
         restart = emulator.start()
@@ -184,7 +193,7 @@ def run(args):
             ui.wait(captions=('База #1',))
         else:
             prompt('После повторного запуска проверьте, что главная показывает ревизию базы #1.')
-        restored, restored_pid = emulator.capture(args.output / '04_restarted')
+        restored, restored_pid = emulator.capture(args.output / '04_restarted', start_if_stopped=bool(args.stock_test_apk))
         require(restored == committed, 'SQLite snapshot changed across force-stop and relaunch')
         require(injection_in(restored) == injection_in(committed), 'Confirmed event differs after relaunch')
         outcome['checks'].append({'force_stop_relaunch_same_snapshot': True, 'start': restart, 'stopped_pid': restored_pid})
@@ -215,6 +224,7 @@ def run(args):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--automated', action='store_true', help='Drive the UI through ADB accessibility')
+    parser.add_argument('--stock-test-apk', type=Path, help='Instrumentation APK for stock WebView without accessibility nodes')
     parser.add_argument('--adb', default='adb', help='Android SDK platform-tools adb')
     parser.add_argument('--serial', required=True, help='Emulator serial, for example emulator-5554')
     parser.add_argument('--avd', required=True, help='Exact fresh AVD name as reported by adb emu avd name')

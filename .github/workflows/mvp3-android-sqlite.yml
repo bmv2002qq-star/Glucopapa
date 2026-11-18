@@ -58,3 +58,4 @@ jobs:
     uses: ./.github/workflows/mvp3-android-device.yml
     with:
       api: ${{ matrix.api }}
+      extended: true

@@ -3,10 +3,11 @@ import json
 import re
 from pathlib import Path
 import sys
+import tempfile
 import time
 
 from ci_ui import BOUNDS, CandidateUI, screen_navigation
-from sqlite_smoke import Emulator, require
+from sqlite_smoke import Emulator, PACKAGE, require
 
 
 def bounds(node):
@@ -20,9 +21,45 @@ def capture(emulator, output, name):
 
 
 def rss(emulator):
-    meminfo = emulator.text('shell', 'dumpsys', 'meminfo', 'com.glucopapa.shell')
+    meminfo = emulator.text('shell', 'dumpsys', 'meminfo', PACKAGE)
     match = re.search(r'TOTAL PSS:\s+(\d+)', meminfo)
     return int(match.group(1)) if match else None
+
+
+
+def interrupted_views(emulator, ui, output):
+    with tempfile.TemporaryDirectory() as temporary:
+        folder = Path(temporary)
+        previous, _ = emulator.capture(folder / 'before-interruptions')
+        emulator.start()
+        ui.home()
+        ui.tap(captions=('Дневник',))
+        stopped = emulator.stop()
+        emulator.start()
+        current, _ = emulator.capture(folder / 'after-diary')
+        require(previous == current, 'Opening the diary and stopping changed SQLite')
+
+        emulator.start()
+        ui.home()
+        ui.tap(captions=('Ещё',))
+        ui.tap('exportState', ('Экспорт аналитического JSON',), scroll=True)
+        deadline = time.monotonic() + 30
+        while time.monotonic() < deadline:
+            windows = emulator.text('shell', 'dumpsys', 'window', 'windows')
+            if any('documentsui' in line.lower() for line in windows.splitlines()
+                   if 'mCurrentFocus' in line or 'mFocusedApp' in line):
+                break
+            time.sleep(0.5)
+        else:
+            raise RuntimeError('Android Storage Access Framework export chooser did not open')
+        capture(emulator, output, 'saf-before-interruption.png')
+        emulator.stop()
+        emulator.start()
+        current, _ = emulator.capture(folder / 'after-saf')
+        require(previous == current, 'Stopping during the pending SAF export changed SQLite')
+        emulator.start()
+        ui.home()
+        return {'diary_open_then_force_stop': stopped, 'saf_pending_then_force_stop': True}
 
 
 def main():
@@ -74,9 +111,18 @@ def main():
         ui.home()
         require(emulator.pid() == pid, 'App process restarted during soak')
         memory.append(rss(emulator))
-    data = {'fixture': 'SYNTHETIC', 'sizes': results,
-            'soak_seconds': round(time.monotonic() - start, 1), 'pss_kb': memory}
-    (output / 'android-gui.json').write_text(json.dumps(data, indent=2) + '\n', encoding='utf-8')
+    real_soak = round(time.monotonic() - start, 1)
+    emulator.execute('shell', 'input', 'keyevent', 'KEYCODE_HOME')
+    response = emulator.execute('shell', 'am', 'send-trim-memory', PACKAGE, 'UI_HIDDEN', check=False)
+    emulator.start()
+    ui.home()
+    trimming = {'command_accepted': response.returncode == 0, 'resumed': True}
+    data = {'fixture': 'SYNTHETIC', 'sizes': results, 'soak_seconds': real_soak, 'pss_kb': memory,
+            'trim_memory_signal': trimming}
+    result_path = output / 'android-gui.json'
+    result_path.write_text(json.dumps(data, indent=2) + '\n', encoding='utf-8')
+    data['interruptions'] = interrupted_views(emulator, ui, output)
+    result_path.write_text(json.dumps(data, indent=2) + '\n', encoding='utf-8')
     print('PASS installed WebView sizes and bounded wall-clock soak')
 
 

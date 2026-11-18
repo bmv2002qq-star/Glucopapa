@@ -44,8 +44,11 @@ public final class StorageInstrumentation extends Instrumentation {
                     case "interrupt": interrupt(store); break;
                     case "reopen": reopen(store); break;
                     case "web":
-                        JSONObject result = new WebViewChecks(this).exercise();
-                        output.putString("webview", result.toString());
+                        output.putString("webview", new WebViewChecks(this).exercise("webview-qa.js", "").toString());
+                        break;
+                    case "stock":
+                        output.putString("webview", new WebViewChecks(this)
+                            .exercise("stock-ui.js", arguments.getString("step", "")).toString());
                         break;
                     default: throw new IllegalArgumentException("Unknown phase");
                 }

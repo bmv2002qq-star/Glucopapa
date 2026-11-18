@@ -8,6 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebView;
 import com.glucopapa.shell.MainActivity;
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CountDownLatch;
@@ -22,7 +23,7 @@ final class WebViewChecks {
         this.instrumentation = instrumentation;
     }
 
-    JSONObject exercise() throws Exception {
+    JSONObject exercise(String asset, String action) throws Exception {
         Intent intent = new Intent(instrumentation.getTargetContext(), MainActivity.class)
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         Activity activity = instrumentation.startActivitySync(intent);
@@ -36,10 +37,16 @@ final class WebViewChecks {
             SystemClock.sleep(200);
         }
         String script;
-        try (InputStream input = instrumentation.getContext().getAssets().open("webview-qa.js")) {
-            script = new String(input.readAllBytes(), StandardCharsets.UTF_8);
+        try (InputStream input = instrumentation.getContext().getAssets().open(asset)) {
+            ByteArrayOutputStream content = new ByteArrayOutputStream();
+            byte[] buffer = new byte[4096];
+            for (int length; (length = input.read(buffer)) != -1;) {
+                content.write(buffer, 0, length);
+            }
+            script = new String(content.toByteArray(), StandardCharsets.UTF_8);
         }
-        String started = evaluate(web, script + "\n'QA_SCRIPT_STARTED';");
+        String prefix = "window.__glucopapaQAAction=" + JSONObject.quote(action) + ";\n";
+        String started = evaluate(web, prefix + script + "\n'QA_SCRIPT_STARTED';");
         if (!"\"QA_SCRIPT_STARTED\"".equals(started)) {
             throw new IllegalStateException("Could not evaluate synthetic fixture: " + started);
         }

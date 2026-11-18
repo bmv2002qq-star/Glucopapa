@@ -89,7 +89,7 @@ def main():
             assert apk.testzip() is None
             assert files == {name.removeprefix('assets/www/'): apk.read(name) for name in apk.namelist()
                              if name.startswith('assets/www/') and not name.endswith('/')}
-            assert not any('webview-qa.js' in name for name in apk.namelist())
+            assert not any(Path(name).name in ('webview-qa.js', 'stock-ui.js') for name in apk.namelist())
 
     print(json.dumps({'status': 'PASS', 'protected_assets': protected, 'load_order': len(order),
                       'active_storage': core[0], 'native_helpers': len(databases), 'web_assets': len(files),
