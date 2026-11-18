@@ -116,7 +116,7 @@ class CandidateUI:
             self.tap('injectionConfirm', ('Я подтверждаю',), scroll=True)
         self.tap(captions=('Сохранить фактический укол',), scroll=True)
         if confirmed:
-            self.wait(captions=('Фактическая инъекция записана один раз',))
+            self.wait(captions=('0,5 ЕД · abdomen',), scroll=True)
             self.journal()
 
     def journal(self):
