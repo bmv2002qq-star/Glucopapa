@@ -6,6 +6,7 @@ android {
         applicationId 'com.glucopapa.shell'
         minSdk 26
         targetSdk 35
+        testInstrumentationRunner 'com.glucopapa.shell.qa.StorageInstrumentation'
         versionCode 8
         versionName '0.3.12-stage10'
     }

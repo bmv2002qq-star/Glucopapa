@@ -3,6 +3,7 @@ set -euo pipefail
 
 sdk=${ANDROID_HOME:?Set ANDROID_HOME to the installed SDK}
 evidence=${EVIDENCE:?Set EVIDENCE to a new test output directory}
+api=${ANDROID_QA_API:-35}
 serial=emulator-5554
 avd=GlucoPapaMvp3CiQa
 adb="$sdk/platform-tools/adb"
@@ -11,7 +12,7 @@ export ANDROID_USER_HOME="$evidence/android-user"
 export ANDROID_EMULATOR_HOME="$ANDROID_USER_HOME"
 export ANDROID_AVD_HOME="$evidence/avd"
 
-printf 'no\n' | avdmanager create avd --name "$avd" --package 'system-images;android-35;default;x86_64' --device pixel_5
+printf 'no\n' | avdmanager create avd --name "$avd" --package "system-images;android-$api;default;x86_64" --device pixel_5
 "$adb" start-server
 "$sdk/emulator/emulator" -avd "$avd" -port 5554 -accel on -gpu swiftshader \
   -no-window -no-audio -no-snapshot -no-boot-anim -no-metrics -camera-back none -camera-front none \
@@ -47,3 +48,6 @@ printf 'AVD %s on %s booted with hardware acceleration\n' "$avd" "$serial" > "$e
 python3 qa/mvp3-android/sqlite_smoke.py --automated --adb "$adb" --serial "$serial" \
   --avd "$avd" --apk android-mvp3/app/build/outputs/apk/debug/app-debug.apk --output "$evidence/checks" \
   2>&1 | tee "$evidence/smoke.log"
+
+test "$("$adb" -s "$serial" shell getprop ro.build.version.sdk | tr -d '\r')" = "$api"
+bash qa/mvp3-android/run-native-stress.sh "$adb" "$serial" "$evidence"

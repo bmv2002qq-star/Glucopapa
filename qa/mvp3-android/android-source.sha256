@@ -1,6 +1,7 @@
 7a65e1fcd9346f9c3ec5e264cd9395524297d7338b2c148ae2ad2275b72ea546  android-mvp3/.github/workflows/build-apk.yml
 d883e4afc8125dc3f4356efdd0ac09239bfd8259878aa332f06a50ac5b3cb37e  android-mvp3/.gitignore
-a905e680299ff84dd92e468a691880cc61af4db70d2bd1cd544b1dcfde57ce0e  android-mvp3/app/build.gradle
+0aa6029494d7c9603babdef7b58a04461adeddceb90864d225067dd3a2d1083d  android-mvp3/app/build.gradle
+68eb2fa0f66ffef5ca6c9f7c7fcbd347662ab50812450a4cbcbecb88b61aa917  android-mvp3/app/src/androidTest/java/com/glucopapa/shell/qa/StorageInstrumentation.java
 5bb7bce222c6a9163851a0de676833a7f72e3847981395eeeb6372d2712493aa  android-mvp3/app/src/main/AndroidManifest.xml
 d7acfbeeb94973faf3976c5c82d9392fe3675f80dc8576ca1ad499c9255a3ae8  android-mvp3/app/src/main/assets/www/app.js
 0abc9b584922377403d2edca6de42f9aea5f31e152415bcda186b6c9f35dc84b  android-mvp3/app/src/main/assets/www/approved-library/CGM_Chart_v0.2A.html

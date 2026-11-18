@@ -13,63 +13,17 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  android-sqlite:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 32
-    steps:
-      - name: Prepare evidence directory
-        shell: bash
-        run: |
-          mkdir -p "$RUNNER_TEMP/glucopapa-android-qa"
-          printf 'EVIDENCE=%s/glucopapa-android-qa\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-      - name: Verify locked Android candidate
-        run: sha256sum --check --quiet qa/mvp3-android/android-source.sha256
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
-      - uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: '8.13'
-      - name: Add Android command-line tools to PATH
-        uses: android-actions/setup-android@v3
-        with:
-          packages: ''
-          accept-android-sdk-licenses: 'false'
-      - name: Prepare SDK and KVM
-        shell: bash
-        run: |
-          test -c /dev/kvm
-          if [[ ! -r /dev/kvm || ! -w /dev/kvm ]]; then
-            sudo chgrp "$(id -gn)" /dev/kvm
-            sudo chmod g+rw /dev/kvm
-          fi
-          test -r /dev/kvm && test -w /dev/kvm
-          sdkmanager --install 'platforms;android-36' 'build-tools;35.0.0' 'platform-tools' 'emulator' 'system-images;android-35;default;x86_64' < /dev/null
-          "$ANDROID_HOME/emulator/emulator" -accel-check
-      - name: Assemble candidate
-        working-directory: android-mvp3
-        shell: bash
-        run: |
-          mkdir -p "$EVIDENCE"
-          gradle --no-daemon --console=plain -Pandroid.builder.sdkDownload=false :app:assembleDebug | tee "$EVIDENCE/build.log"
-          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose app/build/outputs/apk/debug/app-debug.apk | tee "$EVIDENCE/signature.log"
-      - name: Check WebView and SQLite on Android 15
-        shell: bash
-        run: bash qa/mvp3-android/run-on-emulator.sh
-      - name: Attach synthetic test evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: GlucoPapa-MVP3-Android-35-test-evidence
-          path: |
-            ${{ runner.temp }}/glucopapa-android-qa/*.log
-            ${{ runner.temp }}/glucopapa-android-qa/checks/result.json
-            ${{ runner.temp }}/glucopapa-android-qa/checks/webview.txt
-            ${{ runner.temp }}/glucopapa-android-qa/checks/ui-latest.xml
-            ${{ runner.temp }}/glucopapa-android-qa/checks/*/screen.png
-          if-no-files-found: warn
-          retention-days: 7
+  android-15:
+    uses: ./.github/workflows/mvp3-android-device.yml
+    with:
+      api: 35
+
+  compatibility:
+    needs: android-15
+    strategy:
+      fail-fast: false
+      matrix:
+        api: [31, 34, 36]
+    uses: ./.github/workflows/mvp3-android-device.yml
+    with:
+      api: ${{ matrix.api }}
