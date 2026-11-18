@@ -16,9 +16,12 @@ jobs:
   android-sqlite:
     runs-on: ubuntu-24.04
     timeout-minutes: 32
-    env:
-      EVIDENCE: ${{ runner.temp }}/glucopapa-android-qa
     steps:
+      - name: Prepare evidence directory
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/glucopapa-android-qa"
+          printf 'EVIDENCE=%s/glucopapa-android-qa\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
@@ -58,10 +61,10 @@ jobs:
         with:
           name: GlucoPapa-MVP3-Android-35-test-evidence
           path: |
-            ${{ env.EVIDENCE }}/*.log
-            ${{ env.EVIDENCE }}/checks/result.json
-            ${{ env.EVIDENCE }}/checks/webview.txt
-            ${{ env.EVIDENCE }}/checks/ui-latest.xml
-            ${{ env.EVIDENCE }}/checks/*/screen.png
+            ${{ runner.temp }}/glucopapa-android-qa/*.log
+            ${{ runner.temp }}/glucopapa-android-qa/checks/result.json
+            ${{ runner.temp }}/glucopapa-android-qa/checks/webview.txt
+            ${{ runner.temp }}/glucopapa-android-qa/checks/ui-latest.xml
+            ${{ runner.temp }}/glucopapa-android-qa/checks/*/screen.png
           if-no-files-found: warn
           retention-days: 7
