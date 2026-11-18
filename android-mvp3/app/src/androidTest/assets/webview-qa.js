@@ -67,6 +67,11 @@
         assert(snapshot().revision === before, 'Unconfirmed food modified GFStorage');
         click('gfMealActualConfirm');
         click('gfMealActualSave');
+        const unfinished = GFAutoCOBProfile.inspect({host: GPApp.getStorage()});
+        assert(unfinished.code === 'MEAL_NOT_COMPLETED' && unfinished.rows.length === 0,
+            'The research COB window accepted an unfinished meal');
+        click('mealFinish');
+        await until(() => snapshot().mealSessions[0].status === 'completed', 'Meal did not finish');
 
         const checkMeal = async (amount, carbs) => {
             const state = snapshot();
@@ -93,8 +98,6 @@
         };
         const actual = await checkMeal(75, 14.925);
         await stage('meals');
-        click('mealFinish');
-        await until(() => snapshot().mealSessions[0].status === 'completed', 'Meal did not finish');
         select(document.querySelector('#gfMealActualRows [data-actual-index="0"]'), '50');
         select(by('gfMealActualCorrectionReason'), 'SYNTHETIC correction');
         click('gfMealActualConfirm');

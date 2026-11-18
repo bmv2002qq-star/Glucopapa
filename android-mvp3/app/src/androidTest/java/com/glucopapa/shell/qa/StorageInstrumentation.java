@@ -36,15 +36,11 @@ public final class StorageInstrumentation extends Instrumentation {
                 "Expected an Android emulator");
             check("SYNTHETIC".equals(arguments.getString("fixture")), "Expected synthetic fixture");
             File directory = getTargetContext().getDir("synthetic-qa", Context.MODE_PRIVATE);
-            Context testContext = new ContextWrapper(getTargetContext()) {
-                @Override public File getDatabasePath(String name) {
-                    return new File(directory, name);
-                }
-            };
+            Context testContext = isolatedContext(getTargetContext(), directory);
             String phase = arguments.getString("phase", "exercise");
             try (GFNativeStorage store = new GFNativeStorage(testContext)) {
                 switch (phase) {
-                    case "exercise": exercise(store, directory); break;
+                    case "exercise": exercise(store, directory, getTargetContext()); break;
                     case "interrupt": interrupt(store); break;
                     case "reopen": reopen(store); break;
                     case "web":
@@ -62,7 +58,15 @@ public final class StorageInstrumentation extends Instrumentation {
         }
     }
 
-    private static void exercise(GFNativeStorage store, File directory) throws Exception {
+    private static Context isolatedContext(Context context, File directory) {
+        return new ContextWrapper(context) {
+            @Override public File getDatabasePath(String name) {
+                return new File(directory, name);
+            }
+        };
+    }
+
+    private static void exercise(GFNativeStorage store, File directory, Context context) throws Exception {
         checkCode(store.readSnapshot(DEMO), "ABSENT");
         checkCode(store.readSnapshot(LOCAL), "ABSENT");
         checkCode(store.readSnapshot("other"), "READ_FAILED");
@@ -93,6 +97,12 @@ public final class StorageInstrumentation extends Instrumentation {
         snapshot.put("revision", EVENTS + 1);
         checkCode(store.writeIfRevision(DEMO, snapshot.toString(), EVENTS), "WRITE_FAILED");
         db.execSQL("DROP TRIGGER qa_abort");
+        try {
+            store.onUpgrade(db, 1, 2);
+            throw new IllegalStateException("Missing migration must fail closed");
+        } catch (IllegalStateException error) {
+            check(error.getMessage().startsWith("MIGRATION_REQUIRED"), "Unexpected upgrade result");
+        }
         reopen(store);
 
         store.close();
@@ -104,7 +114,13 @@ public final class StorageInstrumentation extends Instrumentation {
             check(DatabaseUtils.longForQuery(copy, "SELECT revision FROM snapshots", null) == EVENTS,
                 "Closed backup revision");
         }
-        Log.i("GlucoPapaQA", "1000 SQLite CAS commits took " + elapsed + " ms");
+        File restored = new File(directory, "restored");
+        check(restored.mkdir(), "Test restore directory must be fresh");
+        Files.copy(backup.toPath(), new File(restored, DATABASE).toPath());
+        try (GFNativeStorage recovered = new GFNativeStorage(isolatedContext(context, restored))) {
+            reopen(recovered);
+        }
+        Log.i("GlucoPapaQA", "1000 SQLite CAS commits took " + elapsed + " ms; isolated backup reopens");
     }
 
     private static void interrupt(GFNativeStorage store) throws Exception {

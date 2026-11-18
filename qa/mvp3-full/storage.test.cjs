@@ -10,6 +10,7 @@ const Storage = fromWeb('modules/GFStorage_v0.5.10/src/gfstorage_core.js');
 const CGM = fromWeb('integration/GFCgmEvidencePolicy_v0.1.0.js');
 const Journal = fromWeb('modules/GFJournal_v0.1.3/src/gfjournal.js');
 const JournalAdapter = fromWeb('modules/GFJournal_v0.1.3/src/gfjournal_storage_adapter.js');
+const Plate = fromWeb('integration/GFMealActualPanel_v0.1.0.js');
 const Settings = fromWeb('modules/GFSettings_v0.1.8/src/gfsettings.js');
 const Export = fromWeb('modules/GFAuditExport_v0.1.4/src/gfaudit_export_storage_adapter.js');
 
@@ -174,9 +175,50 @@ for (const [label, values] of Object.entries({stable: [6, 6, 6, 6], low: [6, 5, 
             const diary = CGM.journalView(persisted, Journal, JournalAdapter, {nowMs: base});
             assert.equal(diary.rows[0].glucose.value, values.at(-1));
             assert.equal(diary.rows[0].glucose.source, 'synthetic');
+            assert.equal(diary.rows[0].glucose.direction, {stable: '→', low: '↓', high: '↑'}[label]);
             const expired = CGM.inspect(persisted, {nowMs: base + 90 * minute});
             assert.equal(expired.currentMmol, null);
             assert.equal(CGM.checkSafety(persisted, null, {nowMs: base}).insulinDoseDecisionAllowed, false);
         });
     }
 }
+
+
+test('Mixed synthetic foods preserve item units, all nutrients and unknown GI', () => {
+    const plan = {schema: 'GFPlate.v1', source: 'GFFoodOnly', items: [
+        {name: 'SYNTHETIC solid', amount: 100, unit: 'г', carbs: 20, fat: 2, protein: 4,
+            kcal: 114, nutritionStatus: 'label_verified', glycemicIndex: 49},
+        {name: 'SYNTHETIC liquid', amount: 200, unit: 'мл', carbs: 15, fat: 0, protein: 2,
+            kcal: 68, nutritionStatus: 'label_verified', glycemicIndex: null},
+    ]};
+    const actual = Plate.scalePlate(plan, [75, 50]);
+    assert.deepEqual(actual.items.map(item => [item.amount, item.unit, item.glycemicIndex]),
+        [[75, 'г', 49], [50, 'мл', null]]);
+    assert.deepEqual(actual.totals, {amount: 125, count: 2, carbs: 18.75, fat: 1.5, protein: 3.5, kcal: 102.5});
+    const unknown = structuredClone(plan);
+    unknown.items[0].amount = null;
+    assert.throws(() => Plate.scalePlate(unknown, [75, 50]), /MEAL_QUANTITY_UNKNOWN/);
+});
+
+test('Synthetic 7-year UI profile and coefficient history survive reload without events', () => {
+    const {host, reopen} = fixture();
+    const settingsPort = host.connect('settings');
+    const settings = Settings.createSettingsService({settingsPort, clock: () => time(base)});
+    settings.saveProfile({birthDate: '2019-11-18', timeZone: 'Europe/Minsk'}, settingsPort.getRevision());
+    settings.addMeasurement({id: 'SYNTHETIC-vitals', measuredAt: time(base), weightKg: 20, heightCm: 120}, settingsPort.getRevision());
+    for (const [kind, value] of [['carb_g_per_u', 10], ['isf_mmol_per_u', 3],
+        ['target_range_mmol', {low: 5.99, high: 6.01}]]) {
+        const windowLocal = kind === 'target_range_mmol' ? null : {from: '12:00', to: '18:00'};
+        settings.addCoefficient({kind, value, source: 'manual', windowLocal, sourceNote: 'SYNTHETIC UI fixture'},
+            settingsPort.getRevision());
+    }
+    const restored = reopen();
+    const view = Settings.createSettingsService({settingsPort: restored.connect('settings')}).getView(time(base));
+    assert.equal(view.ageYears, 7);
+    assert.equal(view.vitals.weight.value, 20);
+    assert.equal(view.vitals.height.value, 120);
+    assert.equal(view.researchOnly, true);
+    assert.equal(restored.exportState().events.length, 0);
+    assert.equal(restored.exportState().coefficients.length, 3);
+    assert.equal(restored.exportState().history.length, restored.exportState().revision);
+});

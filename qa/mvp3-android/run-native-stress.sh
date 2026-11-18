@@ -13,6 +13,7 @@ instrument() {
 
 instrument exercise | tee "$evidence/native-exercise.log"
 grep -F 'QA_PASS exercise' "$evidence/native-exercise.log"
+"${adb[@]}" logcat -d -s 'GlucoPapaQA:I' | grep -F '1000 SQLite CAS commits' > "$evidence/native-timing.log"
 instrument interrupt > "$evidence/native-interrupt.log" 2>&1 &
 process=$!
 pending=0
