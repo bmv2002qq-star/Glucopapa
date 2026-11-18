@@ -12,12 +12,12 @@ instrument() {
 }
 
 instrument exercise | tee "$evidence/native-exercise.log"
-rg -F 'QA_PASS exercise' "$evidence/native-exercise.log"
+grep -F 'QA_PASS exercise' "$evidence/native-exercise.log"
 instrument interrupt > "$evidence/native-interrupt.log" 2>&1 &
 process=$!
 pending=0
 for ((attempt=0; attempt<60; attempt++)); do
-    if "${adb[@]}" logcat -d -s 'GlucoPapaQA:I' | rg -F 'QA_PENDING_TRANSACTION' > "$evidence/native-pending.log"; then
+    if "${adb[@]}" logcat -d -s 'GlucoPapaQA:I' | grep -F 'QA_PENDING_TRANSACTION' > "$evidence/native-pending.log"; then
         pending=1
         break
     fi
@@ -29,4 +29,4 @@ test "$pending" = 1
 wait "$process" || true
 
 instrument reopen | tee "$evidence/native-reopen.log"
-rg -F 'QA_PASS reopen' "$evidence/native-reopen.log"
+grep -F 'QA_PASS reopen' "$evidence/native-reopen.log"
