@@ -90,8 +90,11 @@ class Emulator:
     def start(self):
         result = self.text('shell', 'am', 'start', '-W', '-n', ACTIVITY, timeout=90)
         require('Status: ok' in result.splitlines(), f'App did not start: {result}')
-        require(self.pid(), 'App has no running process after am start')
-        return result
+        for _ in range(24):
+            if self.pid():
+                return result
+            time.sleep(0.25)
+        raise RuntimeError('App has no running process after am start')
 
     def pid(self):
         result = self.execute('shell', 'pidof', PACKAGE, check=False)
@@ -116,13 +119,18 @@ class Emulator:
         require(shot.startswith(b'\x89PNG\r\n\x1a\n'), 'Emulator screenshot is not PNG')
         (directory / 'screen.png').write_bytes(shot)
         stopped_pid = self.stop()
+        return self.read_persisted(directory), stopped_pid
+
+    def read_persisted(self, directory):
+        directory.mkdir(parents=True, exist_ok=True)
+        require(not self.pid(), 'Stop the application before copying SQLite')
         available = self.text('shell', 'run-as', PACKAGE, 'ls', '-1', 'databases').splitlines()
         require(DB_NAME in available, 'Native SQLite file is absent for the debug application')
         for name in (DB_NAME, f'{DB_NAME}-wal', f'{DB_NAME}-shm', f'{DB_NAME}-journal'):
             if name in available:
                 copy = self.execute('exec-out', 'run-as', PACKAGE, 'cat', f'databases/{name}').stdout
                 (directory / name).write_bytes(copy)
-        return inspect_database(directory / DB_NAME), stopped_pid
+        return inspect_database(directory / DB_NAME)
 
 
 def prompt(message):

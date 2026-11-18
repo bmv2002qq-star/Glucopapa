@@ -73,7 +73,7 @@ final class WebViewChecks {
             value.set(result);
             done.countDown();
         }));
-        return done.await(1, TimeUnit.SECONDS) ? value.get() : null;
+        return done.await(5, TimeUnit.SECONDS) ? value.get() : null;
     }
 
     private static WebView findWebView(View view) {

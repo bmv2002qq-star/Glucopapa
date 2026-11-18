@@ -69,11 +69,28 @@ def interrupted_views(emulator, ui, output):
                     raise RuntimeError('Android Storage Access Framework export chooser was not detected')
                 capture(emulator, output, 'saf-before-interruption.png')
                 emulator.stop()
+                stopped = emulator.read_persisted(folder / 'after-saf-stop')
+                require(previous == stopped, 'Stopping during the pending SAF export changed SQLite')
+                try:
+                    runner.wait(timeout=15)
+                except subprocess.TimeoutExpired:
+                    runner.terminate()
+                    runner.wait(timeout=10)
             finally:
                 if runner.poll() is None:
                     runner.terminate()
-                runner.wait(timeout=10)
-        emulator.start()
+                    runner.wait(timeout=10)
+        focus = emulator.text('shell', 'dumpsys', 'window')
+        if any('documentsui' in line.lower() for line in focus.splitlines() if 'mCurrentFocus' in line):
+            emulator.execute('shell', 'input', 'keyevent', 'KEYCODE_BACK')
+        for attempt in range(2):
+            try:
+                emulator.start()
+                break
+            except RuntimeError:
+                if attempt:
+                    raise
+                time.sleep(1)
         current, _ = emulator.capture(folder / 'after-saf')
         require(previous == current, 'Stopping during the pending SAF export changed SQLite')
         emulator.start()
@@ -131,8 +148,7 @@ def main():
         require(emulator.pid() == pid, 'App process restarted during soak')
         memory.append(rss(emulator))
     real_soak = round(time.monotonic() - start, 1)
-    emulator.execute('shell', 'input', 'keyevent', 'KEYCODE_HOME')
-    response = emulator.execute('shell', 'am', 'send-trim-memory', PACKAGE, 'HIDDEN', check=False)
+    response = emulator.execute('shell', 'am', 'send-trim-memory', PACKAGE, 'RUNNING_CRITICAL', check=False)
     emulator.start()
     ui.home()
     trimming = {'command_accepted': response.returncode == 0, 'resumed': True,
