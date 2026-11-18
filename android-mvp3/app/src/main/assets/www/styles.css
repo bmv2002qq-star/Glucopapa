@@ -67,3 +67,6 @@ body[data-active-screen="approved-nutrition"].plate-modal-open #iframeApprovedNu
  position:fixed;z-index:80;top:0;left:50%;transform:translateX(-50%);
  width:min(100%,570px);height:100dvh;min-height:0;border:0;border-radius:0;
 }
+
+.gf-calc-trace{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit}
+.gf-calc-error{color:#9b1c24}

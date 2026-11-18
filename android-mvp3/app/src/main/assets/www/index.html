@@ -126,7 +126,12 @@
    <article class="panel"><h3>Запись фактических действий</h3><div class="actions"><button class="btn secondary" data-screen="injections">Фактически выполненный укол</button><button class="btn secondary" data-screen="meals">Фактически съеденные углеводы</button></div><p class="hint">Здесь нет отдельной формы записи. Программа не рекомендует дозы или граммовки при гипогликемии.</p></article>
   </section>
 
-<section id="screen-approved-nutrition" class="screen"><div class="section-header"><h2>Еда · Моя тарелка v0.4.6</h2><p>Подлинный интерфейс из согласованного модуля. Одна тарелка сохраняется в GFStorage только по явному подтверждению.</p></div><article class="panel"><div class="approved-actions"><button class="btn" id="approvedSavePlate">Сохранить выбранную тарелку в общий дневник</button><button class="btn secondary" data-screen="meal-workflow">План / факт еды</button></div><p class="hint" id="approvedPlateStatus">Выберите продукты в исходной «Моей тарелке», затем сохраните план.</p></article><div class="plate-frame-slot"><iframe id="iframeApprovedNutrition" class="approved-frame" title="Моя тарелка v0.4.6" src="approved/GFNutrition_v0.4.6_LIVE.html"></iframe></div></section>
+<section id="screen-approved-nutrition" class="screen"><div class="section-header"><h2>Еда · Моя тарелка v0.4.6</h2><p>Подлинный интерфейс из согласованного модуля. Одна тарелка сохраняется в GFStorage только по явному подтверждению.</p></div><article class="panel"><div class="approved-actions"><button class="btn" id="approvedSavePlate">Сохранить выбранную тарелку в общий дневник</button><button class="btn secondary" data-screen="meal-workflow">План / факт еды</button></div><p class="hint" id="approvedPlateStatus">Выберите продукты в исходной «Моей тарелке», затем сохраните план.</p></article><div class="plate-frame-slot"><iframe id="iframeApprovedNutrition" class="approved-frame" title="Моя тарелка v0.4.6" src="approved/GFNutrition_v0.4.6_LIVE.html"></iframe></div>
+ <article class="panel gf-calc-evidence" id="calcEvidenceMeal">
+  <details><summary>Расчёт</summary><pre class="gf-calc-trace" data-calc-trace>Снимок данных недоступен.</pre></details>
+  <p class="gf-calc-error" data-calc-summary>Расчёт недоступен</p><ul class="gf-calc-error" data-calc-blockers></ul>
+ </article>
+</section>
 <section id="screen-approved-journal" class="screen"><article class="panel"><h3>Занятия спортом</h3><div id="approvedSportRows" class="events">Записей пока нет</div></article><div class="section-header"><h2>Дневник · кандидат 3 колонки</h2><p>Кандидат: три графы, факты из единого GFStorage. Утверждённый оригинал сохранён.</p></div><iframe id="iframeApprovedJournal" class="approved-frame" title="Кандидат дневника — три колонки" src="approved/GFJournal_v0.1.2_3COL_CANDIDATE.html"></iframe></section>
 <section id="screen-approved-settings" class="screen"><div class="section-header"><h2>Настройки · утверждённый интерфейс</h2><p>Профиль сохраняется через GFSettings и GFStorage. Дополнительные старые формы ещё на проверке.</p></div><iframe id="iframeApprovedSettings" class="approved-frame" title="Утверждённые настройки" src="approved/GFSettings_v0.1.4_LIVE.html"></iframe><article class="panel gf-context-panel" id="gfContextPanel" aria-label="Дополнительные настройки на согласование">
 <h3>Дополнительные настройки · рабочий кандидат W02b</h3>
@@ -146,8 +151,12 @@
   <button type="button" class="btn secondary" data-screen="approved-nutrition">Моя тарелка</button>
   <button type="button" class="btn secondary" data-screen="home">Активность</button>
  </article>
- <article class="panel"><h3>Проверка исходных данных</h3><p id="observedLow"></p><div class="soft gf-evidence-text" id="w06EvidenceLow">Проверка не запущена</div></article>
+ <article class="panel"><h3>Показания CGM</h3><p id="observedLow"></p></article>
  <details class="panel"><summary>Исследовательский профиль COB</summary><div id="w06cStudyLow">Подготовка исследовательских параметров</div></details>
+ <article class="panel gf-calc-evidence" id="calcEvidenceLow">
+  <details><summary>Расчёт</summary><pre class="gf-calc-trace" data-calc-trace>Снимок данных недоступен.</pre></details>
+  <p class="gf-calc-error" data-calc-summary>Расчёт недоступен</p><ul class="gf-calc-error" data-calc-blockers></ul>
+ </article>
 </section>
 <section id="screen-approved-high" class="screen">
  <div class="section-header"><button type="button" class="inline-link" data-screen="home">← На главную</button><h2>Высокий сахар</h2></div>
@@ -156,8 +165,12 @@
   <button type="button" class="btn primary" data-screen="injections">Записать выполненный укол</button>
   <button type="button" class="btn secondary" data-screen="home">Активность</button>
  </article>
- <article class="panel"><h3>Проверка исходных данных</h3><p id="observedHigh"></p><div class="soft gf-evidence-text" id="w06EvidenceHigh">Проверка не запущена</div></article>
+ <article class="panel"><h3>Показания CGM</h3><p id="observedHigh"></p></article>
  <details class="panel"><summary>Исследовательский профиль COB</summary><div id="w06cStudyHigh">Подготовка исследовательских параметров</div></details>
+ <article class="panel gf-calc-evidence" id="calcEvidenceHigh">
+  <details><summary>Расчёт</summary><pre class="gf-calc-trace" data-calc-trace>Снимок данных недоступен.</pre></details>
+  <p class="gf-calc-error" data-calc-summary>Расчёт недоступен</p><ul class="gf-calc-error" data-calc-blockers></ul>
+ </article>
 </section>
 
   <section id="screen-modules" class="screen">
@@ -224,6 +237,7 @@
 <script src="integration/GFProviderCgm_v0.1.0.js"></script>
 <script src="integration/GFJournalBackup_v0.1.0.js"></script>
 <script src="integration/GFForecastReadout_v0.1.0.js"></script>
+<script src="integration/GFCalculationEvidence_v0.1.0.js"></script>
 <script src="app.js"></script>
 <script src="integration/GFModuleUI_v0.2.1.js"></script><script src="integration/GFModuleDirectory_v0.1.0.js"></script><script src="integration/GFSettingsPanel_v0.1.0.js"></script><script src="integration/GFMealActualPanel_v0.1.0.js"></script>
   <script src="integration/GFCOBAutoPanel_v0.2.0.js"></script>

@@ -39,6 +39,7 @@ integration/GFModuleHub_v0.2.0.js
 integration/GFProviderCgm_v0.1.0.js
 integration/GFJournalBackup_v0.1.0.js
 integration/GFForecastReadout_v0.1.0.js
+integration/GFCalculationEvidence_v0.1.0.js
 app.js
 integration/GFModuleUI_v0.2.1.js
 integration/GFModuleDirectory_v0.1.0.js

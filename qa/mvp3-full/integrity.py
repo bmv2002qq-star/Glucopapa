@@ -46,7 +46,7 @@ def main():
     entry.feed((web / 'index.html').read_text(encoding='utf-8'))
     order = [line.strip() for line in (web / 'runtime/LOAD_ORDER.txt').read_text().splitlines()
              if line.strip() and not line.startswith('#')]
-    assert order == entry.scripts and len(set(order)) == len(order) == 65
+    assert order == entry.scripts and len(set(order)) == len(order) == 66
     assert order[0] == 'runtime/webview-compat.js'
     core = [name for name in order if re.search(r'GFStorage.*gfstorage_core\.js$', name)]
     assert core == ['modules/GFStorage_v0.5.11/src/gfstorage_core.js']
@@ -71,19 +71,20 @@ def main():
     assert len(databases) == 1
 
     files = {p.relative_to(web).as_posix(): p.read_bytes() for p in web.rglob('*') if p.is_file()}
-    assert len(files) == 113
+    assert len(files) == 114
     unchanged = None
     changes = []
     if args.archive_web:
         archived = {p.relative_to(args.archive_web).as_posix(): p.read_bytes()
                     for p in args.archive_web.rglob('*') if p.is_file()}
         allowed_additions = {'runtime/webview-compat.js', 'integration/GFProviderCgm_v0.1.0.js',
-                             'integration/GFJournalBackup_v0.1.0.js', 'integration/GFForecastReadout_v0.1.0.js', core[0]}
+                             'integration/GFJournalBackup_v0.1.0.js', 'integration/GFForecastReadout_v0.1.0.js',
+                             'integration/GFCalculationEvidence_v0.1.0.js', core[0]}
         assert set(files) - set(archived) <= allowed_additions
         assert set(archived).issubset(files)
         changes = sorted(name for name in archived if files[name] != archived[name])
         assert set(changes) <= {
-            'app.js', 'index.html', 'runtime/LOAD_ORDER.txt', 'integration/GFCgmEvidencePolicy_v0.1.0.js',
+            'app.js', 'index.html', 'styles.css', 'runtime/LOAD_ORDER.txt', 'integration/GFCgmEvidencePolicy_v0.1.0.js',
             'integration/GFCOBAutoPanel_v0.2.0.js', 'integration/GFGraphEvidenceBridge_v0.1.0.js',
             'integration/GFModuleDirectory_v0.1.0.js', 'integration/GFModuleHub_v0.2.0.js',
             'integration/GFModuleUI_v0.2.1.js', 'integration/GPMvp3ResearchUI_v0.1.0.js',

@@ -52,6 +52,17 @@
             assert(!by('screen-' + name).querySelector('#calcDose, #calcFood'),
                 'Treatment calculator is exposed');
         }
+        for (const [route, suffix] of [['approved-low', 'Low'], ['approved-high', 'High'], ['approved-nutrition', 'Meal']]) {
+            await stage(route);
+            const panel = by('calcEvidence' + suffix);
+            assert(panel.querySelector('summary').textContent === 'Расчёт', 'Calculation disclosure missing ' + route);
+            assert(!panel.querySelector('details').open, 'Calculation disclosure opened automatically');
+            assert(panel.querySelector('[data-calc-summary]').textContent === 'Расчёт недоступен',
+                'Missing inputs rendered as a number');
+            assert(panel.querySelector('[data-code="FOOD_COVERAGE_MISSING"]'), 'Missing food history absent');
+            assert(panel.querySelector('[data-calc-trace]').textContent.includes('ревизия ' + baseline.revision),
+                'Calculation diagnostics did not bind to snapshot revision');
+        }
         assert(snapshot().revision === baseline.revision, 'Navigation wrote to GFStorage');
 
         const plate = await until(() => by('iframeApprovedNutrition').contentDocument?.getElementById('catalogSearch'),

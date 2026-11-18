@@ -90,7 +90,7 @@ function getDriver(selectedMode){
   // Desktop/browser preview only.
   return {load(){const v=localStorage.getItem(key);return v?JSON.parse(v):null;},save(s){localStorage.setItem(key,JSON.stringify(s));}};
 }
-function ensureDependencies(){const required=['GFTimeGrid','GFStorage','GFMealController','GFSettings','GFJournal','GFJournalStorageAdapter','GFCgmEvidencePolicy','GFSafetyStorageBridge','GFSafety','GFAuditExportStorageAdapter','GFCoefficients','GFCoefficientReview','GFHighLowReadOnly','GFHighLowInputGate','GFCOBResearch','GFForecastStorageAdapter','GFForecastReadout','GFFoodMealEntry','GFProviderCgm','GFJournalBackup','GPModuleHub','LevemirEngine','GPCgmWhiteChart','GFInjectionAnalytics','GFPhysioExerciseContext'];return required.filter(name=>!globalThis[name]);}
+function ensureDependencies(){const required=['GFTimeGrid','GFStorage','GFMealController','GFSettings','GFJournal','GFJournalStorageAdapter','GFCgmEvidencePolicy','GFSafetyStorageBridge','GFSafety','GFAuditExportStorageAdapter','GFCoefficients','GFCoefficientReview','GFHighLowReadOnly','GFHighLowInputGate','GFCOBResearch','GFCalculationEvidence','GFForecastStorageAdapter','GFForecastReadout','GFFoodMealEntry','GFProviderCgm','GFJournalBackup','GPModuleHub','LevemirEngine','GPCgmWhiteChart','GFInjectionAnalytics','GFPhysioExerciseContext'];return required.filter(name=>!globalThis[name]);}
 function boot(selectedMode=mode){
  const missing=ensureDependencies();
  if(missing.length)throw new Error('Отсутствуют модули: '+missing.join(', '));
@@ -195,10 +195,18 @@ function cgmDisplayStatus(nowMs){
  if(x.status==='OBSERVED_ONLY')return {state:'invalid',text:'xDrip+ не сообщил о свежести показания · '+Math.floor(x.ageMinutes)+' мин назад',value:'—'};
  return {state:'invalid',text:'Нет актуального показания CGM ('+x.code+')',value:'—'};
 }
-function renderW06Evidence(role,nowMs=Date.now()){
- const out=$('w06Evidence'+(role==='low'?'Low':'High'));
+function renderCalculationEvidence(route,nowMs){
+ const out=$('calcEvidence'+{low:'Low',high:'High',meal:'Meal'}[route]);
  if(!out||!host)return;
- try{const result=GFHighLowInputGate.evaluate({host,nowMs,cgmPolicy:GFCgmEvidencePolicy,insulinGate:GFInsulinEvidenceGate,rinfastEngine:RinfastEngine,cobResearch:GFCOBResearch,...(globalThis.GFCOBStudyPanel?.optionsForRevision?.(host,nowMs)||{})});GFHighLowInputGate.renderPanel(out,result);}catch(e){out.textContent='Проверка данных недоступна: '+String(e.message||e);}
+ let evidence;
+ try{
+   const cobOptions=globalThis.GFCOBStudyPanel?.optionsForRevision?.(host,nowMs)||{};
+   evidence=GFCalculationEvidence.inspect({host,route,nowMs,activeMeal,cobOptions});
+ }catch(error){
+   console.error(error);
+   evidence={blockers:[{code:'INPUT_READ_FAILED',message:'Не удалось прочитать согласованный снимок GFStorage.'}],trace:null};
+ }
+ GFCalculationEvidence.render(out,evidence);
 }
 function renderCgm(cgm,active,nowMs){
  const screenId=document.body.dataset.activeScreen||'home';
@@ -211,10 +219,11 @@ function renderCgm(cgm,active,nowMs){
  renderXdripStatus();
  if(screenId==='cgm')renderChart($('cgmDetailChart'),cgm,nowMs,24);
  if(screenId==='home')renderChart($('cgmChart'),cgm,nowMs,12);
+ if(screenId==='approved-nutrition')renderCalculationEvidence('meal',nowMs);
  if(screenId==='approved-low'||screenId==='approved-high'){
    const low=screenId==='approved-low';
    $('observed'+(low?'Low':'High')).textContent=statusCgm.value+' · '+statusCgm.text;
-   renderW06Evidence(low?'low':'high',nowMs);
+   renderCalculationEvidence(low?'low':'high',nowMs);
  }
 }
 function refreshClockDisplays(){
@@ -474,7 +483,7 @@ function registerApprovedPlate(payload){const converted=GFFoodMealEntry.normaliz
  if(current&&current.status==='draft'&&JSON.stringify(current.plannedPlate?.items)===JSON.stringify(p.items)){
    $('approvedPlateStatus').textContent='Такая тарелка уже сохранена · ID '+activeMeal;notify('Повторная запись еды не создана');return;
  }
- const id=uid('meal');controller.createFromFood(p,id);activeMeal=id;$('approvedPlateStatus').textContent='План зарегистрирован: '+id+' · '+p.items.length+' позиций. Для отметки фактически съеденного откройте «План / факт еды». Подтверждённый план не считается съеденным.';notify('Моя тарелка v0.4.6 передана в GFStorage: '+id);}
+ const id=uid('meal');controller.createFromFood(p,id);activeMeal=id;if(document.body.dataset.activeScreen==='approved-nutrition')renderCalculationEvidence('meal',Date.now());$('approvedPlateStatus').textContent='План зарегистрирован: '+id+' · '+p.items.length+' позиций. Для отметки фактически съеденного откройте «План / факт еды». Подтверждённый план не считается съеденным.';notify('Моя тарелка v0.4.6 передана в GFStorage: '+id);}
 window.addEventListener('message',wrap(e=>{const d=e.data||{};if(!d.type?.startsWith?.('gp:'))return;
  const role=d.role;if(typeof role!=='string'||!isApprovedMessage(role,e))return;
  if(d.type==='gp:ready'){broadcastApproved(role);return;}
