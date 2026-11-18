@@ -9,8 +9,28 @@
  function connect(){const host=h();if(lastHost!==host){if(observer)observer();lastHost=host;observer=host.connect('journal').subscribe(()=>renderActive());}}
  function renderActive(){connect();const section=document.body.dataset.activeScreen;
   if(section==='insulin-models')renderInsulin();if(section==='injection-sites')renderSites();if(section==='reports')renderReports();if(section==='sync')renderSync();if(section==='highlow')renderHighLow();if(section==='settings')renderSettings();}
- function renderInsulin(){const r=GPModuleHub.rinfastModel(h());const parts=r.parts||[];$('rinfastModels').textContent=parts.length?'Подтверждённых уколов РинФаста в исследовательском окне: '+parts.length+'. Суммарный модельный остаток по кривой: '+fmt(r.totalModelUnits,2)+' условных ЕД. Это НЕ безопасная корректирующая доза и НЕ назначение.':'Нет подтверждённых недавних инъекций РинФаста. Численные выводы не строятся.';
- const b=GPModuleHub.levemirModel(h());$('levemirModels').textContent=b.status==='MODEL_ESTIMATE'?'Статус: исследовательская модель. Учтены только подтверждённые факты. Модельный остаток '+fmt(b.remainingModelActionUnits,2)+' условных единиц. НЕ реальная доза и НЕ основание менять инсулин.':'Расчёт заблокирован: '+(b.issues||[]).join(' ')+' Статус: '+b.status+'.';}
+ function renderInsulin(){
+  const r=GPModuleHub.rinfastModel(h()), b=GPModuleHub.levemirModel(h());
+  $('rinfastModels').textContent=r.status==='MODEL_ESTIMATE'?
+    r.source+' · '+r.method+' · '+r.parts.length+' подтверждённых записей. Модельный остаток '+fmt(r.totalModelUnits,3)+' ЕД.':
+    'Данные неполные. '+(r.detail||r.code)+'.';
+  $('levemirModels').textContent=b.status==='MODEL_ESTIMATE'?
+    'Движок Левемир v'+LevemirEngine.VERSION+' · модельный остаток '+fmt(b.remainingModelActionUnits,3)+' ЕД.':
+    'Данные неполные. '+(b.issues||[]).join(' ')+' ('+b.status+')';
+  const inputs=$('insulinModelInputs');
+  inputs.replaceChildren();
+  for(const [label,rows,remaining] of [
+    ['РинФаст',r.parts,'remainingModelUnits'],['Левемир',b.contributions,'remainingModelActionUnits']
+  ]){
+    for(const row of rows||[]){
+      const line=document.createElement('li');
+      line.textContent=label+' · подтверждённый факт '+(row.units??row.doseUnits)+' ЕД · '+
+        fmt(row.ageMinutes??row.ageHours*60,1)+' мин назад · модельный вклад '+fmt(row[remaining],3)+' ЕД';
+      inputs.append(line);
+    }
+  }
+  $('insulinModelTrace').hidden=inputs.childElementCount===0;
+ }
  function renderSites(){const r=GPModuleHub.sitesAnalysis(h());$('siteStats').textContent='Подтверждённых записей: '+r.totals.total+' · пригодных для исследования: '+r.totals.eligible+' · без места/контекста: '+r.totals.metadataMissing+' · CGM недостаточно: '+r.totals.cgmMissingOrUnclear+'. Проверка не назначает время инъекции.';
  $('siteDetails').innerHTML=(r.siteStats||[]).map(x=>'<div class="food-row"><b>'+esc(GFInjectionAnalytics.SITE_LABEL[x.region]||x.region)+'</b><span>'+fmt(x.count,0)+' записей · '+(x.sufficient?'описательная выборка':'мало данных')+'</span></div>').join('')||'Нет данных по местам инъекций';}
  function renderReports(){const r=GPModuleHub.report(h());const ins=(r.events||[]).filter(x=>x.type==='insulin_injection'&&x.status==='confirmed');const done=(r.mealSessions||[]).filter(x=>x.status==='completed');$('reportSummary').textContent='Одна база GFStorage · ревизия '+r.revision+' · CGM '+(r.cgm||[]).length+' точек · инъекции '+ins.length+' · завершено приёмов еды '+done.length+'. JSON содержит всю историю.';
@@ -24,8 +44,7 @@
  for(const [id,event,fn] of bindings)$(id).addEventListener(event,protect(fn));
  $('childProfileForm').addEventListener('submit',protect(e=>{e.preventDefault();const patch={};if($('childName').value.trim())patch.displayName=$('childName').value.trim();if($('childBirth').value)patch.birthDate=$('childBirth').value;patch.allergies=$('childAllergies').value.split(',').map(x=>x.trim()).filter(Boolean);h().connect('settings').updateProfile(patch,h().connect('settings').getRevision());renderSettings();}));
  $('childMeasurementForm').addEventListener('submit',protect(e=>{e.preventDefault();const a=$('childWeight').value.trim(),b=$('childHeight').value.trim();if(!a&&!b)throw Error('Введите вес или рост');const row={id:'measurement-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,7),measuredAt:new Date().toISOString()};if(a)row.weightKg=Number(a);if(b)row.heightCm=Number(b);h().connect('settings').addMeasurement(row,h().connect('settings').getRevision());renderSettings();}));
- // The existing screen handler runs before this listener. Refresh only opened area.
- document.querySelectorAll('[data-screen]').forEach(x=>x.addEventListener('click',protect(()=>renderActive())));
+ // The shell refreshes the active section after every navigation.
  connect();
  globalThis.GPModuleUI=Object.freeze({VERSION:'0.2.1',refresh:renderActive});
 })();

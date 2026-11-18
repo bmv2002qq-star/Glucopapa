@@ -34,7 +34,7 @@ function optionsForRevision(host,nowMs=Date.now()){
  const profile=root.GFAutoCOBProfile.inspect({host,nowMs});
  if(profile.status!=='RESEARCH_PROFILES_READY')return {};
  const coverage=root.GFMealCoverageStudy.inspect({host,nowMs,acknowledgement:ack,kineticsByMealId:profile.kineticsByMealId});
- return coverage.eligible&&coverage.researchOptions?coverage.researchOptions:{};
+ return coverage.eligible&&coverage.researchOptions?{...coverage.researchOptions,mealCoverageRevision:coverage.sourceRevision}:{};
 }
 function populate(node,state){node.replaceChildren();node.append(el('strong','Профиль усвоения из «Моей тарелки» · исследовательский'));
  node.append(el('p','Профиль выбирается автоматически по углеводно-взвешенному ГИ и жирам фактически съеденной порции. Ручной ввод времени не нужен. Часы — непроверенные модельные ориентиры, не фактическая скорость усвоения.'));

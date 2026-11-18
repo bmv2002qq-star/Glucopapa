@@ -24,7 +24,9 @@ def run(browser, origin, output, legacy=False):
     page.on('request', lambda request: urls.append(request.url))
     page.goto(origin + '/index.html')
     page.wait_for_function('globalThis.GPApp && globalThis.GPModuleDirectory')
-    assert page.evaluate('GPApp.mode()') == 'demo'
+    assert page.evaluate('GPApp.mode()') == 'local'
+    assert not page.locator('#banner').is_visible()
+    assert page.locator('#syntheticCgmTools').evaluate('(node) => node.hidden')
     initial = page.evaluate('GPApp.getStorage().exportState()')
     assert initial['schemaVersion'] == 5
     metadata = page.evaluate('GPModuleDirectory.list()')
@@ -80,7 +82,14 @@ def run(browser, origin, output, legacy=False):
         page.locator('#nav [data-screen="journal"]').click()
         assert page.frame_locator('#iframeApprovedJournal').locator('thead th').count() == 3
         page.screenshot(path=output / f'journal-{width}.png')
-    return {'modules': results, 'frames': exact_frames, 'wrong_source': 'PASS', 'viewport_widths': [320, 390, 428, 1280]}
+    page.locator('#nav [data-screen="system"]').click()
+    page.once('dialog', lambda dialog: dialog.accept())
+    page.locator('#modeDemo').click()
+    assert page.evaluate('GPApp.mode()') == 'demo' and page.locator('#banner').is_visible()
+    assert page.evaluate('GPApp.getStorage().exportState()') == initial
+    page.locator('#modeLocal').click()
+    assert page.evaluate('GPApp.mode()') == 'local' and page.evaluate('GPApp.getStorage().exportState()') == initial
+    return {'modules': results, 'fresh_local_no_synthetic': 'PASS', 'frames': exact_frames, 'wrong_source': 'PASS', 'viewport_widths': [320, 390, 428, 1280]}
 
 
 def main():

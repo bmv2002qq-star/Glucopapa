@@ -20,10 +20,11 @@ function inspect(host,{nowMs=Date.now()}={}){
  }catch(e){return fail('CGM_READ_FAILED');}
  if(rev===undefined)return fail('REVISION_CHANGED');
  if(!meta||typeof meta.sourceDeviceId!=='string'||!meta.sourceDeviceId)return fail('CGM_SOURCE_UNKNOWN','BLOCKED',{revision:rev});
- if(!['synthetic','device_recorded'].includes(meta.sourceType))return fail('SOURCE_INVALID','BLOCKED',{revision:rev});
- const sourceStatus=meta.sourceType==='synthetic'?'SYNTHETIC':'DEVICE_DECLARED';
+ if(!['synthetic','device_recorded','xdrip_local'].includes(meta.sourceType))return fail('SOURCE_INVALID','BLOCKED',{revision:rev});
+ const provider=meta.sourceType==='xdrip_local';
+ const sourceStatus=provider?'XDRIP_LOCAL':meta.sourceType==='synthetic'?'SYNTHETIC':'DEVICE_DECLARED';
  const common={revision:rev,sourceStatus,sourceDeviceId:meta.sourceDeviceId,sourceType:meta.sourceType};
- if(!Number.isFinite(meta.qualityScore)||meta.qualityScore<0.8)return fail('CGM_SOURCE_QUALITY_LOW','BLOCKED',common);
+ if(!provider&&(!Number.isFinite(meta.qualityScore)||meta.qualityScore<0.8))return fail('CGM_SOURCE_QUALITY_LOW','BLOCKED',common);
  const raw=(a.cgm||[]).filter(p=>p&&p.sourceDeviceId===meta.sourceDeviceId&&Number.isSafeInteger(p.ts)).sort((x,y)=>x.ts-y.ts);
  if(!raw.length)return fail('CGM_NOT_ENOUGH','BLOCKED',{...common,rawReadings:raw});
  const receivedInFuture=p=>p.receivedAt!=null&&Date.parse(p.receivedAt)>nowMs;
@@ -34,10 +35,15 @@ function inspect(host,{nowMs=Date.now()}={}){
  const clean=received.filter(p=>Number.isFinite(p.mmol)&&p.mmol>=1.5&&p.mmol<=30&&p.valid!==false&&p.qualityFlag!=='invalid');
  if(!clean.length)return fail(futureCode||'CGM_NOT_ENOUGH',futureCode?'FUTURE_BLOCKED':'BLOCKED',{...common,rawReadings:raw});
  const latest=clean.at(-1),ageMinutes=(nowMs-latest.ts)/MINUTE;
- const freshnessMinutes=Math.max(15,3*(Number.isFinite(meta.samplingMinutes)?meta.samplingMinutes:5));
- const status=futureCode?'FUTURE_BLOCKED':qualityBlocked?'QUALITY_BLOCKED':ageMinutes>freshnessMinutes?'STALE':'OK';
- const code=futureCode||(status==='QUALITY_BLOCKED'?'CGM_QUALITY_REJECTED':status==='STALE'?'CGM_STALE':'FRESH_HISTORY');
- return Object.freeze({status,code,currentMmol:status==='OK'?latest.mmol:null,latestAt:new Date(latest.ts).toISOString(),sourceStatus,sourceDeviceId:meta.sourceDeviceId,sourceType:meta.sourceType,revision:rev,readings:clean,rawReadings:raw,freshnessMinutes,ageMinutes});
+ // For the provider, 15 minutes is a display boundary, not a declared sampling interval.
+ const freshnessMinutes=provider?15:Math.max(15,3*(Number.isFinite(meta.samplingMinutes)?meta.samplingMinutes:5));
+ const stale=ageMinutes>freshnessMinutes||(provider&&latest.staleAtReceipt===true);
+ const status=futureCode?'FUTURE_BLOCKED':qualityBlocked?'QUALITY_BLOCKED':stale?'STALE':provider?'OBSERVED_ONLY':'OK';
+ const code=futureCode||(status==='QUALITY_BLOCKED'?'CGM_QUALITY_REJECTED':status==='STALE'?'CGM_STALE':
+   provider?(latest.staleAtReceipt===false?'XDRIP_MODEL_QUALITY_UNKNOWN':'XDRIP_FRESHNESS_UNKNOWN'):'FRESH_HISTORY');
+ return Object.freeze({status,code,currentMmol:status==='OK'?latest.mmol:null,
+   reportedMmol:status==='OBSERVED_ONLY'&&latest.staleAtReceipt===false?latest.mmol:null,
+   latestAt:new Date(latest.ts).toISOString(),sourceStatus,sourceDeviceId:meta.sourceDeviceId,sourceType:meta.sourceType,revision:rev,readings:clean,rawReadings:raw,freshnessMinutes,ageMinutes});
 }
 function forEvent(view,ts,{journal=null}={}){
  if(!view||!Number.isSafeInteger(ts)||view.status==='BLOCKED'||!view.sourceDeviceId)return FROZEN_UNKNOWN;
@@ -47,7 +53,10 @@ function forEvent(view,ts,{journal=null}={}){
  if(!good||good.ts!==recorded.ts||ts-good.ts>Math.min(10,view.freshnessMinutes)*MINUTE)return FROZEN_UNKNOWN;
  if(journal&&typeof journal.glucoseAt==='function'){
    const val=journal.glucoseAt(view.readings,ts);
-   return Object.freeze({...val,source:view.sourceStatus==='SYNTHETIC'?'synthetic':view.sourceStatus==='DEVICE_DECLARED'?'device_declared':'observed'});
+   if(view.sourceStatus==='XDRIP_LOCAL'&&good.direction===null){
+     return Object.freeze({...val,direction:null,trendLabel:'Тренд не передан',source:'xdrip_local'});
+   }
+   return Object.freeze({...val,source:view.sourceStatus==='SYNTHETIC'?'synthetic':view.sourceStatus==='XDRIP_LOCAL'?'xdrip_local':view.sourceStatus==='DEVICE_DECLARED'?'device_declared':'observed'});
  }
  return Object.freeze({value:good.mmol,direction:null,trendLabel:'Наблюдение',ageMin:(ts-good.ts)/MINUTE,source:view.sourceStatus});
 }
@@ -55,7 +64,7 @@ function journalView(host,journal,adapter,{nowMs=Date.now()}={}){
  if(!journal||typeof journal.buildAll!=='function'||!adapter||typeof adapter.connect!=='function')throw Error('Отсутствует GFJournal adapter');
  const view=inspect(host,{nowMs}),input=adapter.connect(host).read();
  if(view.revision!==null&&view.revision!==input.journal.revision)throw Error('REVISION_CHANGED');
- const sanitized={...input,graph:{...input.graph,cgm:view.readings.map(x=>({...x,direction:null}))}};
+ const sanitized={...input,graph:{...input.graph,cgm:view.readings.map(x=>({...x,direction:view.sourceStatus==='XDRIP_LOCAL'?x.direction:null}))}};
  const all=journal.buildAll(sanitized);
  const rows=all.rows.map(r=>({...r,glucose:r.ts>nowMs?FROZEN_UNKNOWN:forEvent(view,r.ts,{journal})}));
  return Object.freeze({...all,rows,cgm:view.readings,sourceStatus:view.sourceStatus,sourceDeviceId:view.sourceDeviceId,cgmEvidenceStatus:view.status,cgmEvidenceCode:view.code});

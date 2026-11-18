@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- No INTERNET permission: local module shell only. -->
-    <application android:label="ГлюкоПапа V2 · тест"
+    <queries>
+        <provider android:authorities="com.eveningoutpost.dexdrip.contentprovider" />
+    </queries>
+    <application android:label="ГлюкоПапа V2"
         android:theme="@android:style/Theme.Material.Light.NoActionBar"
         android:usesCleartextTraffic="false"
         android:allowBackup="false" android:fullBackupContent="false"

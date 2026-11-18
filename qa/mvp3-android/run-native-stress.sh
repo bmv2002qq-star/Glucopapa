@@ -13,7 +13,7 @@ instrument() {
 
 instrument exercise | tee "$evidence/native-exercise.log"
 grep -F 'QA_PASS exercise' "$evidence/native-exercise.log"
-"${adb[@]}" logcat -d -s 'GlucoPapaQA:I' | grep -F '1000 SQLite CAS commits' > "$evidence/native-timing.log"
+"${adb[@]}" logcat -d -s 'GlucoPapaQA:I' | grep -E '1000 SQLite CAS commits|SQLite v1 to v2 migration' > "$evidence/native-timing.log"
 instrument interrupt > "$evidence/native-interrupt.log" 2>&1 &
 process=$!
 pending=0
@@ -31,6 +31,11 @@ wait "$process" || true
 
 instrument reopen | tee "$evidence/native-reopen.log"
 grep -F 'QA_PASS reopen' "$evidence/native-reopen.log"
+
+if [[ ${ANDROID_QA_API:-35} == 31 ]]; then
+    instrument touch | tee "$evidence/native-touch.log"
+    grep -F 'QA_PASS touch' "$evidence/native-touch.log"
+fi
 
 if [[ ${ANDROID_QA_EXTENDED:-false} == true ]]; then
     instrument web | tee "$evidence/native-web.log"

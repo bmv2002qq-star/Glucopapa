@@ -26,9 +26,10 @@ def inspect_database(path):
     with closing(sqlite3.connect(path.resolve().as_uri() + '?mode=ro', uri=True)) as database:
         require(database.execute('PRAGMA quick_check').fetchall() == [('ok',)], 'SQLite quick_check failed')
         version, = database.execute('PRAGMA user_version').fetchone()
-        require(version == 1, f'Unexpected native SQLite version: {version}')
+        require(version == 2, f'Unexpected native SQLite version: {version}')
         rows = {}
-        for key, revision, data in database.execute('SELECT mode_key, revision, data FROM snapshots'):
+        for key, revision, data, digest in database.execute('SELECT mode_key, revision, data, payload_sha256 FROM snapshots'):
+            require(hashlib.sha256(data.encode('utf-8')).hexdigest() == digest, 'Snapshot checksum differs')
             value = json.loads(data)
             require(value['schemaVersion'] == 5 and value['revision'] == revision,
                     f'GFStorage revision/schema mismatch in {key}')
@@ -147,7 +148,7 @@ def run(args):
     emulator.check_fresh()
     args.output.mkdir(parents=True, exist_ok=False)
     ui = None
-    if args.stock_test_apk:
+    if args.stock_webview:
         from ci_ui import StockWebViewUI
         ui = StockWebViewUI(emulator)
     elif args.automated:
@@ -162,16 +163,21 @@ def run(args):
         outcome['android_api'] = emulator.text('shell', 'getprop', 'ro.build.version.sdk')
         (args.output / 'webview.txt').write_text(emulator.text('shell', 'dumpsys', 'webviewupdate'), encoding='utf-8')
         emulator.install(apk)
-        if args.stock_test_apk:
-            result = emulator.text('install', '-t', str(args.stock_test_apk), timeout=180)
-            require('Success' in result, 'Stock WebView test APK installation failed')
-            outcome['ui_driver'] = 'ANDROID_WEBVIEW_INSTRUMENTATION'
+        if args.fixture_test_apk:
+            from ci_ui import StockWebViewUI
+            result = emulator.text('install', '-t', str(args.fixture_test_apk), timeout=180)
+            require('Success' in result, 'Synthetic fixture APK installation failed')
+            StockWebViewUI(emulator).run('select-demo')
+            outcome['checks'].append({'fresh_local_empty_and_demo_opt_in': True})
+        if args.automated:
+            require(args.fixture_test_apk is not None, 'Automation requires the isolated synthetic fixture APK')
+            outcome['ui_driver'] = 'ANDROID_WEBVIEW_INSTRUMENTATION' if args.stock_webview else 'ADB_ACCESSIBILITY'
         emulator.start()
         if ui:
             ui.home()
         else:
             prompt('Убедитесь, что главная открылась в режиме «Тестовые данные».')
-        baseline, baseline_pid = emulator.capture(args.output / '01_initial', start_if_stopped=bool(args.stock_test_apk))
+        baseline, baseline_pid = emulator.capture(args.output / '01_initial', start_if_stopped=args.stock_webview)
         require(not baseline, 'A fresh database already contains a snapshot')
         outcome['checks'].append({'initial_empty_store': True, 'stopped_pid': baseline_pid})
 
@@ -182,7 +188,7 @@ def run(args):
             prompt('Откройте HIGH, затем «Записать выполненный укол». '
                    'Введите тестовый факт РинФаст 0,5 ЕД, место «Живот». '
                    'Нажмите сохранить с пустым флажком подтверждения.')
-        unconfirmed, unconfirmed_pid = emulator.capture(args.output / '02_unconfirmed', start_if_stopped=bool(args.stock_test_apk))
+        unconfirmed, unconfirmed_pid = emulator.capture(args.output / '02_unconfirmed', start_if_stopped=args.stock_webview)
         require(unconfirmed == baseline, 'Unconfirmed input changed SQLite')
         outcome['checks'].append({'unconfirmed_injection_no_write': True, 'stopped_pid': unconfirmed_pid})
 
@@ -192,7 +198,7 @@ def run(args):
         else:
             prompt('Введите ту же синтетическую запись, явно отметьте подтверждение и сохраните один раз. '
                    'Проверьте появление записи на экране инъекций.')
-        committed, committed_pid = emulator.capture(args.output / '03_committed', start_if_stopped=bool(args.stock_test_apk))
+        committed, committed_pid = emulator.capture(args.output / '03_committed', start_if_stopped=args.stock_webview)
         outcome['checks'].append({'confirmed_injection_sqlite': injection_in(committed), 'stopped_pid': committed_pid})
 
         restart = emulator.start()
@@ -201,7 +207,7 @@ def run(args):
             ui.wait(captions=('База #1',))
         else:
             prompt('После повторного запуска проверьте, что главная показывает ревизию базы #1.')
-        restored, restored_pid = emulator.capture(args.output / '04_restarted', start_if_stopped=bool(args.stock_test_apk))
+        restored, restored_pid = emulator.capture(args.output / '04_restarted', start_if_stopped=args.stock_webview)
         require(restored == committed, 'SQLite snapshot changed across force-stop and relaunch')
         require(injection_in(restored) == injection_in(committed), 'Confirmed event differs after relaunch')
         outcome['checks'].append({'force_stop_relaunch_same_snapshot': True, 'start': restart, 'stopped_pid': restored_pid})
@@ -232,7 +238,9 @@ def run(args):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--automated', action='store_true', help='Drive the UI through ADB accessibility')
-    parser.add_argument('--stock-test-apk', type=Path, help='Instrumentation APK for stock WebView without accessibility nodes')
+    parser.add_argument('--fixture-test-apk', '--stock-test-apk', type=Path,
+                        help='Instrumentation APK for the synthetic fixture')
+    parser.add_argument('--stock-webview', action='store_true', help='Use installed DOM for stock WebView smoke')
     parser.add_argument('--adb', default='adb', help='Android SDK platform-tools adb')
     parser.add_argument('--serial', required=True, help='Emulator serial, for example emulator-5554')
     parser.add_argument('--avd', required=True, help='Exact fresh AVD name as reported by adb emu avd name')

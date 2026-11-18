@@ -3,7 +3,7 @@
 runtime/webview-compat.js
 shared/GFNormalizedFacts_v0.1.0.js
 shared/GFTimeGrid_v0.1.0.js
-modules/GFStorage_v0.5.10/src/gfstorage_core.js
+modules/GFStorage_v0.5.11/src/gfstorage_core.js
 modules/GFSettings_v0.1.8/shared/gfnutrition_reference.js
 modules/GFSettings_v0.1.8/shared/gfgrowth_reference.js
 modules/GFSettings_v0.1.8/src/gfsettings.js
@@ -36,6 +36,9 @@ integration/GFAutoCOBProfile_v0.1.0.js
 integration/GFMealCoverageStudy_v0.1.1.js
 integration/GFHighLowInputGate_v0.1.0.js
 integration/GFModuleHub_v0.2.0.js
+integration/GFProviderCgm_v0.1.0.js
+integration/GFJournalBackup_v0.1.0.js
+integration/GFForecastReadout_v0.1.0.js
 app.js
 integration/GFModuleUI_v0.2.1.js
 integration/GFModuleDirectory_v0.1.0.js

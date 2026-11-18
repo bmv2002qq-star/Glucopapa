@@ -45,9 +45,9 @@ printf 'AVD %s on %s booted with hardware acceleration\n' "$avd" "$serial" > "$e
 "$adb" -s "$serial" shell input keyevent KEYCODE_WAKEUP
 "$adb" -s "$serial" shell wm dismiss-keyguard
 
-smoke_options=(--automated)
+smoke_options=(--automated --fixture-test-apk android-mvp3/app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk)
 if [[ $api == 31 ]]; then
-    smoke_options+=(--stock-test-apk android-mvp3/app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk)
+    smoke_options+=(--stock-webview)
 fi
 python3 qa/mvp3-android/sqlite_smoke.py "${smoke_options[@]}" --adb "$adb" --serial "$serial" \
   --avd "$avd" --apk android-mvp3/app/build/outputs/apk/debug/app-debug.apk --output "$evidence/checks" \

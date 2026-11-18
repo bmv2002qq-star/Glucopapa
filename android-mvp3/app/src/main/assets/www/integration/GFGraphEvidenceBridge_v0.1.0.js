@@ -18,7 +18,7 @@ function render({host,renderer,engine,nowMs=Date.now(),historyH=12,showInsulin=t
  const cgm=host.connect('cgmAdapter').read('cgmMetadata');
  if(evidence.status==='BLOCKED')return plain('BLOCKED',evidence.code,'CGM недоступен: '+evidence.code,{sourceStatus:evidence.sourceStatus});
  if(!cgm)return plain('BLOCKED','CGM_SOURCE_UNKNOWN','Источник CGM не зарегистрирован в GFStorage');
- if(cgm.sourceType!=='synthetic'&&cgm.sourceType!=='device_recorded')return plain('BLOCKED','SOURCE_INVALID','Неизвестный тип CGM');
+ if(!['synthetic','device_recorded','xdrip_local'].includes(cgm.sourceType))return plain('BLOCKED','SOURCE_INVALID','Неизвестный тип CGM');
  const sourceStatus=evidence.sourceStatus;
  const clean=evidence.readings;
  if(clean.length<2)return plain('BLOCKED',evidence.status==='FUTURE_BLOCKED'?evidence.code:'CGM_NOT_ENOUGH','Недостаточно достоверных точек CGM данного источника',{count:clean.length,sourceStatus});
@@ -34,9 +34,9 @@ function render({host,renderer,engine,nowMs=Date.now(),historyH=12,showInsulin=t
  let picture;
  try{picture=renderer.renderSvg({readings:clean.map(p=>({ts:p.ts,mmol:p.mmol})),shots:canRenderShots?confirmed:[],engine,now:nowMs,historyH,futureH:6,offsetH:0,showInsulin:canRenderShots,showTotal:false,layout:'guided'});}
  catch(e){return plain('BLOCKED','RENDER_FAILED','График отклонил противоречивую историю',{sourceStatus,reasonDetail:String(e.message||e)});}
- const status=futureBlocked?'FUTURE_BLOCKED':qualityBlocked?'QUALITY_BLOCKED':fresh?'OK':'STALE';
- const notice=[sourceStatus==='SYNTHETIC'?'CGM: СИНТЕТИЧЕСКИЕ ТЕСТОВЫЕ ДАННЫЕ':'CGM: источник заявлен как устройство (не верифицирован xDrip)',
- futureBlocked?'Время измерения или получения CGM находится в будущем':qualityBlocked?'Последнее CGM отклонено по качеству: текущий сахар не показывать':fresh?'Текущее значение допускается только с отметкой источника':'CGM устарел: актуальное значение не определено',
+ const status=evidence.status;
+ const notice=[sourceStatus==='SYNTHETIC'?'CGM: СИНТЕТИЧЕСКИЕ ТЕСТОВЫЕ ДАННЫЕ':sourceStatus==='XDRIP_LOCAL'?'CGM: локальный источник xDrip+ · наблюдения':'CGM: источник заявлен как устройство',
+ futureBlocked?'Время измерения или получения CGM находится в будущем':qualityBlocked?'Последнее CGM отклонено по качеству: текущий сахар не показывать':fresh?'Текущее значение допускается только с отметкой источника':status==='OBSERVED_ONLY'?'Качество для прогноза не подтверждено':'CGM устарел: актуальное значение не определено',
  missingHistory?'История инъекций не подтверждена полной: кривые РинФаста скрыты':!showInsulin?'Кривые РинФаста отключены':'История уколов подтверждена пользователем, кривые схематические'].join(' · ');
  return {status,code:evidence.code,reason:notice,svg:picture.svg,count:picture.readings,shotCount:picture.shownShots.length,shownShots:picture.shownShots,
  currentMmol:(fresh&&!qualityBlocked&&!futureBlocked)?latest.mmol:null,latestAt:new Date(latest.ts).toISOString(),sourceStatus,historyVerified:coverageConfirmed,

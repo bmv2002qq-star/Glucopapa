@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - qa/mvp3-android-sqlite
+      - qa/mvp3-prototype-integration
 
 permissions:
   contents: read

@@ -7,8 +7,10 @@ function snapshot(host){if(!host||host.getSchemaVersion?.()!==5)throw Error('Т�
  const read=host.connect('research'),before=read.getRevision(),s=read.getSnapshot();
  if(read.getRevision()!==before||s.revision!==before)throw Error('GFStorage: ревизия изменилась во время чтения');return s;
 }
-function physio(host,now=Date.now()){
- const snap=snapshot(host),engine=root.GFPhysioProfiles,data=root.GFPhysioProfilesDataV020,
+function physio(host,now=Date.now(),mode='local'){
+ const snap=snapshot(host);
+ if(mode!=='demo')return {status:'VIRTUAL_PROFILE_REQUIRED',reason:'Исследовательское ядро требует виртуальный профиль. Для локального профиля персональная модель недоступна.',canDose:false,revision:snap.revision};
+ const engine=root.GFPhysioProfiles,data=root.GFPhysioProfilesDataV020,
  bridge=root.GFPhysioStorageBridge,connector=root.GFPhysioResearchConnector,core=root.GlucoPapaPhysio;
  if(!engine||!data||!bridge||!connector||!core)return {status:BLOCKED,reason:'Не загружен оригинальный GFPhysio v0.1.2 или справочник v0.2.0',canDose:false,revision:snap.revision};
  let run=null;try{
@@ -35,18 +37,18 @@ function aaps(host,now=Date.now()){
  availableModels:v.comparison?.rows?.[0]?.count||0,reason:'Только исследовательская сверка; личная точность не доказана.'};}
  catch(e){return {status:BLOCKED,reason:'Модель отклонила входные данные: '+String(e.message||e),canDose:false,revision:s.revision};}
 }
-function inspect({host,now=Date.now()}={}){
+function inspect({host,now=Date.now(),mode='local'}={}){
  if(!Number.isFinite(now))throw Error('Неверное время');const s=snapshot(host);
- const p=physio(host,now),a=aaps(host,now);
+ const p=physio(host,now,mode),a=aaps(host,now);
  if(host.connect('research').getRevision()!==s.revision)throw Error('Данные изменились в процессе анализа');
  return Object.freeze({revision:s.revision,physio:Object.freeze(p),aaps:Object.freeze(a),replay:{status:'ISOLATED_SYNTHETIC',canImportUserHistory:false},
- xdrip:{status:'ANDROID_NOT_TESTED'},sync:{status:'SERVER_NOT_CONNECTED'},doseAllowed:false,source:'GFStorage.research_read_only'});
+ xdrip:{status:s.cgmMetadata?.sourceType==='xdrip_local'?'LOCAL_OBSERVATIONS':'NO_LOCAL_OBSERVATIONS'},sync:{status:'SERVER_NOT_CONNECTED'},doseAllowed:false,source:'GFStorage.research_read_only'});
 }
 function attach(){
  if(typeof document==='undefined')return;
  const button=document.getElementById('runAllResearch'),p=document.getElementById('researchPhysio'),a=document.getElementById('researchAaps'),r=document.getElementById('researchStatus');
  if(!button||!p||!a||!r)return;
- button.addEventListener('click',()=>{try{const x=inspect({host:root.GPApp.getStorage()});
+ button.addEventListener('click',()=>{try{const x=inspect({host:root.GPApp.getStorage(),mode:root.GPApp.mode()});
  p.textContent=x.physio.status==='VIRTUAL_ONLY'?'Виртуальная модель: '+x.physio.selectedId+' · '+x.physio.matchStatus+'. Только для исследования.':'Недоступно: '+(x.physio.reason||x.physio.status);
  a.textContent=x.aaps.status==='RESEARCH_ONLY'?'Исследовательская проверка: доступно '+x.aaps.availableModels+' кривых; выводы о дозах отключены.':'Недоступно: '+(x.aaps.reason||x.aaps.status);
  r.textContent='Ревизия GFStorage #'+x.revision+' · только чтение, запись не создавалась. Утверждённые формулы не менялись.';}

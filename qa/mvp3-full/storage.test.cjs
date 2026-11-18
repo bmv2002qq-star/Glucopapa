@@ -6,7 +6,7 @@ const { test } = require('node:test');
 
 const web = path.resolve(__dirname, '../../android-mvp3/app/src/main/assets/www');
 const fromWeb = file => require(path.join(web, file));
-const Storage = fromWeb('modules/GFStorage_v0.5.10/src/gfstorage_core.js');
+const Storage = fromWeb('modules/GFStorage_v0.5.11/src/gfstorage_core.js');
 const CGM = fromWeb('integration/GFCgmEvidencePolicy_v0.1.0.js');
 const Journal = fromWeb('modules/GFJournal_v0.1.3/src/gfjournal.js');
 const JournalAdapter = fromWeb('modules/GFJournal_v0.1.3/src/gfjournal_storage_adapter.js');

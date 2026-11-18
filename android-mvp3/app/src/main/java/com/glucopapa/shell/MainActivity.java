@@ -20,21 +20,36 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
 import androidx.webkit.WebViewAssetLoader;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicReference;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * MVP host for the self-contained V2 research shell.
  * Loads only verified app assets, blocks remote navigation/network.
  * SQLite is experimental and stores unencrypted snapshots in app-private storage.
- * No proven restore/backup or clinical reliability is claimed.
+ * Local files are selected explicitly through the Android document picker.
  */
 public class MainActivity extends Activity {
     private static final String BASE = "https://appassets.androidplatform.net/assets/www/";
     private static final int CREATE_JSON = 3101;
+    private static final int CREATE_BACKUP = 3102;
+    private static final int OPEN_BACKUP = 3103;
+    private static final int BACKUP_BYTES = 32_000_000;
+    private final ExecutorService fileWorker = Executors.newSingleThreadExecutor();
+    private final AtomicReference<String> fileResult = new AtomicReference<>();
     private WebView view;
-    private String pendingExport;
+    private int pendingRequest;
+    private String pendingFile;
     private GFNativeStorage nativeStorage;
+    private GFNativeXDrip nativeXDrip;
 
     @Override public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -90,6 +105,8 @@ public class MainActivity extends Activity {
         view.addJavascriptInterface(new LocalExport(), "AndroidExporter");
         nativeStorage = new GFNativeStorage(getApplicationContext());
         view.addJavascriptInterface(nativeStorage, "GFNativeStorage");
+        nativeXDrip = new GFNativeXDrip(getApplicationContext());
+        view.addJavascriptInterface(nativeXDrip, "GFNativeXDrip");
         view.loadUrl(BASE + "index.html");
     }
 
@@ -124,31 +141,107 @@ public class MainActivity extends Activity {
 
     public final class LocalExport {
         @JavascriptInterface public void saveJson(String json) {
-            if (json == null || json.isEmpty() || json.length() > 8_000_000) return;
-            runOnUiThread(() -> {
-                if (pendingExport != null) return;
-                pendingExport = json;
-                Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
-                intent.addCategory(Intent.CATEGORY_OPENABLE);
-                intent.setType("application/json");
-                intent.putExtra(Intent.EXTRA_TITLE, "ГлюкоПапа_V2_экспорт.json");
-                startActivityForResult(intent, CREATE_JSON);
-            });
+            chooseFile(CREATE_JSON, json, "ГлюкоПапа_V2_экспорт.json");
         }
+
+        @JavascriptInterface public void saveBackup(String json) {
+            chooseFile(CREATE_BACKUP, json, "ГлюкоПапа_V2_резервная_копия.json");
+        }
+
+        @JavascriptInterface public void openBackup() {
+            chooseFile(OPEN_BACKUP, null, null);
+        }
+
+        @JavascriptInterface public String takeFileResult() {
+            return fileResult.getAndSet(null);
+        }
+    }
+
+    private void chooseFile(int request, String json, String name) {
+        runOnUiThread(() -> {
+            if (isDestroyed() || pendingRequest != 0) return;
+            int max = request == CREATE_JSON ? 8_000_000 : 12_000_000;
+            if (request != OPEN_BACKUP && (json == null || json.isEmpty() || json.length() > max)) {
+                sendFileResult(request, "FILE_SIZE", null);
+                return;
+            }
+            pendingRequest = request;
+            pendingFile = json;
+            Intent intent = new Intent(request == OPEN_BACKUP ? Intent.ACTION_OPEN_DOCUMENT
+                : Intent.ACTION_CREATE_DOCUMENT);
+            intent.addCategory(Intent.CATEGORY_OPENABLE);
+            intent.setType("application/json");
+            intent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
+            if (name != null) intent.putExtra(Intent.EXTRA_TITLE, name);
+            try {
+                startActivityForResult(intent, request);
+            } catch (RuntimeException unavailable) {
+                pendingRequest = 0;
+                pendingFile = null;
+                sendFileResult(request, "FILE_PICKER_UNAVAILABLE", null);
+            }
+        });
     }
 
     @Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode != CREATE_JSON) return;
-        String json = pendingExport;
-        pendingExport = null;
-        if (resultCode != RESULT_OK || data == null || data.getData() == null || json == null) return;
-        try (OutputStream out = getContentResolver().openOutputStream(data.getData())) {
-            if (out == null) throw new IllegalStateException("Cannot open destination");
-            out.write(json.getBytes(StandardCharsets.UTF_8));
-        } catch (Exception e) {
-            new AlertDialog.Builder(this).setTitle("Ошибка экспорта")
-                .setMessage("Файл не сохранён: " + e.getMessage()).setPositiveButton("OK", null).show();
+        if (requestCode != pendingRequest || pendingRequest == 0) return;
+        String json = pendingFile;
+        pendingFile = null;
+        Uri uri = data != null ? data.getData() : null;
+        if (resultCode != RESULT_OK || uri == null) {
+            pendingRequest = 0;
+            sendFileResult(requestCode, "FILE_CANCELLED", null);
+            return;
+        }
+        fileWorker.execute(() -> {
+            String code;
+            String contents = null;
+            try {
+                if (requestCode == OPEN_BACKUP) {
+                    contents = readBackup(uri);
+                    code = "FILE_READ";
+                } else {
+                    try (OutputStream out = getContentResolver().openOutputStream(uri, "wt")) {
+                        if (out == null) throw new IllegalStateException("Cannot open destination");
+                        out.write(json.getBytes(StandardCharsets.UTF_8));
+                    }
+                    code = "FILE_SAVED";
+                }
+            } catch (Exception failure) {
+                code = requestCode == OPEN_BACKUP ? "FILE_READ_FAILED" : "FILE_WRITE_FAILED";
+            }
+            final String status = code;
+            final String result = contents;
+            runOnUiThread(() -> {
+                pendingRequest = 0;
+                sendFileResult(requestCode, status, result);
+            });
+        });
+    }
+
+    private String readBackup(Uri uri) throws Exception {
+        try (InputStream in = getContentResolver().openInputStream(uri)) {
+            if (in == null) throw new IllegalStateException("Cannot open source");
+            ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+            byte[] buffer = new byte[16_384];
+            for (int n; (n = in.read(buffer)) != -1;) {
+                if (bytes.size() + n > BACKUP_BYTES) throw new IllegalArgumentException("File size");
+                bytes.write(buffer, 0, n);
+            }
+            return StandardCharsets.UTF_8.newDecoder().decode(ByteBuffer.wrap(bytes.toByteArray())).toString();
+        }
+    }
+
+    private void sendFileResult(int request, String status, String contents) {
+        if (isDestroyed() || view == null) return;
+        try {
+            JSONObject message = new JSONObject().put("status", status).put("report", request == CREATE_JSON);
+            if (contents != null) message.put("data", contents);
+            fileResult.set(message.toString());
+            view.evaluateJavascript("if(window.GPApp)window.GPApp.consumeFileResult()", null);
+        } catch (JSONException invalid) {
+            fileResult.set(null);
         }
     }
 
@@ -162,9 +255,14 @@ public class MainActivity extends Activity {
             view.loadUrl("about:blank");
             view.removeJavascriptInterface("AndroidExporter");
             view.removeJavascriptInterface("GFNativeStorage");
+            view.removeJavascriptInterface("GFNativeXDrip");
             view.destroy();
+            view = null;
+            fileResult.set(null);
         }
         if (nativeStorage != null) {nativeStorage.close();nativeStorage = null;}
+        if (nativeXDrip != null) {nativeXDrip.close();nativeXDrip = null;}
+        fileWorker.shutdownNow();
         super.onDestroy();
     }
 }

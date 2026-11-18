@@ -7,8 +7,21 @@
 
     window.__glucopapaQA = null;
     (async () => {
-        assert(GPApp.mode() === 'demo', 'Expected synthetic journal');
         const action = window.__glucopapaQAAction;
+        if (action === 'select-demo') {
+            assert(GPApp.mode() === 'local', 'Fresh install must open local journal');
+            assert(snapshot().revision === 0 && !snapshot().cgm.length && by('syntheticCgmTools').hidden,
+                'Fresh journal must not contain test readings');
+            assert(globalThis.GFNativeXDrip && !by('xdripEnabled').checked, 'xDrip+ must initially be disabled');
+            const previous = window.confirm;
+            try {
+                window.confirm = () => true;
+                click('modeDemo');
+            } finally { window.confirm = previous; }
+            assert(GPApp.mode() === 'demo' && snapshot().revision === 0, 'Synthetic fixture failed to open');
+            return {status: 'PASS', fixture: 'SYNTHETIC', step: action, fresh_local: true};
+        }
+        assert(GPApp.mode() === 'demo', 'Expected synthetic journal');
         if (action === 'home' || action === 'restored') {
             assert(by('modeBadge').textContent.includes('Тестовые данные'), 'Missing synthetic label');
             if (action === 'restored') assert(snapshot().revision === 1, 'Missing persisted revision');

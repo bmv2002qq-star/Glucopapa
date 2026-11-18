@@ -1,16 +1,16 @@
 <!doctype html>
-<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="color-scheme" content="light"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; frame-src 'self'; base-uri 'none'"><title>ГлюкоПапа V2 · GFShell v0.3.13-MVP2 · просмотр интерфейса</title><link rel="icon" href="data:,"><link rel="stylesheet" href="styles.css"></head>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="color-scheme" content="light"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; frame-src 'self'; base-uri 'none'"><title>ГлюкоПапа V2</title><link rel="icon" href="data:,"><link rel="stylesheet" href="styles.css"></head>
 <body>
 <div class="app">
- <header class="app-header"><div><div class="brand-title">Глюко<span>папа</span></div><div class="sub">Семейный дневник диабета · V2<br>Единая база и подключаемые модули</div></div><div class="toptools"><span id="modeBadge" class="chip demo">Тестовые данные</span><span id="revBadge" class="badge-small">База #0</span></div></header>
+ <header class="app-header"><div><div class="brand-title">Глюко<span>папа</span></div><div class="sub">Семейный дневник диабета · V2<br>Единая база и подключаемые модули</div></div><div class="toptools"><span id="modeBadge" class="chip local">Локальный журнал</span><span id="revBadge" class="badge-small">База #0</span></div></header>
  <main class="main">
   <div class="sr-only" id="pageTitle" aria-live="polite">Главная</div>
-  <div id="banner" class="alert"><strong>Исследовательский прототип.</strong> Не рассчитывает и не рекомендует дозы инсулина; не заменяет xDrip+ и его предупреждения.</div>
+  <div id="banner" class="alert" hidden></div>
   <div id="notice" class="notice" role="status" aria-live="polite"></div>
   <section id="screen-home" class="screen active">
    <div class="home-top"><div class="h1">Здравствуйте 👋</div><span class="chip">Сегодня</span></div>
    <article class="card profile-card"><div class="profile-text"><strong>👤 Профиль ребёнка</strong><p>Данные профиля и измерения читаются из GFStorage.<br>Редактирование доступно в настройках.</p></div><button data-screen="settings" class="btn secondary">Изменить</button></article>
-   <article class="card glucose-card"><div class="glucose-top"><div class="glucose-title">Глюкоза сейчас</div><span class="chip demo">CGM · график v0.2</span></div>
+   <article class="card glucose-card"><div class="glucose-top"><div class="glucose-title">Глюкоза</div><span class="chip">CGM · график A</span></div>
     <div class="value"><strong id="homeGlucose">—</strong></div><div class="muted" id="homeCgmInfo">Ожидаем данные xDrip+ Follower</div>
     <div class="chart-wrap" id="cgmChart"><div class="empty">Здесь появится график глюкозы<br>после подключения xDrip+</div></div>
     <div class="glucose-actions"><button id="openLow" class="low-btn" type="button">↓ Низкий сахар</button><button id="openHigh" class="high-btn" type="button">↑ Высокий сахар</button></div>
@@ -33,9 +33,18 @@
    <article class="card"><h3>Проверка данных</h3><div id="homeSafety" class="soft">GFSafety ещё не запускался.</div><button id="homeSafetyRun" class="btn secondary">Проверить данные</button></article>
   </section>
   <section id="screen-cgm" class="screen"><div class="section-header"><h2>Глюкоза (CGM)</h2><p>Показания и время измерения из GFStorage.</p></div>
-   <article class="card"><div id="cgmDetailChart" class="chart-wrap"></div><div class="chart-options"><label><input id="showRinfast" type="checkbox" checked> Кривые РинФаста</label><label><input id="showForecast" type="checkbox" disabled> Прогноз (недоступен)</label></div></article>
-   <article class="card"><div class="between"><h3>Источник данных</h3><span id="cgmSource" class="chip">Не подключён</span></div><div id="cgmMeta" class="soft">Реальный xDrip+ Follower ещё не подключён.</div><button class="btn secondary full" type="button" data-screen="home">← Вернуться к графику</button></article>
-   <article class="card"><h3>Проверка CGM</h3><p class="muted">Демо-измерения можно загрузить только в отдельную тестовую базу. Это не данные ребёнка.</p><button id="seedDemo" class="btn primary full">Загрузить 24 вымышленных измерения</button></article>
+   <article class="card"><div id="cgmDetailChart" class="chart-wrap"></div><div class="chart-options"><label><input id="showRinfast" type="checkbox" checked> Кривые РинФаста</label><button class="inline-link" type="button" data-screen="analytics">Исследовательский расчёт прогноза</button></div></article>
+   <article class="card">
+    <div class="between"><h3>Источник данных</h3><span id="cgmSource" class="chip">Не подключён</span></div>
+    <div id="cgmMeta" class="soft">Нет сохранённых показаний</div>
+    <div id="xdripControls" hidden>
+      <label class="check"><input id="xdripEnabled" type="checkbox"> Читать показания из xDrip+ на этом устройстве</label>
+      <div id="xdripStatus" class="soft" role="status">Чтение выключено</div>
+      <button id="refreshXdrip" class="btn secondary" type="button">Обновить источник</button>
+    </div>
+    <button class="btn secondary full" type="button" data-screen="home">← Вернуться к графику</button>
+   </article>
+   <article id="syntheticCgmTools" class="card" hidden><h3>Проверка CGM</h3><button id="seedDemo" class="btn secondary full">Загрузить 24 вымышленных измерения</button></article>
   </section>
   <section id="screen-injections" class="screen"><div class="section-header"><button type="button" class="inline-link" data-screen="home">← На главную</button><h2>Запись выполненной инъекции</h2><p>Единственная точка регистрации факта — <code>GFStorage.actionWriter</code>.</p></div><p class="basal-entry-context" id="basalEntryContext" hidden>Выбран длинный инсулин. Укажите фактически введённое количество и подтвердите укол; запись будет одна — в общем дневнике.</p><div class="cols"><article class="panel"><form id="injectionForm" class="fields"><label>Препарат<select id="injectionDrug"><option value="rinfast">РинФаст</option><option value="levemir">Левемир</option></select></label><label>Фактически введено, ЕД<input id="injectionUnits" type="number" min="0.5" max="200" step="0.5" required placeholder="Например: 0,5"></label><label>Когда выполнено<input id="injectionTime" type="datetime-local" step="60" required></label><label>Место укола<select id="injectionRegion"><option value="">Не указано</option><option value="abdomen">Живот</option><option value="arm">Плечо</option><option value="thigh">Бедро</option><option value="buttock">Ягодица</option></select></label><label>Сторона<select id="injectionSide"><option value="">Не указана</option><option value="left">Левая</option><option value="right">Правая</option></select></label><label class="check"><input type="checkbox" id="injectionConfirm" required> Я подтверждаю: инъекция действительно выполнена</label><button class="btn primary" type="submit">Сохранить фактический укол</button></form><p class="hint">Повтор с другой записью в близкое время будет отклонён как возможный дубль. Программа не предлагает дозу.</p></article><article class="panel"><h3>Последние подтверждённые инъекции</h3><div id="injectionList" class="empty">Нет записей</div></article></div></section>
   <section id="screen-meals" class="screen"><div class="section-header"><button type="button" class="inline-link" data-screen="approved-nutrition">← Моя тарелка v0.4.6</button><h2>План / фактически съедено</h2><p>Продукты выбираются только в утверждённой «Моей тарелке» v0.4.6. Здесь подтверждаются начало, фактическая порция и завершение через один GFStorage.</p></div><article class="panel"><h3>Текущий приём пищи</h3><div id="mealCurrent" class="empty">Создайте план в «Моей тарелке»</div><div class="actions"><button id="mealReady" class="btn secondary">Подготовлен</button><button id="mealStart" class="btn secondary">Фактически начал(а) есть</button><button id="mealFinish" class="btn secondary">Завершить приём</button></div><p class="hint">План не равен фактически съеденному. Отдельный ввод граммовки факта доступен ниже.</p></article>
@@ -47,7 +56,10 @@
 <label class="gf-meal-checkbox"><input id="gfMealActualConfirm" type="checkbox"/> Подтверждаю, что это фактически съеденная еда, а не план</label>
 <div class="actions"><button id="gfMealActualSave" class="btn primary" type="button" disabled>Подтвердить фактически съеденное</button><button id="gfMealActualRefresh" class="btn secondary" type="button">Обновить из GFStorage</button></div>
 <p id="gfMealActualMessage" class="hint" role="status" aria-live="polite"></p><p class="hint">Интеграционная панель; утверждённый исходный экран «Моя тарелка» v0.4.6 остаётся побайтно прежним. Не рассчитывает инсулин.</p></article></section>
-<section id="screen-analytics" class="screen"><div class="section-header"><h2>Модули анализа</h2><p>Все результаты исследовательские и не могут использоваться для дозирования.</p></div><div class="cols"><article class="panel"><h3>GFSafety · диагностика входа</h3><div id="analysisSafety" class="soft">Нет проверки</div><button id="runSafety" class="btn secondary">Проверить технические данные</button></article><article class="panel"><h3>GFHighLow · эпизоды CGM</h3><div id="analysisHighLow" class="soft">Нет анализа</div><button id="runHighLow" class="btn secondary">Посмотреть эпизоды</button></article><article class="panel"><h3>GFCoefficients · статистика истории</h3><div id="analysisCoefficients" class="soft">Нет анализа</div><button id="runCoefficients" class="btn secondary">Проанализировать историю</button></article><article class="panel"><h3>GFForecast · прогноз</h3><div id="analysisForecast" class="soft">Требуется достоверный CGM, проверка GFSafety и полнота истории. В тестовом режиме прогноз блокируется.</div><button id="runForecastGate" class="btn secondary">Проверить доступность входа</button></article></div></section>
+<section id="screen-analytics" class="screen"><div class="section-header"><h2>Модули анализа</h2><p>Все результаты исследовательские и не могут использоваться для дозирования.</p></div><div class="cols"><article class="panel"><h3>GFSafety · диагностика входа</h3><div id="analysisSafety" class="soft">Нет проверки</div><button id="runSafety" class="btn secondary">Проверить технические данные</button></article><article class="panel"><h3>GFHighLow · эпизоды CGM</h3><div id="analysisHighLow" class="soft">Нет анализа</div><button id="runHighLow" class="btn secondary">Посмотреть эпизоды</button></article><article class="panel"><h3>GFCoefficients · статистика истории</h3><div id="analysisCoefficients" class="soft">Нет анализа</div><button id="runCoefficients" class="btn secondary">Проанализировать историю</button></article><article class="panel"><h3>GFForecast · расчёт модели</h3>
+<div id="analysisForecast" class="soft" role="status">Для запуска нужны свежие показания с подтверждённым качеством и полная история.</div>
+<button id="runForecastGate" class="btn secondary" type="button">Выполнить расчёт модели</button>
+<details id="forecastTrace" hidden><summary>Исходные данные и результат</summary><pre class="gf-evidence-text" id="forecastValues"></pre></details></article></div></section>
   <section id="screen-settings" class="screen"><div class="section-header"><h2>Настройки</h2><p>GFSettings изменяет только пользовательские параметры через GFStorage.</p></div><article class="panel narrow"><form id="settingsForm" class="fields"><label>Часовой пояс<select id="settingsTZ"><option value="Europe/Minsk">Europe/Minsk</option><option value="Europe/London">Europe/London</option><option value="Europe/Moscow">Europe/Moscow</option><option value="Europe/Warsaw">Europe/Warsaw</option><option value="UTC">UTC</option></select></label><button class="btn primary" type="submit">Сохранить настройку</button></form><p class="hint">GFSettings v0.1.6: ниже доступны имя, дата рождения, аллергии, рост и вес. Остальные параметры пока отображаются через исходный модуль.</p><div id="settingsInfo" class="soft">—</div></article><article class="panel narrow"><h3>Профиль ребёнка</h3><form id="childProfileForm" class="fields">
  <label>Имя для отображения<input id="childName" maxlength="120" placeholder="Имя"></label><label>Дата рождения<input id="childBirth" type="date"></label>
  <label>Аллергии (через запятую)<input id="childAllergies" maxlength="300" placeholder="Например: молоко"></label>
@@ -57,7 +69,7 @@
  <button type="submit" class="btn secondary">Добавить измерение</button></form><div id="childMeasurementInfo" class="hint">Нет измерений</div></article></section>
   <section id="screen-system" class="screen"><div class="section-header"><h2>Ещё / настройки</h2><p>Один дневник и одна база данных для всех разделов.</p></div><article class="card"><h3>Разделы программы</h3>
    <button class="more-option" data-screen="injections"><span class="opt-main"><span class="opt-icon">💉</span><span><strong>Инъекции</strong><small>Запись фактически выполненного укола</small></span></span><span class="chevron">›</span></button>
-   <button class="more-option" data-screen="cgm"><span class="opt-main"><span class="opt-icon">◉</span><span><strong>Датчик и CGM</strong><small>Источник, история, тестовые измерения</small></span></span><span class="chevron">›</span></button>
+   <button class="more-option" data-screen="cgm"><span class="opt-main"><span class="opt-icon">◉</span><span><strong>Датчик и CGM</strong><small>Источник и история измерений</small></span></span><span class="chevron">›</span></button>
    <button class="more-option" data-screen="settings"><span class="opt-main"><span class="opt-icon">⚙</span><span><strong>Настройки</strong><small>Параметры через GFSettings</small></span></span><span class="chevron">›</span></button>
    
    <button class="more-option" data-screen="research"><span class="opt-main"><span class="opt-icon">⌁</span><span><strong>Исследовательские модули</strong><small>GFPhysioProfiles, AAPS, ReplayLab — только чтение или изолированный стенд</small></span></span><span class="chevron">›</span></button>
@@ -65,10 +77,28 @@
    <button class="more-option" data-screen="injection-sites"><span class="opt-main"><span class="opt-icon">◎</span><span><strong>Места инъекций</strong><small>GFInjectionAnalytics · только аналитика</small></span></span><span class="chevron">›</span></button>
    <button class="more-option" data-screen="reports"><span class="opt-main"><span class="opt-icon">▤</span><span><strong>Отчёты и экспорт</strong><small>GFAuditExport · единая история из GFStorage</small></span></span><span class="chevron">›</span></button>
    <button class="more-option" data-screen="sync"><span class="opt-main"><span class="opt-icon">◌</span><span><strong>Синхронизация и xDrip+</strong><small>Проверка статуса подключения источников</small></span></span><span class="chevron">›</span></button>
-   </article><article class="panel"><h3>Режим данных</h3><div class="mode-buttons"><button class="btn primary" id="modeDemo">Тестовый журнал</button><button class="btn secondary" id="modeLocal">Локальный журнал (экспериментальный)</button></div><p class="hint">Это две физически раздельные локальные записи. Режим локального журнала не предназначен для ведения единственной медицинской истории: нет защищённой Android-БД, резервирования и соединения с xDrip+.</p></article><article class="panel"><h3>Состав сборки</h3><div id="moduleTable"></div></article><article class="panel"><h3>Хранилище и аналитический экспорт</h3><div id="storageInfo" class="soft">—</div><div class="actions"><button id="exportState" class="btn secondary">Экспорт аналитического JSON</button><button id="resetDemo" class="btn danger">Очистить только тестовый журнал</button></div><p class="hint">Выгрузка может содержать персональные медицинские данные. Это НЕ резервная копия всей базы и не поддерживает восстановление. Данные сохраняются только по вашему нажатию; приложение ничего не отправляет по сети.</p></article></section>
+   </article>
+   <article class="panel"><h3>Режим данных</h3><div class="mode-buttons">
+     <button class="btn primary" id="modeLocal">Локальный журнал</button>
+     <button class="btn secondary" id="modeDemo">Тестовый журнал</button>
+   </div><p class="hint">Тестовые события сохраняются отдельно от локального журнала.</p></article>
+   <article class="panel"><h3>Состав сборки</h3><div id="moduleTable"></div></article>
+   <article class="panel"><h3>Хранилище</h3><div id="storageInfo" class="soft">—</div>
+     <div class="actions"><button id="exportState" class="btn secondary">Экспорт аналитического JSON</button>
+       <button id="resetDemo" class="btn danger" hidden>Очистить тестовый журнал в браузере</button></div>
+     <div id="backupControls" hidden>
+       <h4>Резервная копия журнала</h4>
+       <p class="hint">Копия содержит полный журнал выбранного режима и может содержать медицинские данные. Выберите закрытую папку. Восстановление доступно в пустой журнал того же режима.</p>
+       <div class="actions"><button id="saveBackup" class="btn secondary">Сохранить резервную копию</button>
+         <button id="openBackup" class="btn secondary">Выбрать файл для восстановления</button></div>
+       <p id="backupStatus" class="hint" role="status"></p>
+     </div>
+   </article>
+   <article class="panel"><h3>О программе</h3><p>ГлюкоПапа V2 — опытный образец. Клиническая валидация медицинских алгоритмов не завершена. Тревоги остаются в xDrip+.</p></article>
+  </section>
 
   <section id="screen-research" class="screen"><div class="section-header"><h2>Исследовательские модули</h2><p>История ребёнка читается из единого GFStorage только по нажатию. Кривые и виртуальные модели не предназначены для дозирования.</p></div>
-   <article class="panel"><h3>GFPhysioProfiles v0.2.0</h3><div class="soft" id="researchPhysio">Проверка не запускалась.</div><p class="hint">Подбор ближайшего ВИРТУАЛЬНОГО пациента по возрасту и весу, без переноса коэффициентов на ребёнка.</p></article>
+   <article class="panel"><h3>GFPhysioProfiles v0.2.0</h3><div class="soft" id="researchPhysio">Проверка не запускалась.</div><p class="hint">Подбор виртуального профиля доступен в исследовательском журнале.</p></article>
    <article class="panel"><h3>GFAAPSResearch v0.1.0 / GFAPSEnhancer v0.1.1</h3><div class="soft" id="researchAaps">Проверка не запускалась.</div><p class="hint">Исходные исследования подключены без вмешательства в РинФаст, Левемир, LOW/HIGH и расчёт доз. Для численной кривой требуется подтверждённый источник и история.</p></article>
    <article class="panel"><h3>Диагностика единой истории</h3><div class="soft" id="researchStatus">Нет чтения.</div><button id="runAllResearch" type="button" class="btn secondary full">Проверить подключение модулей к GFStorage (без записи)</button></article>
    <article class="panel"><h3>Требуют Android и разрешений</h3><div class="soft">xDrip+ Follower: нужен реальный телефон. GFSync: нужен отдельно разрешённый сервер и проверка безопасности. Здесь они не подключены и не имитируются.</div></article>
@@ -77,6 +107,7 @@
    <article class="panel"><h3>РинФаст · активные кривые</h3><div id="rinfastModels" class="soft">Нет данных</div><button type="button" class="btn secondary" id="refreshInsulinModels">Обновить анализ</button></article>
    <article class="panel"><h3>Левемир v0.1.2</h3><div id="levemirModels" class="soft">Нет данных</div><p class="hint">При неизвестном весе или неподтверждённой полноте журнала численный расчёт заблокирован.</p></article>
    <button class="btn secondary full" data-screen="injections">Перейти к записи фактического укола</button>
+   <details class="panel" id="insulinModelTrace" hidden><summary>Исходные факты и вклад инъекций</summary><ul id="insulinModelInputs"></ul></details>
   </section>
   <section id="screen-injection-sites" class="screen"><div class="section-header"><h2>Места инъекций</h2><p>GFInjectionAnalytics v0.1.1 — сопоставление только достаточно похожих событий по журналу; не время начала действия и не основание для изменения техники или дозы.</p></div>
    <article class="panel"><h3>История и качество данных</h3><div id="siteStats" class="soft">Нет анализа</div><button class="btn secondary" id="runSiteAnalytics">Проанализировать места</button></article>
@@ -115,7 +146,7 @@
   <button type="button" class="btn secondary" data-screen="approved-nutrition">Моя тарелка</button>
   <button type="button" class="btn secondary" data-screen="home">Активность</button>
  </article>
- <article class="panel"><h3>Проверка исходных данных</h3><div class="soft gf-evidence-text" id="w06EvidenceLow">Проверка не запущена</div></article>
+ <article class="panel"><h3>Проверка исходных данных</h3><p id="observedLow"></p><div class="soft gf-evidence-text" id="w06EvidenceLow">Проверка не запущена</div></article>
  <details class="panel"><summary>Исследовательский профиль COB</summary><div id="w06cStudyLow">Подготовка исследовательских параметров</div></details>
 </section>
 <section id="screen-approved-high" class="screen">
@@ -125,7 +156,7 @@
   <button type="button" class="btn primary" data-screen="injections">Записать выполненный укол</button>
   <button type="button" class="btn secondary" data-screen="home">Активность</button>
  </article>
- <article class="panel"><h3>Проверка исходных данных</h3><div class="soft gf-evidence-text" id="w06EvidenceHigh">Проверка не запущена</div></article>
+ <article class="panel"><h3>Проверка исходных данных</h3><p id="observedHigh"></p><div class="soft gf-evidence-text" id="w06EvidenceHigh">Проверка не запущена</div></article>
  <details class="panel"><summary>Исследовательский профиль COB</summary><div id="w06cStudyHigh">Подготовка исследовательских параметров</div></details>
 </section>
 
@@ -155,7 +186,7 @@
 <script src="runtime/webview-compat.js"></script>
 <script src="shared/GFNormalizedFacts_v0.1.0.js"></script>
 <script src="shared/GFTimeGrid_v0.1.0.js"></script>
-<script src="modules/GFStorage_v0.5.10/src/gfstorage_core.js"></script>
+<script src="modules/GFStorage_v0.5.11/src/gfstorage_core.js"></script>
 <script src="modules/GFSettings_v0.1.8/shared/gfnutrition_reference.js"></script>
 <script src="modules/GFSettings_v0.1.8/shared/gfgrowth_reference.js"></script>
 <script src="modules/GFSettings_v0.1.8/src/gfsettings.js"></script>
@@ -190,6 +221,9 @@
 <script src="integration/GFMealCoverageStudy_v0.1.1.js"></script>
 <script src="integration/GFHighLowInputGate_v0.1.0.js"></script>
 <script src="integration/GFModuleHub_v0.2.0.js"></script>
+<script src="integration/GFProviderCgm_v0.1.0.js"></script>
+<script src="integration/GFJournalBackup_v0.1.0.js"></script>
+<script src="integration/GFForecastReadout_v0.1.0.js"></script>
 <script src="app.js"></script>
 <script src="integration/GFModuleUI_v0.2.1.js"></script><script src="integration/GFModuleDirectory_v0.1.0.js"></script><script src="integration/GFSettingsPanel_v0.1.0.js"></script><script src="integration/GFMealActualPanel_v0.1.0.js"></script>
   <script src="integration/GFCOBAutoPanel_v0.2.0.js"></script>
