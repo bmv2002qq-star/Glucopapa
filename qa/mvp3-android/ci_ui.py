@@ -15,14 +15,28 @@ def label(node):
     return ' '.join((node.get('text', ''), node.get('content-desc', ''))).strip()
 
 
-def find_node(root, resource_id, captions):
+def screen_navigation(root):
+    for node in root.iter('node'):
+        if node.get('resource-id') == 'nav' or label(node) == 'Основные разделы':
+            return node
+    return None
+
+
+def find_node(root, resource_id, captions, tappable=False):
+    navigation = screen_navigation(root) if tappable else None
+    navigation_bounds = BOUNDS.fullmatch(navigation.get('bounds', '')) if navigation is not None else None
+    navigation_top = int(navigation_bounds.group(2)) if navigation_bounds else None
+    navigation_nodes = set(navigation.iter('node')) if navigation is not None else set()
     candidates = []
     for node in root.iter('node'):
         match = BOUNDS.fullmatch(node.get('bounds', ''))
         if match is None or node.get('enabled') != 'true':
             continue
         left, top, right, bottom = map(int, match.groups())
-        if left >= right or top >= bottom:
+        if navigation_top is not None and node not in navigation_nodes:
+            bottom = min(bottom, navigation_top)
+        minimum_height = 28 if tappable else 1
+        if left >= right or bottom - top < minimum_height:
             continue
         node_id = node.get('resource-id', '').rsplit('/', 1)[-1]
         exact_id = resource_id and node_id == resource_id
@@ -57,7 +71,7 @@ class CandidateUI:
         (self.output / 'ui-latest.xml').write_bytes(contents.stdout)
         return self.last_root
 
-    def wait(self, resource_id=None, captions=(), scroll=False):
+    def wait(self, resource_id=None, captions=(), scroll=False, tappable=False):
         end = time.monotonic() + 65
         scrolled = 0
         while time.monotonic() < end:
@@ -66,7 +80,7 @@ class CandidateUI:
             except subprocess.TimeoutExpired:
                 root = None
             if root is not None:
-                node = find_node(root, resource_id, captions)
+                node = find_node(root, resource_id, captions, tappable)
                 if node is not None:
                     return node
                 if scroll and scrolled < 4:
@@ -89,8 +103,10 @@ class CandidateUI:
         self.emulator.execute('shell', 'input', 'swipe', str(x), str(start), str(x), str(finish), '270')
 
     def tap(self, resource_id=None, captions=(), scroll=False):
-        node, (left, top, right, bottom) = self.wait(resource_id, captions, scroll)
-        self.emulator.execute('shell', 'input', 'tap', str((left+right)//2), str((top+bottom)//2))
+        node, (left, top, right, bottom) = self.wait(resource_id, captions, scroll, tappable=True)
+        x, y = (left+right)//2, (top+bottom)//2
+        print(f'Tap {resource_id or captions} at ({x}, {y})', flush=True)
+        self.emulator.execute('shell', 'input', 'tap', str(x), str(y))
         return node
 
     def home(self):
@@ -110,14 +126,15 @@ class CandidateUI:
             self.emulator.execute('shell', 'input', 'keyevent', 'KEYCODE_BACK')
         self.tap('injectionRegion', ('Не указано', 'Место укола'), scroll=True)
         self.tap(captions=('Живот',))
-        checkbox, _ = self.wait('injectionConfirm', ('Я подтверждаю',), scroll=True)
+        checkbox, _ = self.wait('injectionConfirm', ('Я подтверждаю',), scroll=True, tappable=True)
         require(checkbox.get('checked') != 'true', 'A new injection must start unconfirmed')
         if confirmed:
             self.tap('injectionConfirm', ('Я подтверждаю',), scroll=True)
+            checked, _ = self.wait('injectionConfirm', ('Я подтверждаю',), scroll=True, tappable=True)
+            require(checked.get('checked') == 'true', 'Confirmation was not selected')
         self.tap(captions=('Сохранить фактический укол',), scroll=True)
         if confirmed:
             self.wait(captions=('0,5 ЕД · abdomen',), scroll=True)
-            self.journal()
 
     def journal(self):
         self.tap(captions=('Дневник',))

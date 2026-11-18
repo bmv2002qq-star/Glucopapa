@@ -174,19 +174,26 @@ def run(args):
             ui.injection(confirmed=True)
         else:
             prompt('Введите ту же синтетическую запись, явно отметьте подтверждение и сохраните один раз. '
-                   'Откройте «Дневник» и проверьте запись.')
+                   'Проверьте появление записи на экране инъекций.')
         committed, committed_pid = emulator.capture(args.output / '03_committed')
         outcome['checks'].append({'confirmed_injection_sqlite': injection_in(committed), 'stopped_pid': committed_pid})
 
         restart = emulator.start()
         if ui:
-            ui.journal()
+            ui.home()
+            ui.wait(captions=('База #1',))
         else:
-            prompt('После повторного запуска откройте «Дневник» и проверьте ту же запись.')
+            prompt('После повторного запуска проверьте, что главная показывает ревизию базы #1.')
         restored, restored_pid = emulator.capture(args.output / '04_restarted')
         require(restored == committed, 'SQLite snapshot changed across force-stop and relaunch')
         require(injection_in(restored) == injection_in(committed), 'Confirmed event differs after relaunch')
         outcome['checks'].append({'force_stop_relaunch_same_snapshot': True, 'start': restart, 'stopped_pid': restored_pid})
+        emulator.start()
+        if ui:
+            ui.journal()
+        else:
+            prompt('Откройте «Дневник» и проверьте ту же запись.')
+        outcome['checks'].append({'confirmed_injection_visible_in_journal': True})
         outcome['status'] = 'PASS'
         print('PASS Android emulator UI and native SQLite smoke')
     except Exception as error:
