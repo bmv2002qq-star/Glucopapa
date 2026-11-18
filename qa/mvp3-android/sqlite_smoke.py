@@ -199,6 +199,14 @@ def run(args):
     except Exception as error:
         outcome['status'] = 'FAIL'
         outcome['error'] = str(error)
+        try:
+            failure_screen = emulator.execute('exec-out', 'screencap', '-p', timeout=8, check=False)
+            if failure_screen.stdout.startswith(b'\x89PNG\r\n\x1a\n'):
+                failure_dir = args.output / 'failure'
+                failure_dir.mkdir(exist_ok=True)
+                (failure_dir / 'screen.png').write_bytes(failure_screen.stdout)
+        except (OSError, subprocess.TimeoutExpired):
+            pass
         raise
     finally:
         (args.output / 'result.json').write_text(json.dumps(outcome, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')

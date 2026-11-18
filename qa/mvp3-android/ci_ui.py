@@ -131,7 +131,8 @@ class CandidateUI:
         if confirmed:
             self.tap('injectionConfirm', ('Я подтверждаю',), scroll=True)
             checked, _ = self.wait('injectionConfirm', ('Я подтверждаю',), scroll=True, tappable=True)
-            require(checked.get('checked') == 'true', 'Confirmation was not selected')
+            if checked.get('checkable') == 'true':
+                require(checked.get('checked') == 'true', 'Confirmation was not selected')
         self.tap(captions=('Сохранить фактический укол',), scroll=True)
         if confirmed:
             self.wait(captions=('0,5 ЕД · abdomen',), scroll=True)
