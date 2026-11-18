@@ -110,9 +110,8 @@ class CandidateUI:
         return node
 
     def home(self):
-        self.wait('modeBadge', ('Тестовые данные',))
-        require(any('Тестовые данные' in label(node) for node in self.last_root.iter('node')),
-                'The app did not enter its synthetic journal')
+        # The static badge exists before the saved mode has loaded. Wait for the mode, not the node ID.
+        self.wait(captions=('Тестовые данные',))
 
     def injection(self, confirmed):
         self.home()
