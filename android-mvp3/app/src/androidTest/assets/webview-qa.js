@@ -24,10 +24,23 @@
         assert(by('screen-' + name).classList.contains('active'), 'Route ' + name);
     };
 
+    const originalConfirm = window.confirm;
+    const expectedPrompts = [
+        'Подтвердить, что еда действительно началась?',
+        'Подтвердить завершение приёма пищи?',
+    ];
+    const prompts = [];
     window.__glucopapaQA = null;
     (async () => {
         await until(() => window.GPApp?.getStorage(), 'GFStorage unavailable');
         assert(GPApp.mode() === 'demo', 'Disposable synthetic journal required');
+        // Test-APK-only acceptance of the two prompts in this named synthetic meal.
+        // The actual-quantity checkbox and all GFStorage validation remain active.
+        window.confirm = message => {
+            assert(message === expectedPrompts[prompts.length], 'Unexpected confirmation prompt');
+            prompts.push(message);
+            return true;
+        };
         const baseline = snapshot();
         assert(baseline.events.length === 1 && baseline.mealSessions.length === 0, 'Expected injection smoke snapshot');
 
@@ -108,8 +121,9 @@
         const corrected = await checkMeal(50, 9.95);
         assert(snapshot().workflowLog.filter(row => row.action === 'record_actual_plate').length === 2,
             'Meal correction did not retain the audit trail');
-        return {status: 'PASS', fixture: 'SYNTHETIC', actual, corrected};
+        assert(prompts.length === 2, 'Expected both meal lifecycle confirmation prompts');
+        return {status: 'PASS', fixture: 'SYNTHETIC', actual, corrected, synthetic_confirmations: prompts.length};
     })().then(result => { window.__glucopapaQA = result; }, error => {
         window.__glucopapaQA = {status: 'FAIL', error: String(error), stack: String(error.stack)};
-    });
+    }).finally(() => { window.confirm = originalConfirm; });
 })();

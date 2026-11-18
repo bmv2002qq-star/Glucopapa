@@ -1,15 +1,11 @@
 package com.glucopapa.shell.qa;
 
-import android.accessibilityservice.AccessibilityServiceInfo;
 import android.app.Activity;
 import android.app.Instrumentation;
-import android.app.UiAutomation;
 import android.content.Intent;
 import android.os.SystemClock;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.accessibility.AccessibilityNodeInfo;
-import android.view.accessibility.AccessibilityWindowInfo;
 import android.webkit.WebView;
 import com.glucopapa.shell.MainActivity;
 import java.io.InputStream;
@@ -43,15 +39,12 @@ final class WebViewChecks {
         try (InputStream input = instrumentation.getContext().getAssets().open("webview-qa.js")) {
             script = new String(input.readAllBytes(), StandardCharsets.UTF_8);
         }
-        UiAutomation automation = instrumentation.getUiAutomation();
-        AccessibilityServiceInfo service = automation.getServiceInfo();
-        service.flags |= AccessibilityServiceInfo.FLAG_REPORT_VIEW_IDS
-            | AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS;
-        automation.setServiceInfo(service);
-        instrumentation.runOnMainSync(() -> web.evaluateJavascript(script, null));
+        String started = evaluate(web, script + "\n'QA_SCRIPT_STARTED';");
+        if (!"\"QA_SCRIPT_STARTED\"".equals(started)) {
+            throw new IllegalStateException("Could not evaluate synthetic fixture: " + started);
+        }
         long deadline = SystemClock.elapsedRealtime() + 90_000;
         while (SystemClock.elapsedRealtime() < deadline) {
-            confirmTestDialog(automation);
             String raw = evaluate(web, "window.__glucopapaQA");
             if (raw != null && !"null".equals(raw)) {
                 JSONObject outcome = new JSONObject(raw);
@@ -74,19 +67,6 @@ final class WebViewChecks {
             done.countDown();
         }));
         return done.await(1, TimeUnit.SECONDS) ? value.get() : null;
-    }
-
-    private void confirmTestDialog(UiAutomation automation) {
-        for (AccessibilityWindowInfo window : automation.getWindows()) {
-            if (window.getType() != AccessibilityWindowInfo.TYPE_APPLICATION) continue;
-            AccessibilityNodeInfo root = window.getRoot();
-            if (root == null) continue;
-            for (AccessibilityNodeInfo node : root.findAccessibilityNodeInfosByText("Подтвердить")) {
-                if ("android.widget.Button".contentEquals(node.getClassName())
-                    && "Подтвердить".equals(String.valueOf(node.getText()))
-                    && node.performAction(AccessibilityNodeInfo.ACTION_CLICK)) return;
-            }
-        }
     }
 
     private static WebView findWebView(View view) {

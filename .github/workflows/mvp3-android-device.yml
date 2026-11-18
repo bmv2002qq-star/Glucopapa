@@ -6,6 +6,12 @@ on:
       api:
         required: true
         type: number
+      extended:
+        type: boolean
+        default: false
+      artifact-suffix:
+        type: string
+        default: ''
 
 permissions:
   contents: read
@@ -16,6 +22,7 @@ jobs:
     timeout-minutes: 25
     env:
       ANDROID_QA_API: ${{ inputs.api }}
+      ANDROID_QA_EXTENDED: ${{ inputs.extended }}
     steps:
       - name: Prepare evidence directory
         shell: bash
@@ -65,7 +72,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: GlucoPapa-MVP3-API-${{ inputs.api }}-evidence
+          name: GlucoPapa-MVP3-API-${{ inputs.api }}${{ inputs.artifact-suffix }}-evidence
           path: |
             ${{ runner.temp }}/glucopapa-android-qa/*.log
             ${{ runner.temp }}/glucopapa-android-qa/*.json

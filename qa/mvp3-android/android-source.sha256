@@ -1,9 +1,9 @@
 7a65e1fcd9346f9c3ec5e264cd9395524297d7338b2c148ae2ad2275b72ea546  android-mvp3/.github/workflows/build-apk.yml
 d883e4afc8125dc3f4356efdd0ac09239bfd8259878aa332f06a50ac5b3cb37e  android-mvp3/.gitignore
 0aa6029494d7c9603babdef7b58a04461adeddceb90864d225067dd3a2d1083d  android-mvp3/app/build.gradle
-12bf018c22ecad1a186a975fb94783a0605001b14e3faeded26fa3fa47bc71b3  android-mvp3/app/src/androidTest/assets/webview-qa.js
+68f65b28c76ce8f5e868a469a13c0534cca14e7a382470066c36709da0b07353  android-mvp3/app/src/androidTest/assets/webview-qa.js
 dcb40a0e404df37599fec5dcc77b29e6623921df686dd6660a5b2442c1b40dc9  android-mvp3/app/src/androidTest/java/com/glucopapa/shell/qa/StorageInstrumentation.java
-64bc7b908a9771386b20eb41b0aaa638a37c11dd2f3677c520cdca027894a4c7  android-mvp3/app/src/androidTest/java/com/glucopapa/shell/qa/WebViewChecks.java
+19699c717596feb62061301fd1ee55e2e79aa06cb80205ba76757aec0e6db79a  android-mvp3/app/src/androidTest/java/com/glucopapa/shell/qa/WebViewChecks.java
 5bb7bce222c6a9163851a0de676833a7f72e3847981395eeeb6372d2712493aa  android-mvp3/app/src/main/AndroidManifest.xml
 d7acfbeeb94973faf3976c5c82d9392fe3675f80dc8576ca1ad499c9255a3ae8  android-mvp3/app/src/main/assets/www/app.js
 0abc9b584922377403d2edca6de42f9aea5f31e152415bcda186b6c9f35dc84b  android-mvp3/app/src/main/assets/www/approved-library/CGM_Chart_v0.2A.html
