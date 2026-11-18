@@ -13,6 +13,18 @@
             assert(snapshot().revision === 0 && !snapshot().cgm.length && by('syntheticCgmTools').hidden,
                 'Fresh journal must not contain test readings');
             assert(globalThis.GFNativeXDrip && !by('xdripEnabled').checked, 'xDrip+ must initially be disabled');
+            assert(by('backupControls').hidden === false && typeof AndroidExporter.openBackup === 'function',
+                'Native backup controls are unavailable');
+            GFNativeXDrip.pollLatest();
+            const cutoff = Date.now() + 6000;
+            let source;
+            do {
+                source = JSON.parse(GFNativeXDrip.peekLatest()).status;
+                if (source !== 'READING') break;
+                await new Promise(resolve => setTimeout(resolve, 125));
+            } while (Date.now() < cutoff);
+            assert(source === 'NO_PROVIDER' && snapshot().revision === 0,
+                'An AVD with no xDrip+ should not create a CGM record');
             const previous = window.confirm;
             try {
                 window.confirm = () => true;

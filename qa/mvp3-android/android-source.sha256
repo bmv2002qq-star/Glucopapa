@@ -1,7 +1,7 @@
 7a65e1fcd9346f9c3ec5e264cd9395524297d7338b2c148ae2ad2275b72ea546  android-mvp3/.github/workflows/build-apk.yml
 d883e4afc8125dc3f4356efdd0ac09239bfd8259878aa332f06a50ac5b3cb37e  android-mvp3/.gitignore
 fed9aa982d1aa1a49a65497b1d02d08173beda824c0421e58e36dfadc06666dc  android-mvp3/app/build.gradle
-22e25fb54cab4ddc0ba91dbc216565dc2d2482b14b6e3ced2da32117bd318dad  android-mvp3/app/src/androidTest/assets/stock-ui.js
+b058b097033a4eb8ca1fcc290f50c40126d21d12d55475e5d0bc3a0a9730033c  android-mvp3/app/src/androidTest/assets/stock-ui.js
 68f65b28c76ce8f5e868a469a13c0534cca14e7a382470066c36709da0b07353  android-mvp3/app/src/androidTest/assets/webview-qa.js
 5b7d75572a425a31e4dd8622edef1cf074f3c38af107d5b852150b191180a1af  android-mvp3/app/src/androidTest/java/com/glucopapa/shell/ProviderContractChecks.java
 fa71102cd393dc71bb439833ff5688fb1fd9c1dcd64f70d1a431b8b0160c6545  android-mvp3/app/src/androidTest/java/com/glucopapa/shell/qa/StorageInstrumentation.java
@@ -43,7 +43,7 @@ b312c5a58bdd60ab9dd8c280045bfd473e30460ac073c4b255c2a6a6ba210033  android-mvp3/a
 721a9f918d49ffb8806aba4aa84e9e381b9218d89a52d46efa1911eba008e7b1  android-mvp3/app/src/main/assets/www/integration/GFMealActualPanel_v0.1.0.js
 98e98ce214c3c72d1cbf235842d4e20b4e273206963d6cb14cc76a088536daf8  android-mvp3/app/src/main/assets/www/integration/GFMealCoverageStudy_v0.1.0.js
 7f738669db3b4a22ab3cb625ab21aacfbd7c3406c9e66d6ca8700224fb826480  android-mvp3/app/src/main/assets/www/integration/GFMealCoverageStudy_v0.1.1.js
-0f20961bf491311c28a6f069cbb9dcc87db6c4a9eb867b3d027fa43be628c15c  android-mvp3/app/src/main/assets/www/integration/GFModuleDirectory_v0.1.0.js
+7e7ccb5ea8d9365872f437735c4ab583fec2887d1c8b9c9539a8d4c243191150  android-mvp3/app/src/main/assets/www/integration/GFModuleDirectory_v0.1.0.js
 05cd1152fc3d33fff56e4406f5e5b7d2dd52a41e17d5f60653e7b1562386db55  android-mvp3/app/src/main/assets/www/integration/GFModuleHub_v0.2.0.js
 b14d3b12f9d65330ec2b973f247d2ddf34ff6fd66e5bfa4217eebc6c1aa77a4f  android-mvp3/app/src/main/assets/www/integration/GFModuleUI_v0.2.0.js
 05505fd382e40c4ab17992bf122121c35119ee9b847a523990ea80e4d17f2e67  android-mvp3/app/src/main/assets/www/integration/GFModuleUI_v0.2.1.js
