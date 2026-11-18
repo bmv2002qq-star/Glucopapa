@@ -1,6 +1,7 @@
 """Observe installed WebView at Android screen sizes and during a bounded wall-clock soak."""
 import json
 import re
+import subprocess
 from pathlib import Path
 import sys
 import tempfile
@@ -39,21 +40,29 @@ def interrupted_views(emulator, ui, output):
         current, _ = emulator.capture(folder / 'after-diary')
         require(previous == current, 'Opening the diary and stopping changed SQLite')
 
-        emulator.start()
-        ui.home()
-        ui.tap(captions=('Ещё',))
-        ui.tap('exportState', ('Экспорт аналитического JSON',), scroll=True)
-        deadline = time.monotonic() + 30
-        while time.monotonic() < deadline:
-            windows = emulator.text('shell', 'dumpsys', 'window', 'windows')
-            if any('documentsui' in line.lower() for line in windows.splitlines()
-                   if 'mCurrentFocus' in line or 'mFocusedApp' in line):
-                break
-            time.sleep(0.5)
-        else:
-            raise RuntimeError('Android Storage Access Framework export chooser did not open')
-        capture(emulator, output, 'saf-before-interruption.png')
-        emulator.stop()
+        export = emulator.prefix + [
+            'shell', 'am', 'instrument', '-w', '-r', '-e', 'fixture', 'SYNTHETIC', '-e', 'phase', 'stock',
+            '-e', 'step', 'export', 'com.glucopapa.shell.test/com.glucopapa.shell.qa.StorageInstrumentation',
+        ]
+        with (output / 'saf-instrumentation.log').open('wb') as trace:
+            runner = subprocess.Popen(export, stdout=trace, stderr=subprocess.STDOUT)
+            try:
+                deadline = time.monotonic() + 35
+                while time.monotonic() < deadline:
+                    windows = emulator.text('shell', 'dumpsys', 'window', 'windows')
+                    if any('documentsui' in line.lower() for line in windows.splitlines()
+                           if 'mCurrentFocus' in line or 'mFocusedApp' in line):
+                        break
+                    require(runner.poll() is None, 'Export instrumentation ended before opening the file chooser')
+                    time.sleep(0.5)
+                else:
+                    raise RuntimeError('Android Storage Access Framework export chooser did not open')
+                capture(emulator, output, 'saf-before-interruption.png')
+                emulator.stop()
+            finally:
+                if runner.poll() is None:
+                    runner.terminate()
+                runner.wait(timeout=10)
         emulator.start()
         current, _ = emulator.capture(folder / 'after-saf')
         require(previous == current, 'Stopping during the pending SAF export changed SQLite')
@@ -113,7 +122,7 @@ def main():
         memory.append(rss(emulator))
     real_soak = round(time.monotonic() - start, 1)
     emulator.execute('shell', 'input', 'keyevent', 'KEYCODE_HOME')
-    response = emulator.execute('shell', 'am', 'send-trim-memory', PACKAGE, 'UI_HIDDEN', check=False)
+    response = emulator.execute('shell', 'am', 'send-trim-memory', PACKAGE, 'HIDDEN', check=False)
     emulator.start()
     ui.home()
     trimming = {'command_accepted': response.returncode == 0, 'resumed': True}

@@ -29,6 +29,11 @@
             } else {
                 assert(state.revision === revision && !state.events.length, 'Unconfirmed action modified GFStorage');
             }
+        } else if (action === 'export') {
+            GPApp.open('system');
+            assert(by('screen-system').classList.contains('active'), 'System route did not open');
+            assert(globalThis.AndroidExporter, 'Native export bridge missing');
+            click('exportState');
         } else if (action === 'journal') {
             by('nav').querySelector('[data-screen="journal"]').click();
             const diary = by('iframeApprovedJournal');

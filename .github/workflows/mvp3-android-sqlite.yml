@@ -43,14 +43,12 @@ jobs:
       artifact-suffix: '-core'
 
   android-15-extended:
-    needs: android-15
     uses: ./.github/workflows/mvp3-android-device.yml
     with:
       api: 35
       extended: true
 
   compatibility:
-    needs: android-15
     strategy:
       fail-fast: false
       matrix:

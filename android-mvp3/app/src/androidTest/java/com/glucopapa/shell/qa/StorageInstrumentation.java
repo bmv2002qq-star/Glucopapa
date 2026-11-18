@@ -47,8 +47,9 @@ public final class StorageInstrumentation extends Instrumentation {
                         output.putString("webview", new WebViewChecks(this).exercise("webview-qa.js", "").toString());
                         break;
                     case "stock":
-                        output.putString("webview", new WebViewChecks(this)
-                            .exercise("stock-ui.js", arguments.getString("step", "")).toString());
+                        String step = arguments.getString("step", "");
+                        output.putString("webview", new WebViewChecks(this).exercise("stock-ui.js", step).toString());
+                        if ("export".equals(step)) SystemClock.sleep(45_000);
                         break;
                     default: throw new IllegalArgumentException("Unknown phase");
                 }
