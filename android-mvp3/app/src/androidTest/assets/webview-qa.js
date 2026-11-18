@@ -18,6 +18,7 @@
         node.dispatchEvent(new Event('change', {bubbles: true}));
     };
     const stage = async name => {
+        window.__glucopapaQAStage = name;
         GPApp.open(name);
         await yieldFrame();
         assert(by('screen-' + name).classList.contains('active'), 'Route ' + name);
@@ -57,6 +58,7 @@
 
         await stage('meals');
         click('mealReady');
+        window.__glucopapaQAStage = 'start confirmation';
         click('mealStart');
         await until(() => snapshot().mealSessions[0].status === 'started', 'Confirmed meal did not start');
         const actualAmount = await until(() => document.querySelector('#gfMealActualRows [data-actual-index="0"]'),
@@ -70,6 +72,7 @@
         const unfinished = GFAutoCOBProfile.inspect({host: GPApp.getStorage()});
         assert(unfinished.code === 'MEAL_NOT_COMPLETED' && unfinished.rows.length === 0,
             'The research COB window accepted an unfinished meal');
+        window.__glucopapaQAStage = 'finish confirmation';
         click('mealFinish');
         await until(() => snapshot().mealSessions[0].status === 'completed', 'Meal did not finish');
 
