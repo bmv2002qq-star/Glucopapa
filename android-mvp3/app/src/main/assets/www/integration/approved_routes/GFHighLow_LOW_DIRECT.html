@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+
+<html lang="ru">
+<head>
+<meta charset="utf-8"/><meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
+<title>ГлюкоПапа — интерфейс 3 суток, болезнь и длинный инсулин · версия 5</title>
+<style>
+:root{--bg:#f2f7f7;--paper:#fff;--ink:#153743;--muted:#718b92;--line:#d8e7e8;--teal:#128a83;--teal-deep:#0a6b68;--mint:#e8f7f3;--rose:#ad3b56;--rosebg:#fdf0f2;--amber:#9b5f22;--amberbg:#fff4e8}
+*{box-sizing:border-box}body{margin:0;background:#eaf2f2;color:var(--ink);font:15px/1.48 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}button,input,select{font:inherit}button{cursor:pointer}button:disabled{opacity:.45;cursor:not-allowed}button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid #2cc2b5;outline-offset:3px}
+.app{width:min(100%,440px);height:100dvh;min-height:600px;background:var(--bg);margin:auto;position:relative;overflow:hidden;box-shadow:0 0 0 1px #dae8e8,0 15px 60px #183d4720}.demo-top{padding:10px 16px;background:#e9f3f2;text-align:center;color:#4d777b;font-size:10px;letter-spacing:.06em;font-weight:850;border-bottom:1px solid #d7e7e6}.page{overflow-y:auto;height:calc(100% - 99px);padding:19px 18px 35px}.logo{font-size:29px;font-weight:850;letter-spacing:-1.1px}.logo span{color:var(--teal)}.sub{color:var(--muted);font-size:12px;margin:2px 0 19px}.card{background:#fff;border:1px solid var(--line);border-radius:22px;padding:18px;margin-bottom:13px}.card h3{font-size:16px;margin:0 0 9px}.little{font-size:12px;color:var(--muted)}.topline{display:flex;align-items:center;justify-content:space-between;gap:10px}.pill{background:#e7f5f1;color:var(--teal-deep);border-radius:60px;padding:5px 9px;font-size:11px;font-weight:750}.reading{font-size:64px;font-weight:850;letter-spacing:-3px;line-height:1.18}.reading small{font-size:17px;letter-spacing:0;color:var(--rose)}.chart{width:100%;height:auto;display:block;margin-top:8px}.chart-axis{display:flex;justify-content:space-between;font-size:11px;color:#8fa8af}.action-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:13px}.action{border-radius:15px;border:1px solid #e5b7c0;background:#ffeff1;color:#9f324c;padding:15px 6px;font-weight:800;min-height:56px}.action.high{background:#fff4e8;border-color:#ead2ae;color:#986025}.block-title{font-size:13px;font-weight:800;margin:0 0 11px}.nav{height:68px;position:absolute;left:0;right:0;bottom:0;background:#fff;border-top:1px solid #dce9e9;display:flex;align-items:center;justify-content:space-around;padding-bottom:env(safe-area-inset-bottom)}.nav button{border:0;background:transparent;color:#8ca0a5;font-size:11px;font-weight:700;display:grid;justify-items:center;gap:2px;min-width:56px}.nav button span{font-size:21px}.nav button.active{color:var(--teal)}
+.overlay{position:fixed;inset:0;background:#193c4870;z-index:10;display:none;justify-content:center;align-items:flex-end}.overlay.open{display:flex}.sheet{width:min(100%,440px);max-height:94dvh;min-height:65dvh;background:white;border-radius:28px 28px 0 0;overflow:auto;padding:11px 19px 30px;box-shadow:0 -7px 40px #14333d33;scrollbar-width:thin}.handle{width:43px;height:4px;border-radius:6px;background:#d2e1e2;margin:0 auto 16px}.sheet-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:13px}.sheet-title h1{font-size:21px;margin:0;line-height:1.2;letter-spacing:-.4px}.close{border:0;background:#f0f5f5;width:34px;height:34px;border-radius:50%;font-size:20px;color:#55767e}.banner{font-size:11px;padding:10px 12px;color:#50767d;background:#edf6f5;border-radius:12px;margin:0 0 13px}.banner strong{color:#315963}.summary{background:#f5fafa;border:1px solid #d9e9e9;border-radius:21px;padding:17px 16px 14px}.summary.high{background:#fffaf5;border-color:#f0e1cf}.data-label{color:#718e95;font-size:12px;font-weight:700}.metrics{display:grid;grid-template-columns:1.1fr 0.9fr;align-items:end;gap:8px;margin-top:6px}.big{font-size:49px;line-height:1;font-weight:870;letter-spacing:-1.6px}.big .arrow{color:var(--rose);font-size:23px}.big .arrow.up{color:var(--amber)}.unit{font-size:12px;color:#67878c;margin-top:5px}.goal{border-left:1px solid #d6e5e5;padding-left:14px;text-align:right}.goal input{width:100%;max-width:104px;font-size:24px;font-weight:800;text-align:right;padding:3px 5px;border:1px solid #d2e2e2;border-radius:10px;color:var(--ink);background:#fff}.goal small{font-size:11px;color:var(--muted);display:block;margin-bottom:5px}.tags{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.tag{background:#eaf3f3;border-radius:8px;padding:5px 9px;font-size:11px;color:#567d83;font-weight:700}.tag.warn{background:#f8e9ee;color:#af4058}.tag.up{background:#fff0df;color:#a66b29}.field{margin-top:20px}.field label{font-size:13px;font-weight:800;display:block;margin-bottom:8px}.input,select{background:white;border:1px solid #cbdfe0;border-radius:13px;padding:13px 14px;color:var(--ink);width:100%;font-size:17px;min-height:53px}.input-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}.smallhint{font-size:12px;color:var(--muted);margin:7px 2px 0}.primary{width:100%;margin-top:15px;padding:15px;border:0;border-radius:15px;background:var(--teal);color:#fff;font-weight:850;font-size:15px}.primary.amber{background:#bd7b35}.outline{width:100%;margin-top:10px;padding:15px;border:1px solid #b9dcd6;border-radius:15px;background:#eaf7f4;color:#087169;font-weight:850;font-size:15px}.outline.amber{border-color:#ecd0ad;background:#fff3e7;color:#926020}.result{display:none;margin-top:16px;background:#edf8f5;border:1px solid #c9e7df;border-radius:19px;padding:16px}.result.visible{display:block}.result.orange{background:#fff6ed;border-color:#eedac2}.result-kicker{font-size:10px;font-weight:850;color:#5b8485;letter-spacing:.06em}.result-number{font-size:40px;font-weight:850;letter-spacing:-.8px;margin:4px 0;line-height:1.15}.muted{color:var(--muted)}.result-row{display:flex;gap:9px;align-items:baseline;justify-content:space-between;padding:9px 0;border-bottom:1px solid #d7e9e4;font-size:13px}.result-row strong{text-align:right}.result-note{font-size:12px;color:#63858a}.recommend{background:#fff;border-left:4px solid var(--teal);margin-top:12px;border-radius:0 11px 11px 0;padding:12px 13px;font-size:13px}.result.orange .recommend{border-left-color:#bb8342}.recommend b{display:block;margin-bottom:4px}.mini{font-size:11px;color:#69828a}.extra{border-top:1px solid #e3eeee;margin-top:17px;padding-top:12px;font-size:12px;color:#66818a}.extra summary{font-weight:750;cursor:pointer}.extra p{margin:8px 0}.stamp{font-weight:650;padding:8px 10px;background:#eaf7f1;border:1px solid #c8e7d9;color:#19715b;border-radius:10px;font-size:12px;margin-top:9px;display:none}.stamp.show{display:block}.divider{border:0;border-top:1px solid #e4eded;margin:15px 0}.diary-empty{text-align:center;padding:29px 10px;color:#769097}.event{padding:12px 0;border-bottom:1px solid #e4efee}.event:last-child{border-bottom:0}.event-head{display:flex;justify-content:space-between;align-items:center;gap:9px;font-weight:750}.event-head time{font-size:12px;color:var(--muted);font-weight:650}.event-details{font-size:12px;color:#63818a;margin-top:5px}.legend-grid{display:grid;grid-template-columns:110px 1fr;gap:8px 12px;font-size:12px;color:#648088}.legend-grid strong{color:var(--ink)}.printnote{font-size:11px;color:#82949a;margin:12px 3px;line-height:1.5}.secondary-header{display:flex;justify-content:space-between;gap:9px;align-items:center;margin-bottom:12px}.tiny-button{padding:7px 10px;background:#edf6f5;color:#21776f;border:1px solid #cfe8e4;border-radius:11px;font-size:11px;font-weight:750}
+@media(min-width:720px){body{padding:24px}.app{height:min(900px,calc(100dvh - 48px));min-height:740px;border-radius:28px}.overlay{background:#12313c48}.sheet{max-height:calc(100dvh - 60px);border-radius:25px;margin:22px 0;min-height:0}.page{height:calc(100% - 99px)}}
+@media(max-width:360px){.sheet{padding:10px 14px 25px}.big{font-size:42px}.sheet-title h1{font-size:19px}.goal input{font-size:20px}}
+/* IOB strip and transparent formula cards · v4 interface-only */
+.iob-card{border:1px solid #d5e6e8;background:linear-gradient(125deg,#f1f8fa,#fff);border-radius:16px;padding:12px 14px;margin:12px 0 8px}
+.iob-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px}.iob-top strong{font-size:13px}.iob-num{font-weight:870;color:#126d77;font-size:22px;white-space:nowrap}.iob-descr{font-size:11px;color:#69878d;margin-top:3px}
+.iob-card details{border-top:1px solid #e2eeee;margin-top:9px;padding-top:6px;font-size:11px;color:#567a81}.iob-card summary{cursor:pointer;font-weight:750}.iob-fields{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:10px 0 5px}.iob-fields label{display:block;font-weight:650;margin-bottom:3px;font-size:11px}.iob-fields input{min-width:0;width:100%;border:1px solid #cbdfe0;border-radius:9px;padding:9px;font-size:15px;background:white}
+.iob-foot{font-size:10px;color:#6b8589;line-height:1.5;margin-top:8px}.formula-box{margin-top:15px;padding:11px 12px;border-top:1px solid #e1e9e9;border-bottom:1px solid #e1e9e9;color:#789095;font-size:10.5px;line-height:1.65}
+.formula-box b{font-size:10.5px;color:#547982}.formula-box code{font-family:inherit;font-size:10.5px;color:#506f76;overflow-wrap:anywhere}.formula-box .f-row{margin:4px 0}.formula-box .f-row b{margin-right:4px}
+.iob-emphasis{font-weight:800;color:#0f7982}.inline-note{font-size:11px;color:#55797e;margin:8px 1px}.prototype-warning{background:#fff8ea;border-left:3px solid #cf9343;color:#88642e;padding:8px 11px;font-size:11px;margin-top:9px;border-radius:5px}
+@media(max-width:360px){.iob-top strong{font-size:11px}.iob-num{font-size:19px}}
+
+/* v5: main, illness diary and long-insulin schedule preview */
+.demo-top{background:#123e48;letter-spacing:.07em}
+.app{max-width:468px}
+.hero-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:15px}
+.hero-head .logo{margin:0}
+.hero-head .sub{margin:4px 0 0}
+.small-status{font-size:11px;color:#177b70;font-weight:760;padding:7px 10px;border-radius:30px;background:#e8f7f3}
+.v5-main-title{font-size:17px;font-weight:830;margin:0}
+.v5-reading-line{display:flex;align-items:end;justify-content:space-between;gap:10px;margin-top:8px}
+.v5-reading-value{font-weight:870;letter-spacing:-2.2px;font-size:54px;line-height:1;color:#153a48}
+.v5-reading-unit{font-size:13px;color:#748b91;margin-left:4px;font-weight:650}
+.v5-reading-trend{color:#b17a38;font-weight:800;font-size:19px;margin-left:4px}
+.v5-reading-sub{color:#66858c;font-size:12px;margin-top:8px}
+.v5-chart{display:block;width:100%;height:auto;background:#fbfdfc;border:1px solid #edf2f2;border-radius:14px;margin-top:14px}
+.v5-chart-actions{margin-top:14px}
+.v5-chart-controls{display:flex;gap:6px;margin:9px 0 0;align-items:center;justify-content:space-between}
+.v5-range-btn{background:transparent;border:1px solid #d5e6e6;padding:5px 10px;border-radius:9px;font-weight:700;color:#54777c;font-size:11px}
+.v5-range-btn.active{background:#dcf3ee;border-color:#8ed4c6;color:#0a766c}
+.v5-chart-key{display:flex;flex-wrap:wrap;gap:6px 13px;color:#7b939a;font-size:10px;margin-top:9px}
+.v5-chart-key span::before{content:'•';margin-right:4px;color:#15968f}
+.v5-chart-key .ill::before{color:#e5a461}
+.basal-quick{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:10px;padding:13px 15px;background:#e4f4f0;color:#0b766d;border:1px solid #b7dfd7;border-radius:13px;text-align:left;cursor:pointer}
+.basal-quick strong{font-size:14px}.basal-quick small{display:block;color:#67948d;font-size:11px;font-weight:550}
+.illness-card{border:1px solid #f5cfae;background:#fff6ef;position:relative}
+.illness-card .topline{align-items:center}
+.illness-card .ill-desc{color:#8c694d;font-size:11px;margin-top:2px}
+.illness-card input:not([type=checkbox]){padding:10px;border-radius:11px;border:1px solid #edcead;background:white;color:#233d46;width:100%;font-weight:700;font-size:15px}
+.v5-switch{position:relative;display:inline-block;width:50px;height:29px;cursor:pointer}
+.v5-switch input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer}
+.v5-switch .track{display:block;background:#cdd6d8;height:28px;border-radius:20px;transition:.2s}
+.v5-switch .track:after{content:'';display:block;position:absolute;top:3px;left:3px;width:22px;height:22px;background:#fff;border-radius:50%;transition:.2s}
+.v5-switch input:checked+.track{background:#12958d}.v5-switch input:checked+.track:after{left:25px}
+.ill-active-info{background:#fff; border:1px solid #f7e1cb;border-radius:12px;padding:11px;color:#895d36;font-size:11px;margin:12px 0}
+.ill-active-info strong{font-size:12px;color:#745032}
+.ill-editor{display:grid;grid-template-columns:1fr auto;align-items:end;gap:9px;margin-top:13px}
+.ill-editor label{display:block;color:#956b4f;font-size:11px;font-weight:740;margin-bottom:5px}
+.v5-button{border:0;border-radius:11px;background:#0f8880;color:white;min-height:40px;padding:9px 14px;font-size:12px;font-weight:770}
+.v5-button.outline{color:#986030;background:#fff;border:1px solid #e9c5a3}
+.v5-button.secondary{background:#e7f4f1;color:#116e68}
+.v5-ill-btns{display:flex;gap:8px;align-items:center;margin-top:11px;flex-wrap:wrap}
+.ill-health{font-size:11px;color:#95785e;line-height:1.5;margin-top:10px}
+.today-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.today-grid div{border:1px solid #e0eaea;background:#fbfdfd;padding:11px;border-radius:12px}
+.today-grid b{font-size:16px;display:block}.today-grid small{font-size:10px;color:#778e93}
+.v5-cardtitle{font-size:15px;font-weight:780;color:#213d48}
+.v5-diary-controls{display:flex;gap:7px;flex-wrap:wrap;margin:0 0 14px}
+.v5-day-filter{border:1px solid #dae6e6;background:#fff;padding:8px 11px;font-weight:740;color:#66858a;border-radius:10px;font-size:11px}
+.v5-day-filter.active{background:#d8f0e9;color:#0d7770;border-color:#b6e2d7}
+.v5-diaries-date{font-size:13px;font-weight:800;margin:13px 0 6px;display:flex;justify-content:space-between}
+.v5-diaries-date span{font-size:10px;color:#779093;font-weight:650}
+.v5-event{padding:10px 10px;border:1px solid #e1ebeb;border-radius:12px;margin:6px 0;background:#fff}
+.v5-event.active-ill{border-left:4px solid #e1a15a;background:#fff5e9}
+.v5-event.planned{border-style:dashed;background:#f8fbfb}
+.v5-event-title{display:flex;gap:7px;align-items:flex-start;justify-content:space-between;color:#173e49;font-size:12px;font-weight:740}
+.v5-event-title time{font-size:11px;color:#7b9298;white-space:nowrap}
+.v5-event-note{color:#7e9397;font-size:10px;margin-top:4px;line-height:1.55}
+.v5-event-tag{display:inline-block;background:#fae8d4;color:#9b683b;padding:2px 6px;border-radius:6px;font-size:10px;font-weight:740}
+.v5-prototype-note{margin:12px 0;color:#7d9197;font-size:10px;line-height:1.5}
+.v5-notice{background:#f0f7f6;color:#577e82;font-size:11px;border-radius:11px;padding:10px 12px;margin:12px 0;line-height:1.5}
+.v5-notice.warn{background:#fff5e7;color:#88643f}
+.v5-basal-card{padding:13px 12px;border:1px solid #dbe8e7;background:#f9fdfc;border-radius:14px;margin:12px 0}
+.v5-basal-top{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:12px}
+.v5-basal-top strong{font-size:15px}
+.v5-basal-badge{font-size:10px;background:#e5f4f1;color:#177b71;padding:4px 7px;border-radius:9px}
+.v5-formline{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.v5-formline label{display:block;color:#668189;font-size:11px;margin-bottom:4px;font-weight:730}
+.v5-formline input{padding:9px 11px;min-width:0;width:100%;border:1px solid #cfdfe0;background:white;border-radius:9px;font-size:15px}
+.v5-basal-buttons{display:grid;gap:8px;margin-top:12px}
+.v5-full{width:100%}
+.v5-override{border-top:1px solid #dae7e6;margin-top:11px;padding-top:10px}
+.v5-override-toggle{background:none;border:0;color:#177b74;font-size:12px;font-weight:760;padding:3px 0;cursor:pointer}
+.v5-basal-schedule-note{font-size:10px;color:#788e94;margin-top:8px;line-height:1.55}
+.v5-ill-k{font-weight:760;color:#a25d30}
+#basalPane{min-height:10px}
+.v5-legend{padding:11px;border-radius:12px;background:#f5faf9;font-size:11px;color:#667f85;line-height:1.6;margin-top:8px}
+@media(max-width:370px){.v5-reading-value{font-size:46px}.v5-chart-controls{gap:3px}.v5-range-btn{padding:5px 7px}}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="demo-top">ГЛЮКОПАПА · ВЕРСИЯ 5 · ДЕМОНСТРАЦИЯ, НЕ ЛЕЧЕБНЫЙ КАЛЬКУЛЯТОР</div>
+<main class="page" id="page">
+<div id="homeView">
+<div class="hero-head"><div><div class="logo">Глюко<span>папа</span></div><p class="sub">Семейный дневник диабета · демонстрация</p></div><span class="small-status">● Локально</span></div>
+<div class="card">
+<div class="topline"><h2 class="v5-main-title">Глюкоза сейчас</h2><span class="pill">● CGM · вымышлено</span></div>
+<div class="v5-reading-line"><div><span class="v5-reading-value">7,1</span><span class="v5-reading-unit">ммоль/л</span><span class="v5-reading-trend">↗</span></div><span class="tag">+0,02 ммоль/л/мин</span></div>
+<div class="v5-reading-sub">Пример xDrip+ Follower · <span id="v5CurrentClock">текущие дата и время</span> · последнее значение 1 мин назад</div>
+<div id="v5ChartWrap"><svg aria-label="Трёхдневный демонстрационный график CGM" class="v5-chart" id="v5CgmChart" role="img" viewbox="0 0 760 242"></svg></div>
+<div class="v5-chart-controls" id="chartDays"><button class="v5-range-btn" data-range="0">9 ноя</button><button class="v5-range-btn" data-range="1">10 ноя</button><button class="v5-range-btn" data-range="2">11 ноя</button><button class="v5-range-btn active" data-range="all">3 суток</button></div>
+<div class="v5-chart-key"><span>Глюкоза · 15 мин</span><span>Завтрак / обед / ужин</span><span class="ill">Период болезни</span></div>
+<div class="action-grid v5-chart-actions"><button class="action" id="openLow">↓ Низкий сахар</button><button class="action high" id="openHigh">↑ Высокий сахар</button></div>
+<button class="basal-quick" id="openBasal"><div><strong>💉 Ввести длинный инсулин</strong><small>Утро 08:00 · вечер 20:00 · время подставляется из расписания</small></div><strong>Открыть ›</strong></button>
+<p class="v5-prototype-note">Плановые инъекции не считаются введёнными без нажатия «Сделал укол».</p>
+</div>
+<div class="card illness-card" id="illnessCard">
+<div class="topline"><div><strong>🤒 Болеет</strong><div class="ill-desc">Отметить начало, поправочный коэффициент и завершение</div></div><label aria-label="Режим болезни" class="v5-switch"><input checked="" id="illToggle" type="checkbox"/><span class="track"></span></label></div>
+<div id="illContent"></div>
+</div>
+<div class="card"><div class="topline"><b class="v5-cardtitle">🍽 Питание и инъекции · 3 дня</b><button class="tiny-button" id="goDiary">Дневник ›</button></div><div class="v5-reading-sub">Завтраки, обеды, ужины, подколки и длинный инсулин — тестовая история 9–11 ноября</div><div class="today-grid"><div><small>Записано приёмов пищи</small><b>9</b></div><div><small>Коротких инъекций</small><b>10</b></div><div><small>Длинных инъекций</small><b>6</b></div><div><small>Период болезни</small><b id="illMiniStat">с 10 ноября</b></div></div><div class="v5-notice">График и дневник синтетические. Изменения в этом макете не переходят в установленное приложение.</div><button class="tiny-button" id="openLegend">Легенда и обозначения</button></div>
+</div>
+<div hidden="" id="diaryView">
+<div class="secondary-header"><div><div class="logo">Дневник<span style="color:var(--teal)"> · 3 дня</span></div><p class="sub">Вымышленные значения, события и расчёты</p></div><button class="tiny-button" id="clearDiary">Сбросить тестовые записи</button></div>
+<div class="card"><div class="v5-diary-controls" id="diaryFilters"><button class="v5-day-filter active" data-day="all">Все дни</button><button class="v5-day-filter" data-day="9">9 ноя</button><button class="v5-day-filter" data-day="10">10 ноя</button><button class="v5-day-filter" data-day="11">11 ноя</button><button class="v5-day-filter" data-day="today">Сегодня</button></div><div id="eventList"></div></div>
+<div class="v5-legend">🟠 Светлая оранжевая полоса обозначает период болезни; пунктирная карточка — запланированная инъекция, ещё не подтверждённая фактически.</div>
+<div class="printnote">Всё сохраняется только до закрытия/перезагрузки этой демонстрации. Не используется для лечения.</div>
+</div>
+</main>
+<nav aria-label="Навигация макета" class="nav"><button class="active" id="navHome"><span>⌂</span>Главная</button><button id="navDiary"><span>▤</span>Дневник <small id="diaryCount"></small></button><button id="navLow"><span>↓</span>Низкий</button><button id="navHigh"><span>↑</span>Высокий</button><button id="navLegend"><span>ⓘ</span>Легенда</button></nav>
+</div>
+<div class="overlay" id="overlay"><section aria-labelledby="sheetTitle" aria-modal="true" class="sheet" id="sheet" role="dialog">
+<div class="handle"></div><div class="sheet-title"><h1 id="sheetTitle"></h1><button aria-label="Закрыть" class="close" id="close">×</button></div>
+<div class="banner"><strong>ДЕМОНСТРАЦИЯ.</strong> Все значения CGM, коэффициенты, дозы и прогнозы вымышлены. Это тест взаимодействия с интерфейсом, не инструкция по лечению ребёнка.</div>
+<div hidden="" id="lowPane">
+<div class="summary"><div class="data-label">Данные в настоящий момент · демонстрация</div><div class="metrics"><div><div class="big">3,5<span class="arrow"> ↓</span></div><div class="unit">ммоль/л · снижается</div></div><div class="goal"><small>Цель по плану, ммоль/л</small><input aria-label="Цель при низком сахаре" id="lowTarget" max="10" min="4" step="0.1" type="number" value="5.5"/></div></div><div class="tags"><span class="tag warn">−0,05 ммоль/л/мин</span><span class="tag">CGM · 1 мин назад</span></div></div>
+<div aria-label="Оценка действующего инсулина: демонстрация" class="iob-card">
+<div class="iob-top"><strong>💉 Активный инсулин · IOB</strong><span class="iob-num" id="lowIob">≈ 0,3 ЕД</span></div>
+<div class="iob-descr" id="lowIobMeta">НовоРапид · 1,0 ЕД · 3 ч 30 мин назад</div>
+<div class="iob-descr" id="lowIobTime">Условное оставшееся окно действия: ≈ 1 ч 30 мин</div>
+<details><summary>Изменить предыдущую инъекцию для теста</summary><div class="iob-fields">
+<div><label for="lowPrevDose">Введено ранее, ЕД</label><input id="lowPrevDose" inputmode="decimal" max="10" min="0" step="0.5" type="number" value="1"/></div>
+<div><label for="lowPrevAge">Прошло минут</label><input id="lowPrevAge" inputmode="numeric" max="480" min="0" step="15" type="number" value="210"/></div>
+</div></details>
+<div class="iob-foot">IOB — ориентировочный остаток действия введённого инсулина, <b>не измерение его концентрации в крови</b>. Здесь используется специально упрощённая тестовая кривая.</div>
+</div><div class="field" style="margin-top:12px"><label>Активность ребёнка за последние 30 минут</label><select class="input gf-approved-activity"><option value="none">Не указана</option><option value="low">Низкая</option><option value="medium">Средняя</option><option value="high">Высокая</option></select><div class="smallhint">Активность отмечается в дневнике и учитывается при оценке неопределённости. Её влияние нельзя надёжно перевести в ммоль/л без проверенной индивидуальной модели.</div></div>
+<div class="field"><label for="product">Какой продукт хотите дать?</label><select id="product"><option value="marshmallow">Зефир</option><option selected="" value="juice">Сок</option><option value="crisp">Хлебец</option><option value="candy">Конфета</option><option value="apple">Яблоко</option><option value="pear">Груша</option></select><p class="smallhint" id="foodLabel">Яблочный сок · условный состав: 10 г углеводов на 100 мл</p></div>
+<button class="primary" id="calcFood">Рассчитать количество</button>
+<div class="field"><label for="foodAmount">Количество, которое хочу дать</label><div class="input-grid"><input class="input" id="foodAmount" inputmode="decimal" max="500" min="1" placeholder="Напр. 120" step="1" type="number"/><select aria-label="Единица измерения" id="foodUnit"><option value="ml">мл</option></select></div><p class="smallhint">Можно заменить количество вручную — демонстрационный прогноз обновится автоматически.</p></div>
+<div aria-live="polite" class="result" id="lowResult"><div class="result-kicker">УСЛОВНЫЙ РАСЧЁТ · НЕ ПРОГНОЗ ДЛЯ РЕБЁНКА</div><div class="result-number" id="lowExpected">—</div><div class="result-note" id="lowRange"></div><div class="result-row"><span>Выбранный продукт</span><strong id="lowProductResult">—</strong></div><div class="result-row"><span>Углеводы по примеру этикетки</span><strong id="lowCarbs">—</strong></div><div class="recommend"><b>Краткое пояснение</b><span id="lowAdvice">—</span></div><button class="outline" id="foodGiven">✓ Дал еду · записать в дневник</button><div class="stamp" id="lowSaved" role="status"></div></div>
+<div class="formula-box" id="lowFormula"><b>Как считается · демонстрация</b>
+<div class="f-row"><b>Данные:</b> CGM 3,5 ↓, выбранный продукт, углеводы на 100 г/мл, история инъекции. Цель показана для сравнения, но в искусственном расчёте порции не используется.</div>
+<div class="f-row"><b>Преобразование:</b> углеводы (г) = количество × углеводы на 100 / 100; демонстрационная порция рассчитана от условных 12 г углеводов.</div>
+<div class="f-row"><b>IOB в макете:</b> прошлая доза × max(0; 1 − прошедшие минуты / 300). Это искусственная линейная кривая, не медицинский IOB.</div>
+<div class="f-row"><b>Показ результата:</b> <code id="lowFormulaLive">тестовая модель = 3,5 + вклад еды − влияние IOB</code>. Это не проверенный способ прогнозировать лечение.</div>
+</div>
+<div class="mini" style="margin-top:13px">При подтверждённой гипогликемии нельзя задерживать первую помощь ради расчёта. При нарушении сознания или глотания ничего не давать через рот — действовать по экстренному плану.</div>
+</div>
+<div hidden="" id="highPane">
+<div class="summary high"><div class="data-label">Данные в настоящий момент · демонстрация</div><div class="metrics"><div><div class="big">14,2<span class="arrow up"> ↑</span></div><div class="unit">ммоль/л · растёт</div></div><div class="goal"><small>Планируемая цель, ммоль/л</small><input aria-label="Цель при высоком сахаре" id="highTarget" max="13" min="4" step="0.1" type="number" value="7.0"/></div></div><div class="tags"><span class="tag up">+0,07 ммоль/л/мин</span><span class="tag">CGM · 1 мин назад</span></div></div>
+<div aria-label="Оценка действующего инсулина: демонстрация" class="iob-card">
+<div class="iob-top"><strong>💉 Активный инсулин · IOB</strong><span class="iob-num" id="highIob">≈ 0,3 ЕД</span></div>
+<div class="iob-descr" id="highIobMeta">НовоРапид · 1,0 ЕД · 3 ч 30 мин назад</div>
+<div class="iob-descr" id="highIobTime">Условное оставшееся окно действия: ≈ 1 ч 30 мин</div>
+<details><summary>Изменить предыдущую инъекцию для теста</summary><div class="iob-fields">
+<div><label for="highPrevDose">Введено ранее, ЕД</label><input id="highPrevDose" inputmode="decimal" max="10" min="0" step="0.5" type="number" value="1"/></div>
+<div><label for="highPrevAge">Прошло минут</label><input id="highPrevAge" inputmode="numeric" max="480" min="0" step="15" type="number" value="210"/></div>
+</div></details>
+<div class="iob-foot">IOB — ориентировочный остаток действия введённого инсулина, <b>не измерение его концентрации в крови</b>. Здесь используется специально упрощённая тестовая кривая.</div>
+</div><div class="field" style="margin-top:12px"><label>Активность ребёнка за последние 30 минут</label><select class="input gf-approved-activity"><option value="none">Не указана</option><option value="low">Низкая</option><option value="medium">Средняя</option><option value="high">Высокая</option></select><div class="smallhint">Активность отмечается в дневнике и учитывается при оценке неопределённости. Её влияние нельзя надёжно перевести в ммоль/л без проверенной индивидуальной модели.</div></div>
+<div class="v5-notice warn" id="sickFactorHigh"></div><div class="field"><label>Расчёт дозы по планируемой цели</label><p class="smallhint" style="margin-top:0">Вымышленный пример: ФЧИ 4,0 ммоль/л/ЕД; текущий IOB берётся из блока выше; шаг 0,5 ЕД.</p></div>
+<button class="primary amber" id="calcDose">Рассчитать условную дозу</button>
+<div aria-live="polite" class="result orange" id="highSuggested"><div class="result-kicker">ПРИМЕР АРИФМЕТИКИ, НЕ НАЗНАЧЕНИЕ</div><div class="result-number" id="suggestedDose">—</div><div class="result-note" id="highExplain">—</div></div>
+<div class="field"><label for="doseAmount">Или введи свою дозу</label><div class="input-grid"><input class="input" id="doseAmount" inputmode="decimal" max="20" min="0" placeholder="Напр. 1,5" step="0.5" type="number"/><select aria-label="Единицы инсулина" id="doseUnit"><option>ЕД</option></select></div><p class="smallhint">Измени дозу — пример результата обновится <b>автоматически</b>. Запись в дневник сохраняет именно введённую дозу.</p></div>
+<div aria-live="polite" class="result orange" id="highResult"><div class="result-kicker">МОЯ ДОЗА · АВТОПЕРЕСЧЁТ · ИСКУССТВЕННЫЕ ДАННЫЕ</div><div class="result-number" id="highExpected">—</div><div class="result-note" id="highRange"></div><div class="result-row"><span>Планируемый ввод</span><strong id="highAmountResult">—</strong></div><div class="inline-note">Предполагаемая глюкоза показана только для тестирования интерфейса. В настоящем приложении точный результат не может быть гарантирован.</div><div class="field" style="margin-top:13px"><label>Место фактического укола</label><select class="input" id="gfApprovedSite"><option>Живот</option><option>Плечо</option><option>Бедро</option><option>Ягодица</option></select></div><button class="outline amber" id="shotGiven">✓ Сделал укол · записать в дневник</button><div class="stamp" id="highSaved" role="status"></div></div>
+<div class="formula-box" id="highFormula"><b>Как считается · демонстрация</b>
+<div class="f-row"><b>Данные:</b> CGM 14,2 ↑, цель, тестовая ФЧИ 4,0 ммоль/л/ЕД, активный инсулин (IOB), введённая доза и шаг 0,5 ЕД.</div>
+<div class="f-row"><b>IOB в макете:</b> прошлая доза × max(0; 1 − прошедшие минуты / 300). Это искусственная линейная кривая, не медицинский IOB.</div>
+<div class="f-row"><b>Условная коррекция:</b> <code>(CGM − цель) ÷ ФЧИ − IOB</code> с округлением вниз по шагу — только проверка вида интерфейса.</div>
+<div class="f-row"><b>Условный прогноз:</b> <code id="highFormulaLive">CGM − (своя доза + IOB) × ФЧИ</code>. Не учитывает время действия, питание и изменение чувствительности.</div>
+</div>
+<div class="mini" style="margin-top:13px">При болезни, кетонах, недавнем болюсе или признаках кетоацидоза требуется действующий индивидуальный план. Макет не предназначен для выбора реальной дозы.</div>
+</div>
+<div hidden="" id="basalPane">
+<div class="v5-notice">Временное расписание автоматически подставляется в план. <b>Запись «Сделал укол»</b> подтверждает фактическое введение. Данные вымышленные.</div>
+<div class="topline"><strong>Сейчас в демонстрации</strong><span class="pill" id="basalTodayClock">Сегодня · текущее время</span></div>
+<div id="basalRows"></div>
+<div class="v5-legend">При «Изменить время на сегодня» меняется сегодняшнее плановое время и заменяется старая плановая запись. Постоянное расписание не меняется. Факт инъекции появится только после подтверждения и будет записан с указанным фактическим временем.</div>
+</div>
+<div hidden="" id="legendPane"><div class="card"><h3>Легенда и сценарии проверки</h3><div class="legend-grid"><strong>↓ / ↑</strong><span>Направление условного тренда CGM</span><strong>Цель</strong><span>Выбранное значение глюкозы для отображения</span><strong>Расчёт</strong><span>Условный пример из вымышленной модели, не медицинский результат</span><strong>Своя доза</strong><span>Измени ЕД и увидишь новый условный результат без дополнительной кнопки</span><strong>✓ Записать</strong><span>Добавляет тестовую запись только в дневник этого HTML</span><strong>IOB</strong><span>Остаточная активность от предыдущей инъекции (не концентрация инсулина в крови). В макете — синтетическое число.</span><strong>Формулы</strong><span>Под результатом: какие данные использованы и упрощённая демонстрационная арифметика.</span><strong>Диапазон</strong><span>Иллюстрация неопределённости; не клинически валидированный интервал</span></div></div><div class="card"><h3>Порядок тестирования</h3><p class="little">1. Открой «Низкий», выбери яблоко, рассчитай количество и затем измени граммы. Посмотри пояснение о медленном действии. Нажми «Дал еду».</p><p class="little">2. Открой «Высокий», нажми «Рассчитать условную дозу», затем введи своё количество и проверь автоматическое изменение тестового результата; можно изменить прошлую дозу и время для демонстрации IOB. Нажми «Сделал укол».</p><p class="little">3. Открой «Дневник»: обе записи должны находиться там с фактическим временем.</p></div><div class="mini">Все параметры этого макета вымышлены. Он не получает данные xDrip+, не запускает Qwen и не изменяет основное приложение.</div></div>
+<details class="extra"><summary>Дополнительная информация о демонстрации</summary><p>Для согласования интерфейса используется специально упрощённая математическая имитация. Она не учитывает индивидуальную фармакодинамику, реальный IOB, скорость усвоения, проверку сенсора, кетоны и множество других факторов. Ни дозы, ни расчёт конечной глюкозы не должны переноситься в лечение.</p></details>
+</section></div>
+<script>
+(()=>{'use strict';
+const $=id=>document.getElementById(id),fmt=(n,d=1)=>Number(n).toLocaleString('ru-RU',{minimumFractionDigits:d,maximumFractionDigits:d});
+const foods={
+ marshmallow:{name:'Зефир',carbs:78,unit:'г',factor:0.72,info:'Зефир · условный состав: 78 г углеводов на 100 г',advice:'Состав и скорость действия зефира различаются. При срочной помощи приоритет имеют быстрые углеводы по индивидуальному плану.'},
+ juice:{name:'Яблочный сок',carbs:10,unit:'мл',factor:1,info:'Яблочный сок · условный состав: 10 г углеводов на 100 мл',advice:'Сок без мякоти обычно действует быстрее цельного яблока. В реальности важно содержание быстрых углеводов на упаковке.'},
+ crisp:{name:'Хлебец',carbs:68,unit:'г',factor:0.36,info:'Хлебец · условный состав: 68 г углеводов на 100 г',advice:'Хлебец может действовать медленнее быстрых углеводов и не является основным вариантом срочного устранения гипогликемии.'},
+ candy:{name:'Конфета',carbs:75,unit:'г',factor:0.77,info:'Конфета · условный состав: 75 г углеводов на 100 г',advice:'Конфеты бывают разными: шоколадные и жирные варианты могут действовать медленнее. Состав нужно уточнять.'},
+ apple:{name:'Яблоко',carbs:11,unit:'г',factor:0.34,info:'Яблоко · условный состав: 11 г углеводов на 100 г',advice:'Цельное яблоко с клетчаткой может повышать сахар медленно. Для быстрой помощи предпочтительнее источник быстрых углеводов из утверждённого плана, например сок с известным составом.'},
+ pear:{name:'Груша',carbs:10,unit:'г',factor:0.30,info:'Груша · условный состав: 10 г углеводов на 100 г',advice:'Цельная груша обычно не подходит для быстрого устранения гипогликемии. Скорость подъёма глюкозы предсказать нельзя.'}
+};
+let events=seedEvents(),screen='home',currentSheet='',lastFocus=null, lastLowSave='',lastHighSave='';
+const mockIob={units:1,ageMinutes:210,durationMinutes:300}; // DEMO ONLY: simplistic linear decay. Not clinical IOB.
+function demoIob(){return Math.max(0, mockIob.units)*(Math.max(0,1-mockIob.ageMinutes/mockIob.durationMinutes))}
+function syncIob(){const remain=Math.max(0,mockIob.durationMinutes-mockIob.ageMinutes);const howLong=remain?`${Math.floor(remain/60)} ч ${remain%60} мин`:'завершено';for(const side of ['low','high']){ $(side+'Iob').textContent='≈ '+fmt(demoIob())+' ЕД';$(side+'IobMeta').textContent='НовоРапид · '+fmt(mockIob.units)+' ЕД · '+Math.floor(mockIob.ageMinutes/60)+' ч '+mockIob.ageMinutes%60+' мин назад';$(side+'IobTime').textContent='Условное окно действия: '+howLong;$(side+'PrevDose').value=String(mockIob.units);$(side+'PrevAge').value=String(mockIob.ageMinutes)}}
+function updateIobFrom(side){const u=Number($(side+'PrevDose').value),minutes=Number($(side+'PrevAge').value);if(!valid(u,0,10)||!valid(minutes,0,480))return;mockIob.units=u;mockIob.ageMinutes=minutes;syncIob();lowPreview();highPreview();refreshSuggested()}
+function setView(name){screen=name;$('homeView').hidden=name!=='home';$('diaryView').hidden=name!=='diary';$('navHome').classList.toggle('active',name==='home');$('navDiary').classList.toggle('active',name==='diary');if(name==='diary')renderDiary();$('page').scrollTop=0;}
+function openSheet(kind){lastFocus=document.activeElement;currentSheet=kind;const names={low:'↓ Действия при низком сахаре',high:'↑ Действия при высоком сахаре',legend:'ⓘ Легенда макета',basal:'💉 Длинный инсулин · расписание'};$('sheetTitle').textContent=names[kind];for(const p of ['low','high','legend','basal'])$(p+'Pane').hidden=p!==kind;$('overlay').classList.add('open');$('sheet').scrollTop=0;document.body.style.overflow='hidden';$('close').focus();}
+function closeSheet(){$('overlay').classList.remove('open');currentSheet='';document.body.style.overflow='';lastFocus?.focus?.()}
+function resetStamp(id){$(id).classList.remove('show');if(id==='lowSaved')$('foodGiven').disabled=false;if(id==='highSaved')$('shotGiven').disabled=false}
+function valid(n,min,max){return Number.isFinite(n)&&n>=min&&n<=max}
+function showInvalid(id,message){$(id).textContent=message;$(id).classList.add('show')}
+function setFoodLabel(){const p=foods[$('product').value];$('foodLabel').textContent=p.info;$('foodUnit').innerHTML='<option>'+p.unit+'</option>';resetStamp('lowSaved');$('lowResult').classList.remove('visible');$('foodAmount').value=''}
+function lowPreview(){const p=foods[$('product').value],a=Number($('foodAmount').value),target=Number($('lowTarget').value);resetStamp('lowSaved');if(!valid(target,4,10)||!valid(a,1,500)){ $('lowResult').classList.remove('visible');return false}
+ const carbs=a*p.carbs/100;
+ // PURELY FICTIONAL: a visual formula for input-response interaction testing.
+ const predicted=3.5+0.15*carbs*p.factor-0.4*demoIob();
+ const floor=Math.max(2.9,predicted-1.1),ceil=predicted+1.4;
+ $('lowExpected').textContent='≈ '+fmt(predicted)+' ммоль/л';
+ $('lowRange').textContent='Синтетический сценарий через 30 мин · условный диапазон '+fmt(floor)+'–'+fmt(ceil)+' ммоль/л · цель '+fmt(target);
+ $('lowProductResult').textContent=fmt(a,a%1?1:0)+' '+p.unit+' · '+p.name;
+ $('lowCarbs').textContent=fmt(carbs)+' г';$('lowAdvice').textContent=p.advice;
+ $('lowFormulaLive').textContent='3,5 + 0,15 × '+fmt(carbs)+' г × условный фактор '+fmt(p.factor,2)+' − 0,4 × '+fmt(demoIob())+' ЕД IOB = '+fmt(predicted)+' ммоль/л';
+ $('lowResult').classList.add('visible');return true;
+}
+function calcFood(){const target=Number($('lowTarget').value);if(!valid(target,4,10)){showInvalid('lowSaved','Укажи цель от 4 до 10 ммоль/л для демонстрации.');return}const p=foods[$('product').value];const testCarbs=12;let amount=testCarbs*100/p.carbs;amount=Math.round(amount*10)/10;$('foodAmount').value=Number.isInteger(amount)?String(amount):amount.toFixed(1);lowPreview();$('lowResult').scrollIntoView({behavior:'smooth',block:'nearest'})}
+function highPreview(){const target=Number($('highTarget').value),dose=Number($('doseAmount').value);resetStamp('highSaved');if(!valid(target,4,13)||$('doseAmount').value.trim()===''||!valid(dose,0,20)){$('highResult').classList.remove('visible');showInvalid('highSaved','Укажи дозу от 0 до 20 ЕД и цель от 4 до 13 ммоль/л для проверки макета.');return false}
+ // PURELY FICTIONAL: a visual formula for UI testing, not a treatment model.
+ const projected=14.2-(dose+demoIob())*(4.0/illnessFactor());
+ const low=Math.max(1.5,projected-1.8),upper=Math.min(35,projected+2.1);
+ $('highExpected').textContent='≈ '+fmt(Math.max(1.5,projected))+' ммоль/л';
+ $('highRange').textContent='Вымышленный результат без указания времени · условный диапазон '+fmt(low)+'–'+fmt(Math.max(low+0.2,upper))+' ммоль/л · цель '+fmt(target);
+ $('highAmountResult').textContent=fmt(dose)+' ЕД (условно)';$('highFormulaLive').textContent='14,2 − ('+fmt(dose)+' ЕД + IOB '+fmt(demoIob())+' ЕД) × (4,0 / K '+fmt(illnessFactor(),2)+') = '+fmt(projected)+' ммоль/л';$('highResult').classList.add('visible');return true;
+}
+function calcDose(){const target=Number($('highTarget').value);if(!valid(target,4,13)){showInvalid('highSaved','Укажи цель от 4 до 13 ммоль/л для демонстрации.');return}const isf=4/illnessFactor(),iob=demoIob();const raw=Math.max(0,(14.2-target)/isf-iob);const dose=Math.floor((raw+1e-9)*2)/2;$('suggestedDose').textContent=fmt(dose)+' ЕД';$('highExplain').textContent='Искусственный пример: (14,2 − '+fmt(target)+') ÷ 4,0 − IOB '+fmt(iob)+'; округление вниз до шага 0,5 ЕД.';$('highSuggested').classList.add('visible');$('doseAmount').value=fmt(dose).replace(',','.');highPreview();$('highSuggested').scrollIntoView({behavior:'smooth',block:'nearest'})}
+function invalidateHigh(){$('highResult').classList.remove('visible');resetStamp('highSaved');}
+function refreshSuggested(){if($('highSuggested').classList.contains('visible'))calcDosePreviewOnly()}
+function calcDosePreviewOnly(){const target=Number($('highTarget').value);if(!valid(target,4,13))return;const iob=demoIob(),raw=Math.max(0,(14.2-target)/(4/illnessFactor())-iob),rounded=Math.floor((raw+1e-9)*2)/2;$('suggestedDose').textContent=fmt(rounded)+' ЕД';$('highExplain').textContent='Вымышленный пример: (14,2 − '+fmt(target)+') ÷ 4 − IOB '+fmt(iob)+'; округление вниз до 0,5 ЕД.';}
+ function addEvent(kind){const when=new Date(DEMO_NOW);if(kind==='meal'){if(!lowPreview())return;const p=foods[$('product').value],amount=Number($('foodAmount').value);const signature=JSON.stringify([p.name,amount,$('lowTarget').value]);if(signature===lastLowSave){showInvalid('lowSaved','Эта запись уже добавлена. Чтобы создать новую, сначала измени количество.');$('foodGiven').disabled=true;return}lastLowSave=signature;events.unshift({type:'meal',title:'🍎 Дал еду',when,desc:p.name+' · '+fmt(amount,amount%1?1:0)+' '+p.unit+' · по условной этикетке '+fmt(amount*p.carbs/100)+' г углеводов; цель '+fmt(Number($('lowTarget').value))+' ммоль/л'});$('lowSaved').textContent='✓ Тестовая запись добавлена в дневник';$('lowSaved').classList.add('show');$('foodGiven').disabled=true}
+ else {const amount=Number($('doseAmount').value),target=Number($('highTarget').value);if(amount<=0){showInvalid('highSaved','Для проверки записи введи положительную дозу.');return}if(!$('highResult').classList.contains('visible')){showInvalid('highSaved','Сначала введи корректную дозу; пример результата появится автоматически.');return}const signature=JSON.stringify([amount,$('highTarget').value]);if(signature===lastHighSave){showInvalid('highSaved','Эта запись уже добавлена. Чтобы создать новую, сначала измени дозу.');$('shotGiven').disabled=true;return}lastHighSave=signature;events.unshift({type:'insulin',title:'💉 Сделал укол',when,desc:'НовоРапид · '+fmt(amount)+' ЕД · исходная глюкоза 14,2 ммоль/л · цель '+fmt(Number($('highTarget').value))+' ммоль/л'});$('highSaved').textContent='✓ Тестовая запись добавлена в дневник';$('highSaved').classList.add('show');$('shotGiven').disabled=true}
+ $('diaryCount').textContent=events.length?String(events.length):'';
+}
+function renderDiary(){return renderV5Diary()}
+$('openLow').onclick=()=>openSheet('low');$('openHigh').onclick=()=>openSheet('high');$('navLow').onclick=()=>openSheet('low');$('navHigh').onclick=()=>openSheet('high');$('navLegend').onclick=()=>openSheet('legend');$('openLegend').onclick=()=>openSheet('legend');$('navHome').onclick=()=>{closeSheet();setView('home')};$('navDiary').onclick=()=>{closeSheet();setView('diary')};$('close').onclick=closeSheet;$('overlay').addEventListener('click',e=>{if(e.target===$('overlay'))closeSheet()});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&currentSheet)closeSheet()});
+$('product').onchange=setFoodLabel;$('calcFood').onclick=calcFood;$('foodAmount').oninput=lowPreview;$('lowTarget').oninput=lowPreview;$('foodGiven').onclick=()=>addEvent('meal');$('calcDose').onclick=calcDose;$('doseAmount').oninput=highPreview;$('highTarget').oninput=()=>{refreshSuggested();highPreview()};$('shotGiven').onclick=()=>addEvent('insulin');$('clearDiary').onclick=()=>{events=[];lastLowSave='';lastHighSave='';$('foodGiven').disabled=false;$('shotGiven').disabled=false;$('diaryCount').textContent='';renderDiary()};
+for(const side of ['low','high']){for(const field of ['PrevDose','PrevAge'])$(side+field).oninput=()=>updateIobFrom(side)}syncIob();$('doseAmount').value='1.5';
+
+// ---------- Version 5: Synthetic 3-day example and illness + basal planner -----------
+const DEMO_NOW=new Date();
+const DEMO_TODAY=DEMO_NOW.toLocaleDateString('sv-SE');
+const DEMO_CLOCK=DEMO_NOW.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit',hour12:false});
+const demoDates=['2026-11-09','2026-11-10','2026-11-11'];
+function d5(d,t){return new Date(d+'T'+t+':00')}
+function evt5(type,date,time,title,detail,extra={}){return {type,title,when:d5(date,time),desc:detail,...extra}}
+function seedEvents(){
+ const e=[];
+ for(const [i,date] of ['2026-11-09','2026-11-10','2026-11-11'].entries()){
+  const sick=i===2;
+  e.push(evt5('basal',date,'08:0'+(i+1),'💉 Левемир · утро','6,0 ЕД · фактически введён · тестовая запись',{slot:'morning',units:6}));
+  e.push(evt5('rapid',date,'08:18','💉 НовоРапид · на завтрак',(sick?'4,0':'3,5')+' ЕД · тестовая запись',{units:sick?4:3.5}));
+  e.push(evt5('meal',date,'08:30','🍽 Завтрак','Овсянка, йогурт · '+(38+i*2)+' г углеводов · тестовая запись',{carbs:38+i*2}));
+  e.push(evt5('rapid',date,'13:12','💉 НовоРапид · на обед',(sick?'5,5':'5,0')+' ЕД · тестовая запись',{units:sick?5.5:5}));
+  e.push(evt5('meal',date,'13:25','🍽 Обед','Суп, картофель, курица · '+(53+i*2)+' г углеводов · тестовая запись',{carbs:53+i*2}));
+  e.push(evt5('rapid',date,'18:48','💉 НовоРапид · на ужин',(sick?'6,0':'5,5')+' ЕД · тестовая запись',{units:sick?6:5.5}));
+  e.push(evt5('meal',date,'19:04','🍽 Ужин','Рис с овощами · '+(60+i*2)+' г углеводов · тестовая запись',{carbs:60+i*2}));
+  e.push(evt5('basal',date,'20:0'+(i+2),'💉 Левемир · вечер','5,0 ЕД · фактически введён · тестовая запись',{slot:'evening',units:5}));
+ }
+ e.push(evt5('rapid','2026-11-10','17:20','💉 НовоРапид · подколка','0,5 ЕД · коррекция · демонстрационная запись',{units:0.5}));
+ e.push(evt5('illness','2026-11-10','13:40','🤒 Начало болезни','Поправочный коэффициент K=1,15, введён вручную',{factor:1.15}));
+ return e.sort((a,b)=>b.when-a.when);
+}
+let v5Ill={toggle:true,active:true,start:d5('2026-11-10','13:40'),end:null,factor:1.15};
+let v5IllHistory=[{start:d5('2026-11-10','13:40'),end:null}];
+let v5BasalSchedule={morning:{time:'08:00',units:6},evening:{time:'20:00',units:5}};
+let v5TodayOverride={morning:null,evening:null};
+let v5TodayGiven={morning:false,evening:false};
+let v5Day='all',v5Range='all';
+function illnessFactor(){return v5Ill.toggle&&v5Ill.active?v5Ill.factor:1}
+function esc5(s){return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;')}
+function renderIll(){
+ $('illToggle').checked=v5Ill.toggle;
+ const box=$('illContent');if(!v5Ill.toggle){box.innerHTML='<div class="v5-ill-btns"><span class="v5-basal-badge">Режим выключен · K = 1,00</span></div><p class="ill-health">Исторические отметки болезни сохраняются в дневнике.</p>';}
+ else if(!v5Ill.active){box.innerHTML='<div class="ill-active-info">Режим выбран. Для начала нового периода укажи коэффициент и нажми кнопку ниже.</div><div class="ill-editor"><div><label for="illFactor">Поправочный коэффициент болезни</label><input id="illFactor" type="number" min="0.5" max="2" step="0.05" value="1.00"></div><button id="illStart" class="v5-button">Начало болезни</button></div><p class="ill-health">До подтверждения коэффициент не применяется. Сейчас K = 1,00.</p>';}
+ else {box.innerHTML='<div class="ill-active-info"><strong>Болезнь началась: '+v5Ill.start.toLocaleDateString('ru-RU',{day:'numeric',month:'short'})+', '+v5Ill.start.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'})+'</strong><br>Период отмечен оранжевым цветом на графике и в дневнике.</div><div class="ill-editor"><div><label for="illFactor">Поправочный коэффициент болезни · K</label><input id="illFactor" type="number" min="0.5" max="2" step="0.05" value="'+v5Ill.factor.toFixed(2)+'"></div><button id="illConfirm" class="v5-button">Подтвердить K</button></div><div class="v5-ill-btns"><button class="v5-button outline" id="illFinish">✓ Болезнь прошла</button><span class="v5-ill-k">Используется K = '+fmt(v5Ill.factor,2)+'</span></div><p class="ill-health">Коэффициент задаётся вручную. В демонстрационной формуле высокого сахара он изменяет условную чувствительность; это не лечебное назначение.</p>';}
+ const start=$('illStart'),confirm=$('illConfirm'),finish=$('illFinish');
+ if(start)start.onclick=()=>{const k=Number($('illFactor').value);if(!Number.isFinite(k)||k<.5||k>2){alert('В демонстрации K должен быть от 0,50 до 2,00');return}v5Ill.active=true;v5Ill.start=new Date(DEMO_NOW);v5Ill.end=null;v5Ill.factor=k;v5IllHistory.push({start:new Date(DEMO_NOW),end:null});events.unshift({type:'illness',title:'🤒 Начало болезни',when:new Date(DEMO_NOW),desc:'Коэффициент K='+fmt(k,2)+' · демо'});refreshAllV5();};
+ if(confirm)confirm.onclick=()=>{const k=Number($('illFactor').value);if(!Number.isFinite(k)||k<.5||k>2){alert('В демонстрации K должен быть от 0,50 до 2,00');return}v5Ill.factor=k;events.unshift({type:'illness',title:'⚙ Изменение коэффициента болезни',when:new Date(DEMO_NOW.getTime()+1000),desc:'Подтверждён вручную K='+fmt(k,2)+' · демо'});refreshAllV5();};
+ if(finish)finish.onclick=()=>finishIllness();
+ $('illMiniStat').textContent=v5Ill.active?'с '+v5Ill.start.toLocaleDateString('ru-RU',{day:'numeric',month:'short'}):v5Ill.end?'завершена':'нет';
+}
+function finishIllness(){if(v5Ill.active){v5Ill.active=false;v5Ill.end=new Date(DEMO_NOW);if(v5IllHistory.length)v5IllHistory[v5IllHistory.length-1].end=new Date(DEMO_NOW);events.unshift({type:'illness',title:'🌤 Болезнь прошла',when:new Date(DEMO_NOW),desc:'Период болезни закрыт · коэффициент K вернулся к 1,00'});}v5Ill.toggle=false;refreshAllV5()}
+$('illToggle').onchange=e=>{if(!e.target.checked){finishIllness()}else {v5Ill.toggle=true;v5Ill.active=false;v5Ill.factor=1;refreshAllV5()}};
+function refreshAllV5(){if($('v5CurrentClock'))$('v5CurrentClock').textContent=DEMO_NOW.toLocaleDateString('ru-RU',{day:'numeric',month:'long'})+', '+DEMO_CLOCK;renderIll();renderChartV5();renderV5Diary();renderBasalRows();const box=$('sickFactorHigh');if(box)box.textContent='Болезнь: K = '+fmt(illnessFactor(),2)+' · учебная модель: эффективная ФЧИ = 4,0 / K. К не является назначением и не меняет реальные дозы.';highPreview();refreshSuggested()}
+// Day-by-day visual sample: synthetic curve, not generated from insulin effect.
+const START5=d5('2026-11-09','00:00').getTime(),END5=d5('2026-11-12','00:00').getTime();
+function mockGlucose5(day,h){let v=6.2+0.58*Math.sin(h*0.75+day*.9)+0.39*Math.sin(h*2.3+day*.4);
+ for(const [m,a] of [[9.2,3.1],[14.4,3.7],[19.7,3.3]])v+=a*Math.exp(-(((h-m)/1.2)**2));
+ if(day===1&&h>=13.5)v+=1.0;if(day===2)v+=1.25;
+ return Math.max(3.4,Math.min(15.4,v));}
+function renderChartV5(){const svg=$('v5CgmChart');if(!svg)return;
+ const x0=50,x1=744,y0=20,y1=204,min=3,max=16;
+ const xAt=ts=>x0+(ts-START5)/(END5-START5)*(x1-x0),yAt=v=>y1-(v-min)/(max-min)*(y1-y0);
+ const startDay=v5Range==='all'?0:Number(v5Range),endDay=v5Range==='all'?3:startDay+1;
+ const dayWidth=(x1-x0)/3,viewX=x0+startDay*dayWidth-4,viewW=(endDay-startDay)*dayWidth+8;
+ const samples=[];for(let d=0;d<3;d++)for(let k=0;k<=96;k++){const ts=START5+(d*96+k)*15*60000;if(ts>END5)continue;samples.push({ts,day:d,hr:k/4,v:mockGlucose5(d,k/4)})}
+ let body='<rect width="760" height="242" fill="#fbfdfc" rx="13" />';
+ for(const level of [3.9,7,10,14]){const y=yAt(level);body+='<line x1="'+x0+'" x2="'+x1+'" y1="'+y+'" y2="'+y+'" stroke="'+(level===3.9||level===10?'#cae7d9':'#ecf1f1')+'" stroke-width="1" '+(level!==7?'stroke-dasharray="4 5"':'')+'/>'+'<text x="'+(x0-8)+'" y="'+(y+4)+'" text-anchor="end" font-size="12" fill="#8ba2a6">'+String(level).replace('.',',')+'</text>'}
+ body+='<rect x="'+x0+'" y="'+yAt(10)+'" width="'+(x1-x0)+'" height="'+(yAt(3.9)-yAt(10))+'" fill="#def5e9" fill-opacity=".47"/>';
+ for(const period of v5IllHistory){const l=Math.max(START5,period.start.getTime());const r=Math.min(END5,period.end?.getTime()??END5);if(r>l)body+='<rect x="'+xAt(l)+'" y="'+y0+'" width="'+(xAt(r)-xAt(l))+'" height="'+(y1-y0)+'" fill="#f5c18c" opacity=".24"/>'}
+ for(let d=0;d<=3;d++){const x=x0+d*dayWidth;body+='<path d="M'+x+','+y0+' V'+y1+'" stroke="#dce7e8" stroke-dasharray="2 5"/>'}
+ const path=samples.map((p,i)=>(i?'L':'M')+xAt(p.ts).toFixed(2)+' '+yAt(p.v).toFixed(2)).join(' ');
+ body+='<path d="'+path+'" stroke="#138e88" stroke-width="3.7" fill="none" stroke-linecap="round" stroke-linejoin="round"/>';
+ for(const p of events.filter(e=>e.type==='meal'&&e.when>=new Date(START5)&&e.when<new Date(END5))){const d=Math.floor((p.when.getTime()-START5)/(24*3600000)),h=p.when.getHours()+p.when.getMinutes()/60;const x=xAt(p.when.getTime()),y=yAt(mockGlucose5(d,h));body+='<circle cx="'+x+'" cy="'+y+'" r="4.4" stroke="white" stroke-width="1.5" fill="#dd9c59"><title>'+esc5(p.when.toLocaleDateString('ru-RU'))+' · '+esc5(p.title)+'</title></circle>'}
+ ['9 ноя','10 ноя','11 ноя'].forEach((t,i)=>body+='<text x="'+(x0+(i+.5)*dayWidth)+'" y="228" text-anchor="middle" font-size="13" fill="#718f93">'+t+'</text>');
+ svg.innerHTML=body;svg.setAttribute('viewBox',v5Range==='all'?'0 0 760 242':viewX+' 0 '+viewW+' 242');
+ [...document.querySelectorAll('[data-range]')].forEach(b=>b.classList.toggle('active',b.dataset.range===v5Range));
+}
+$('chartDays').onclick=e=>{const b=e.target.closest('[data-range]');if(!b)return;v5Range=b.dataset.range;renderChartV5()};
+function renderBasalRows(){const el=$('basalRows');if(!el)return;if($('basalTodayClock'))$('basalTodayClock').textContent=DEMO_NOW.toLocaleDateString('ru-RU',{day:'numeric',month:'short'})+' · '+DEMO_CLOCK;el.innerHTML=['morning','evening'].map(slot=>{
+ const morning=slot==='morning',cfg=v5BasalSchedule[slot],v=v5TodayOverride[slot],title=morning?'Утренний длинный':'Вечерний длинный';
+ const confirmed=v5TodayGiven[slot];
+ return '<div class="v5-basal-card" data-basal-slot="'+slot+'"><div class="v5-basal-top"><strong>'+(morning?'☀️':'🌙')+' '+title+'</strong><span class="v5-basal-badge">'+(confirmed?'✓ Записан факт':'Планируется')+'</span></div><div class="v5-formline"><div><label>Постоянное время</label><input data-basal-fixed-time="'+slot+'" type="time" value="'+cfg.time+'"></div><div><label>Доза по расписанию · демо</label><input data-basal-fixed-dose="'+slot+'" type="number" step="0.5" min="0" max="30" value="'+cfg.units+'"></div></div><button class="v5-button secondary v5-full" style="margin-top:9px" data-basal-permanent="'+slot+'">Сохранить постоянное расписание</button><div class="v5-override"><button class="v5-override-toggle" data-basal-show="'+slot+'">↺ Изменить время на сегодня</button><div data-basal-override="'+slot+'" style="display:'+(v?'block':'none')+'"><div class="v5-formline" style="margin-top:9px"><div><label>Только на сегодня</label><input type="time" data-basal-today-time="'+slot+'" value="'+(v||DEMO_CLOCK)+'"></div><div><label>Текущий план</label><div class="v5-notice" style="margin:0;padding:11px">'+(v||cfg.time)+'</div></div></div><button class="v5-button outline v5-full" data-basal-save-today="'+slot+'" style="margin-top:7px">Применить время на сегодня</button></div></div><div class="v5-notice" style="margin:9px 0 0">План сегодня: <b>'+(v||cfg.time)+'</b> · '+(confirmed?'Факт укола отдельно записан в дневник.':'Запланировано, но факт введения не подтверждён.')+'</div><button class="v5-button v5-full" style="margin-top:8px" data-basal-confirm="'+slot+'" '+(confirmed?'disabled':'')+'>'+(confirmed?'✓ Введение записано':'💉 Сделал укол · записать факт')+'</button><div class="v5-basal-schedule-note">Нажатие «Сделал укол» записывает реальное время. В этой демонстрации текущее время '+DEMO_CLOCK+'; если указано сегодняшнее фактическое время — оно используется для тестовой записи.</div></div>';
+ }).join('')}
+$('basalRows').onclick=e=>{
+ const b=e.target.closest('button');if(!b)return;
+ if(b.dataset.basalShow){const slot=b.dataset.basalShow,box=document.querySelector('[data-basal-override="'+slot+'"]');box.style.display=box.style.display==='none'?'block':'none';return}
+ if(b.dataset.basalPermanent){const slot=b.dataset.basalPermanent,time=document.querySelector('[data-basal-fixed-time="'+slot+'"]')?.value,dose=Number(document.querySelector('[data-basal-fixed-dose="'+slot+'"]')?.value);if(!time||!Number.isFinite(dose)||dose<=0||dose>30)return alert('Проверь время и дозу в демонстрации');v5BasalSchedule[slot]={time,units:dose};renderBasalRows();renderV5Diary();return}
+ if(b.dataset.basalSaveToday){const slot=b.dataset.basalSaveToday,time=document.querySelector('[data-basal-today-time="'+slot+'"]')?.value;if(!time)return alert('Укажи время');v5TodayOverride[slot]=time;renderBasalRows();renderV5Diary();return}
+ if(b.dataset.basalConfirm){const slot=b.dataset.basalConfirm;if(v5TodayGiven[slot])return;const cfg=v5BasalSchedule[slot];const actualTime=v5TodayOverride[slot]||DEMO_CLOCK;const fact=d5(DEMO_TODAY,actualTime);v5TodayGiven[slot]=true;events.unshift({type:'basal',title:'💉 Левемир · '+(slot==='morning'?'утро':'вечер')+' · факт',when:fact,desc:fmt(cfg.units)+' ЕД · '+(v5TodayOverride[slot]?'время подтверждено пользователем':'время нажатия '+DEMO_CLOCK)+' · демо',slot,units:cfg.units});renderBasalRows();renderV5Diary();$('diaryCount').textContent=events.length;return}
+};
+$('openBasal').onclick=()=>{renderBasalRows();openSheet('basal')};
+function renderV5Diary(){
+ const root=$('eventList');if(!root)return;
+ let rows=events.slice();const date=DEMO_TODAY;
+ for(const slot of ['morning','evening'])if(!v5TodayGiven[slot]){const p=v5BasalSchedule[slot],when=d5(date,v5TodayOverride[slot]||p.time);rows.push({when,type:'planned',slot,title:'💉 Левемир · '+(slot==='morning'?'утро':'вечер')+' · по плану',desc:fmt(p.units)+' ЕД · '+(v5TodayOverride[slot]?'время на сегодня изменено':'постоянное расписание')+' · не отмечено как введённое'})}
+ rows=rows.filter(r=>v5Day==='all'||(v5Day==='today'?r.when.toLocaleDateString('sv-SE')===DEMO_TODAY:String(r.when.getDate())===v5Day)).sort((a,b)=>b.when-a.when);
+ if(!rows.length){root.innerHTML='<div class="diary-empty">Нет записей для выбранного дня</div>';return}
+ let previous='';root.innerHTML=rows.map(r=>{
+ const k=r.when.toLocaleDateString('sv-SE'),datefmt=r.when.toLocaleDateString('ru-RU',{day:'numeric',month:'long',weekday:'short'});
+ let group='';if(k!==previous){previous=k;group='<div class="v5-diaries-date">'+datefmt+' <span>время и история · демо</span></div>'}
+ const wasSick=r.type==='illness'||v5IllHistory.some(p=>r.when>=p.start&&(p.end===null||r.when<=p.end));
+ return group+'<div class="v5-event '+(wasSick?'active-ill ':'')+(r.type==='planned'?'planned':'')+'"><div class="v5-event-title"><span>'+esc5(r.title)+'</span><time>'+r.when.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'})+'</time></div><div class="v5-event-note">'+esc5(r.desc)+(r.type==='planned'?' · <span class="v5-event-tag">Не введён</span>':'')+'</div></div>';
+ }).join('')
+}
+$('diaryFilters').onclick=e=>{const b=e.target.closest('[data-day]');if(!b)return;v5Day=b.dataset.day;[...document.querySelectorAll('[data-day]')].forEach(x=>x.classList.toggle('active',x.dataset.day===v5Day));renderV5Diary()};
+$('goDiary').onclick=()=>setView('diary');
+$('clearDiary').onclick=()=>{events=seedEvents();v5TodayGiven={morning:false,evening:false};v5TodayOverride={morning:null,evening:null};v5Ill={toggle:true,active:true,start:d5('2026-11-10','13:40'),end:null,factor:1.15};v5IllHistory=[{start:d5('2026-11-10','13:40'),end:null}];refreshAllV5();$('diaryCount').textContent=events.length};
+$('diaryCount').textContent=events.length;
+refreshAllV5();
+
+// v5 takes over initial view after wiring the extra controls.
+const q=new URLSearchParams(location.search).get('screen');if(q==='diary')setView('diary');else if(['low','high','legend','basal'].includes(q))openSheet(q);else setView('home');
+
+// Bridge from the originally approved v5 high / low dialogs into the journal.
+// The original calculator arithmetic and DOM remain unchanged. All its coefficients are explicitly fictional.
+(function(){
+  const activitySelections=[...document.querySelectorAll('.gf-approved-activity')];
+  activitySelections.forEach(sel=>sel.addEventListener('change',()=>{
+    activitySelections.forEach(other=>{if(other!==sel)other.value=sel.value});
+    parent.postMessage({gf28:'activity',level:sel.value},'*');
+  }));
+  const sendEntry=(kind)=>{
+    const e=events[0];
+    if(!e||e===sendEntry.last||!((kind==='meal'&&e.type==='meal')||(kind==='insulin'&&e.type==='insulin')))return;
+    sendEntry.last=e;
+    const data={gf28:'entry',kind,activity:activitySelections[0]?.value||'none',at:Date.now()};
+    if(kind==='meal'){
+      const p=foods[$('product').value],amount=Number($('foodAmount').value);
+      data.name=p.name;data.grams=amount;data.carbs=amount*p.carbs/100;
+      data.unit=p.unit;data.target=Number($('lowTarget').value);
+      data.preview=String($('lowExpected').textContent);
+    }else{
+      data.units=Number($('doseAmount').value);data.site=$('gfApprovedSite')?.value||'';
+      data.target=Number($('highTarget').value);data.preview=String($('highExpected').textContent);
+    }
+    parent.postMessage(data,'*');
+  };
+  $('foodGiven')?.addEventListener('click',()=>sendEntry('meal'));
+  $('shotGiven')?.addEventListener('click',()=>sendEntry('insulin'));
+  $('close')?.addEventListener('click',()=>parent.postMessage({gf28:'close'},'*'));
+  window.addEventListener('message',e=>{
+    if(e.data?.gf28==='open'){
+      openSheet(e.data.kind==='high'?'high':'low');
+      if(e.data.activity){activitySelections.forEach(sel=>sel.value=e.data.activity)}
+    }
+  });
+  // Avoid exposing the original standalone demo's navigation behind the approved dialog.
+  document.querySelector('.app')?.setAttribute('aria-hidden','true');
+})();
+
+/* GlucoPapa GF30: research-only test engine.
+ * Equations for independent arithmetic/unit tests, not validated to determine doses for a child.
+ * See PDF Solntseva pp.24-28; ISPAD 2022 Ch9 and Exercise chapters.
+ */
+(function(root){
+'use strict';
+const R=(x,n=3)=>Math.round(x*10**n)/10**n;
+const num=x=>Number(x);
+const finite=x=>x!==null&&x!==''&&Number.isFinite(Number(x));
+const bound=(x,min,max)=>Math.max(min,Math.min(max,x));
+const H=3600000, MIN=60000;
+function profileFor(name){const s=(name||'').toLowerCase().replace(/ё/g,'е');
+ if(/ринфаст ник/.test(s))return {id:'faster-aspart',name:'РинФаст Ник',kind:'rapid',onsetMin:[6,12],peakMin:[60,180],durationMin:[180,300],note:'Сверхбыстрый аспарт, отдельный препарат'};
+ if(/ринфаст|новорапид|аспарт/.test(s))return {id:'aspart',name:name||'Инсулин аспарт',kind:'rapid',onsetMin:[9,21],peakMin:[60,180],durationMin:[180,300],note:'Диапазоны у разных людей различаются'};
+ if(/левемир|детемир/.test(s))return {id:'detemir',name:name||'Детемир',kind:'basal',onsetMin:[60,120],peakMin:[240,420],durationMin:[1200,1440],note:'Продолжительность дозозависима; детемир часто вводят дважды в день'};
+ if(/гларгин|лантус/.test(s))return {id:'glargine',name:name||'Гларгин',kind:'basal',onsetMin:[120,240],peakMin:null,durationMin:[1320,1440],note:'Клинический профиль может быть без отчётливого пика'};
+ if(/тресиба|деглудек/.test(s))return {id:'degludec',name:name||'Деглудек',kind:'basal',onsetMin:[30,90],peakMin:null,durationMin:[2520,3000],note:'Сверхдлительный базальный'};
+ return {id:'unknown',name:name||'Не задан',kind:'unknown',onsetMin:null,peakMin:null,durationMin:null,note:'Профиль не найден: автоматическая экстраполяция запрещена'};
+}
+function sourceFactors(tdd,kind='rapid'){
+ if(!finite(tdd)||num(tdd)<=0)return null;
+ const n=num(tdd);
+ return {tdd:n,isfRough:R((kind==='regular'?83:100)/n,4),icrRough:R(500/n,4),source:'Population starting estimates only — not an individualized prescription'};
+}
+function actionCDF(age,diaMin=300){
+ if(!finite(age)||!finite(diaMin)||diaMin<=12)return 0;
+ if(age<=12)return 0;if(age>=diaMin)return 1;
+ const x=(age-12)/(diaMin-12);
+ return R(3*x*x-2*x*x*x,8);
+}
+function carbCDF(age,tau=85){return age<=0?0:1-Math.exp(-Math.pow(age/tau,1.9))}
+function iob(shots,at=Date.now(),diaMin=300){let units=0;const rows=[];
+ for(const e of shots||[]){if(e.type!=='insulin'||e.insulinType!=='short'||!finite(e.units)||num(e.units)<=0||!finite(e.ts))continue;
+ const age=(at-num(e.ts))/MIN;if(age<0||age>=diaMin)continue;
+ const remaining=1-actionCDF(age,diaMin);
+ units+=num(e.units)*remaining;rows.push({ts:num(e.ts),ageMin:R(age,1),units:num(e.units),remainingFraction:R(remaining),activeUnits:R(num(e.units)*remaining)})
+ }
+ return {units:R(units),rows,model:'Smoothstep research curve — not measured pharmacodynamics'};
+}
+function remainingEffect(shots,at,horizonMin,isf,diaMin=300){
+ let future=0;for(const e of shots||[]){if(e.type!=='insulin'||e.insulinType!=='short'||!finite(e.ts)||!finite(e.units))continue;
+  const age=(at-num(e.ts))/MIN;if(age<0||age>=diaMin)continue;
+  future+=num(e.units)*(actionCDF(age+horizonMin,diaMin)-actionCDF(age,diaMin));
+ }
+ return R(future*isf,4);
+}
+function latest(readings,at=Date.now()){return (readings||[]).filter(x=>finite(x.ts)&&finite(x.mmol)&&num(x.ts)<=at).sort((a,b)=>num(b.ts)-num(a.ts))[0]||null}
+function trend(readings,at=Date.now()){
+ const r=(readings||[]).filter(x=>finite(x.ts)&&finite(x.mmol)&&num(x.ts)>=at-25*MIN&&num(x.ts)<=at).sort((a,b)=>num(a.ts)-num(b.ts));
+ if(r.length<3)return {slope:0,coverage:r.length,reliable:false};
+ const first=r[0],last=r.at(-1);if(num(last.ts)-num(first.ts)<10*MIN)return {slope:0,coverage:r.length,reliable:false};
+ return {slope:R((num(last.mmol)-num(first.mmol))/((num(last.ts)-num(first.ts))/MIN),4),coverage:r.length,reliable:true};
+}
+function activityEffect(level,horizon){
+ // Artificial sensitivity only. This is deliberately NOT a dose adjustment or a clinical estimate.
+ const effects={none:0,low:0,medium:-0.20,high:-0.50};
+ const effect=(effects[level]??0)*Math.min(1,horizon/30);
+ return {value:R(effect,3),unknown:level==='none'||!(level in effects),note:'Иллюстративная поправка в тестовой модели; в реальности тип нагрузки может менять знак эффекта'};
+}
+
+// GF31: timestamp arithmetic uses an explicit IANA time zone, not device-local Date.getHours().
+// Night bins use wall-clock minutes in the selected zone. DST transition nights are excluded.
+const GF31_DEMO_ZONE='Europe/Moscow';
+function gf31Zone(tz){try{new Intl.DateTimeFormat('en-GB',{timeZone:tz}).format(0);return tz}catch(_){return 'UTC'}}
+function gf31Wall(ts,tz=GF31_DEMO_ZONE){
+ const p=Object.fromEntries(new Intl.DateTimeFormat('en-GB',{timeZone:gf31Zone(tz),year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(Number(ts)).filter(x=>x.type!=='literal').map(x=>[x.type,Number(x.value)]));
+ const serial=Date.UTC(p.year,p.month-1,p.day,p.hour,p.minute);
+ return {serial,hour:p.hour,date:[p.year,String(p.month).padStart(2,'0'),String(p.day).padStart(2,'0')].join('-')};
+}
+
+function dawnFlag(readings,at=Date.now(),timeZone=GF31_DEMO_ZONE){
+ const arr=(readings||[]).filter(e=>finite(e.mmol)&&finite(e.ts)).map(e=>({...e,_local:gf31Wall(e.ts,timeZone)}));const nights=[];
+ const today=gf31Wall(at,timeZone).serial;const daySerial=Math.floor(today/(24*H))*(24*H);
+ for(let day=0;day<5;day++){
+  const midnight=daySerial-day*24*H;
+  const p=arr.filter(r=>r._local.serial>=midnight+2*H&&r._local.serial<midnight+8*H);
+  const medianRange=(from,to)=>{const a=p.filter(x=>x._local.serial>=midnight+from*H&&x._local.serial<midnight+to*H).map(x=>num(x.mmol)).sort((a,b)=>a-b);return a.length?a[Math.floor(a.length/2)]:null};
+  const before=medianRange(2,4),after=medianRange(6,8),low=p.some(x=>num(x.mmol)<3.9);
+  if(before===null||after===null)continue;
+  const delta=R(after-before,2);
+  nights.push({date:new Date(midnight).toISOString().slice(0,10),before,after,delta,low,possible:delta>=1.0&&!low});
+ }
+ return {nights,possible:nights.filter(n=>n.possible).length>=2,possibleNights:nights.filter(n=>n.possible).length,validNights:nights.length,warning:'Возможный утренний подъём — не диагноз: может быть связан с едой, ослаблением фонового инсулина, болезнью и др.'};
+}
+function forecast(o){
+ const at=finite(o.at)?num(o.at):Date.now();const horizon=bound(num(o.horizon)||60,15,240);
+ const actual=latest(o.readings,at),glucose=finite(o.glucose)?num(o.glucose):(actual?num(actual.mmol):null);
+ const isf=finite(o.isf)&&num(o.isf)>0?num(o.isf):null;
+ const k=finite(o.illnessK)&&num(o.illnessK)>0?num(o.illnessK):1;
+ if(glucose===null||isf===null)return {ok:false,reason:'Нет исходной CGM или подтверждённой тестовой ФЧИ',profile:profileFor(o.insulinName)};
+ const dia=finite(o.diaMin)?num(o.diaMin):300,prev=o.shots||[];
+ const t=trend(o.readings,at);
+ const trendTerm=R(bound(t.slope*Math.min(30,horizon)/2,-1.0,1.0),3);
+ const exposure=actionCDF(horizon,dia);
+ const newDose=Math.max(0,num(o.dose)||0);
+ const newInsulinTerm=R(-newDose*(isf/k)*exposure,3);
+ const previous=R(-remainingEffect(prev,at,horizon,isf/k,dia),3);
+ const amount=Math.max(0,num(o.carbs)||0),carbFactor=finite(o.carbFactor)?num(o.carbFactor):1;
+ const carbsTerm=R(amount*0.15*carbFactor*carbCDF(horizon,o.fastCarbs?30:85),3);
+ const activity=activityEffect(o.activity||'none',horizon);
+ const hour=gf31Wall(at,o.timeZone||GF31_DEMO_ZONE).hour;const dawn=(hour>=3&&hour<8)?R(0.25*Math.min(1,horizon/60),3):0;
+ const illness=R((k-1)*0.25*Math.min(1,horizon/60),3);
+ const predicted=R(glucose+trendTerm+newInsulinTerm+previous+carbsTerm+activity.value+dawn+illness,2);
+ const uncertainty=R(1.1 + (activity.unknown?0.7:Math.abs(activity.value)*1.5) +(t.reliable?0:0.5) +(k!==1?0.5:0),2);
+ return {ok:true,synthetic:true,predicted,range:[R(predicted-uncertainty,2),R(predicted+uncertainty,2)],iob:iob(prev,at,dia),parts:{g:glucose,trend:trendTerm,meal:carbsTerm,newInsulin:newInsulinTerm,oldInsulin:previous,activity:activity.value,dawn,illness,k,isf,diaMin:dia,horizon,carbs:amount,dose:newDose,carbFactor},profile:profileFor(o.insulinName),evidence:{trend:t,activityNote:activity.note},scope:'ARITHMETIC TOY; NOT A PATIENT FORECAST'};
+}
+function toyFoodGrams(o){
+ if(!finite(o.goal)||!finite(o.carbsPer100)||num(o.carbsPer100)<=0)return null;
+ const f=forecast({...o,carbs:0,dose:0});if(!f.ok)return null;
+ const k=0.15*(finite(o.carbFactor)?num(o.carbFactor):1)*carbCDF(bound(num(o.horizon)||30,15,240),o.fastCarbs?30:85);
+ if(k<=0)return null;
+ const rawGrams=Math.max(0,(num(o.goal)-f.predicted)/(k*num(o.carbsPer100)/100));
+ const grams=bound(rawGrams,0,500);
+ return {grams:R(grams,1),capped:rawGrams>500,rawGrams:R(rawGrams,1),explain:'Учебное решение для искусственного поглощения; НЕ применять при гипогликемии'};
+}
+function toyCorrection(o){
+ if(!finite(o.goal))return null;
+ const f=forecast({...o,dose:0,carbs:0});if(!f.ok)return null;
+ const perU=(num(o.isf)/num(o.illnessK||1))*actionCDF(bound(num(o.horizon)||120,15,240),num(o.diaMin)||300);
+ if(perU<=0)return null;
+ const dose=bound(Math.floor(Math.max(0,f.predicted-num(o.goal))/perU*2)/2,0,10);
+ return {dose:R(dose,1),explain:'Только учебная подстановка; не является расчётом лечебного болюса'};
+}
+function nightStats(readings,events,now=Date.now(),timeZone=GF31_DEMO_ZONE){
+ const a=(readings||[]).filter(x=>finite(x.ts)&&finite(x.mmol)).map(x=>({...x,local:gf31Wall(x.ts,timeZone)})).sort((x,y)=>num(x.ts)-num(y.ts));
+ const ev=(events||[]).filter(x=>finite(x.ts)).map(x=>({...x,local:gf31Wall(x.ts,timeZone)}));
+ const days=[];const at=gf31Wall(now,timeZone).serial;const daySerial=Math.floor(at/(24*H))*(24*H);
+ for(let i=5;i>=1;i--){
+  const midnight=daySerial-i*24*H;const start=midnight+22*H,end=start+10*H;
+  if(end>at)continue;
+  const p=a.filter(x=>x.local.serial>=start&&x.local.serial<=end);
+  const near=(stamp)=>{let best=null,d=Infinity;for(const x of p){const gap=Math.abs(x.local.serial-stamp);if(gap<d){d=gap;best=x}}return d<=20*MIN?best:null};
+  const first=near(start),last=near(start+8*H),low=p.some(x=>num(x.mmol)<3.9);
+  let gap=0;for(let j=1;j<p.length;j++)gap=Math.max(gap,num(p[j].ts)-num(p[j-1].ts));
+  const reasons=[];
+  if(!first||!last||p.length<105||gap>20*MIN)reasons.push('пробелы CGM');
+  if(low)reasons.push('ночная гипогликемия');
+  if(p.some((x,i)=>i>0&&Math.abs((x.local.serial-p[i-1].local.serial)-(num(x.ts)-num(p[i-1].ts)))>30*MIN))reasons.push('переход времени');
+  for(const e of ev){const t=e.local.serial;if(t<start-10*H||t>end)continue;
+   if(e.type==='insulin'&&e.insulinType==='short'&&t>start-5*H)reasons.push('быстрый инсулин');
+   if(e.type==='meal'&&t>start-4*H)reasons.push('поздняя еда');
+   if(e.type==='activity'&&t>start-10*H)reasons.push('активность');
+   if(e.type==='illness')reasons.push('болезнь');
+  }
+  // An ongoing illness begun before the current window also confounds it.
+  const lastIll=ev.filter(e=>e.type==='illness'&&e.local.serial<=end).sort((x,y)=>y.ts-x.ts)[0];
+  if(lastIll&&lastIll.phase==='start')reasons.push('болезнь');
+  const baseline=first?num(first.mmol):null,final=last?num(last.mmol):null;
+  const pre=p.filter(x=>x.local.serial>=start+4*H&&x.local.serial<start+6*H);
+  const dawn=p.filter(x=>x.local.serial>=start+8*H&&x.local.serial<start+10*H);
+  const mean=z=>z.length?R(z.reduce((s,x)=>s+num(x.mmol),0)/z.length,2):null;
+  const m0=mean(pre),m1=mean(dawn),dawnChange=m0===null||m1===null?null:R(m1-m0,2);
+  days.push({day:new Date(midnight).toISOString().slice(0,10),start:baseline,end:final,change:baseline!==null&&final!==null?R(final-baseline,2):null,low,dawnChange,possibleDawn:dawnChange!==null&&dawnChange>=1&&!low,usable:reasons.length===0,problems:[...new Set(reasons)],count:p.length});
+ }
+ const clean=days.filter(x=>x.usable&&x.change!==null).map(x=>x.change).sort((a,b)=>a-b);
+ const med=clean.length?(clean.length%2?clean[(clean.length-1)/2]:(clean[clean.length/2-1]+clean[clean.length/2])/2):null;
+ return {days,usable:clean.length,median:med===null?null:R(med,2),dawnCount:days.filter(x=>x.possibleDawn).length,timeZone:gf31Zone(timeZone),warning:'Описательная статистика ночей, не расчёт лечебных доз'};
+}
+function selfTest(){const checks=[];const a=(label,ok)=>checks.push({label,ok:!!ok});
+ a('ISF=100/TDD',sourceFactors(20).isfRough===5);a('ICR=500/TDD',sourceFactors(20).icrRough===25);
+ a('zero IOB after DIA',iob([{type:'insulin',insulinType:'short',units:2,ts:0}],6*H,300).units===0);
+ a('early IOB greater than late',iob([{type:'insulin',insulinType:'short',units:2,ts:0}],30*MIN,300).units>iob([{type:'insulin',insulinType:'short',units:2,ts:0}],200*MIN,300).units);
+ a('faster aspart separate',profileFor('РинФаст Ник').id!==profileFor('РинФаст').id);
+ const base={glucose:14.2,isf:4.2,readings:[],shots:[],at:12*H,diaMin:300,horizon:120,illnessK:1};
+ const f=x=>forecast({...base,...x}).predicted;
+ a('more fictional insulin => lower model output',f({dose:2})<f({dose:0}));
+ a('more fictional carbs => higher model output',f({carbs:25})>f({carbs:0}));
+ a('demo illness changes insulin action',f({dose:2,illnessK:1.4})>f({dose:2,illnessK:1}));
+ a('activity affects preview',f({activity:'high'})!==f({activity:'low'}));
+ a('pre-dawn additive term',forecast({...base,at:Date.UTC(2026,10,12,2),timeZone:GF31_DEMO_ZONE}).parts.dawn>forecast({...base,at:Date.UTC(2026,10,12,9),timeZone:GF31_DEMO_ZONE}).parts.dawn);
+ const p={...base,glucose:3.5,carbsPer100:10,horizon:30,carbFactor:1,fastCarbs:true};
+ a('higher demo target => more food',toyFoodGrams({...p,goal:7}).grams>toyFoodGrams({...p,goal:5}).grams);
+ a('CGM starting value changes output',f({glucose:16})>f({glucose:12}));
+ a('no real dose without ISF',!forecast({...base,isf:null}).ok);
+ return {passed:checks.filter(x=>x.ok).length,total:checks.length,checks};
+}
+const api={sourceFactors,profileFor,actionCDF,carbCDF,iob,remainingEffect,latest,trend,activityEffect,dawnFlag,forecast,toyFoodGrams,toyCorrection,nightStats,selfTest};
+root.GF30Core=api;if(typeof module!=='undefined'&&module.exports)module.exports=api;
+})(typeof window!=='undefined'?window:globalThis);
+
+/* GF30: app-state bridge and auditable toy math for approved v5 screens.
+   This code is inserted inside the unchanged approved v5 IIFE. */
+let gf30State={events:[],readings:[],profile:{shortInsulin:'РинФаст'},at:Date.now(),demo:true,illnessK:1};
+let gf30ManualIOB=null;
+const gf30num=x=>Number(x);
+const gf30str=x=>Number(x).toLocaleString('ru-RU',{maximumFractionDigits:2});
+const gf30el=id=>document.getElementById(id);
+const gf30get=x=>gf30el(x);
+const gf30Part=()=>{const h=new Date(gf30State.at).getHours();return h>=5&&h<11?'morning':h>=11&&h<17?'day':'evening'};
+function gf30Val(a){return gf30State.profile?.coefficients?.[a]?.[gf30Part()]}
+function gf30Isf(){const value=gf30Val('isf');if(value!=null&&Number(value)>0)return {value:Number(value),source:'профиль (учебный)'};
+ const d=gf30State.events.filter(e=>e.type==='insulin'&&e.units>0);const dates=[...new Set(d.map(e=>new Date(e.ts).toLocaleDateString('sv-SE')))];if(dates.length>=3){const sum=d.reduce((s,x)=>s+Number(x.units||0),0)/dates.length;const fac=GF30Core.sourceFactors(sum);if(fac)return {value:fac.isfRough,source:'100 / СДИ из записей (не подтверждено)'}};
+ return {value:4.0,source:'учебная константа 4,0; недостаточно данных'};
+}
+function gf30K(){return gf30State.illnessK>0?Number(gf30State.illnessK):1}
+function gf30Activity(){return document.querySelector('.gf-approved-activity')?.value||'none'}
+function gf30G(side){const el=gf30get('gf30Scenario'+side);const n=Number(el?.value);return el&&el.value.trim()!==''&&Number.isFinite(n)&&n>=2&&n<=35?n:NaN}
+function gf30Opts(side,extra={}){
+ const profile=gf30State.profile||{},dia=Number(profile.gf27Clinical?.dia)||5;
+ return {readings:gf30State.readings,shots:gf30ManualIOB||gf30State.events,at:gf30State.at,glucose:gf30G(side),isf:gf30Isf().value,illnessK:gf30K(),insulinName:profile.shortInsulin||'РинФаст',activity:gf30Activity(),timeZone:profile.gf30TimeZone||gf30State.timeZone||Intl.DateTimeFormat().resolvedOptions().timeZone,diaMin:dia*60,...extra};
+}
+function gf30Label(f){const p=f.parts;return 'Gмодель = G_CGM '+gf30str(p.g)+' + тренд '+gf30str(p.trend)+' + углеводы '+gf30str(p.meal)+' + инсулин предыдущих уколов '+gf30str(p.oldInsulin)+' + выбранный укол '+gf30str(p.newInsulin)+' + активность '+gf30str(p.activity)+' + утренняя заря '+gf30str(p.dawn)+' + болезнь '+gf30str(p.illness)+' = '+gf30str(f.predicted)+' ммоль/л. ФЧИ='+gf30str(p.isf)+' ('+gf30Isf().source+'); Kбол='+gf30str(p.k)+'; DIA='+gf30str(p.diaMin)+' мин; IOB≈'+gf30str(f.iob.units)+' ЕД. Все коэффициенты эффекта/всасывания — только синтетическая модель; НЕ медицинский прогноз или назначение.'}
+function gf30Read(){const latest=GF30Core.latest(gf30State.readings,gf30State.at);for(const side of ['Low','High']){
+ const el=gf30get('gf30Scenario'+side);if(!el)continue;
+ // Real CGM supplied by parent is the starting source. In demo this value can be edited.
+ if(!el.dataset.userEdited)el.value=latest?Number(latest.mmol).toFixed(1):(side==='Low'?'3.5':'14.2');
+ const big=gf30get(side==='Low'?'lowPane':'highPane')?.querySelector('.summary .big');if(big)big.innerHTML=gf30str(Number(el.value))+'<span class="arrow '+(side==='High'?'up':'')+'">'+(side==='High'?'↑':'↓')+'</span>';
+ const source=gf30get('gf30Source'+side);if(source)source.textContent=latest?'CGM из 5-дневной истории (введите другое значение для проверки сценария)':'CGM отсутствует: введите значение для проверки сценария';
+ }
+ gf30SyncIOB();gf30LowPreview();gf30HighPreview();
+}
+for(const side of ['Low','High']){
+ const root=gf30get(side.toLowerCase()+'Pane');const summary=root?.querySelector('.summary');
+ if(summary){const el=document.createElement('div');el.style.cssText='padding:10px 0 0;font-size:11px;color:#68818a';
+ el.innerHTML='<label style="display:block;font-weight:750;margin-bottom:4px">CGM для проверки сценария, ммоль/л</label><input id="gf30Scenario'+side+'" type="number" min="2" max="35" step="0.1" value="'+(side==='Low'?'3.5':'14.2')+'" style="font-size:14px;padding:8px;border:1px solid #cbdfe0;border-radius:8px;width:130px"><div id="gf30Source'+side+'" style="margin-top:4px">Загрузка тестовой истории</div>';
+ summary.appendChild(el);
+ gf30get('gf30Scenario'+side).addEventListener('input',()=>{const big=summary.querySelector('.big');if(big)big.innerHTML=gf30str(Number(gf30get('gf30Scenario'+side).value))+'<span class="arrow '+(side==='High'?'up':'')+'">'+(side==='High'?'↑':'↓')+'</span>';gf30get('gf30Scenario'+side).dataset.userEdited='1';gf30LowPreview();gf30HighPreview()});}
+}
+function gf30SyncIOB(){
+ const iso=gf30State.profile.shortInsulin||'РинФаст';const dia=Number(gf30State.profile.gf27Clinical?.dia)||5;
+ const list=gf30ManualIOB||gf30State.events;const result=GF30Core.iob(list,gf30State.at,dia*60);
+ for(const side of ['low','high']){
+  gf30get(side+'Iob').textContent='≈ '+gf30str(result.units)+' ЕД';
+  gf30get(side+'IobMeta').textContent=iso+' · остаток введённых доз по учебной кривой';
+  gf30get(side+'IobTime').textContent='DIA '+gf30str(dia)+' ч; профиль: '+GF30Core.profileFor(iso).id;
+ }
+}
+function gf30UpdateIOB(side){const units=Number(gf30get(side+'PrevDose').value),age=Number(gf30get(side+'PrevAge').value);
+ if(!Number.isFinite(units)||units<0||units>30||!Number.isFinite(age)||age<0||age>720)return;
+ // Manual research override remains scoped to iframe; no actual shot is written.
+ gf30ManualIOB=[{type:'insulin',insulinType:'short',units,ts:gf30State.at-age*60000}];
+ for(const other of ['low','high'])if(other!==side){gf30get(other+'PrevDose').value=units;gf30get(other+'PrevAge').value=age;}
+ gf30SyncIOB();gf30LowPreview();gf30HighPreview();
+}
+function gf30LowPreview(){const p=foods[gf30get('product').value],amount=Number(gf30get('foodAmount').value),goal=Number(gf30get('lowTarget').value);
+ resetStamp('lowSaved');if(!(amount>=1&&amount<=500&&goal>=4&&goal<=10&&Number.isFinite(gf30G('Low')))){gf30get('lowResult').classList.remove('visible');return false}
+ const carbs=amount*p.carbs/100;
+ const f=GF30Core.forecast(gf30Opts('Low',{horizon:30,carbs,carbFactor:p.factor,fastCarbs:true}));if(!f.ok)return false;
+ gf30get('lowExpected').textContent='≈ '+gf30str(f.predicted)+' ммоль/л';
+ gf30get('lowRange').textContent='Через 30 мин · исследовательский диапазон '+f.range.map(gf30str).join('–')+' · цель '+gf30str(goal)+' ммоль/л; прогноз НЕ валидирован';
+ gf30get('lowProductResult').textContent=gf30str(amount)+' '+p.unit+' · '+p.name;
+ gf30get('lowCarbs').textContent=gf30str(carbs)+' г';
+ gf30get('lowAdvice').textContent='При настоящей гипогликемии прекратите нагрузку и следуйте индивидуальному плану; CGM при симптомах проверяют глюкометром. Спорт повышает риск повторного снижения.';
+ gf30get('lowFormulaLive').textContent=gf30Label(f);
+ gf30get('lowResult').classList.add('visible');return true;
+}
+function gf30HighPreview(){const dose=Number(gf30get('doseAmount').value),goal=Number(gf30get('highTarget').value);
+ resetStamp('highSaved');if(!(gf30get('doseAmount').value.trim()!==''&&dose>=0&&dose<=20&&goal>=4&&goal<=13&&Number.isFinite(gf30G('High')))){gf30get('highResult').classList.remove('visible');return false}
+ const f=GF30Core.forecast(gf30Opts('High',{horizon:120,dose}));if(!f.ok)return false;
+ gf30get('highExpected').textContent='≈ '+gf30str(f.predicted)+' ммоль/л';
+ gf30get('highRange').textContent='Через 2 часа · исследовательский диапазон '+f.range.map(gf30str).join('–')+' · цель '+gf30str(goal)+' ммоль/л; не гарантировано';
+ gf30get('highAmountResult').textContent=gf30str(dose)+' ЕД — только тест введённого значения';
+ gf30get('highFormulaLive').textContent=gf30Label(f);gf30get('highResult').classList.add('visible');return true;
+}
+function gf30CalcFood(){const p=foods[gf30get('product').value],goal=Number(gf30get('lowTarget').value);
+ const suggestion=GF30Core.toyFoodGrams(gf30Opts('Low',{horizon:30,goal,carbsPer100:p.carbs,carbFactor:p.factor,fastCarbs:true}));
+ if(!suggestion)return;
+ gf30get('foodAmount').value=suggestion.grams;gf30LowPreview();
+ gf30get('lowAdvice').textContent=(suggestion.capped?'В этой учебной модели расчёт превышает 500 '+p.unit+'; значение ограничено, цель НЕ обещана. ':'')+'Объём рассчитан по вымышленной реакции для проверки кнопки. При реальной гипогликемии НЕЛЬЗЯ использовать это количество как назначение.';
+ gf30get('lowResult').scrollIntoView({block:'nearest'});
+}
+function gf30SuggestOnly(){const goal=Number(gf30get('highTarget').value);
+ const s=GF30Core.toyCorrection(gf30Opts('High',{horizon:120,goal}));if(!s)return;
+ gf30get('suggestedDose').textContent=gf30str(s.dose)+' ЕД · ТОЛЬКО ДЕМО';
+ gf30get('highExplain').textContent='Математический тест: изменение дозы до цели в искусственной модели; не применять для лечения. ФЧИ='+gf30str(gf30Isf().value)+'; болезнь K='+gf30str(gf30K())+'; учитывается эффект уже введённого РинФаст, активность, утренняя заря.';
+ gf30get('highSuggested').classList.add('visible');
+}
+function gf30CalcDose(){gf30SuggestOnly();const text=gf30get('suggestedDose').textContent;const dose=parseFloat(text.replace(',','.'));
+ if(Number.isFinite(dose))gf30get('doseAmount').value=dose;gf30HighPreview();gf30get('highSuggested').scrollIntoView({block:'nearest'});
+}
+// Override original fictional formulas, but preserve HTML and user-approved control placements.
+lowPreview=gf30LowPreview;highPreview=gf30HighPreview;calcFood=gf30CalcFood;calcDose=gf30CalcDose;calcDosePreviewOnly=gf30SuggestOnly;syncIob=gf30SyncIOB;updateIobFrom=gf30UpdateIOB;
+gf30get('foodAmount').oninput=gf30LowPreview;gf30get('lowTarget').oninput=gf30LowPreview;
+gf30get('calcFood').onclick=gf30CalcFood;
+gf30get('doseAmount').oninput=gf30HighPreview;gf30get('highTarget').oninput=()=>{gf30SuggestOnly();gf30HighPreview()};gf30get('calcDose').onclick=gf30CalcDose;
+for(const side of ['low','high'])for(const field of ['PrevDose','PrevAge'])gf30get(side+field).oninput=()=>gf30UpdateIOB(side);
+document.querySelectorAll('.gf-approved-activity').forEach(x=>x.addEventListener('change',()=>{gf30LowPreview();gf30HighPreview()}));
+window.addEventListener('message',e=>{
+ if(e.data?.gf30!=='sync')return;
+ const x=e.data.payload;if(!x)return;
+ gf30State={events:Array.isArray(x.events)?x.events:[],readings:Array.isArray(x.readings)?x.readings:[],profile:x.profile||{},at:Number(x.at)||Date.now(),illnessK:Number(x.illnessK)||1,demo:!!x.demo};
+ gf30ManualIOB=null;gf30Read();
+});
+// Initialize app source even without messages for direct-standalone tests.
+gf30Read();
+
+/* v0.31: single-source output sync for v5 approved windows, synthetic numbers only. */
+let gf31Updating=false;
+function gf31RenderStatus(){
+ const k=gf30K(),isf=gf30Isf(),drug=gf30State.profile.shortInsulin||'Не выбран';
+ const el=gf30get('sickFactorHigh');
+ if(el)el.textContent='Из настроек главной: болезнь K = '+gf30str(k)+'; ФЧИ = '+gf30str(isf.value)+' ммоль/л/ЕД ('+isf.source+'). Расчётная чувствительность учебной модели: '+gf30str(isf.value/k)+'. Препарат: '+drug+'. Режим '+(gf30State.demo?'ДЕМО':'НЕ ДЛЯ НАЗНАЧЕНИЙ')+'.';
+ const description=gf30get('highPane')?.querySelector('#sickFactorHigh + .field .smallhint');
+ if(description)description.textContent='Исходная глюкоза, ФЧИ, IOB, цель, болезнь и активность берутся из единого расчётного состояния. Данные тестовые, не лечебное назначение.';
+ const highRows=[...gf30get('highFormula')?.querySelectorAll('.f-row')||[]];
+ if(highRows[0])highRows[0].textContent='Текущие тестовые входы: CGM '+gf30str(gf30G('High'))+' ммоль/л; цель '+gf30get('highTarget').value+'; ФЧИ '+gf30str(isf.value)+'; K '+gf30str(k)+'; препарат '+drug+'.';
+ if(highRows[1])highRows[1].textContent='IOB модели: сумма остаточных долей ранее введённого короткого инсулина, рассчитанных по нелинейной тестовой кривой и DIA '+gf30str(gf30State.profile.gf27Clinical?.dia||5)+' ч; это не измерение в крови.';
+ if(highRows[2])highRows[2].textContent='Учебная условная коррекция: max(0, округление вниз по 0,5 ЕД [(Gбезновогоукола − цель) / ((ФЧИ/K) × накопленная доля действия к 120 минут)]). Учитываются модельные IOB, активность, тренд и заря.';
+ if(highRows[3]){const node=highRows[3].querySelector('code');if(node?.nextSibling)node.nextSibling.textContent=' Модель включает время действия и другие тестовые слагаемые; не является проверенным медицинским прогнозом.';}
+ const lowRows=[...gf30get('lowFormula')?.querySelectorAll('.f-row')||[]];
+ if(lowRows[0])lowRows[0].textContent='Учебный расчёт еды: исходный CGM '+gf30str(gf30G('Low'))+'; цель '+gf30get('lowTarget').value+'; IOB по тестовой нелинейной кривой; активность='+gf30Activity()+'.';
+ if(lowRows[1])lowRows[1].textContent='IOB: нелинейная тестовая кривая, не измерение действующего инсулина в крови.';
+
+}
+function gf31ShowRisk(f){
+ let box=gf30get('gf31HighRisk');
+ if(!box){box=document.createElement('div');box.id='gf31HighRisk';box.setAttribute('role','status');box.style.cssText='margin-top:9px;padding:10px;border-radius:12px;font-size:12px;line-height:1.5;';gf30get('highExplain')?.insertAdjacentElement('afterend',box)}
+ if(!f?.ok){box.textContent='Не хватает данных для учебного прогноза.';return}
+ const low=f.predicted<3.9||f.range[0]<3.9;
+ box.style.background=low?'#ffe9ec':'#f2f8f7';box.style.color=low?'#8f233f':'#587a7e';
+ box.textContent=low?'⚠️ ВНИМАНИЕ: искусственный прогноз допускает глюкозу ниже 3,9 ммоль/л. Не использовать это значение для выбора дозы или лечения.':'Учебный прогноз имеет широкий диапазон неопределённости; это не расчёт безопасной дозы.';
+}
+function gf31RefreshSuggestion(force=false){
+ const pane=gf30get('highSuggested');if(!force&&!pane?.classList.contains('visible'))return;
+ if(!gf30State.demo){gf30get('suggestedDose').textContent='Не рассчитывается';gf30get('highExplain').textContent='Исследовательский алгоритм не проверен для лечебных назначений. Дозы не предлагаются.';pane.classList.add('visible');return;}
+ const goal=Number(gf30get('highTarget')?.value);
+ const opt=gf30Opts('High',{horizon:120,goal});
+ const s=GF30Core.toyCorrection(opt);
+ if(!s||!Number.isFinite(gf30G('High'))||!(goal>=4&&goal<=13)){
+  if(pane)pane.classList.remove('visible');return;
+ }
+ gf30get('suggestedDose').textContent=gf30str(s.dose)+' ЕД · ТОЛЬКО ДЕМО';
+ const f=GF30Core.forecast({...opt,dose:s.dose,carbs:0});
+ const before=GF30Core.forecast({...opt,dose:0,carbs:0});
+ const p=before.parts;
+ let why=s.dose===0?'Условный результат 0 ЕД: учтены действующие предыдущие уколы (IOB), активность и исходное CGM; это не означает, что корректировка безопасна. ':'';
+ why+='Внутренняя тестовая формула: max(0, округление вниз по 0,5 × [(G_без_нового_укола − цель) / ((ФЧИ / K) × доля действия к 120 мин)]). ';
+ why+='Входы: G_без_нового_укола='+gf30str(before.predicted)+'; цель='+gf30str(goal)+'; ФЧИ='+gf30str(p.isf)+'; K='+gf30str(p.k)+'; IOB='+gf30str(before.iob.units)+' ЕД; активность='+gf30Activity()+'; препарат='+(gf30State.profile.shortInsulin||'нет')+'. '; 
+ why+='Итоговая модельная глюкоза='+gf30str(f.predicted)+' ммоль/л. Это искусственная арифметика, не назначение ребёнку.';
+ gf30get('highExplain').textContent=why;
+ pane.classList.add('visible');gf31ShowRisk(f);
+}
+let gf31FoodAuto=false;
+function gf31AutoFoodRefresh(){
+ if(!gf31FoodAuto||!gf30State.demo)return null;
+ const food=foods[gf30get('product').value],goal=Number(gf30get('lowTarget').value);
+ const s=GF30Core.toyFoodGrams(gf30Opts('Low',{goal,horizon:30,carbsPer100:food.carbs,carbFactor:food.factor,fastCarbs:true}));
+ if(!s)return null;
+ gf30get('foodAmount').value=s.grams;
+ gf30get('lowAdvice').textContent=(s.capped?'В модельном примере предел 500, цель не достигнута. ':'')+'Учебное количество автоматически пересчитано при изменении цели, CGM, IOB или активности. НЕ использовать для лечения гипогликемии.';
+ return s;
+}
+function gf31UpdateAll(force=false){
+ if(gf31Updating)return;gf31Updating=true;
+ try{
+  gf30SyncIOB();const foodReview=gf31AutoFoodRefresh();gf30LowPreview();if(foodReview?.capped)gf30get('lowAdvice').textContent='ВНИМАНИЕ: расчетное учебное количество превышает предел 500; цель НЕ достигнута. Не использовать при настоящей гипогликемии. Обратитесь к индивидуальному плану лечения.';gf30HighPreview();gf31RenderStatus();gf31RefreshSuggestion(force);
+  if(!gf30State.demo){gf30get('lowResult').classList.remove('visible');gf30get('highResult').classList.remove('visible');}
+ }finally{gf31Updating=false}
+}
+// Real records are not used to produce numerical insulin or food recommendations.
+gf30get('calcDose').onclick=()=>{if(!gf30State.demo){gf31RefreshSuggestion(true);return}gf30CalcDose();gf31UpdateAll(true)};
+gf30get('calcFood').onclick=()=>{if(!gf30State.demo)return;gf31FoodAuto=true;gf30CalcFood();gf31UpdateAll()};
+gf30get('foodAmount').addEventListener('input',()=>{gf31FoodAuto=false},true);
+// All changes share ONE recalculation pass; no stale suggested test dose after editing inputs.
+for(const id of ['gf30ScenarioLow','gf30ScenarioHigh','highTarget','lowTarget','foodAmount','doseAmount','product',
+ 'lowPrevDose','lowPrevAge','highPrevDose','highPrevAge']){
+ const input=gf30get(id);if(input){input.addEventListener('input',()=>gf31UpdateAll(),true);input.addEventListener('change',()=>gf31UpdateAll(),true)}
+}
+document.querySelectorAll('.gf-approved-activity').forEach(el=>el.addEventListener('change',()=>gf31UpdateAll(),true));
+// Re-sync from main page, including changes to sickness or drug while the dialog is visible.
+window.addEventListener('message',e=>{if(e.data?.gf30==='sync')setTimeout(()=>gf31UpdateAll(),0)});
+// Show risk immediately after calculate; its inputs are the same single-source state.
+gf30get('calcDose').addEventListener('click',()=>gf31UpdateAll(true));
+const gf31OrigRead=gf30Read;
+gf30Read=function(){gf31OrigRead();gf31UpdateAll();};
+setTimeout(()=>gf31UpdateAll(),0);
+
+})();</script>
+<script>/* GlucoPapa v0.32 - contextual meal/insulin observations (NOT treatment).
+ * Evaluates entered events and recent CGM trend. No dose recommendation,
+ * no carbohydrate prescription, no forecasting or therapy change.
+ */
+(function(root){
+'use strict';
+const MIN=60000, H=60*MIN;
+const finite=x=>x!==null&&x!==undefined&&x!==''&&Number.isFinite(Number(x));
+const N=x=>Number(x);
+const rnd=(v,d=1)=>Math.round(v*10**d)/10**d;
+function mealNutrients(e){
+ const ret={carbs:finite(e.carbs)?N(e.carbs):null,fat:finite(e.fat)?N(e.fat):null,protein:finite(e.protein)?N(e.protein):null,kcal:finite(e.kcal)?N(e.kcal):null};
+ // No guessing if meal nutrients are incomplete.
+ return ret;
+}
+function cgmTrend(readings,at){
+ const points=(readings||[]).filter(x=>finite(x.ts)&&finite(x.mmol)&&N(x.ts)<=at&&N(x.ts)>=at-30*MIN).sort((a,b)=>N(a.ts)-N(b.ts));
+ if(points.length<3)return {reliable:false,reason:'мало точек CGM'};
+ const a=points[0],b=points.at(-1),span=(N(b.ts)-N(a.ts))/MIN,age=(at-N(b.ts))/MIN;
+ if(span<12||age>15)return {reliable:false,reason:age>15?'показания CGM устарели':'недостаточный интервал CGM'};
+ const slope=(N(b.mmol)-N(a.mmol))/span;
+ const label=slope<=-0.045?'снижается':slope>=0.045?'повышается':'без выраженного изменения';
+ return {reliable:true,slopePerMin:rnd(slope,3),change:rnd(N(b.mmol)-N(a.mmol),2),minutes:rnd(span,0),label,latest:rnd(N(b.mmol),2),lastAgeMin:rnd(age,1)};
+}
+function evaluate({events=[],readings=[],at=Date.now(),glucose=null,scenario='low'}={}){
+ const now=finite(at)?N(at):Date.now(),level=finite(glucose)?N(glucose):null;
+ const trend=cgmTrend(readings,now);
+ const meals=(events||[]).filter(e=>e&&e.type==='meal'&&finite(e.ts)&&N(e.ts)<=now&&now-N(e.ts)<=6*H&&!(e.status&&e.status!=='eaten')&&e.mealAction!=='planned').map(e=>({time:N(e.ts),ageMin:rnd((now-N(e.ts))/MIN,1),name:String(e.name||'Приём пищи'),...mealNutrients(e)})).sort((a,b)=>b.time-a.time);
+ const boluses=(events||[]).filter(e=>e&&e.type==='insulin'&&e.insulinType==='short'&&finite(e.ts)&&N(e.ts)<=now&&now-N(e.ts)<=5*H&&finite(e.units)&&N(e.units)>0&&!(e.status&&e.status!=='given')).map(e=>({time:N(e.ts),ageMin:rnd((now-N(e.ts))/MIN,1),units:N(e.units),drug:e.insulinName||'не указан'})).sort((a,b)=>b.time-a.time);
+ const recent=meals.filter(m=>m.ageMin<=120),late=meals.filter(m=>m.ageMin>120&&m.ageMin<=360);
+ const delayed=meals.filter(m=>m.ageMin>=90&&m.ageMin<=360&&(m.fat!==null&&m.fat>=15||m.kcal!==null&&m.fat!==null&&m.kcal>0&&(m.fat*9/m.kcal>=0.4)));
+ const dataFlags=[];const observations=[];const issues=[];
+ if(!trend.reliable)dataFlags.push('Нельзя надёжно оценить текущую тенденцию CGM: '+trend.reason+'.');
+ if(meals.some(m=>m.carbs===null||m.fat===null||m.protein===null))dataFlags.push('У некоторых блюд не заполнены углеводы, жиры или белки: ожидаемое всасывание нельзя точно оценить.');
+ if(recent.length){
+  const m=recent[0];observations.push('Еда '+rnd(m.ageMin,0)+' мин назад ('+m.name+'). Углеводы могут ещё всасываться; скорость неизвестна без состава, порции и индивидуальной истории.');
+ }
+ if(delayed.length){
+  const m=delayed[0];observations.push('Возможен отсроченный подъём после жирной еды '+rnd(m.ageMin/60,1)+' ч назад ('+m.name+'): влияние жиров/белков иногда сохраняется 3–6 ч. Это не доказательство причины текущего повышения.');
+ }
+ if(boluses.length){
+  const b=boluses[0];observations.push('Последний короткий инсулин: '+b.drug+', '+rnd(b.units,2)+' ЕД, '+rnd(b.ageMin,0)+' мин назад. Остаточное действие возможно; оценка IOB требует подтверждённой модели препарата.');
+ }
+ if(trend.reliable)observations.push('CGM за '+trend.minutes+' мин: '+trend.label+' ('+(trend.change>=0?'+':'')+trend.change+' ммоль/л). Стрелка и график не указывают однозначно причину.');
+ if(!meals.length)observations.push('За 6 часов не найдено подтверждённых записей еды. Это не означает, что ребёнок не ел.');
+ if(!boluses.length)observations.push('За 5 часов не найдено подтверждённых записей короткого инсулина. Это не доказывает отсутствие его действия.');
+ if(scenario==='low'){
+  issues.push('При фактическом низком сахаре не ожидайте всасывания предыдущей еды: действуйте по плану гипогликемии и повторно проверяйте сахар.');
+  if(level!==null&&level<3.0)issues.unshift('Очень низкая глюкоза: при тяжёлых симптомах необходимы экстренные действия по индивидуальному плану; при невозможности глотать ничего не давать через рот.');
+  if(recent.length&&boluses.length)issues.push('Сочетание недавнего болюса и недавно съеденной еды может давать раннее снижение с последующим подъёмом, но время подъёма предсказать нельзя.');
+ }else{
+  if(delayed.length)issues.push('Не интерпретируйте поздний подъём после жирной еды автоматически как нехватку инсулина.');
+  if(boluses.length)issues.push('Повторная коррекция при ещё действующем коротком инсулине повышает риск наложения доз; проверяйте IOB и индивидуальный план.');
+  if(level!==null&&level>13.9)issues.push('При выраженной гипергликемии, болезни или симптомах проверьте кетоны по назначенному плану.');
+ }
+ return {version:'0.32',type:'read_only_event_context',scenario,glucose:level,trend,meals,recentMeals:recent.length,delayedFatMeals:delayed.length,recentBoluses:boluses.length,observations,issues,dataFlags,summary:'Предыдущая еда и введённый инсулин учтены как наблюдаемые факторы, но не преобразованы в неподтверждённую дозировку или прогноз. Тестовые числовые блоки v0.31 не являются лечебными.'};
+}
+root.GFMealContext32={evaluate,cgmTrend,mealNutrients};
+if(typeof module!=='undefined'&&module.exports)module.exports=root.GFMealContext32;
+})(typeof window!=='undefined'?window:globalThis);
+
+/* v0.32: read-only clinical context annotations for approved v5 panels. */
+(function(){'use strict';
+const B=window.GFMealContext32;
+let snapshot={events:[],readings:[],at:Date.now(),profile:{},demo:true};
+const safe=s=>String(s??'').replace(/[&<>"']/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[x]));
+const panel=(side)=>{
+ let p=document.getElementById('gf32-context-'+side);if(p)return p;
+ p=document.createElement('section');p.id='gf32-context-'+side;
+ p.setAttribute('role','status');p.style.cssText='margin:13px 0;padding:12px 13px;border:1px solid #c9e1df;border-radius:14px;background:#f4faf8;color:#264e55;font-size:12px;line-height:1.5;';
+ const holder=document.querySelector('#'+side+'Pane .gf-approved-activity')?.closest('.field')||document.getElementById(side+'Pane')?.querySelector('.summary');
+ if(holder)holder.insertAdjacentElement('afterend',p);
+ return p;
+};
+function refresh(){
+ for(const [side,scenario,field] of [['low','low','gf30ScenarioLow'],['high','high','gf30ScenarioHigh']]){
+  const p=panel(side);const input=document.getElementById(field);const value=input&&input.value!==''?Number(input.value):null;
+  const r=B.evaluate({events:snapshot.events,readings:snapshot.readings,at:snapshot.at,glucose:value,scenario});
+  const observations=r.observations.slice(0,5).map(s=>'<li>'+safe(s)+'</li>').join('');
+  const flags=r.dataFlags.map(s=>'<div style="color:#986b2c">ℹ '+safe(s)+'</div>').join('');
+  const alerts=r.issues.map(s=>'<p style="margin:6px 0;color:#993e42"><strong>⚠ '+safe(s)+'</strong></p>').join('');
+  p.innerHTML='<details open><summary style="font-size:13px;font-weight:850;cursor:pointer">Еда, прошлые уколы и тенденция CGM</summary><div style="padding-top:8px"><div style="color:#5b7b81;margin-bottom:6px">Контекст по записям последних 6 часов · без подбора дозы</div><ul style="padding-left:16px;margin:6px 0">'+observations+'</ul>'+flags+alerts+'<div style="border-top:1px solid #d9e9e7;padding-top:7px;margin-top:8px;font-size:11px;color:#647e83">Время после еды и жирность — признаки возможного задержанного эффекта, а не точная скорость всасывания. Значения доз и мл в старом демонстрационном калькуляторе НЕ валидированы для ребёнка.</div></div></details>';
+ }
+}
+window.addEventListener('message',e=>{if(e.data?.gf30!=='sync')return;const v=e.data.payload||{};snapshot={events:Array.isArray(v.events)?v.events:[],readings:Array.isArray(v.readings)?v.readings:[],at:Number(v.at)||Date.now(),profile:v.profile||{},demo:!!v.demo};setTimeout(refresh,20)});
+for(const typ of ['input','change'])document.addEventListener(typ,e=>{if(e.target?.matches?.('#lowPane input,#highPane input,#lowPane select,#highPane select,.gf-approved-activity'))setTimeout(refresh,0)},true);
+setTimeout(refresh,300);
+})();
+</script>
+<script id="gp-ui-layout-v039">
+/* GFShell 0.3.9 presentation-only rearrangement. Original computational functions untouched.
+   The shared HTML calculation controls keep their original IDs and event handlers.
+   Original v5 approved asset is preserved separately and unchanged. */
+(function () {
+  function moveHint(field, dest) {
+    const hint=field && field.querySelector('.smallhint');
+    if (hint) { dest.appendChild(hint); }
+  }
+  function makeTail() {
+    const details=document.createElement('details');
+    details.className='gp-reference-tail';
+    const label=document.createElement('summary');
+    label.textContent='Справочная информация и подробный расчёт';
+    const body=document.createElement('div');
+    body.className='gp-reference-content';
+    details.append(label,body);return {details,body};
+  }
+  function applyLow() {
+    const pane=document.getElementById('lowPane');if(!pane)return;
+    const items=Array.from(pane.children),iob=items.find(x=>x.classList.contains('iob-card'));
+    const activity=items.find(x=>x.querySelector('.gf-approved-activity'));
+    const product=items.find(x=>x.querySelector('#product'));
+    const amount=items.find(x=>x.querySelector('#foodAmount'));
+    const formula=document.getElementById('lowFormula');
+    const caution=items.find(x=>x.classList.contains('mini'));
+    const {details,body}=makeTail();
+    moveHint(activity,body);moveHint(product,body);moveHint(amount,body);
+    if(iob)pane.appendChild(iob); // after the product and result, not before activity
+    if(formula)body.appendChild(formula);
+    pane.appendChild(details);
+    if(caution)pane.appendChild(caution);
+  }
+  function applyHigh() {
+    const pane=document.getElementById('highPane');if(!pane)return;
+    const items=Array.from(pane.children),iob=items.find(x=>x.classList.contains('iob-card'));
+    const activity=items.find(x=>x.querySelector('.gf-approved-activity'));
+    const sick=document.getElementById('sickFactorHigh');
+    const calcExplanation=sick?.nextElementSibling;
+    const formula=document.getElementById('highFormula');
+    const caution=items.find(x=>x.classList.contains('mini'));
+    const {details,body}=makeTail();
+    moveHint(activity,body);
+    // Keep #sickFactorHigh directly followed by its .field so existing dynamic
+    // text updates via '#sickFactorHigh + .field .smallhint' remain intact.
+    if(sick)body.appendChild(sick);
+    if(calcExplanation && calcExplanation.classList.contains('field'))body.appendChild(calcExplanation);
+    if(formula)body.appendChild(formula);
+    const heading=document.createElement('div');heading.className='field gp-calc-heading';
+    const headingLabel=document.createElement('label');headingLabel.textContent='Расчёт дозы по планируемой цели';
+    heading.appendChild(headingLabel);
+    if(document.getElementById('calcDose'))pane.insertBefore(heading,document.getElementById('calcDose'));
+    if(iob)pane.appendChild(iob);
+    pane.appendChild(details);
+    if(caution)pane.appendChild(caution);
+  }
+  applyLow();applyHigh();
+})();
+</script>
+<style id="gp-ui-layout-v039-css">
+.gp-reference-tail{margin:15px 0 4px;border:1px solid #dbe8e8;border-radius:13px;background:#f8fbfa;padding:12px 13px;}
+.gp-reference-tail>summary{cursor:pointer;color:#32716f;font-size:12px;font-weight:780;list-style-position:inside}
+.gp-reference-content{padding:9px 1px 1px;color:#648084;}
+.gp-reference-content .smallhint,.gp-reference-content .v5-notice{font-size:11px;line-height:1.6;margin:8px 0}
+.gp-reference-content .formula-box{background:#fff;border-radius:10px;padding:12px;margin:9px 0;border:1px solid #e1ebea;}
+#lowPane>.iob-card,#highPane>.iob-card{margin-top:19px}
+#lowPane>.field,#highPane>.field{margin-top:13px}
+#lowPane>button#calcFood{display:block;margin:13px 0 5px;width:100%}
+#lowPane>.mini,#highPane>.mini{margin:16px 0 5px}
+</style>
+
+<!-- Integration-only startup (not part of the approved source). -->
+<style id="gp-direct-shell-style">.app{display:none!important}</style>
+<script id="gp-direct-shell-startup">
+(function(){
+  'use strict';
+  function openDirect(){
+    try {
+      const directButton=document.getElementById('low'==='low'?'openLow':'openHigh');
+      if(!directButton)throw new Error('MISSING_DIALOG_BUTTON');
+      directButton.click();
+      if (!document.getElementById('overlay')?.classList.contains('open') || document.getElementById('lowPane')?.hidden) {
+        throw new Error('DIRECT_DIALOG_NOT_OPEN');
+      }
+      document.documentElement.dataset.gpDirectScreen='low';
+    } catch (error) {
+      const warning=document.createElement('div');
+      warning.setAttribute('role','alert');warning.dataset.error=String(error);
+      warning.style.cssText='padding:24px;background:#fff;color:#9a2a37;font:16px sans-serif';
+      warning.textContent='Не удалось открыть форму. Закройте экран и повторите попытку.';
+      document.body.appendChild(warning);
+      parent.postMessage({gf28:'direct-route-error',kind:'low',error:String(error)},'*');
+    }
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',openDirect,{once:true});
+  else openDirect();
+})();
+</script>
+</body></html>

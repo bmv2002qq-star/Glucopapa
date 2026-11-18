@@ -1,0 +1,332 @@
+<!doctype html><html lang="ru"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>ГлюкоПапа — анализ мест уколов · v0.1.1</title>
+<style>
+:root{--ink:#153442;--muted:#5a7180;--border:#d7e4eb;--blue:#14799d;--bg:#f3f8fb;--white:#fff;--teal:#117a73}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,'Segoe UI',Arial,sans-serif;color:var(--ink);background:var(--bg);line-height:1.42}
+main{max-width:1060px;padding:16px 15px 44px;margin:auto}header{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+h1{margin:0;font-size:clamp(20px,4vw,29px)}h2{margin:0 0 12px;font-size:18px}h3{margin:0 0 9px;font-size:16px}
+.subtitle{font-size:12px;color:var(--muted);margin:4px 0 0}.flag{background:#e6f2f6;color:#12617a;border-radius:99px;padding:7px 13px;font-size:12px;font-weight:750}
+.notice{padding:13px 15px;border-left:4px solid #d48d29;background:#fff5dd;border-radius:9px;color:#755b1f;margin:10px 0 16px;font-size:13px}
+.panel{background:var(--white);border:1px solid var(--border);border-radius:16px;padding:18px;margin-top:13px;box-shadow:0 3px 20px #2755740c}
+.control-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}label{display:flex;flex-direction:column;min-width:0;gap:7px;font-size:12px;color:var(--muted);font-weight:700}select{font:inherit;font-size:14px;min-width:0;width:100%;border:1px solid #a8c6d2;padding:10px;border-radius:9px;min-height:42px;background:#fff;color:var(--ink)}
+.status{display:inline-block;background:#e6f5ed;color:#06705f;padding:6px 9px;font-size:12px;border-radius:8px;font-weight:750;margin:13px 0 4px}.status.sick{background:#fce8ed;color:#b5264a}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.metric{padding:13px 10px;border:1px solid #dcebf0;border-radius:11px;background:#f9fcfe;text-align:center}
+.metric strong{display:block;font-size:clamp(20px,3vw,29px)}.metric span{font-size:11px;color:var(--muted)}
+.sites{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px}.site-card{border:1px solid var(--border);padding:13px;border-radius:12px;background:#fbfdff}
+.site-card.selected{border:2px solid #0d8c83;background:#f3fcfa;padding:12px}.site-card .value{font-size:24px;font-weight:800;color:#0c6470}.site-card .value.unavailable{font-size:15px;color:#855a22}
+.site-card p{font-size:11px;color:var(--muted);min-height:46px;margin:5px 0}.site-card .muted{font-size:11px;color:#537280}
+.compare{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px}.comparison{display:flex;flex-direction:column;gap:5px;border:1px solid var(--border);border-radius:12px;padding:13px}
+.comparison b{font-size:13px}.difference{font-size:20px;font-weight:800;color:#206a83}.comparison small{font-size:11px;color:var(--muted);line-height:1.5}
+.explain{font-size:13px;color:var(--muted)}.lowline{border-top:1px dashed var(--border);padding-top:10px;margin-top:12px;font-size:12px;color:#5b7380}.no-treatment{border-radius:9px;border:1px solid #b5cbd5;background:#f1f7f9;padding:12px;font-size:12px;margin-top:13px}
+footer{font-size:12px;color:#627985;margin-top:20px}.legend{padding:10px 0;font-size:12px;color:var(--muted)}
+@media(max-width:740px){.sites,.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.control-grid{grid-template-columns:1fr}.compare{grid-template-columns:1fr}.site-card p{min-height:0}}
+@media(max-width:360px){main{padding:10px 8px 32px}.panel{padding:12px}.metric{padding:10px 5px}.site-card{padding:10px}.site-card.selected{padding:9px}.site-card .value{font-size:20px}}
+</style></head><body><main>
+<header><div><h1>ГлюкоПапа <span style="color:var(--blue)">/ Анализ инъекций</span></h1><p class="subtitle">GFInjectionAnalytics v0.1.1 · отдельный аналитический модуль · 90 дней</p></div><span class="flag">Автономное учебное демо</span></header>
+<div class="notice"><strong>Исследовательская статистика, не калькулятор инсулина.</strong> Здесь используются исключительно придуманные CGM-показания и уколы. Время до наблюдаемого падения CGM <strong>не равно</strong> времени начала действия инсулина. Модуль не назначает дозы и не меняет интервал «укол — еда».</div>
+<section class="panel"><h2>Параметры сравнения</h2>
+<div class="control-grid"><label>Наблюдаемое состояние ребёнка <select id="condition"><option value="usual">Обычный день</option><option value="ill">Болеет</option><option value="active">Повышенная активность</option></select></label>
+<label>С чем сравнить другие места <select id="reference"><option value="abdomen">Живот</option><option value="arm">Плечо</option><option value="thigh">Бедро</option><option value="buttock">Ягодица</option></select></label>
+<label>Источник данных <select id="source"><option value="synthetic">Учебная история (вымышленная)</option><option value="empty">Без данных</option></select></label></div>
+<div id="stateBadge" class="status">Режим: обычный день</div><p id="viewState" class="explain"></p></section>
+<section class="panel"><h2>Качество и период истории</h2><div class="metrics"><div class="metric"><strong id="total">—</strong><span>Всего инъекций в учебной истории</span></div><div class="metric"><strong id="inWindow">—</strong><span>В текущем окне 90 дней</span></div><div class="metric"><strong id="archived">—</strong><span>Старше 90 дней, архив</span></div><div class="metric"><strong id="eligible">—</strong><span>Пригодно в данном контексте</span></div></div>
+<p id="windowInfo" class="legend"></p><p id="quality" class="lowline"></p></section>
+<section class="panel"><h2>Наблюдения по местам инъекций</h2><p class="explain">Показывается взвешенная по свежести медиана времени до первого устойчивого снижения CGM, обнаруженного эвристикой. Если данных недостаточно, число скрыто. Это не индивидуальная кинетика инсулина и не инструкция, когда вводить препарат.</p>
+<div id="siteCards" class="sites"></div></section>
+<section class="panel"><h2>Сравнение похожих ситуаций</h2><p class="explain">Сопоставляются только случаи с проверенными временными метками, документированными периодами болезни и активности, без близких повторных инъекций и с непрерывной CGM. Условия еды, дозы, IOB и настройки должны быть сопоставимы. Если хороших совпадений мало — результата не будет.</p>
+<div id="compareRows" class="compare"></div><div class="no-treatment">Различия ниже показаны <b>только на специально сгенерированной истории</b>. Они не должны переноситься на ребёнка и не используются для автоматического изменения дозы или времени укола.</div></section>
+<section class="panel"><h2>Что делает программа в реальном проекте</h2>
+<p class="explain"><strong>GFStorage</strong> должен хранить историю инъекций, CGM, еды, болезни и активности после расширения его контракта. Аналитический модуль читает разрешённый снимок, использует только события последних 90 дней и помечает старые как архивные. Сами старые события не удаляются.</p>
+<p class="explain">Когда в GFStorage появятся структурированные место укола и контекст, можно будет анализировать реальные данные. В текущем GFStorage v0.2.0 этих полей и полной метаинформации о CGM ещё нет. Без них модуль не будет делать персональных выводов.</p></section>
+<footer>Отдельный модуль v0.1.1. «Питание» v0.4.6 и GFMealCalc не менялись. Данные демоверсии вымышлены и не сохраняются в браузере.</footer>
+</main><script>
+/* ГлюкоПапа · GFInjectionAnalytics v0.1.1 — исследовательский анализатор.
+ * ВАЖНО: описательная статистика CGM НЕ равна началу действия инсулина,
+ * не вычисляет дозы и интервалы до еды. История никогда не удаляется.
+ * Все данные поступают через снимок GFStorage; внешние модули не вызываются.
+ */
+(function(root,factory){'use strict';const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;if(root)root.GFInjectionAnalytics=api;})(typeof globalThis!=='undefined'?globalThis:this,function(){
+'use strict';
+const VERSION='0.1.1',SCHEMA='GFInjectionAnalyticsInput.v1',DAY=86400000,MINUTE=60000;
+const WINDOW_DAYS=90,CGM_WINDOW_MIN=180,MIN_SAMPLES=8,MIN_DAYS=5,MIN_MATCHED_PAIRS=6;
+const REGIONS=Object.freeze(['abdomen','arm','thigh','buttock']);
+const SITE_LABEL=Object.freeze({abdomen:'Живот',arm:'Плечо',thigh:'Бедро',buttock:'Ягодица'});
+const validTime=x=>(typeof x==='number'&&Number.isSafeInteger(x)&&Math.abs(x)<8.64e15?x:(typeof x==='string'&&Number.isFinite(Date.parse(x))?Date.parse(x):NaN));
+const number=x=>typeof x==='number'&&Number.isFinite(x);
+const rnd1=n=>Math.round(n*10)/10;
+const med=v=>{if(!v.length)return null;const a=v.slice().sort((x,y)=>x-y),m=a.length>>1;return a.length%2?a[m]:(a[m-1]+a[m])/2;};
+const quantile=(v,q)=>{if(!v.length)return null;const a=v.slice().sort((x,y)=>x-y),p=(a.length-1)*q,l=Math.floor(p),h=Math.ceil(p);return a[l]+(a[h]-a[l])*(p-l);};
+function weightedMedian(values,weights){if(!values.length)return null;const a=values.map((x,i)=>[x,weights[i]]).sort((x,y)=>x[0]-y[0]),sum=weights.reduce((x,y)=>x+y,0);let z=0;for(const [v,w] of a){z+=w;if(z>=sum/2)return v;}return a.at(-1)[0];}
+const groupTime=h=>h<11?'morning':h<17?'day':'evening';
+const dayKey=ts=>new Date(ts).toISOString().slice(0,10);
+const count=(obj,key)=>{obj[key]=(obj[key]||0)+1;};
+function normalizedInterval(v){if(!v||typeof v!=='object')return null;const start=validTime(v.start),end=validTime(v.end);if(!Number.isFinite(start)||!Number.isFinite(end)||end<start||end-start>30*DAY||typeof v.id!=='string'||!v.id.trim())return null;return {id:v.id.trim(),start,end};}
+function normalizeShot(raw){
+ if(!raw||typeof raw.id!=='string'||!raw.id.trim()||!['rinfast','levemir'].includes(raw.insulinId))return null;
+ const ts=validTime(raw.administeredAt),c=raw.context||{};
+ if(!Number.isFinite(ts)||!number(raw.units)||raw.units<=0||raw.units>200)return null;
+ const region=REGIONS.includes(raw.site?.region)?raw.site.region:null;
+ const offset=Number.isInteger(c.utcOffsetMinutes)&&c.utcOffsetMinutes>=-720&&c.utcOffsetMinutes<=840&&c.utcOffsetMinutes%15===0?c.utcOffsetMinutes:null;
+ const localHour=Number.isInteger(c.localHour)&&c.localHour>=0&&c.localHour<=23?c.localHour:null;
+ const actualHour=offset!==null?new Date(ts+offset*MINUTE).getUTCHours():null;
+ const rawRevision=(typeof c.settingRevision==='string'||Number.isSafeInteger(c.settingRevision))?String(c.settingRevision).trim():'';
+ const illness=['no','yes'].includes(c.illness)?c.illness:null;
+ const activity=['low','usual','high'].includes(c.activity)?c.activity:null;
+ const mealGroup=['with_meal','without_meal'].includes(c.mealGroup)?c.mealGroup:null;
+ return {id:raw.id.trim(),insulinId:raw.insulinId,ts,units:raw.units,region,side:['left','right'].includes(raw.site?.side)?raw.site.side:null,
+   illness,activity,carbsG:number(c.carbsG)&&c.carbsG>=0&&c.carbsG<=400?c.carbsG:null,
+   iobU:number(c.iobU)&&c.iobU>=0&&c.iobU<=100?c.iobU:null,
+   mealLagMinutes:number(c.mealLagMinutes)&&c.mealLagMinutes>=-60&&c.mealLagMinutes<=180?c.mealLagMinutes:null,
+   mealGroup,settingRevision:rawRevision||null,localHour,
+   utcOffsetMinutes:offset,timeConsistent:localHour!==null&&offset!==null&&localHour===actualHour,
+   illnessPeriod:normalizedInterval(c.illnessPeriod),activityPeriod:normalizedInterval(c.activityPeriod)};
+}
+function sameShot(a,b){return JSON.stringify(a)===JSON.stringify(b);}
+function normalizeCgm(cgm,expectedSourceId){
+ const readings=new Map(),conflicts=new Set(),invalidTimes=new Set();
+ for(const x of cgm){if(!x||typeof x!=='object')continue;const ts=validTime(x.ts);if(!Number.isFinite(ts))continue;
+   if(x.valid===false||x.qualityFlag==='invalid'||(typeof x.sourceDeviceId==='string'&&expectedSourceId&&x.sourceDeviceId!==expectedSourceId)){invalidTimes.add(ts);continue;}
+   if(!number(x.mmol)||x.mmol<1.5||x.mmol>30){invalidTimes.add(ts);continue;}
+   if(readings.has(ts)&&readings.get(ts)!==x.mmol){conflicts.add(ts);continue;}
+   readings.set(ts,x.mmol);
+ }
+ for(const ts of [...conflicts,...invalidTimes])readings.delete(ts);
+ return {readings:[...readings].sort((a,b)=>a[0]-b[0]).map(([ts,mmol])=>({ts,mmol})),conflicts,invalidTimes};
+}
+function normalizeInput(input){
+ if(!input||typeof input!=='object'||input.schema!==SCHEMA)throw Error('Ожидался '+SCHEMA);
+ if(!Array.isArray(input.injections)||!Array.isArray(input.cgm))throw Error('Нужны массивы injections и cgm');
+ if(input.injections.length>50000||input.cgm.length>500000)throw Error('Слишком большой снимок');
+ const byId=new Map(),quality={invalidInjections:0,conflictingIds:0,repeatedIds:0,ambiguousSameMoment:0,cgmConflicts:0,invalidCgmPoints:0};
+ for(const raw of input.injections){const s=normalizeShot(raw);if(!s){quality.invalidInjections++;if(raw&&typeof raw.id==='string'&&raw.id.trim()){const id=raw.id.trim();if(!byId.has(id))byId.set(id,[]);byId.get(id).push(null);}continue;}
+   if(!byId.has(s.id))byId.set(s.id,[]);byId.get(s.id).push(s);
+ }
+ const shots=[];
+ for(const entries of byId.values()){if(entries.some(x=>x===null)||entries.some(x=>!sameShot(x,entries[0]))){quality.conflictingIds++;continue;}if(entries.length>1)quality.repeatedIds+=entries.length-1;shots.push(entries[0]);}
+ // Два разных ID, совпадающих по моменту/типу/дозе/месту, не считаем независимыми.
+ // Остальные одновременные уколы обнаруживаются как перекрывающиеся эпизоды ниже.
+ const keys=new Map();for(const s of shots){const k=[s.ts,s.insulinId,s.units,s.region,s.side].join('|');if(!keys.has(k))keys.set(k,[]);keys.get(k).push(s);}
+ const quarantine=new Set();for(const v of keys.values())if(v.length>1){quality.ambiguousSameMoment+=v.length;for(const s of v)quarantine.add(s.id);}
+ shots.sort((a,b)=>a.ts-b.ts||a.id.localeCompare(b.id));
+ const m=input.cgmMetadata||{};const sourceId=typeof m.sourceDeviceId==='string'&&m.sourceDeviceId.trim()?m.sourceDeviceId.trim():null;
+ const normCgm=normalizeCgm(input.cgm,sourceId);quality.cgmConflicts=normCgm.conflicts.size;quality.invalidCgmPoints=normCgm.invalidTimes.size;
+ const badTimestamps=[...new Set([...normCgm.conflicts,...normCgm.invalidTimes])].sort((a,b)=>a-b);
+ const sourceType=['synthetic','device_recorded'].includes(m.sourceType)?m.sourceType:'unknown';
+ const samplingMinutes=[5,10].includes(m.samplingMinutes)?m.samplingMinutes:null;
+ const qualityScore=number(m.qualityScore)&&m.qualityScore>=0&&m.qualityScore<=1?m.qualityScore:null;
+ const provenanceComplete=!!sourceId&&sourceType!=='unknown'&&samplingMinutes!==null&&qualityScore!==null&&qualityScore>=0.8;
+ return {shots,cgm:normCgm.readings,badTimestamps,quarantine,quality,meta:{sourceDeviceId:sourceId,sourceType,samplingMinutes,qualityScore,provenanceComplete},revision:Number.isInteger(input.revision)?input.revision:null};
+}
+function lowerBound(a,t){let lo=0,hi=a.length;while(lo<hi){const m=(lo+hi)>>1;if(a[m].ts<t)lo=m+1;else hi=m;}return lo;}
+function lowerBoundNumbers(a,t){let lo=0,hi=a.length;while(lo<hi){const m=(lo+hi)>>1;if(a[m]<t)lo=m+1;else hi=m;}return lo;}
+function linearSlope(points){if(points.length<3)return null;const t0=points[0].ts;let sx=0,sy=0,sxy=0,sxx=0,n=points.length;for(const p of points){const x=(p.ts-t0)/MINUTE;sx+=x;sy+=p.mmol;sxx+=x*x;sxy+=x*p.mmol;}const den=n*sxx-sx*sx;return !den?null:(n*sxy-sx*sy)/den;}
+function extractObservation(shot,data){
+ const t=shot.ts,a=lowerBound(data.cgm,t-23*MINUTE),b=lowerBound(data.cgm,t+(CGM_WINDOW_MIN+1)*MINUTE),series=data.cgm.slice(a,b);
+ const badIndex=lowerBoundNumbers(data.badTimestamps,t-22*MINUTE);
+ if(badIndex<data.badTimestamps.length&&data.badTimestamps[badIndex]<=t+CGM_WINDOW_MIN*MINUTE)return {ok:false,reason:'cgm_quality_conflict'};
+ const pre=series.filter(p=>p.ts>=t-22*MINUTE&&p.ts<=t),at=pre.filter(p=>p.ts>=t-11*MINUTE);
+ if(pre.length<3||!at.length||t-pre.at(-1).ts>10*MINUTE)return {ok:false,reason:'no_baseline'};
+ const priorSlope=linearSlope(pre),glucose=med(at.map(p=>p.mmol));
+ if(priorSlope===null)return {ok:false,reason:'no_baseline'};
+ if(priorSlope<-0.012)return {ok:false,reason:'already_falling'};
+ if(Math.abs(priorSlope)>0.1)return {ok:false,reason:'unstable_baseline'};
+ const post=series.filter(p=>p.ts>=t&&p.ts<=t+CGM_WINDOW_MIN*MINUTE);
+ if(!post.length)return {ok:false,reason:'cgm_gap'};
+ const firstAfter=post.find(p=>p.ts>t)||post[0];
+ if(firstAfter.ts-pre.at(-1).ts>15*MINUTE||post[0].ts-t>10*MINUTE)return {ok:false,reason:'cgm_gap_around_injection'};
+ const gaps=[];for(let i=1;i<post.length;i++)gaps.push((post[i].ts-post[i-1].ts)/MINUTE);
+ const observedCadence=med(gaps);
+ if(!number(observedCadence)||Math.abs(observedCadence-data.meta.samplingMinutes)>1)return {ok:false,reason:'cgm_cadence_mismatch'};
+ if(Math.max(...gaps)>15)return {ok:false,reason:'cgm_gap'};
+ if(post.length<Math.floor(160/data.meta.samplingMinutes)||post.at(-1).ts-post[0].ts<160*MINUTE)return {ok:false,reason:'cgm_gap'};
+ if(series.some(p=>p.mmol<3.9))return {ok:false,reason:'low_glucose_context'};
+ let onset=null;
+ for(let i=0;i<post.length;i++){
+   const p=post[i],minute=(p.ts-t)/MINUTE;if(minute<25||minute>175)continue;
+   const left=lowerBound(post,p.ts-20*MINUTE),pts=post.slice(left,i+1);
+   if(pts.length<(data.meta.samplingMinutes===10?3:4)||pts.at(-1).ts-pts[0].ts<14*MINUTE)continue;
+   const slope=linearSlope(pts);
+   if(slope!==null&&slope<=-0.015&&pts[0].mmol-pts.at(-1).mmol>=0.30&&p.mmol<=glucose-0.45){onset=Math.round(minute);break;}
+ }
+ if(onset===null)return {ok:false,reason:'no_decline_observed'};
+ return {ok:true,firstDeclineMinutes:onset,glucoseAtShot:glucose,baselineSlope:priorSlope};
+}
+function quality(s){
+ if(!s.region||!s.illness||!s.activity||s.carbsG===null||s.iobU===null||s.mealLagMinutes===null||!s.mealGroup||!s.settingRevision||!s.timeConsistent)return false;
+ if(s.mealGroup==='without_meal'&&s.carbsG>5)return false;
+ if(s.illness==='yes'&&(!s.illnessPeriod||s.ts<s.illnessPeriod.start||s.ts>s.illnessPeriod.end))return false;
+ if(s.illness==='no'&&s.illnessPeriod&&s.ts>=s.illnessPeriod.start&&s.ts<=s.illnessPeriod.end)return false;
+ if(s.activity!=='usual'&&(!s.activityPeriod||s.ts<s.activityPeriod.start||s.ts>s.activityPeriod.end))return false;
+ return true;
+}
+function compatible(a,b){return a.insulinId===b.insulinId&&a.illness===b.illness&&a.activity===b.activity&&a.mealGroup===b.mealGroup&&a.settingRevision===b.settingRevision&&a.phase===b.phase&&
+ Math.abs(a.units-b.units)<=0.5&&Math.abs(a.carbsG-b.carbsG)<=12&&Math.abs(a.iobU-b.iobU)<=0.5&&
+ Math.abs(a.mealLagMinutes-b.mealLagMinutes)<=15&&Math.abs(a.glucoseAtShot-b.glucoseAtShot)<=1.5&&Math.abs(a.baselineSlope-b.baselineSlope)<=0.03;}
+function pairDistance(a,b){return Math.abs(a.units-b.units)*3+Math.abs(a.carbsG-b.carbsG)/10+Math.abs(a.iobU-b.iobU)*2+Math.abs(a.glucoseAtShot-b.glucoseAtShot)+Math.abs(a.mealLagMinutes-b.mealLagMinutes)/15;}
+function bucketKey(s){return [s.insulinId,s.illness,s.activity,s.mealGroup,s.settingRevision,s.phase].join('|');}
+// O(n*128), а не полное O(n*m). Недостающие пары безопасно уменьшают статистическую достаточность.
+function greedyPair(a,b){
+ const buckets=new Map();for(const s of b){const key=bucketKey(s);if(!buckets.has(key))buckets.set(key,[]);buckets.get(key).push(s);}
+ for(const arr of buckets.values())arr.sort((x,y)=>x.glucoseAtShot-y.glucoseAtShot||x.ts-y.ts||x.id.localeCompare(y.id));
+ const used=new Set(),out=[];
+ const sorted=a.slice().sort((x,y)=>x.ts-y.ts||x.id.localeCompare(y.id));
+ for(const s of sorted){const arr=buckets.get(bucketKey(s));if(!arr||!arr.length)continue;
+   let lo=0,hi=arr.length;while(lo<hi){let mid=(lo+hi)>>1;if(arr[mid].glucoseAtShot<s.glucoseAtShot)lo=mid+1;else hi=mid;}
+   let best=null;const begin=Math.max(0,lo-64),end=Math.min(arr.length,lo+64);
+   for(let i=begin;i<end;i++){const q=arr[i];if(used.has(q.id)||Math.abs(s.ts-q.ts)<=DAY/2||!compatible(s,q))continue;
+     const d=pairDistance(s,q);if(!best||d<best.d||(d===best.d&&(q.ts<best.q.ts||(q.ts===best.q.ts&&q.id<best.q.id))))best={q,d};
+   }
+   if(best){used.add(best.q.id);out.push([s,best.q]);}
+ }
+ return out;
+}
+function intervalBootstrap(values,seed=53217){if(values.length<2)return null;let x=seed>>>0;const next=()=>{x=(1664525*x+1013904223)>>>0;return x/4294967296;};const e=[];for(let i=0;i<500;i++){const v=[];for(let j=0;j<values.length;j++)v.push(values[Math.floor(next()*values.length)]);e.push(med(v));}return [rnd1(quantile(e,0.05)),rnd1(quantile(e,0.95))];}
+function analyze(input,opts={}){
+ const asOf=validTime(opts.asOf??Date.now());if(!Number.isFinite(asOf))throw Error('Неверное время анализа');
+ const referenceRegion=REGIONS.includes(opts.referenceRegion)?opts.referenceRegion:'abdomen';
+ const illness=['no','yes'].includes(opts.illness)?opts.illness:'no';
+ const activity=['low','usual','high'].includes(opts.activity)?opts.activity:'usual';
+ const data=normalizeInput(input),boundary=asOf-WINDOW_DAYS*DAY;
+ const visibleCgm=data.cgm.filter(p=>p.ts<=asOf);
+ const available={...data,cgm:visibleCgm};
+ const status={total:data.shots.length,archived:0,future:0,basalExcluded:0,metadataMissing:0,outsideContext:0,cgmMissingOrUnclear:0,eligible:0,reasonCounts:{},duplicateAndIntegrity:data.quality,overlappingEpisodes:0};
+ const recent=data.shots.filter(x=>x.ts>=boundary&&x.ts<=asOf),rapid=recent.filter(x=>x.insulinId==='rinfast');
+ const overload=rapid.length>1500;
+ if(overload)count(status.reasonCounts,'history_over_limit');
+ const samples=[];
+ for(const s of data.shots){
+   if(s.ts<boundary){status.archived++;continue;}if(s.ts>asOf){status.future++;continue;}
+   if(s.insulinId!=='rinfast'){status.basalExcluded++;continue;}
+   if(data.quarantine.has(s.id)){status.metadataMissing++;count(status.reasonCounts,'ambiguous_duplicate_event');continue;}
+   if(!quality(s)){status.metadataMissing++;count(status.reasonCounts,'metadata_inconsistent');continue;}
+   if(s.illness!==illness||s.activity!==activity){status.outsideContext++;continue;}
+   if(overload){status.metadataMissing++;continue;}
+   if(!data.meta.provenanceComplete){status.cgmMissingOrUnclear++;count(status.reasonCounts,'cgm_provenance_missing');continue;}
+   // Не приписываем эффект одному уколу при другом быстром инсулине:
+   // предыдущие 5 ч (возможный остаточный эффект) или следующие 3 ч наблюдения.
+   const pos=lowerBound(rapid,s.ts-300*MINUTE);
+   let overlap=false;for(let i=pos;i<rapid.length&&rapid[i].ts<=s.ts+180*MINUTE;i++){if(rapid[i].id!==s.id){overlap=true;break;}}
+   if(overlap){status.overlappingEpisodes++;count(status.reasonCounts,'overlapping_rapid_injection');continue;}
+   const x=extractObservation(s,available);
+   if(!x.ok){status.cgmMissingOrUnclear++;count(status.reasonCounts,x.reason);continue;}
+   samples.push({...s,...x,phase:groupTime(s.localHour),ageDays:Math.max(0,(asOf-s.ts)/DAY)});
+ }
+ status.eligible=samples.length;
+ const bySite=Object.fromEntries(REGIONS.map(k=>[k,samples.filter(x=>x.region===k)]));
+ const siteStats=REGIONS.map(region=>{const group=bySite[region],uniqueDays=new Set(group.map(x=>dayKey(x.ts))).size,weights=group.map(x=>Math.pow(.5,x.ageDays/45));
+  const sufficient=group.length>=MIN_SAMPLES&&uniqueDays>=MIN_DAYS;
+  return {region,label:SITE_LABEL[region],count:group.length,days:uniqueDays,medianObservedMinutes:group.length?med(group.map(x=>x.firstDeclineMinutes)):null,
+    recencyWeightedMinutes:group.length?weightedMedian(group.map(x=>x.firstDeclineMinutes),weights):null,sufficient};});
+ const comparisons=REGIONS.filter(x=>x!==referenceRegion).map(region=>{
+   const p=greedyPair(bySite[referenceRegion],bySite[region]);
+   const dr=new Set(p.map(x=>dayKey(x[0].ts))).size,db=new Set(p.map(x=>dayKey(x[1].ts))).size;
+   const other=siteStats.find(x=>x.region===region),ref=siteStats.find(x=>x.region===referenceRegion);
+   const sufficient=ref.sufficient&&other.sufficient&&p.length>=MIN_MATCHED_PAIRS&&dr>=MIN_DAYS&&db>=MIN_DAYS;
+   const values=p.map(([a,b])=>b.firstDeclineMinutes-a.firstDeclineMinutes),weights=p.map(([a,b])=>Math.pow(.5,Math.max(a.ageDays,b.ageDays)/45));
+   return {referenceRegion,region,label:SITE_LABEL[region],matchedPairs:p.length,sufficient,observedDifferenceMinutes:sufficient?rnd1(weightedMedian(values,weights)):null,
+     exploratoryInterval90:sufficient?intervalBootstrap(values):null,note:sufficient?'Только описание CGM, не начало действия инсулина':'Недостаточно надёжных сопоставимых наблюдений'};
+ });
+ return {schema:'GFInjectionAnalyticsResult.v1',version:VERSION,analysisAt:new Date(asOf).toISOString(),referenceRegion,daysWindow:WINDOW_DAYS,
+   windowStart:new Date(boundary).toISOString(),condition:{illness,activity,illnessPeriod:'проверяется по каждой инъекции'},sourceRevision:data.revision,
+   sourceDeviceId:data.meta.sourceDeviceId,cgmSensorQuality:{status:data.meta.provenanceComplete?'metadata_complete':'unverified',type:data.meta.sourceType,
+     qualityScore:data.meta.qualityScore,samplingMinutes:data.meta.samplingMinutes,qualityMeasuresAreNotClinicalValidation:true},
+   totals:status,siteStats,comparisons,
+   limitations:['Снижение CGM не устанавливает начало действия инсулина','Косвенная статистика не доказывает причину изменения CGM',
+   'Периоды болезни, активность и близкие уколы требуют достоверных меток','Даже достаточные числовые наблюдения не предназначены для изменения дозы или времени','История старше 90 дней исключается, но не удаляется'],
+   automatedDoseOrTimingChange:false,safeForDoseOrTiming:false};
+}
+function fromGFStoragePort(port){
+ if(!port||typeof port.getSnapshot!=='function')throw Error('Нужен разрешённый порт GFStorage');
+ const snap=port.getSnapshot();if(!snap||!Array.isArray(snap.events)||!Array.isArray(snap.cgm))throw Error('GFStorage не предоставил events/cgm');
+ const shots=snap.events.filter(x=>x&&x.type==='insulin_injection'&&x.status==='confirmed').map(x=>({id:x.id,insulinId:x.insulinId,administeredAt:x.administeredAt,units:x.units,site:x.injectionSite||null,context:x.injectionContext||null}));
+ // Никаких предположений о provenance: GFStorage v0.2.0 не передаёт cgmMetadata.
+ const m=snap.cgmMetadata||null;
+ return {schema:SCHEMA,revision:snap.revision,injections:shots,cgm:snap.cgm.map(x=>({ts:x.ts,mmol:x.mmol,valid:x.valid,qualityFlag:x.qualityFlag,sourceDeviceId:x.sourceDeviceId})),...(m?{cgmMetadata:m}:{})};
+}
+return Object.freeze({VERSION,SCHEMA,WINDOW_DAYS,REGIONS,SITE_LABEL,analyze,fromGFStoragePort});
+});
+
+</script><script>
+/* Исключительно вымышленные учебные события; НЕ данные ребёнка. */
+(function(root,factory){'use strict';const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;if(root)root.GFInjectionAnalyticsSynthetic=api;})(typeof globalThis!=='undefined'?globalThis:this,function(){
+'use strict';
+const AS_OF='2026-11-13T15:00:00.000Z';
+const DAY=86400000;
+const REGIONS=['abdomen','arm','thigh','buttock'];
+function generate(){let shots=[],cgm=[];const as=Date.parse(AS_OF);
+  for(let n=1;n<=116;n++){
+    if(n>86 && n<104)continue; // специально пробел в истории
+    const region=REGIONS[(n-1)%4],sick=n%13===0, active=n%11===0;
+    const t=as-n*DAY-(7*60)*60000;  // 08:00 по UTC, одинаковая фаза суток
+    const lag={abdomen:47,arm:70,thigh:92,buttock:80}[region]+(sick?18:0)+(active?-10:0)+(n%5-2)*3;
+    const baseline=8.4+(n%5-2)*0.09;
+    const carbs=34+(n%5-2)*2;
+    shots.push({id:'synthetic-'+String(n).padStart(3,'0'),insulinId:'rinfast',administeredAt:new Date(t).toISOString(),units:1.5+(n%4===0?0.5:0),
+      site:{region,side:n%2?'left':'right'},context:{illness:sick?'yes':'no',activity:active?'high':'usual',carbsG:carbs,iobU:n%4===0?0.2:0,
+      mealLagMinutes:12+(n%3-1)*3,localHour:11,utcOffsetMinutes:180,mealGroup:'with_meal',settingRevision:'synthetic-settings-1',
+      ...(sick?{illnessPeriod:{id:'sick-'+n,start:new Date(t-DAY).toISOString(),end:new Date(t+DAY).toISOString()}}:{}),
+      ...(active?{activityPeriod:{id:'activity-'+n,start:new Date(t-2*60*60000).toISOString(),end:new Date(t+4*60*60000).toISOString()}}:{})}});
+    for(let m=-20;m<=180;m+=5){const diff=Math.max(0,m-lag),glucose=Math.round((baseline-diff*0.0215)*100)/100;
+      cgm.push({ts:t+m*60000,mmol:glucose});}
+  }
+  // Второй вид инсулина: хранится, но не участвует в анализе быстрого снижения CGM.
+  shots.push({id:'synthetic-basal',insulinId:'levemir',administeredAt:new Date(as-2*DAY).toISOString(),units:4,
+    site:{region:'thigh',side:'right'},context:{illness:'no',activity:'usual',carbsG:0,iobU:0,mealLagMinutes:0,localHour:18,utcOffsetMinutes:180,mealGroup:'without_meal',settingRevision:'synthetic-settings-1'}});
+  // Событие в будущем: алгоритм не принимает как состоявшийся укол.
+  shots.push({id:'synthetic-future',insulinId:'rinfast',administeredAt:new Date(as+DAY).toISOString(),units:1,
+    site:{region:'arm',side:'right'},context:{illness:'no',activity:'usual',carbsG:30,iobU:0,mealLagMinutes:10,localHour:18,utcOffsetMinutes:180,mealGroup:'with_meal',settingRevision:'synthetic-settings-1'}});
+  return {schema:'GFInjectionAnalyticsInput.v1',revision:21,injections:shots,cgm,cgmMetadata:{sourceDeviceId:'DEMO-SIMULATED-CGM',sourceType:'synthetic',samplingMinutes:5,qualityScore:1}};
+}
+return Object.freeze({AS_OF,generate});
+});
+
+</script><script>
+(function(){'use strict';
+const core=window.GFInjectionAnalytics,source=window.GFInjectionAnalyticsSynthetic;
+const $=id=>document.getElementById(id);
+const siteName=core.SITE_LABEL;
+const fmt=x=>x===null||x===undefined?'—':(Math.round(x*10)/10).toLocaleString('ru-RU');
+let state={illness:'no',activity:'usual',referenceRegion:'abdomen',source:'synthetic'};
+let demo=source.generate();
+function render(){
+  const current=state.source==='synthetic'?demo:{schema:core.SCHEMA,revision:0,injections:[],cgm:[]};
+  const result=core.analyze(current,{asOf:source.AS_OF,illness:state.illness,activity:state.activity,referenceRegion:state.referenceRegion});
+  $('total').textContent=result.totals.total;$('inWindow').textContent=result.totals.total-result.totals.archived-result.totals.future;
+  $('archived').textContent=result.totals.archived;$('eligible').textContent=result.totals.eligible;
+  $('stateBadge').textContent=state.illness==='yes'?'Режим: болеет':state.activity==='high'?'Режим: высокая активность':'Режим: обычный день';
+  $('stateBadge').className=state.illness==='yes'?'status sick':'status';
+  $('siteCards').replaceChildren();
+  for(const s of result.siteStats){
+    const card=document.createElement('article');card.className='site-card'+(s.region===state.referenceRegion?' selected':'');
+    const h=document.createElement('h3');h.textContent=s.label;card.appendChild(h);
+    const stat=document.createElement('div');stat.className='value';stat.textContent=s.sufficient?fmt(s.recencyWeightedMinutes)+' мин':'Мало данных';if(!s.sufficient)stat.classList.add('unavailable');card.appendChild(stat);
+    const description=document.createElement('p');description.textContent='Взвешенная по свежести медиана наблюдаемого снижения CGM';card.appendChild(description);
+    const foot=document.createElement('div');foot.className='muted';foot.textContent=s.count+' событий · '+s.days+' разных дней'+(s.sufficient?'':' · мало данных');card.appendChild(foot);
+    $('siteCards').appendChild(card);
+  }
+  $('compareRows').replaceChildren();
+  for(const p of result.comparisons){
+    const item=document.createElement('div');item.className='comparison';
+    const title=document.createElement('b');title.textContent=siteName[result.referenceRegion]+' ↔ '+siteName[p.region];item.appendChild(title);
+    const diff=document.createElement('span');diff.className='difference';
+    diff.textContent=p.sufficient?(p.observedDifferenceMinutes>0?'+':'')+fmt(p.observedDifferenceMinutes)+' мин':'Недостаточно данных';item.appendChild(diff);
+    const desc=document.createElement('small');desc.textContent='Сопоставимых пар: '+p.matchedPairs+(p.sufficient?' · учебный интервал разброса медианы '+p.exploratoryInterval90.map(fmt).join('…')+' мин':'');item.appendChild(desc);
+    $('compareRows').appendChild(item);
+  }
+  $('quality').textContent='Без места/контекста: '+result.totals.metadataMissing+' · недостаточно CGM: '+result.totals.cgmMissingOrUnclear+
+    ' · другой контекст: '+result.totals.outsideContext+' · базальный инсулин отдельно: '+result.totals.basalExcluded+
+    ' · наложения уколов: '+result.totals.overlappingEpisodes+
+    ' · неоднозначные дубли: '+(result.totals.duplicateAndIntegrity.conflictingIds+result.totals.duplicateAndIntegrity.ambiguousSameMoment)+
+    ' · источник CGM: '+(result.sourceDeviceId||'не указан')+
+    ' · метаданные качества: '+(result.cgmSensorQuality.status==='metadata_complete'?'есть':'недостаточно');
+  $('windowInfo').textContent='Окно: '+new Date(result.windowStart).toLocaleDateString('ru-RU')+' — '+new Date(result.analysisAt).toLocaleDateString('ru-RU')+'. Записи вне окна сохранены.';
+  $('viewState').textContent=state.source==='synthetic'?'Учебные данные: результат показывает работу алгоритма, не поведение реального ребёнка.':'Пустое хранилище: выводы не делаются без достаточных записей.';
+  window.GFInjectionAnalyticsDemo={state:()=>({...state}),result:()=>result};
+}
+$('condition').addEventListener('change',e=>{state.illness=e.target.value==='ill'?'yes':'no';state.activity=e.target.value==='active'?'high':'usual';render();});
+$('reference').addEventListener('change',e=>{state.referenceRegion=e.target.value;render();});
+$('source').addEventListener('change',e=>{state.source=e.target.value;render();});
+render();
+})();
+
+</script></body></html>

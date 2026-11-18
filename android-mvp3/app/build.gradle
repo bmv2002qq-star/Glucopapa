@@ -1,0 +1,22 @@
+plugins { id 'com.android.application' }
+android {
+    namespace 'com.glucopapa.shell'
+    compileSdk 36
+    defaultConfig {
+        applicationId 'com.glucopapa.shell'
+        minSdk 26
+        targetSdk 35
+        versionCode 8
+        versionName '0.3.12-stage10'
+    }
+    buildTypes {
+        release { minifyEnabled false }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+dependencies {
+    implementation 'androidx.webkit:webkit:1.18.0'
+}

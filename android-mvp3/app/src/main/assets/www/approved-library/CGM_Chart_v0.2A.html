@@ -1,0 +1,581 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Вариант А · Пик РинФаста и CGM · белая версия 0.2</title><style>
+:root{--ink:#213846;--muted:#6b7f8b;--bg:#eef3f7;--border:#e2e9ef;--aqua:#1f9fc9;--orange:#e4a22d;--red:#ce4656}*{box-sizing:border-box}html{background:var(--bg)}body{margin:0;font:15px/1.46 system-ui,-apple-system,Segoe UI,Arial,sans-serif;color:var(--ink);background:var(--bg)}button,input,select{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #7fd0ee;outline-offset:2px}.shell{max-width:760px;margin:0 auto;padding:15px 13px 48px}.panel{background:#fff;border:1px solid #e2e9ef;border-radius:21px;box-shadow:0 7px 32px #21394d0c;overflow:hidden}.topnav{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:18px 22px 4px}.brand{display:flex;align-items:center;gap:12px}.droplet{width:29px;height:37px;fill:#e4474e;flex:none}.brand h1{font-size:25px;letter-spacing:-.8px;margin:0;color:#22333b;font-weight:850}.brand h1 span{font-weight:550}.pill{font-size:11px;border-radius:99px;background:#edf6fa;color:#4b7b93;font-weight:750;padding:5px 8px;white-space:nowrap}.summary{padding:16px 22px 2px;display:flex;align-items:flex-end;justify-content:space-between;gap:8px}.reading{font-size:70px;font-weight:650;line-height:.98;letter-spacing:-2px;color:#1e303e}.reading .arrow{font-size:39px;font-weight:400;color:#607381;vertical-align:17%;margin-left:5px}.label{font-size:13px;color:#6c8090;margin:0 0 5px}.subtitle{font-size:13px;color:#617581}.status{font-size:12px;color:#bf4752;font-weight:750}.chart-wrap{padding:5px 8px 3px;position:relative}.chart-wrap svg{width:100%;height:auto;display:block;overflow:visible}.rangebar{display:flex;gap:6px;align-items:center;justify-content:space-between;padding:0 22px 12px;flex-wrap:wrap}.range-buttons{display:flex;gap:5px}.range-buttons button,.toggle,.button{border:1px solid #d4e1e9;background:#fff;color:#496879;border-radius:10px;padding:7px 10px;font-size:12px;font-weight:720}.range-buttons button.active,.toggle[aria-pressed="true"]{background:#e8f5fb;border-color:#9acddd;color:#1c809a}.mini-key{display:flex;gap:13px;align-items:center;flex-wrap:wrap;color:#69818b;font-size:11px}.swatch{width:13px;height:13px;display:inline-block;vertical-align:-2px;border-radius:50%;margin-right:4px;background:#25a4d2}.mini-key .orange .swatch{background:#eba928}.mini-key .low .swatch{background:#d84955}.detail{padding:2px 22px 12px;display:flex;align-items:center;justify-content:space-between;gap:10px}.detail p{font-size:11px;color:#748895;margin:5px 0;line-height:1.5}.overview-wrap{margin:0 12px 9px;border-radius:8px;background:#fff}.overview-wrap svg{width:100%;height:auto;display:block;cursor:crosshair;touch-action:pan-y}.overlays{border-top:1px solid #e2edf0;padding:14px 22px 17px}.overlays-head{display:flex;gap:12px;align-items:center;justify-content:space-between}.overlays-head h2{margin:0;font-size:15px}.overlays-head small{display:block;color:#7a8d99;font-size:11px;margin-top:3px}.inject-list{margin-top:12px;display:grid;gap:9px}.shot-row{border:1px solid var(--border);background:#fafdff;border-radius:13px;padding:10px 12px;display:grid;grid-template-columns:16px minmax(0,1fr) 93px 100px 26px;align-items:end;gap:7px}.shot-row .id-dot{width:11px;height:11px;border-radius:50%;margin-bottom:15px}.shot-row label{display:block;font-size:10px;color:#718997;margin-bottom:4px;font-weight:720}.shot-row .note{font-size:11px;color:#567689;align-self:center;font-weight:740}.shot-row input,.shot-row select{width:100%;border:1px solid #d2e2ea;border-radius:8px;background:#fff;padding:7px 6px;min-width:0;color:#2e4758}.delete{border:0;background:#f4f8fa;border-radius:7px;height:31px;color:#7e8f98;font-size:18px;padding:0}.add{margin-top:10px;background:#eff9fc;color:#2788a3;border-color:#c5e0e9}.result-note{font-size:11px;color:#607b88;background:#f5f9fb;border-radius:11px;padding:10px 11px;margin-top:12px}.footnote{font-size:11px;line-height:1.55;color:#738792;margin:10px 5px 0}.model-legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;color:#617986;font-size:11px}.model-legend .item{display:inline-flex;gap:5px;align-items:center}.model-legend .bar{width:18px;height:0;border-top:2px solid var(--line-color);display:inline-block}.strong{font-weight:800}.button:disabled{opacity:.45;cursor:default}@media(max-width:480px){.shell{padding:0 0 22px}.panel{border-radius:0;border-left:0;border-right:0}.topnav{padding:15px 16px 0}.brand h1{font-size:23px}.summary{padding:12px 16px 2px}.reading{font-size:60px}.reading .arrow{font-size:31px}.status{font-size:11px}.rangebar,.overlays{padding-left:13px;padding-right:13px}.detail{padding-left:14px;padding-right:14px}.shot-row{grid-template-columns:13px minmax(0,1fr) 66px 80px 24px;gap:5px;padding:9px 6px}.shot-row .note{font-size:10px}.shot-row input,.shot-row select{font-size:13px;padding:7px 4px}.shot-row label{font-size:9px}.pill{font-size:9px;padding:5px 7px}.mini-key{gap:9px}.chart-wrap{padding:5px 0 1px}}
+
+/* v0.2: visual comparison of projected peak and inline insulin overlay */
+.chart-wrap{overflow:hidden}
+.gp-rinfast-model path[data-insulin-curve]{pointer-events:visibleStroke}
+.gp-rinfast-model line[data-peak-guide]{pointer-events:visibleStroke}
+
+</style></head>
+<body><main class="shell"><article class="panel">
+ <header class="topnav"><div class="brand"><svg class="droplet" viewBox="0 0 32 39" aria-hidden="true"><path d="M17 0C13 9 1 19 1 27a15 15 0 0 0 30 0C31 19 20 9 17 0Zm0 6v30C8 36 5 30 5 26c0-6 7-14 12-20Z"/></svg><h1>xDrip<span>+</span> <small style="font-size:11px;color:#78919d;font-weight:700;letter-spacing:0">· ГлюкоПапа</small></h1></div><span class="pill">ДЕМО · не живые данные</span></header>
+ <section class="summary"><div><div class="label">1 минуту назад · изменение −0,2 ммоль/л</div><div class="status">Пример показаний · не клинический прогноз</div></div><div class="reading">4,1<span class="arrow">→</span></div></section>
+ <div class="chart-wrap"><div id="loading" style="padding:24px;color:#77919c">Загрузка графика…</div><div id="mainGraph"></div></div>
+ <div class="rangebar"><div class="range-buttons" id="rangeButtons"><button type="button" data-hours="6">6 ч</button><button class="active" type="button" data-hours="12">12 ч</button><button type="button" data-hours="24">24 ч</button></div><button type="button" id="returnNow" class="button">К текущему времени ↗</button></div>
+ <div class="detail"><div class="mini-key"><span><i class="swatch"></i> Норма</span><span class="orange"><i class="swatch"></i> Выше порога</span><span class="low"><i class="swatch"></i> Низкий</span></div><span class="pill">ммоль/л</span></div>
+ <div class="overview-wrap" id="overview"></div>
+ <div class="overlays">
+  <div class="overlays-head"><div><h2>Кривые действия РинФаста</h2><small>Тонкие линии · модельный пик и завершение</small></div><button type="button" class="toggle" aria-pressed="true" id="toggleInsulin">✓ РинФаст</button></div>
+  <div id="overlayLegend" class="model-legend" aria-live="polite"></div>
+  <div class="model-legend" style="margin-top:11px"><button class="toggle" type="button" aria-pressed="false" id="toggleTotal">Суммарная кривая</button><span style="align-self:center">Временная ось общая, высота инсулина условная</span></div>
+  <div id="shots" class="inject-list"></div><button type="button" id="addShot" class="button add">+ Добавить тестовую инъекцию</button>
+  <div id="overlapText" class="result-note" aria-live="polite"></div>
+  <p id="error" role="alert" style="color:#b94351"></p>
+  <div id="info" class="footnote"></div>
+  <div class="footnote">Пунктир от пика РинФаста ведёт к показанию CGM на том же времени, если оно существует. Для будущего пика точку сахара не создаём. Совпадение линий не доказывает причинную связь.</div><div class="footnote">Синтетические показания CGM показывают работу интерфейса. Кривые построены по ранее принятой исследовательской модели РинФаста 300/75 минут; они не являются измерением активности инсулина, прогнозом глюкозы или основанием для расчёта доз и лечебных углеводов. «Конец модели» не гарантирует прекращение действия инсулина.</div>
+ </div>
+ </article></main>
+ <script>
+/*
+ * ГлюкоПапа: независимый исследовательский модуль IOB для РинФаста (инсулин аспарт).
+ * v0.3.0. Расчётная кривая OpenAPS exponential (rapid acting), не индивидуальная
+ * фармакодинамическая оценка и НЕ алгоритм назначения инсулина/еды.
+ * Не требуется сеть, CGM, журнал еды или другие модули.
+ * License of THIS implementation: MIT. Reference method: OpenAPS/oref0.
+ */
+(function (root, factory) {
+  "use strict";
+  const api = factory();
+  if (typeof module === "object" && module.exports) module.exports = api;
+  if (root) root.RinfastEngine = api;
+})(typeof globalThis !== "undefined" ? globalThis : this, function () {
+  "use strict";
+  const ENGINE_VERSION = "0.3.0";
+  const DEFAULT_PROFILE = Object.freeze({
+    drugId: "rinfast", drugName: "РинФаст", substance: "инсулин аспарт",
+    model: "openaps_exponential_rapid", modelVersion: "0.3.0",
+    diaMinutes: 300, peakMinutes: 75,
+    dataSource: "https://help.geropharm.ru/rinfast-insulin-aspart",
+    modelSource: "https://github.com/openaps/oref0/blob/master/lib/iob/calculate.js",
+    clinicalValidation: false
+  });
+  // Диапазоны — из инструкции производителя, НЕ параметры кривой OpenAPS.
+  const LABEL_TIME_RANGES = Object.freeze({
+    onsetMinutes: Object.freeze([10, 20]),
+    maximumEffectMinutes: Object.freeze([60, 180]),
+    durationMinutes: Object.freeze([180, 300]),
+    source: "https://help.geropharm.ru/rinfast-insulin-aspart"
+  });
+  const WARNINGS = Object.freeze([
+    "Расчёт — модель доли оставшегося эффекта, не измерение инсулина в крови.",
+    "Профиль 300/75 минут — исследовательские параметры OpenAPS, не индивидуальная кривая РинФаста.",
+    "Число IOB нельзя использовать самостоятельно для расчёта доз, углеводов или лечения гипогликемии.",
+    "Отсутствие записей в журнале не доказывает отсутствия введённого инсулина.",
+    "Ноль через выбранную DIA означает только завершение выбранной математической кривой, не гарантирует отсутствия действия в организме.",
+    "Начало 10–20 мин, максимум 1–3 ч, длительность 3–5 ч — диапазоны по инструкции, не персональные пороги.",
+    "Рост математической активности до 10 минут НЕ означает подтверждённый клинический эффект до 10 минут.",
+    "Модельная продолжительность 360+ минут выходит за пределы типичного диапазона 3–5 часов из инструкции и служит только анализу чувствительности."
+  ]);
+  function finiteNumber(v) { return typeof v === "number" && Number.isFinite(v); }
+  function clamp01(x) { return Math.max(0, Math.min(1, x)); }
+  function validateProfile(profile) {
+    const p = profile == null ? DEFAULT_PROFILE : profile;
+    if (!p || p.drugId !== "rinfast" || p.model !== "openaps_exponential_rapid") {
+      throw new Error("Профиль должен быть для РинФаста с моделью openaps_exponential_rapid.");
+    }
+    if (!finiteNumber(p.diaMinutes) || p.diaMinutes < 300 || p.diaMinutes > 480) {
+      throw new Error("Некорректная длительность DIA: разрешён исследовательский диапазон 300–480 мин.");
+    }
+    if (!finiteNumber(p.peakMinutes) || p.peakMinutes < 50 || p.peakMinutes > 120 || p.peakMinutes >= p.diaMinutes / 2) {
+      throw new Error("Некорректное время пика: 50–120 мин и строго меньше половины DIA.");
+    }
+    return p;
+  }
+  function parameters(profile) {
+    const p = validateProfile(profile);
+    const D = p.diaMinutes, P = p.peakMinutes;
+    const tau = P * (1 - P / D) / (1 - 2 * P / D);
+    const a = 2 * tau / D;
+    const scale = 1 / (1 - a + (1 + a) * Math.exp(-D / tau));
+    if (![tau, a, scale].every(Number.isFinite) || tau <= 0 || scale <= 0) {
+      throw new Error("Не удалось рассчитать устойчивые параметры кривой.");
+    }
+    return { D, P, tau, a, scale };
+  }
+  /** Returns a fraction of insulin GLUCOSE-LOWERING EFFECT remaining, not plasma insulin. */
+  function getCurve(ageMinutes, profile = DEFAULT_PROFILE) {
+    if (!finiteNumber(ageMinutes) || ageMinutes < 0) throw new Error("Возраст инъекции должен быть неотрицательным числом минут.");
+    const { D, tau, a, scale } = parameters(profile);
+    if (ageMinutes >= D) return { remainingFraction: 0, usedFraction: 1, activityFractionPerMinute: 0 };
+    if (ageMinutes === 0) return { remainingFraction: 1, usedFraction: 0, activityFractionPerMinute: 0 };
+    const t = ageMinutes;
+    const exp = Math.exp(-t / tau);
+    // Algebraically equivalent to OpenAPS iobContrib, but avoids / (1-a)
+    // singularity when peak makes a exactly 1.
+    const remaining = 1 - scale * ((t * t / (tau * D) - (1 - a) * (t / tau + 1)) * exp + (1 - a));
+    const activity = (scale / (tau * tau)) * t * (1 - t / D) * exp;
+    const r = clamp01(remaining);
+    return { remainingFraction: r, usedFraction: 1 - r, activityFractionPerMinute: Math.max(0, activity) };
+  }
+  /** Instruction-based qualitative phase, deliberately independent of model action. */
+  function getPhase(ageMinutes, profile = DEFAULT_PROFILE) {
+    const p = validateProfile(profile);
+    if (!finiteNumber(ageMinutes) || ageMinutes < 0) throw new Error("Возраст инъекции должен быть неотрицательным числом минут.");
+    if (ageMinutes >= p.diaMinutes) return {code:"MODEL_HORIZON_PASSED",label:"За пределами выбранного модельного интервала",modelMinutesRemaining:0};
+    const modelMinutesRemaining = p.diaMinutes - ageMinutes;
+    if (ageMinutes < 10) return {code:"BEFORE_TYPICAL_ONSET",label:"До типичного начала действия по инструкции",modelMinutesRemaining};
+    if (ageMinutes < 20) return {code:"ONSET_WINDOW",label:"Диапазон начала действия по инструкции",modelMinutesRemaining};
+    if (ageMinutes < 60) return {code:"BEFORE_MAX_EFFECT_WINDOW",label:"После начала, до диапазона максимального эффекта",modelMinutesRemaining};
+    if (ageMinutes <= 180) return {code:"MAX_EFFECT_WINDOW",label:"Диапазон максимального эффекта по инструкции",modelMinutesRemaining};
+    if (ageMinutes < 300) return {code:"LATE_EFFECT_WINDOW",label:"Поздняя часть диапазона действия по инструкции",modelMinutesRemaining};
+    return {code:"EXTENDED_RESEARCH_MODEL",label:"Исследовательское продление за 5 часов — вне типичного диапазона инструкции",modelMinutesRemaining};
+  }
+  function timestampMs(value) {
+    if (typeof value !== "string" || !/T\d\d:\d\d/.test(value) || !/(?:Z|[+\-]\d\d:\d\d)$/i.test(value)) {
+      throw new Error("Время должно быть ISO 8601 с часовым поясом, например 2026-11-13T13:00:00+03:00.");
+    }
+    const ms = Date.parse(value);
+    if (!Number.isFinite(ms)) throw new Error("Невозможно прочитать время.");
+    return ms;
+  }
+  function validateHorizons(horizons) {
+    if (!Array.isArray(horizons) || horizons.length < 1 || horizons.length > 12 ||
+        !horizons.every(v => Number.isInteger(v) && v > 0 && v <= 480) ||
+        new Set(horizons).size !== horizons.length) {
+      throw new Error("Горизонты прогноза: уникальные положительные целые минуты (1–480), не более 12.");
+    }
+    return horizons;
+  }
+  /**
+   * Input: {nowIso, events, profile, horizonsMinutes?}
+   * Event: {id, type:'insulin_injection', insulinId:'rinfast', status:'confirmed',
+   *         administeredAt:'ISO8601 with offset', units: positive number}
+   * On any ambiguous relevant record -> INCOMPLETE and ALL computed values null.
+   */
+  function calculate(request) {
+    if (!request || typeof request !== "object") throw new Error("Передайте объект запроса.");
+    const profile = validateProfile(request.profile || DEFAULT_PROFILE);
+    const now = timestampMs(request.nowIso);
+    if (!Array.isArray(request.events) || request.events.length > 10000) {
+      throw new Error("События журнала должны быть массивом длиной до 10 000.");
+    }
+    const horizons = validateHorizons(request.horizonsMinutes || [15, 30, 60]);
+    const issues = [], ignored = [];
+    const accepted = [], ids = new Set();
+    for (const event of request.events) {
+      if (!event || typeof event !== "object") {
+        issues.push("В журнале обнаружена повреждённая запись."); continue;
+      }
+      if (event.type !== "insulin_injection") {
+        if (!event.type) issues.push("В журнале запись без типа события.");
+        continue;
+      }
+      if (typeof event.insulinId !== "string" || !event.insulinId.trim()) {
+        issues.push("Инъекция без идентификатора инсулина."); continue;
+      }
+      if (event.insulinId !== "rinfast") {
+        if (event.insulinId === "levemir") {
+          ignored.push({ id: String(event.id || "?"), reason: "Левемир учитывается отдельным модулем" });
+        } else {
+          issues.push(`Инъекция ${String(event.id || "?")}: препарат ${event.insulinId} неизвестен этому модулю или является другим коротким инсулином; требуется сверка журнала.`);
+        }
+        continue;
+      }
+      if (typeof event.id !== "string" || !event.id.trim() || ids.has(event.id)) {
+        issues.push("Отсутствует или повторяется идентификатор инъекции РинФаста."); continue;
+      }
+      ids.add(event.id);
+      if (event.status !== "confirmed") {
+        issues.push(`Инъекция ${event.id}: нет подтверждения фактического введения (status=confirmed).`);
+        continue;
+      }
+      if (!finiteNumber(event.units) || event.units <= 0 || event.units > 200) {
+        issues.push(`Инъекция ${event.id}: недостоверная доза.`); continue;
+      }
+      let administration;
+      try { administration = timestampMs(event.administeredAt); }
+      catch (_) { issues.push(`Инъекция ${event.id}: недостоверное время.`); continue; }
+      if (administration > now) {
+        issues.push(`Инъекция ${event.id}: время в будущем относительно момента расчёта.`); continue;
+      }
+      const ageMinutes = (now - administration) / 60000;
+      if (ageMinutes >= profile.diaMinutes) {
+        ignored.push({ id: event.id, reason: "За пределами расчётной длительности действия" });
+        continue;
+      }
+      accepted.push({ id: event.id, units: event.units, ageMinutes, administeredAt: event.administeredAt });
+    }
+    const base = {
+      engineVersion: ENGINE_VERSION, modelVersion: profile.modelVersion || ENGINE_VERSION,
+      drugId: "rinfast", drugName: "РинФаст", model: profile.model,
+      diaMinutes: profile.diaMinutes, peakMinutes: profile.peakMinutes,
+      nowIso: request.nowIso, issues, ignored,
+      warnings: Array.from(WARNINGS), timingSource: LABEL_TIME_RANGES.source, instructionTiming: LABEL_TIME_RANGES, acceptedCount: accepted.length,
+      clinicalValidation: false,
+      statusMeaning: "MODEL_ESTIMATE означает математический расчёт, не индивидуально проверенное действие",
+      assumesCompleteJournal: true,
+      durationBeyondLabel: profile.diaMinutes > 300,
+      labelOnsetIsNotHardCutoff: true
+    };
+    if (issues.length) {
+      return { ...base, status: "INCOMPLETE", modelRemainingUnits: null,
+        activityModelUnitsPerMinute: null, futureActionModelUnits: null, contributions: null };
+    }
+    let modelRemainingUnits = 0, activityModelUnitsPerMinute = 0;
+    const futureActionModelUnits = Object.fromEntries(horizons.map(h => [String(h), 0]));
+    const contributions = accepted.map(inj => {
+      const atNow = getCurve(inj.ageMinutes, profile);
+      const actionNext = {};
+      for (const h of horizons) {
+        const after = getCurve(inj.ageMinutes + h, profile);
+        const part = Math.max(0, inj.units * (atNow.remainingFraction - after.remainingFraction));
+        actionNext[String(h)] = part;
+        futureActionModelUnits[String(h)] += part;
+      }
+      const remainingUnits = inj.units * atNow.remainingFraction;
+      const usedUnits = inj.units * atNow.usedFraction;
+      const activityUnitsPerMinute = inj.units * atNow.activityFractionPerMinute;
+      modelRemainingUnits += remainingUnits;
+      activityModelUnitsPerMinute += activityUnitsPerMinute;
+      return {
+        id: inj.id, administeredAt: inj.administeredAt, ageMinutes: inj.ageMinutes,
+        phase: getPhase(inj.ageMinutes, profile),
+        doseUnits: inj.units, remainingFraction: atNow.remainingFraction,
+        usedFraction: atNow.usedFraction, remainingModelUnits: remainingUnits,
+        usedModelUnits: usedUnits, activityModelUnitsPerMinute: activityUnitsPerMinute,
+        futureActionModelUnits: actionNext
+      };
+    });
+    return {
+      ...base, status: "MODEL_ESTIMATE", modelRemainingUnits,
+      activityModelUnitsPerMinute, futureActionModelUnits, contributions
+    };
+  }
+  /**
+   * Исследовательская серия по времени вокруг nowIso.
+   * Перед инъекцией её действие = 0, после DIA = 0 только в рамках модели.
+   * Данные используются только для построения отдельных и суммарных графиков.
+   * Не оценивает фактический сахар и не назначает терапию.
+   */
+  function calculateTimeline(request, options = {}) {
+    if (!request || typeof request !== "object") throw new Error("Нужен объект запроса.");
+    const profile = validateProfile(request.profile || DEFAULT_PROFILE);
+    const now = timestampMs(request.nowIso);
+    const start = options.startOffsetMinutes == null ? -240 : options.startOffsetMinutes;
+    const end = options.endOffsetMinutes == null ? 360 : options.endOffsetMinutes;
+    const step = options.stepMinutes == null ? 5 : options.stepMinutes;
+    if (![start, end, step].every(finiteNumber) || !Number.isInteger(start) || !Number.isInteger(end) ||
+        !Number.isInteger(step) || start < -600 || end > 600 || end <= start || step < 1 || step > 60 ||
+        Math.ceil((end - start) / step) > 1200) {
+      throw new Error("Некорректный интервал графика: -600..+600 минут, шаг 1–60 минут.");
+    }
+    const audit = calculate({ nowIso: request.nowIso, events: request.events, profile });
+    if (audit.status !== "MODEL_ESTIMATE") return {
+      status: "INCOMPLETE", issues: audit.issues, rows: null, shotIds: null, clinicalValidation: false
+    };
+    const shots = request.events.filter(e => e.type === "insulin_injection" && e.insulinId === "rinfast")
+      .map(e => ({ id: e.id, units: e.units, administeredAt: e.administeredAt,
+        ageAtNowMinutes: (now - timestampMs(e.administeredAt)) / 60000 }));
+    const rows = [];
+    for (let offset = start; offset <= end; offset += step) {
+      const perShot = []; let totalActivityUnitsPerMinute = 0, totalRemainingModelUnits = 0;
+      for (const shot of shots) {
+        const age = shot.ageAtNowMinutes + offset;
+        const curve = age < 0 ? null : getCurve(age, profile);
+        const activityUnitsPerMinute = curve ? shot.units * curve.activityFractionPerMinute : 0;
+        const remainingModelUnits = curve ? shot.units * curve.remainingFraction : 0;
+        perShot.push({ id: shot.id, activityUnitsPerMinute, remainingModelUnits });
+        totalActivityUnitsPerMinute += activityUnitsPerMinute;
+        totalRemainingModelUnits += remainingModelUnits;
+      }
+      rows.push({ offsetMinutes: offset, totalActivityUnitsPerMinute, totalRemainingModelUnits, perShot });
+    }
+    if (rows.at(-1).offsetMinutes !== end) {
+      const tail = calculateTimeline(request, { startOffsetMinutes: end-1, endOffsetMinutes: end, stepMinutes: 1 });
+      // Include endpoint without duplicating previous data.
+      rows.push(tail.rows.at(-1));
+    }
+    return { status: "MODEL_ESTIMATE", modelVersion: ENGINE_VERSION,
+      profile: {diaMinutes: profile.diaMinutes, peakMinutes: profile.peakMinutes},
+      shotIds: shots.map(x => x.id), rows,
+      labelTiming: LABEL_TIME_RANGES, clinicalValidation: false };
+  }
+  /** Sensitivity analysis; NEVER chooses a patient-specific DIA. */
+  function compareDurations(request, durationMinutes = [300, 360]) {
+    if (!Array.isArray(durationMinutes) || durationMinutes.length < 2 || durationMinutes.length > 6 ||
+        new Set(durationMinutes).size !== durationMinutes.length) {
+      throw new Error("Нужны 2–6 уникальных вариантов исследовательского времени DIA.");
+    }
+    const baseline = validateProfile(request.profile || DEFAULT_PROFILE);
+    const alternatives = durationMinutes.map(diaMinutes => {
+      const profile = {...baseline, diaMinutes};
+      validateProfile(profile);
+      const r = calculate({...request, profile});
+      return {diaMinutes, peakMinutes: profile.peakMinutes, status: r.status,
+        modelRemainingUnits: r.modelRemainingUnits,
+        futureActionModelUnits: r.futureActionModelUnits, issues: r.issues};
+    });
+    return {status: alternatives.every(a => a.status === "MODEL_ESTIMATE") ? "MODEL_ESTIMATE" : "INCOMPLETE",
+      scenarios: alternatives, clinicalValidation: false,
+      note: "Диапазон сценариев НЕ является доверительным интервалом и НЕ предсказывает клиническую погрешность."};
+  }
+  return Object.freeze({ ENGINE_VERSION, DEFAULT_PROFILE, LABEL_TIME_RANGES, WARNINGS, getPhase,
+    validateProfile, getCurve, calculate, calculateTimeline, compareDurations });
+});
+
+</script>
+<script>
+/**
+ * ГлюкоПапа · xDrip-style white chart v0.1.
+ * Visual presentation only: CGM points and independent schematic short-insulin activity.
+ * No prediction, no medical decisions. Uses UNMODIFIED RinfastEngine.getCurve() from v0.3.1.
+ */
+(function(root,factory){
+  'use strict';
+  const api=factory();
+  if(typeof module==='object'&&module.exports) module.exports=api;
+  if(root) root.GPCgmWhiteChart=api;
+})(typeof globalThis!=='undefined'?globalThis:this,function(){
+ 'use strict';
+ const DAY=86400000, HOUR=3600000, MIN=60000;
+ const ANCHOR=Date.parse('2026-11-13T03:00:00+03:00');
+ const PALETTE=['#7656c9','#e08739','#288f9a','#c4599e','#5286cb','#a27147'];
+ const COLORS={normal:'#26a7d4',high:'#efa525',low:'#de4148',ink:'#354653',lines:'#e4eaee'};
+ const COORD={W:550,H:585,L:39,R:539,T:18,B:544};
+ const escapeXml=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ const finite=n=>typeof n==='number'&&Number.isFinite(n);
+ const pad=n=>String(n).padStart(2,'0');
+ const tm=t=>{const d=new Date(t+3*HOUR);return pad(d.getUTCHours())+':'+pad(d.getUTCMinutes())};
+ const hour=t=>{const d=new Date(t+3*HOUR);return pad(d.getUTCHours())};
+ const timeISO=t=>new Date(t).toISOString();
+ function fakeCgm(now=ANCHOR){
+   // Explicitly synthetic anchors inspired by the user's screenshot; NOT extracted patient data.
+   const knots=[[-24,6.0],[-18,5.4],[-15,4.3],[-13,5.4],[-12,5.5],[-11,7.2],[-10.5,8.5],[-10,8.8],[-9.7,6.6],[-9.3,6.4],[-8.5,10.2],[-7.5,7.5],[-7,7.0],[-6.2,8.7],[-5.6,9.7],[-5.15,4.1],[-4.85,2.6],[-4.3,5.4],[-3.4,7.8],[-2.6,9.7],[-2.1,8.0],[-1.5,8.8],[-0.9,6.2],[-0.4,5.0],[0,4.1]];
+   const arr=[];const start=now-24*HOUR;
+   for(let t=start;t<=now;t+=5*MIN){const h=(t-now)/HOUR;
+     let idx=0;while(idx<knots.length-2&&knots[idx+1][0]<h)idx++;
+     const [a,va]=knots[idx],[b,vb]=knots[idx+1],u=Math.max(0,Math.min(1,(h-a)/(b-a)));
+     let g=va+(vb-va)*u + 0.11*Math.sin((t-start)/MIN*0.23)+0.08*Math.sin((t-start)/MIN*0.53);
+     if(t===now)g=4.1;
+     arr.push({ts:t,mmol:+Math.max(2.2,g).toFixed(2)});
+   }
+   return arr;
+ }
+ function normalizeReadings(rows){
+   if(!Array.isArray(rows))throw Error('Ожидался массив CGM');
+   const map=new Map();
+   for(const v of rows){if(!v||!finite(v.ts)||!finite(v.mmol)||v.mmol<1.5||v.mmol>30)continue;map.set(v.ts,{ts:v.ts,mmol:v.mmol});}
+   return [...map.values()].sort((a,b)=>a.ts-b.ts);
+ }
+ function normalizeShots(shots){
+   if(!Array.isArray(shots))throw Error('Ожидался журнал инъекций');
+   const seen=new Set();const res=[];
+   for(const s of shots){
+     if(!s||s.insulinId!=='rinfast')continue;
+     if(s.status!=='confirmed')continue;
+     if(!finite(s.ts)||!finite(s.units)||s.units<=0||s.units>200||!s.id||seen.has(s.id))throw Error('Некорректная запись РинФаста');
+     seen.add(s.id);res.push({id:String(s.id),insulinId:'rinfast',status:'confirmed',ts:s.ts,units:s.units});
+   }
+   return res.sort((a,b)=>a.ts-b.ts);
+ }
+ function makeModel(engine,profile){
+   if(!engine||typeof engine.getCurve!=='function')throw Error('Нужен модуль RinfastEngine v0.3.1');
+   const p=profile||engine.DEFAULT_PROFILE;engine.validateProfile(p);
+   return {p,activity:(age)=>age<0||age>=p.diaMinutes?0:engine.getCurve(age,p).activityFractionPerMinute};
+ }
+ function validView(now,historyH=12,futureH=6,offsetH=0){
+   if(!finite(now)||!finite(historyH)||!finite(futureH)||!finite(offsetH)||historyH<2||historyH>24||futureH<0||futureH>8||offsetH>0||offsetH< -24)throw Error('Недопустимое окно');
+   return {start:now-historyH*HOUR+offsetH*HOUR,end:now+futureH*HOUR+offsetH*HOUR,now,historyH,futureH,offsetH};
+ }
+ function overlapIntervals(shots, diaMinutes){
+   const ends=[];for(const s of shots){ends.push({t:s.ts,k:1},{t:s.ts+diaMinutes*MIN,k:-1});}
+   ends.sort((a,b)=>a.t-b.t||a.k-b.k);
+   let n=0,open=null;const result=[];
+   for(const e of ends){const prev=n;n+=e.k;if(prev<2&&n>=2)open=e.t;if(prev>=2&&n<2&&open!==null){if(e.t>open)result.push({from:open,to:e.t});open=null;}}
+   return result;
+ }
+ const svgPath=(list)=>list.length?'M'+list.map(([x,y])=>x.toFixed(2)+','+y.toFixed(2)).join(' L'):'';
+ function renderSvg({readings,shots,now=ANCHOR,historyH=12,futureH=6,offsetH=0,engine,profile,showInsulin=true,showTotal=false,layout="guided"}){
+   const data=normalizeReadings(readings);const inject=normalizeShots(shots);
+   if(inject.some(s=>s.ts>now)) throw Error("Подтверждённая инъекция не может находиться в будущем относительно времени графика");
+   if(!['guided','inline'].includes(layout))throw Error('Неверный тип отображения');
+   const model=makeModel(engine,profile);
+   const view=validView(now,historyH,futureH,offsetH), {L,R,T,B,H,W}=COORD;
+   const xAt=t=>L+(t-view.start)/(view.end-view.start)*(R-L);
+   const yAt=g=>B-(g-2)/(13-2)*(B-T);
+   const insideX=x=>Math.max(L,Math.min(R,x));
+   let parts=[];
+   parts.push(`<defs><clipPath id="gpPlotClip"><rect x="${L}" y="${T}" width="${R-L}" height="${B-T}" /></clipPath></defs>`);
+   parts.push('<rect width="550" height="585" fill="#ffffff"/>');
+   // Gray future window is separated from observed CGM without fabricating readings.
+   if(view.start<now&&view.end>now)parts.push(`<rect x="${xAt(now).toFixed(1)}" y="${T}" width="${(R-xAt(now)).toFixed(1)}" height="${B-T}" fill="#f7f9fc"/>`);
+   // Mild low-glucose fill + reference levels, consistent with xDrip visual language.
+   parts.push(`<rect x="${L}" y="${yAt(3.9).toFixed(2)}" width="${R-L}" height="${(B-yAt(3.9)).toFixed(2)}" fill="#fbe5e5" opacity="0.70"/>`);
+   for(const g of [4,6,8,10,12]){const y=yAt(g);parts.push(`<line x1="${L}" x2="${R}" y1="${y.toFixed(1)}" y2="${y.toFixed(1)}" stroke="#d9e1e5" stroke-width="1"/><text x="${L-7}" y="${y+4}" font-size="12.5" fill="#667783" text-anchor="end">${g}</text>`);}
+   for(let t=Math.ceil(view.start/(2*HOUR))*2*HOUR;t<=view.end;t+=2*HOUR){const x=xAt(t);parts.push(`<line x1="${x}" y1="${T}" x2="${x}" y2="${B}" stroke="#e3e9ec" stroke-width="1"/><text x="${x}" y="571" fill="#687782" font-size="13.5" text-anchor="middle">${hour(t)}</text>`);}
+   parts.push(`<line x1="${L}" x2="${R}" y1="${yAt(9.4)}" y2="${yAt(9.4)}" stroke="#d69a26" stroke-width="1.5"/>`);
+   parts.push(`<line x1="${L}" x2="${R}" y1="${yAt(3.9)}" y2="${yAt(3.9)}" stroke="#c94450" stroke-width="1.6"/>`);
+   parts.push(`<line x1="${L}" x2="${R}" y1="${yAt(7.1)}" y2="${yAt(7.1)}" stroke="#80b34f" stroke-width="1.1" stroke-dasharray="4 5" opacity=".8"/>`);
+   const selected=data.filter(r=>r.ts>=view.start&&r.ts<=now&&r.ts<=view.end);
+   let chunks=[],c=[];for(const point of selected){if(c.length&&point.ts-c.at(-1).ts>12*MIN){chunks.push(c);c=[];}c.push(point);}if(c.length)chunks.push(c);
+   parts.push('<g clip-path="url(#gpPlotClip)" class="gp-cgm-trace">');
+   for(const chunk of chunks){const coords=chunk.map(p=>[xAt(p.ts),yAt(p.mmol)]);parts.push(`<path d="${svgPath(coords)}" fill="none" stroke="#9aa0a5" stroke-width="1.55" stroke-linejoin="round"/>`);}
+   for(const pt of selected){const fill=pt.mmol<3.9?COLORS.low:pt.mmol>9.4?COLORS.high:COLORS.normal;parts.push(`<circle data-cgm-point="1" cx="${xAt(pt.ts).toFixed(2)}" cy="${yAt(pt.mmol).toFixed(2)}" r="3.25" fill="${fill}"><title>${tm(pt.ts)} · ${pt.mmol.toFixed(1)} ммоль/л · демо</title></circle>`);}
+   parts.push('</g>');
+   if(view.start<now&&view.end>now){const x=xAt(now);parts.push(`<line x1="${x}" x2="${x}" y1="${T}" y2="${B}" stroke="#64758a" stroke-width="1.1" stroke-dasharray="4 5"/><text x="${x+5}" y="${T+15}" fill="#4d6171" font-size="12" font-weight="700">Сейчас</text>`);}
+   if(showInsulin){
+     // Obtain a CGM value ONLY inside the measured time range and across short valid gaps.
+     // If the modelled peak is in the future, never create a fictional glucose point.
+     function observedGlucoseAt(ts){
+       if(ts>now||data.length===0)return null;
+       let lo=0,hi=data.length-1;
+       while(lo<=hi){const mid=(lo+hi)>>1;if(data[mid].ts<ts)lo=mid+1;else hi=mid-1;}
+       if(lo<data.length&&data[lo].ts===ts)return data[lo].mmol;
+       const a=data[lo-1],b=data[lo];
+       if(!a||!b||b.ts-a.ts>12*MIN)return null;
+       const v=a.mmol+(b.mmol-a.mmol)*(ts-a.ts)/(b.ts-a.ts);
+       return finite(v)?v:null;
+     }
+     // Vertical placement of insulin is SCHEMATIC and NOT tied to mmol/L.
+     // Variant 1: activity in upper plot zone. Variant 2: activity gently integrated into the plot body.
+
+     const graphShots=inject.filter(s=>s.ts+model.p.diaMinutes*MIN>=view.start&&s.ts<=view.end);
+     const maxA=Math.max(.0001,model.activity(model.p.peakMinutes)*Math.max(4,...graphShots.map(s=>s.units))); // Stable scaling for ordinary demo doses
+     const height=layout==='guided'?92:96,baseY=layout==='guided'?165:355,topY=baseY-height;
+     parts.push(`<g class="gp-rinfast-model" clip-path="url(#gpPlotClip)">`);
+     if(layout==='guided')parts.push(`<text x="${L+10}" y="${topY+17}" fill="#778ba7" font-size="11.5" font-weight="700">Схема активности РинФаста — условная высота</text>`);
+     if(layout==='inline')parts.push(`<text x="${L+10}" y="${topY+18}" fill="#778ba7" font-size="11" font-weight="700">Наложение инсулина — не шкала сахара</text>`);
+
+     const ovs=overlapIntervals(graphShots,model.p.diaMinutes);
+     for(const [idx,o] of ovs.entries()){const a=Math.max(view.start,o.from),b=Math.min(view.end,o.to);if(b>a)parts.push(`<rect class="gp-overlap" x="${xAt(a)}" y="${T}" width="${xAt(b)-xAt(a)}" height="${B-T}" fill="#e6dbff" opacity="0.12"><title>Временное перекрытие модельных действий: ${tm(a)}–${tm(b)}</title></rect>`);}
+     const stepsPerCurve=72;let visible=[];
+     graphShots.forEach((s,i)=>{
+       const color=PALETTE[i%PALETTE.length],amp=s.units*model.activity(model.p.peakMinutes)/maxA;
+       const pts=[];
+       for(let k=0;k<=stepsPerCurve;k++){const t=s.ts+model.p.diaMinutes*MIN*k/stepsPerCurve;if(t<view.start||t>view.end)continue;const v=model.activity((t-s.ts)/MIN)*s.units/maxA;pts.push([xAt(t),baseY-height*v]);}
+       if(pts.length<2)return;
+       parts.push(`<path data-insulin-curve="${escapeXml(s.id)}" d="${svgPath(pts)}" fill="none" stroke="${color}" stroke-width="1.75" stroke-linecap="round" opacity="0.88"><title>РинФаст ${s.units} ЕД · ${tm(s.ts)}, модельное действие</title></path>`);
+       const markings=[{t:s.ts,label:'Укол',yc:baseY},{t:s.ts+model.p.peakMinutes*MIN,label:'Пик',yc:baseY-height*amp},{t:s.ts+model.p.diaMinutes*MIN,label:'Конец модели',yc:baseY}];
+       // Peak-to-CGM projection: time is shared, glucose value is measured and interpolated only between adjacent readings.
+       const peakAt=s.ts+model.p.peakMinutes*MIN;
+       if(peakAt>=view.start&&peakAt<=view.end){
+         const px=xAt(peakAt),peakY=baseY-height*amp;
+         const measured=observedGlucoseAt(peakAt);
+         if(measured!==null){
+           const cy=yAt(measured);
+           parts.push(`<line data-peak-guide="${escapeXml(s.id)}" x1="${px}" x2="${px}" y1="${peakY+4}" y2="${cy}" stroke="${color}" stroke-width="1.35" stroke-dasharray="3 5" opacity=".75"><title>${tm(peakAt)} · сахар ${measured.toFixed(1)} ммоль/л (демо) во время модельного пика</title></line>`);
+           parts.push(`<circle data-peak-cgm="${escapeXml(s.id)}" cx="${px}" cy="${cy}" r="5.1" fill="white" stroke="${color}" stroke-width="2"><title>${tm(peakAt)} · CGM ${measured.toFixed(1)} ммоль/л · демонстрация</title></circle>`);
+           parts.push(`<circle cx="${px}" cy="${cy}" r="2.0" fill="${color}"/>`);
+         } else {
+           parts.push(`<line data-peak-guide="${escapeXml(s.id)}" data-future="true" x1="${px}" x2="${px}" y1="${peakY+4}" y2="${B}" stroke="${color}" stroke-width="1.15" stroke-dasharray="3 5" opacity=".65"><title>Пик ${tm(peakAt)} — фактического CGM на это время нет</title></line>`);
+           parts.push(`<text x="${px}" y="${B-8}" fill="${color}" font-size="10.5" text-anchor="middle">пик впереди</text>`);
+         }
+       }
+
+       markings.forEach((m,j)=>{if(m.t<view.start||m.t>view.end)return;const x=xAt(m.t);parts.push(`<circle data-insulin-mark="${j}" cx="${x}" cy="${m.yc}" r="${j===1?3.3:2.5}" fill="white" stroke="${color}" stroke-width="1.65"><title>${m.label}: ${tm(m.t)} · РинФаст ${s.units} ЕД</title></circle>`);if(j===1)parts.push(`<text x="${x}" y="${m.yc-7}" text-anchor="middle" fill="${color}" font-size="10.5" font-weight="750">пик</text>`);});
+       visible.push({...s,color,peak:s.ts+model.p.peakMinutes*MIN,end:s.ts+model.p.diaMinutes*MIN,cgmAtPeak:observedGlucoseAt(s.ts+model.p.peakMinutes*MIN)});
+     });
+     if(showTotal&&graphShots.length>1){
+       const coords=[];for(let t=view.start;t<=view.end;t+=6*MIN){const a=graphShots.reduce((sum,s)=>sum+s.units*model.activity((t-s.ts)/MIN),0);coords.push([xAt(t),baseY-height*a/maxA*.75]);}parts.push(`<path class="gp-insulin-total" d="${svgPath(coords)}" fill="none" stroke="#4a527e" stroke-width="2.1" stroke-dasharray="4 4" opacity=".63"/>`);
+     }
+     // Visual crossings are NOT pharmacodynamic measurements; these are equality points of two model curves.
+     const crossings=[];
+     const activityAt=(s,t)=>s.units*model.activity((t-s.ts)/MIN);
+     for(let i=0;i<graphShots.length;i++)for(let j=i+1;j<graphShots.length;j++){
+       const a=graphShots[i],b=graphShots[j];
+       const left=Math.max(a.ts,b.ts,view.start),right=Math.min(a.ts+model.p.diaMinutes*MIN,b.ts+model.p.diaMinutes*MIN,view.end);
+       if(right-left<MIN)continue;
+       const difference=t=>activityAt(a,t)-activityAt(b,t);
+       const step=2*MIN;
+       for(let t=left;t<right;t+=step){const nt=Math.min(right,t+step),d1=difference(t),d2=difference(nt);
+         if(!(d1*d2<0))continue;
+         let lo=t,hi=nt;
+         for(let z=0;z<30;z++){const m=(lo+hi)/2;if(difference(lo)*difference(m)<=0)hi=m;else lo=m;}
+         const ct=(lo+hi)/2;const val=activityAt(a,ct);
+         if(val<=0)continue;
+         const cx=xAt(ct),cy=baseY-height*val/maxA;
+         parts.push(`<circle class="gp-insulin-crossing" data-cross-marker="${escapeXml(a.id)}-${escapeXml(b.id)}" cx="${cx}" cy="${cy}" r="3.7" fill="#fff" stroke="#515b73" stroke-width="1.8"><title>Схематическое пересечение кривых: ${tm(ct)} · НЕ измерение эффекта</title></circle>`);
+         parts.push(`<path d="M${cx-2},${cy-2} l4,4 M${cx+2},${cy-2} l-4,4" stroke="#515b73" stroke-width="1.1" fill="none"/>`);
+         crossings.push({at:ct,first:a.id,second:b.id});
+         break;
+       }
+     }
+     parts.push('</g>');
+     
+     parts.push(`</svg>`);
+     return {svg:`<svg id="gpXdripSvg" viewBox="0 0 550 585" role="img" aria-label="История CGM и схематическое действие РинФаста" xmlns="http://www.w3.org/2000/svg">${parts.join('')}`,shownShots:visible,overlaps:ovs,crossings,readings:selected.length,view};
+   }
+   parts.push('</svg>');
+   return {svg:`<svg id="gpXdripSvg" viewBox="0 0 550 585" role="img" aria-label="История CGM" xmlns="http://www.w3.org/2000/svg">${parts.join('')}`,shownShots:[],overlaps:[],readings:selected.length,view};
+ }
+ function renderOverview(readings,now=ANCHOR,view){
+   const data=normalizeReadings(readings).filter(p=>p.ts>=now-24*HOUR&&p.ts<=now);
+   const W=550,L=38,R=539,top=12,bottom=91,st=now-24*HOUR,ed=now;
+   const x=t=>L+(t-st)/(ed-st)*(R-L),y=g=>bottom-(g-2)/11*(bottom-top);
+   const path=svgPath(data.map(d=>[x(d.ts),y(d.mmol)]));
+   let s=`<svg id="gpOverview" viewBox="0 0 550 117" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Обзор 24 часов, выберите точку для перемещения окна"><rect width="550" height="117" fill="#fff"/>`;
+   for(let g of [4,8,12])s+=`<line x1="${L}" x2="${R}" y1="${y(g)}" y2="${y(g)}" stroke="#e0e6ea" stroke-width="1"/>`;
+   s+=`<path d="${path}" fill="none" stroke="#8c9ba5" stroke-width="1.15"/>`;
+   for(const p of data.filter((r,i)=>i%3===0)){const c=p.mmol<3.9?COLORS.low:p.mmol>9.4?COLORS.high:COLORS.normal;s+=`<circle cx="${x(p.ts)}" cy="${y(p.mmol)}" r="1.8" fill="${c}"/>`;}
+   const left=Math.max(L,x(Math.max(st,view.start))),right=Math.min(R,x(Math.min(ed,view.end)));
+   s+=`<rect class="gp-overview-window" x="${left}" y="7" width="${Math.max(1,right-left)}" height="94" stroke="#687b91" stroke-width="2" fill="#aab6c2" fill-opacity=".13"/>`;
+   for(let t=st;t<=ed;t+=4*HOUR)s+=`<text x="${x(t)}" y="113" fill="#788b97" font-size="10.5" text-anchor="middle">${hour(t)}</text>`;
+   s+='</svg>';return s;
+ }
+ return Object.freeze({ANCHOR,COORD,PALETTE,fakeCgm,normalizeReadings,normalizeShots,makeModel,validView,overlapIntervals,renderSvg,renderOverview,tm,timeISO});
+});
+
+</script>
+<script>window.GP_CHART_LAYOUT="guided";</script>
+<script>
+(function(){
+'use strict';
+const api=GPCgmWhiteChart, engine=RinfastEngine, now=api.ANCHOR;
+const layout=window.GP_CHART_LAYOUT||'guided';
+const readings=api.fakeCgm(now);
+let historyH=12,futureH=6,offsetH=0,showInsulin=true,showTotal=false;
+let shots=[{id:'demo-1',insulinId:'rinfast',status:'confirmed',units:2,ts:now-180*60000},{id:'demo-2',insulinId:'rinfast',status:'confirmed',units:1,ts:now-110*60000}];
+let counter=2;
+const $=id=>document.getElementById(id);
+const nice=n=>(Math.round(n*10)/10).toFixed(1).replace('.',',');
+const fmt=api.tm;
+const color=api.PALETTE;
+function renderShotInputs(){
+ $('shots').innerHTML=shots.map((s,i)=>`<div class="shot-row" data-id="${s.id}">
+   <span class="id-dot" style="background:${color[i%color.length]}"></span>
+   <span class="note">РинФаст ${i+1}<br><small style="font-weight:400;color:#79909b">${fmt(s.ts)}</small></span>
+   <div><label>Доза, ЕД</label><input aria-label="Доза инъекции ${i+1}" data-key="units" data-id="${s.id}" type="number" min="0.5" max="20" step="0.5" value="${s.units}"></div>
+   <div><label>Мин. назад</label><input aria-label="Время инъекции ${i+1} в минутах назад" data-key="age" data-id="${s.id}" type="number" min="0" max="1500" step="5" value="${Math.round((now-s.ts)/60000)}"></div>
+   <button class="delete" data-delete="${s.id}" title="Удалить инъекцию ${i+1}" aria-label="Удалить инъекцию ${i+1}">×</button>
+ </div>`).join('');
+}
+function redraw(){
+ try{
+ const r=api.renderSvg({readings,shots,engine,now,historyH,futureH,offsetH,showInsulin,showTotal,layout});
+ $('mainGraph').innerHTML=r.svg;
+ $('overview').innerHTML=api.renderOverview(readings,now,r.view);
+ const els=[];
+ for(let i=0;i<r.shownShots.length;i++){
+  const s=r.shownShots[i];els.push(`<span class="item"><i class="bar" style="--line-color:${s.color}"></i> ${s.units} ЕД · ${fmt(s.ts)} · пик ${fmt(s.peak)} · конец модели ${fmt(s.end)} · ${s.cgmAtPeak===null?"на пике ещё нет CGM":"CGM на пике "+nice(s.cgmAtPeak)+" ммоль/л"}</span>`);
+ }
+ $('overlayLegend').innerHTML=showInsulin?els.join(''):'Линии РинФаста скрыты';
+ const overlaps=r.overlaps.filter(x=>x.from<r.view.end&&x.to>r.view.start);
+ $('overlapText').textContent=overlaps.length?'По модели действие нескольких инъекций перекрывается: '+overlaps.map(x=>fmt(x.from)+'–'+fmt(x.to)).join(', ')+'.':shots.length>1?'В текущем окне нет перекрытия действия подтверждённых инъекций.':'Сейчас показана одна инъекция или инъекций нет.';
+ $('overlapText').textContent += r.crossings?.length?' Схематическое пересечение кривых: '+r.crossings.map(x=>fmt(x.at)).join(', ')+'.':'';
+ $('info').textContent=`xDrip+ — демонстрационные показания, ${r.readings} точек в текущем окне · РинФаст — модельная кривая 300/75 минут.`;
+ $('error').textContent='';
+ }catch(e){$('error').textContent='Ошибка графика: '+e.message; $('mainGraph').textContent='График временно недоступен';}
+}
+function updateAll(){renderShotInputs();redraw();}
+$('rangeButtons').addEventListener('click',e=>{const btn=e.target.closest('button[data-hours]');if(!btn)return;historyH=Number(btn.dataset.hours);offsetH=0;document.querySelectorAll('[data-hours]').forEach(b=>b.classList.toggle('active',b===btn));redraw();});
+$('toggleInsulin').addEventListener('click',()=>{showInsulin=!showInsulin;$('toggleInsulin').setAttribute('aria-pressed',String(showInsulin));$('toggleInsulin').textContent=showInsulin?'✓ РинФаст':'РинФаст выключен';redraw();});
+$('toggleTotal').addEventListener('click',()=>{showTotal=!showTotal;$('toggleTotal').setAttribute('aria-pressed',String(showTotal));redraw();});
+$('shots').addEventListener('change',e=>{const input=e.target.closest('[data-id][data-key]');if(!input)return;const s=shots.find(x=>x.id===input.dataset.id);if(!s)return;const value=Number(input.value);if(!Number.isFinite(value)||value<0){$('error').textContent='Некорректное значение, проверьте запись.';return;}if(input.dataset.key==='units'){if(value<=0||value>20)return;$('error').textContent='';s.units=value;}else{if(value>1500)return;s.ts=now-value*60000;}updateAll();});
+$('shots').addEventListener('click',e=>{const btn=e.target.closest('button[data-delete]');if(!btn)return;shots=shots.filter(x=>x.id!==btn.dataset.delete);updateAll();});
+$('addShot').addEventListener('click',()=>{if(shots.length>=6)return;shots.push({id:'demo-'+(++counter),insulinId:'rinfast',status:'confirmed',units:1,ts:now-25*60000});updateAll();});
+$('overview').addEventListener('click',e=>{
+ const el=$('overview').querySelector('svg');if(!el)return;const pt=el.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;
+ const matrix=el.getScreenCTM();if(!matrix)return;const p=pt.matrixTransform(matrix.inverse());
+ const percent=(p.x-38)/(539-38);if(percent<0||percent>1)return;
+ const clickTime=now-24*3600000+percent*24*3600000;
+ // Display clicked time near the middle. Actual future area only when the window includes now.
+ offsetH=Math.max(-24,Math.min(0,(clickTime-now)/3600000-(futureH-historyH)/2));
+ redraw();
+});
+$('returnNow').addEventListener('click',()=>{offsetH=0;redraw();});
+$('loading').hidden=true;
+updateAll();
+})();
+
+</script>
+ </body></html>

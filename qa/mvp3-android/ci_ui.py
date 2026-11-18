@@ -1,0 +1,124 @@
+"""Drive the candidate's normal Android UI on the disposable Actions AVD."""
+from pathlib import Path
+import re
+import subprocess
+import time
+import xml.etree.ElementTree as ET
+
+from sqlite_smoke import require
+
+UI_PATH = '/data/local/tmp/glucopapa-mvp3-qa.xml'
+BOUNDS = re.compile(r'\[(\d+),(\d+)\]\[(\d+),(\d+)\]')
+
+
+def label(node):
+    return ' '.join((node.get('text', ''), node.get('content-desc', ''))).strip()
+
+
+def find_node(root, resource_id, captions):
+    candidates = []
+    for node in root.iter('node'):
+        match = BOUNDS.fullmatch(node.get('bounds', ''))
+        if match is None or node.get('enabled') != 'true':
+            continue
+        left, top, right, bottom = map(int, match.groups())
+        if left >= right or top >= bottom:
+            continue
+        node_id = node.get('resource-id', '').rsplit('/', 1)[-1]
+        exact_id = resource_id and node_id == resource_id
+        matches_caption = any(caption.casefold() in label(node).casefold() for caption in captions)
+        if exact_id or matches_caption:
+            rank = (bool(exact_id), node.get('clickable') == 'true', -(right-left)*(bottom-top))
+            candidates.append((rank, node, (left, top, right, bottom)))
+    if not candidates:
+        return None
+    _, node, bounds = max(candidates, key=lambda item: item[0])
+    return node, bounds
+
+
+class CandidateUI:
+    def __init__(self, emulator, output):
+        self.emulator = emulator
+        self.output = Path(output)
+        self.last_root = None
+
+    def hierarchy(self):
+        self.emulator.execute('shell', 'rm', '-f', UI_PATH)
+        response = self.emulator.execute('shell', 'uiautomator', 'dump', UI_PATH, timeout=20, check=False)
+        if response.returncode:
+            return None
+        contents = self.emulator.execute('exec-out', 'cat', UI_PATH, check=False)
+        if contents.returncode or not contents.stdout:
+            return None
+        try:
+            self.last_root = ET.fromstring(contents.stdout)
+        except ET.ParseError:
+            return None
+        (self.output / 'ui-latest.xml').write_bytes(contents.stdout)
+        return self.last_root
+
+    def wait(self, resource_id=None, captions=(), scroll=False):
+        end = time.monotonic() + 65
+        scrolled = 0
+        while time.monotonic() < end:
+            try:
+                root = self.hierarchy()
+            except subprocess.TimeoutExpired:
+                root = None
+            if root is not None:
+                node = find_node(root, resource_id, captions)
+                if node is not None:
+                    return node
+                if scroll and scrolled < 4:
+                    self.scroll()
+                    scrolled += 1
+            time.sleep(.6)
+        raise RuntimeError(f'Android control unavailable: {resource_id or captions}')
+
+    def scroll(self):
+        webviews = [node for node in self.last_root.iter('node') if node.get('class') == 'android.webkit.WebView']
+        if not webviews:
+            return
+        match = BOUNDS.fullmatch(webviews[0].get('bounds', ''))
+        if not match:
+            return
+        left, top, right, bottom = map(int, match.groups())
+        x = left + (right-left)*2//3
+        start = top + (bottom-top)*3//4
+        finish = top + (bottom-top)//4
+        self.emulator.execute('shell', 'input', 'swipe', str(x), str(start), str(x), str(finish), '270')
+
+    def tap(self, resource_id=None, captions=(), scroll=False):
+        node, (left, top, right, bottom) = self.wait(resource_id, captions, scroll)
+        self.emulator.execute('shell', 'input', 'tap', str((left+right)//2), str((top+bottom)//2))
+        return node
+
+    def home(self):
+        self.wait('openHigh', ('Высокий сахар',))
+        self.wait('modeBadge', ('Тестовые данные',))
+        require(any('Тестовые данные' in label(node) for node in self.last_root.iter('node')),
+                'The app did not enter its synthetic journal')
+
+    def injection(self, confirmed):
+        self.tap('openHigh', ('Высокий сахар',))
+        self.tap(captions=('Записать выполненный укол',))
+        self.tap('injectionUnits', ('Фактически введено', 'Например: 0,5'))
+        self.emulator.execute('shell', 'input', 'text', '0.5')
+        keyboard = self.emulator.text('shell', 'dumpsys', 'input_method')
+        if re.search(r'\b(?:mInputShown|mIsInputViewShown)=true', keyboard):
+            self.emulator.execute('shell', 'input', 'keyevent', 'KEYCODE_BACK')
+        self.tap('injectionRegion', ('Не указано', 'Место укола'), scroll=True)
+        self.tap(captions=('Живот',))
+        checkbox, _ = self.wait('injectionConfirm', ('Я подтверждаю',), scroll=True)
+        require(checkbox.get('checked') != 'true', 'A new injection must start unconfirmed')
+        if confirmed:
+            self.tap('injectionConfirm', ('Я подтверждаю',), scroll=True)
+        self.tap(captions=('Сохранить фактический укол',), scroll=True)
+        if confirmed:
+            self.wait(captions=('Фактическая инъекция записана один раз',))
+            self.journal()
+
+    def journal(self):
+        self.tap(captions=('Дневник',))
+        self.wait(captions=('РинФаст',), scroll=True)
+        self.wait(captions=('Живот',), scroll=True)

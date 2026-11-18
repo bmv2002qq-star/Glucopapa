@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ГлюкоПапа | РинФаст v0.3.1 | независимый исследовательский стенд</title>
+<style>
+:root{color-scheme:light;--bg:#f4f7fc;--panel:#fff;--ink:#13223b;--muted:#5d6e86;--edge:#dce5f1;--blue:#285fb9;--orange:#e28d20;--teal:#098a94;--purple:#8867db;--red:#ac3f34}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font:14px/1.5 system-ui,-apple-system,'Segoe UI',Arial,sans-serif;color:var(--ink)}main{max-width:1290px;margin:auto;padding:26px 19px 55px}h1{font-size:28px;line-height:1.2;margin:2px 0 7px}h2{font-size:17px;line-height:1.3;margin:0 0 13px}h3{font-size:14px;margin:18px 0 9px}p{margin:5px 0}.eyebrow{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);font-weight:760}.muted{color:var(--muted)}.small{font-size:12px;color:var(--muted)}.head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;margin-bottom:18px}.tag{background:#e9f0ff;color:#2255a7;border-radius:100px;padding:7px 11px;font-size:12px;font-weight:700}
+.warn{background:#fff9ed;border:1px solid #e8d2ae;border-left:4px solid #cf8f2a;border-radius:10px;padding:14px;margin-bottom:18px}.columns{display:grid;grid-template-columns:345px minmax(0,1fr);gap:17px;align-items:start}.panel{background:var(--panel);border:1px solid var(--edge);border-radius:14px;padding:19px;margin-bottom:16px;box-shadow:0 4px 16px #13233b08}.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.field{min-width:0}label{display:block;font-weight:650;font-size:12px;margin:7px 0 5px}input,select{width:100%;border:1px solid #bacbdf;border-radius:9px;background:white;padding:10px 9px;font:inherit;color:var(--ink);min-width:0}.shot{background:#f8fafd;border:1px solid var(--edge);border-radius:10px;margin-top:10px;padding:11px}.shothead{display:flex;justify-content:space-between;align-items:center;gap:10px}.shothead strong{font-size:13px}.btn{display:inline-flex;align-items:center;justify-content:center;border:1px solid #adc1e1;background:white;color:#24508d;font:700 13px system-ui,sans-serif;border-radius:9px;padding:10px 13px;cursor:pointer;white-space:nowrap}.btn.primary{background:var(--blue);color:#fff;border:0;padding:12px 16px}.btn.danger{font-size:11px;padding:6px 9px}.buttons{display:flex;flex-wrap:wrap;gap:9px;margin-top:13px}.legend{display:flex;flex-wrap:wrap;gap:9px 16px;margin:7px 0 10px;font-size:12px;color:#43556f}.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:middle}.metricgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}.metric{border:1px solid var(--edge);background:#f7f9fd;border-radius:11px;padding:12px}.metric small{display:block;color:var(--muted);font-size:11px;min-height:30px;line-height:1.35}.metric strong{display:block;font-size:22px;font-variant-numeric:tabular-nums;line-height:1.4}.canvasbox{border:1px solid var(--edge);background:#fafcff;border-radius:11px;padding:11px;margin-top:13px}.canvasbox canvas{width:100%;height:250px;display:block}.rowhead{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:center}.pill{padding:3px 9px;border-radius:50px;background:#e4f4f1;color:#17695e;font-size:11px;font-weight:700}.err{display:none;color:#8b2529;background:#ffeded;border:1px solid #edb3b5;padding:12px;border-radius:8px;margin:10px 0}.tablewrap{overflow-x:auto}table{width:100%;border-collapse:collapse;white-space:nowrap;font-size:12px;font-variant-numeric:tabular-nums}td,th{padding:9px 7px;border-bottom:1px solid var(--edge);text-align:right}td:first-child,th:first-child{text-align:left}th{color:var(--muted);font-size:11px}a{color:var(--blue)}.key{color:var(--muted);font-size:12px;padding:9px 0;border-bottom:1px solid var(--edge)}.key:last-child{border:0}.key b{float:right;color:var(--ink)}.statuswarn{border:1px solid #edd5ad;padding:11px;background:#fff9ed;border-radius:8px;font-size:12px}
+@media(max-width:1000px){.columns{grid-template-columns:1fr}.metricgrid{grid-template-columns:repeat(2,1fr)}}@media(max-width:520px){main{padding:16px 10px 28px}.panel{padding:13px}.head{display:block}.tag{display:inline-block;margin-top:8px}.metric strong{font-size:19px}.canvasbox canvas{height:225px}.metricgrid{gap:6px}}
+</style></head><body><main>
+<div class="head"><div><div class="eyebrow">ГлюкоПапа / отдельные математические модули</div><h1>РинФаст — исследование действия v0.3.1</h1><p class="muted">Инсулин аспарт, не «РинФаст Ник» · независимый офлайн-стенд</p></div><span class="tag">Версия 0.3.1 · исправлены графики</span></div>
+<div class="warn"><b>Не использовать для назначения инсулина, еды или лечения гипогликемии.</b> Все дозы на экране вымышленные. Графики показывают условную долю сахароснижающего действия по OpenAPS. Они не измеряют инсулин в крови и не предсказывают сахар ребёнка. При подозрении на ошибочную дозу требуется срочная медицинская оценка.</div>
+<div class="columns"><aside>
+<div class="panel"><h2>1. Параметры исследования</h2><p class="small">По умолчанию — опубликованная кривая OpenAPS для обычного инсулина аспарт: пик модельной активности 75 минут, DIA 300 минут.</p>
+<label for="dia">Длительность модельного действия</label><select id="dia"><option value="300">300 минут (5 ч) · исходная</option><option value="330">330 минут (5,5 ч) · эксперимент</option><option value="360">360 минут (6 ч) · эксперимент</option><option value="420">420 минут (7 ч) · эксперимент</option></select>
+<label for="peak">Пик модельной скорости действия</label><select id="peak"><option value="60">60 минут · эксперимент</option><option value="75" selected>75 минут · OpenAPS</option><option value="90">90 минут · эксперимент</option><option value="105">105 минут · эксперимент</option><option value="120">120 минут · эксперимент</option></select>
+<p class="small" style="margin-top:11px">Длительность более 300 минут здесь используется <b>только для сравнения чувствительности</b> модели, а не как подтверждённая продолжительность действия конкретной инъекции.</p></div>
+<div class="panel"><h2>2. Условный журнал инъекций</h2><p class="small">Значения не связаны с реальным дневником. Время задаётся относительно момента расчёта (0 = сейчас).</p><div id="shots"></div><div class="buttons"><button class="btn" id="add">+ Инъекция</button><button class="btn" id="reset">Сбросить пример</button><button class="btn primary" id="recalc">Пересчитать</button></div><div id="err" class="err" role="alert"></div><p class="small" style="margin-top:12px">Для расчёта требуются только <b>подтверждённые</b> фактические введения. Запланированная инъекция блокирует результат, а не считается введённой.</p></div>
+<div class="panel"><h2>3. Данные производителя</h2><div class="key">Начало наблюдаемого действия <b>10–20 мин</b></div><div class="key">Максимальный эффект <b>1–3 часа</b></div><div class="key">Продолжительность <b>3–5 часов</b></div><p class="small" style="margin-top:10px">Внутри математической кривой активность плавно возрастает с момента укола. Диапазон начала по инструкции <b>не превращаем</b> в искусственную ступеньку на 10-й минуте.</p></div>
+</aside><section>
+<div class="panel"><div class="rowhead"><h2>4. Расчётные показатели сейчас</h2><span class="pill" id="status">Модель</span></div>
+<div class="metricgrid"><div class="metric"><small>Осталось модельного действия, экв. ЕД</small><strong id="iob">—</strong></div><div class="metric"><small>Модельная активность сейчас, экв. ЕД/ч</small><strong id="rate">—</strong></div><div class="metric"><small>Модельное действие за следующие 30 минут</small><strong id="next30">—</strong></div><div class="metric"><small>Модельное действие за следующие 60 минут</small><strong id="next60">—</strong></div></div>
+<div class="canvasbox"><div class="rowhead"><h3 style="margin:0">Скорость сахароснижающего действия (модель)</h3><span class="small">ЕД/ч · время относительно сейчас</span></div><div id="legend1" class="legend"></div><canvas id="activityGraph" aria-label="Раздельные кривые каждой инъекции и их суммы"></canvas></div>
+<div class="canvasbox"><div class="rowhead"><h3 style="margin:0">Оставшееся модельное действие (IOB)</h3><span class="small">Экв. ЕД · не концентрация</span></div><div id="legend2" class="legend"></div><canvas id="iobGraph" aria-label="Раздельный остаток эффекта каждой инъекции и сумма"></canvas></div>
+<p class="small" style="margin-top:10px">Ось X: −4 часа…+6 часов относительно момента расчёта. Вертикальная фиолетовая линия — сейчас. Время ввода каждой дозы показано штриховой линией. Кривая старой дозы не обнуляется при появлении новой; действия суммируются.</p>
+</div>
+<div class="panel"><h2>5. Действие отдельных инъекций сейчас</h2><div class="tablewrap"><table><thead><tr><th>Инъекция</th><th>Доза, ЕД</th><th>Мин назад</th><th>Фаза по инструкции</th><th>Остаток модели</th><th>След. 30 мин, экв. ЕД</th></tr></thead><tbody id="detail"></tbody></table></div><p class="small">Препарат не перестаёт гарантированно действовать при математическом остатке 0. Нулевой IOB в этой реализации означает лишь окончание заданной модели, а не доказательство безопасности.</p></div>
+<div class="panel"><h2>6. Насколько результат зависит от 5 или 6 часов?</h2><p class="small">Один и тот же журнал, один и тот же пик; меняем только DIA. Разница показывает чувствительность <em>алгоритма</em>, не индивидуальную биологическую погрешность.</p>
+<div class="metricgrid"><div class="metric"><small>IOB по модели 5 ч, экв. ЕД</small><strong id="short">—</strong></div><div class="metric"><small>IOB по модели 6 ч, экв. ЕД</small><strong id="long">—</strong></div><div class="metric"><small>Разница модельных остатков, экв. ЕД</small><strong id="diff">—</strong></div><div class="metric"><small>Прогноз сахара / корректировка дозы</small><strong>Нет</strong></div></div><div class="statuswarn" style="margin-top:12px">Если параметры различаются, нельзя автоматически выбирать наиболее удобный результат. Для реального человека длительность и точность действия должны быть клинически проверены.</div></div>
+</section></div>
+<p class="small"><b>Источники:</b> <a href="https://help.geropharm.ru/rinfast-insulin-aspart">ГЕРОФАРМ — РинФаст</a>; <a href="https://openaps.readthedocs.io/en/latest/docs/While%20You%20Wait%20For%20Gear/understanding-insulin-on-board-calculations.html">OpenAPS — Exponential IOB curves</a>. Версия исследовательской модели 0.3.1; это не медицинское изделие и не клинически валидированный алгоритм.</p>
+</main>
+<script>/*
+ * ГлюкоПапа: независимый исследовательский модуль IOB для РинФаста (инсулин аспарт).
+ * v0.3.0. Расчётная кривая OpenAPS exponential (rapid acting), не индивидуальная
+ * фармакодинамическая оценка и НЕ алгоритм назначения инсулина/еды.
+ * Не требуется сеть, CGM, журнал еды или другие модули.
+ * License of THIS implementation: MIT. Reference method: OpenAPS/oref0.
+ */
+(function (root, factory) {
+  "use strict";
+  const api = factory();
+  if (typeof module === "object" && module.exports) module.exports = api;
+  if (root) root.RinfastEngine = api;
+})(typeof globalThis !== "undefined" ? globalThis : this, function () {
+  "use strict";
+  const ENGINE_VERSION = "0.3.0";
+  const DEFAULT_PROFILE = Object.freeze({
+    drugId: "rinfast", drugName: "РинФаст", substance: "инсулин аспарт",
+    model: "openaps_exponential_rapid", modelVersion: "0.3.0",
+    diaMinutes: 300, peakMinutes: 75,
+    dataSource: "https://help.geropharm.ru/rinfast-insulin-aspart",
+    modelSource: "https://github.com/openaps/oref0/blob/master/lib/iob/calculate.js",
+    clinicalValidation: false
+  });
+  // Диапазоны — из инструкции производителя, НЕ параметры кривой OpenAPS.
+  const LABEL_TIME_RANGES = Object.freeze({
+    onsetMinutes: Object.freeze([10, 20]),
+    maximumEffectMinutes: Object.freeze([60, 180]),
+    durationMinutes: Object.freeze([180, 300]),
+    source: "https://help.geropharm.ru/rinfast-insulin-aspart"
+  });
+  const WARNINGS = Object.freeze([
+    "Расчёт — модель доли оставшегося эффекта, не измерение инсулина в крови.",
+    "Профиль 300/75 минут — исследовательские параметры OpenAPS, не индивидуальная кривая РинФаста.",
+    "Число IOB нельзя использовать самостоятельно для расчёта доз, углеводов или лечения гипогликемии.",
+    "Отсутствие записей в журнале не доказывает отсутствия введённого инсулина.",
+    "Ноль через выбранную DIA означает только завершение выбранной математической кривой, не гарантирует отсутствия действия в организме.",
+    "Начало 10–20 мин, максимум 1–3 ч, длительность 3–5 ч — диапазоны по инструкции, не персональные пороги.",
+    "Рост математической активности до 10 минут НЕ означает подтверждённый клинический эффект до 10 минут.",
+    "Модельная продолжительность 360+ минут выходит за пределы типичного диапазона 3–5 часов из инструкции и служит только анализу чувствительности."
+  ]);
+  function finiteNumber(v) { return typeof v === "number" && Number.isFinite(v); }
+  function clamp01(x) { return Math.max(0, Math.min(1, x)); }
+  function validateProfile(profile) {
+    const p = profile == null ? DEFAULT_PROFILE : profile;
+    if (!p || p.drugId !== "rinfast" || p.model !== "openaps_exponential_rapid") {
+      throw new Error("Профиль должен быть для РинФаста с моделью openaps_exponential_rapid.");
+    }
+    if (!finiteNumber(p.diaMinutes) || p.diaMinutes < 300 || p.diaMinutes > 480) {
+      throw new Error("Некорректная длительность DIA: разрешён исследовательский диапазон 300–480 мин.");
+    }
+    if (!finiteNumber(p.peakMinutes) || p.peakMinutes < 50 || p.peakMinutes > 120 || p.peakMinutes >= p.diaMinutes / 2) {
+      throw new Error("Некорректное время пика: 50–120 мин и строго меньше половины DIA.");
+    }
+    return p;
+  }
+  function parameters(profile) {
+    const p = validateProfile(profile);
+    const D = p.diaMinutes, P = p.peakMinutes;
+    const tau = P * (1 - P / D) / (1 - 2 * P / D);
+    const a = 2 * tau / D;
+    const scale = 1 / (1 - a + (1 + a) * Math.exp(-D / tau));
+    if (![tau, a, scale].every(Number.isFinite) || tau <= 0 || scale <= 0) {
+      throw new Error("Не удалось рассчитать устойчивые параметры кривой.");
+    }
+    return { D, P, tau, a, scale };
+  }
+  /** Returns a fraction of insulin GLUCOSE-LOWERING EFFECT remaining, not plasma insulin. */
+  function getCurve(ageMinutes, profile = DEFAULT_PROFILE) {
+    if (!finiteNumber(ageMinutes) || ageMinutes < 0) throw new Error("Возраст инъекции должен быть неотрицательным числом минут.");
+    const { D, tau, a, scale } = parameters(profile);
+    if (ageMinutes >= D) return { remainingFraction: 0, usedFraction: 1, activityFractionPerMinute: 0 };
+    if (ageMinutes === 0) return { remainingFraction: 1, usedFraction: 0, activityFractionPerMinute: 0 };
+    const t = ageMinutes;
+    const exp = Math.exp(-t / tau);
+    // Algebraically equivalent to OpenAPS iobContrib, but avoids / (1-a)
+    // singularity when peak makes a exactly 1.
+    const remaining = 1 - scale * ((t * t / (tau * D) - (1 - a) * (t / tau + 1)) * exp + (1 - a));
+    const activity = (scale / (tau * tau)) * t * (1 - t / D) * exp;
+    const r = clamp01(remaining);
+    return { remainingFraction: r, usedFraction: 1 - r, activityFractionPerMinute: Math.max(0, activity) };
+  }
+  /** Instruction-based qualitative phase, deliberately independent of model action. */
+  function getPhase(ageMinutes, profile = DEFAULT_PROFILE) {
+    const p = validateProfile(profile);
+    if (!finiteNumber(ageMinutes) || ageMinutes < 0) throw new Error("Возраст инъекции должен быть неотрицательным числом минут.");
+    if (ageMinutes >= p.diaMinutes) return {code:"MODEL_HORIZON_PASSED",label:"За пределами выбранного модельного интервала",modelMinutesRemaining:0};
+    const modelMinutesRemaining = p.diaMinutes - ageMinutes;
+    if (ageMinutes < 10) return {code:"BEFORE_TYPICAL_ONSET",label:"До типичного начала действия по инструкции",modelMinutesRemaining};
+    if (ageMinutes < 20) return {code:"ONSET_WINDOW",label:"Диапазон начала действия по инструкции",modelMinutesRemaining};
+    if (ageMinutes < 60) return {code:"BEFORE_MAX_EFFECT_WINDOW",label:"После начала, до диапазона максимального эффекта",modelMinutesRemaining};
+    if (ageMinutes <= 180) return {code:"MAX_EFFECT_WINDOW",label:"Диапазон максимального эффекта по инструкции",modelMinutesRemaining};
+    if (ageMinutes < 300) return {code:"LATE_EFFECT_WINDOW",label:"Поздняя часть диапазона действия по инструкции",modelMinutesRemaining};
+    return {code:"EXTENDED_RESEARCH_MODEL",label:"Исследовательское продление за 5 часов — вне типичного диапазона инструкции",modelMinutesRemaining};
+  }
+  function timestampMs(value) {
+    if (typeof value !== "string" || !/T\d\d:\d\d/.test(value) || !/(?:Z|[+\-]\d\d:\d\d)$/i.test(value)) {
+      throw new Error("Время должно быть ISO 8601 с часовым поясом, например 2026-11-13T13:00:00+03:00.");
+    }
+    const ms = Date.parse(value);
+    if (!Number.isFinite(ms)) throw new Error("Невозможно прочитать время.");
+    return ms;
+  }
+  function validateHorizons(horizons) {
+    if (!Array.isArray(horizons) || horizons.length < 1 || horizons.length > 12 ||
+        !horizons.every(v => Number.isInteger(v) && v > 0 && v <= 480) ||
+        new Set(horizons).size !== horizons.length) {
+      throw new Error("Горизонты прогноза: уникальные положительные целые минуты (1–480), не более 12.");
+    }
+    return horizons;
+  }
+  /**
+   * Input: {nowIso, events, profile, horizonsMinutes?}
+   * Event: {id, type:'insulin_injection', insulinId:'rinfast', status:'confirmed',
+   *         administeredAt:'ISO8601 with offset', units: positive number}
+   * On any ambiguous relevant record -> INCOMPLETE and ALL computed values null.
+   */
+  function calculate(request) {
+    if (!request || typeof request !== "object") throw new Error("Передайте объект запроса.");
+    const profile = validateProfile(request.profile || DEFAULT_PROFILE);
+    const now = timestampMs(request.nowIso);
+    if (!Array.isArray(request.events) || request.events.length > 10000) {
+      throw new Error("События журнала должны быть массивом длиной до 10 000.");
+    }
+    const horizons = validateHorizons(request.horizonsMinutes || [15, 30, 60]);
+    const issues = [], ignored = [];
+    const accepted = [], ids = new Set();
+    for (const event of request.events) {
+      if (!event || typeof event !== "object") {
+        issues.push("В журнале обнаружена повреждённая запись."); continue;
+      }
+      if (event.type !== "insulin_injection") {
+        if (!event.type) issues.push("В журнале запись без типа события.");
+        continue;
+      }
+      if (typeof event.insulinId !== "string" || !event.insulinId.trim()) {
+        issues.push("Инъекция без идентификатора инсулина."); continue;
+      }
+      if (event.insulinId !== "rinfast") {
+        if (event.insulinId === "levemir") {
+          ignored.push({ id: String(event.id || "?"), reason: "Левемир учитывается отдельным модулем" });
+        } else {
+          issues.push(`Инъекция ${String(event.id || "?")}: препарат ${event.insulinId} неизвестен этому модулю или является другим коротким инсулином; требуется сверка журнала.`);
+        }
+        continue;
+      }
+      if (typeof event.id !== "string" || !event.id.trim() || ids.has(event.id)) {
+        issues.push("Отсутствует или повторяется идентификатор инъекции РинФаста."); continue;
+      }
+      ids.add(event.id);
+      if (event.status !== "confirmed") {
+        issues.push(`Инъекция ${event.id}: нет подтверждения фактического введения (status=confirmed).`);
+        continue;
+      }
+      if (!finiteNumber(event.units) || event.units <= 0 || event.units > 200) {
+        issues.push(`Инъекция ${event.id}: недостоверная доза.`); continue;
+      }
+      let administration;
+      try { administration = timestampMs(event.administeredAt); }
+      catch (_) { issues.push(`Инъекция ${event.id}: недостоверное время.`); continue; }
+      if (administration > now) {
+        issues.push(`Инъекция ${event.id}: время в будущем относительно момента расчёта.`); continue;
+      }
+      const ageMinutes = (now - administration) / 60000;
+      if (ageMinutes >= profile.diaMinutes) {
+        ignored.push({ id: event.id, reason: "За пределами расчётной длительности действия" });
+        continue;
+      }
+      accepted.push({ id: event.id, units: event.units, ageMinutes, administeredAt: event.administeredAt });
+    }
+    const base = {
+      engineVersion: ENGINE_VERSION, modelVersion: profile.modelVersion || ENGINE_VERSION,
+      drugId: "rinfast", drugName: "РинФаст", model: profile.model,
+      diaMinutes: profile.diaMinutes, peakMinutes: profile.peakMinutes,
+      nowIso: request.nowIso, issues, ignored,
+      warnings: Array.from(WARNINGS), timingSource: LABEL_TIME_RANGES.source, instructionTiming: LABEL_TIME_RANGES, acceptedCount: accepted.length,
+      clinicalValidation: false,
+      statusMeaning: "MODEL_ESTIMATE означает математический расчёт, не индивидуально проверенное действие",
+      assumesCompleteJournal: true,
+      durationBeyondLabel: profile.diaMinutes > 300,
+      labelOnsetIsNotHardCutoff: true
+    };
+    if (issues.length) {
+      return { ...base, status: "INCOMPLETE", modelRemainingUnits: null,
+        activityModelUnitsPerMinute: null, futureActionModelUnits: null, contributions: null };
+    }
+    let modelRemainingUnits = 0, activityModelUnitsPerMinute = 0;
+    const futureActionModelUnits = Object.fromEntries(horizons.map(h => [String(h), 0]));
+    const contributions = accepted.map(inj => {
+      const atNow = getCurve(inj.ageMinutes, profile);
+      const actionNext = {};
+      for (const h of horizons) {
+        const after = getCurve(inj.ageMinutes + h, profile);
+        const part = Math.max(0, inj.units * (atNow.remainingFraction - after.remainingFraction));
+        actionNext[String(h)] = part;
+        futureActionModelUnits[String(h)] += part;
+      }
+      const remainingUnits = inj.units * atNow.remainingFraction;
+      const usedUnits = inj.units * atNow.usedFraction;
+      const activityUnitsPerMinute = inj.units * atNow.activityFractionPerMinute;
+      modelRemainingUnits += remainingUnits;
+      activityModelUnitsPerMinute += activityUnitsPerMinute;
+      return {
+        id: inj.id, administeredAt: inj.administeredAt, ageMinutes: inj.ageMinutes,
+        phase: getPhase(inj.ageMinutes, profile),
+        doseUnits: inj.units, remainingFraction: atNow.remainingFraction,
+        usedFraction: atNow.usedFraction, remainingModelUnits: remainingUnits,
+        usedModelUnits: usedUnits, activityModelUnitsPerMinute: activityUnitsPerMinute,
+        futureActionModelUnits: actionNext
+      };
+    });
+    return {
+      ...base, status: "MODEL_ESTIMATE", modelRemainingUnits,
+      activityModelUnitsPerMinute, futureActionModelUnits, contributions
+    };
+  }
+  /**
+   * Исследовательская серия по времени вокруг nowIso.
+   * Перед инъекцией её действие = 0, после DIA = 0 только в рамках модели.
+   * Данные используются только для построения отдельных и суммарных графиков.
+   * Не оценивает фактический сахар и не назначает терапию.
+   */
+  function calculateTimeline(request, options = {}) {
+    if (!request || typeof request !== "object") throw new Error("Нужен объект запроса.");
+    const profile = validateProfile(request.profile || DEFAULT_PROFILE);
+    const now = timestampMs(request.nowIso);
+    const start = options.startOffsetMinutes == null ? -240 : options.startOffsetMinutes;
+    const end = options.endOffsetMinutes == null ? 360 : options.endOffsetMinutes;
+    const step = options.stepMinutes == null ? 5 : options.stepMinutes;
+    if (![start, end, step].every(finiteNumber) || !Number.isInteger(start) || !Number.isInteger(end) ||
+        !Number.isInteger(step) || start < -600 || end > 600 || end <= start || step < 1 || step > 60 ||
+        Math.ceil((end - start) / step) > 1200) {
+      throw new Error("Некорректный интервал графика: -600..+600 минут, шаг 1–60 минут.");
+    }
+    const audit = calculate({ nowIso: request.nowIso, events: request.events, profile });
+    if (audit.status !== "MODEL_ESTIMATE") return {
+      status: "INCOMPLETE", issues: audit.issues, rows: null, shotIds: null, clinicalValidation: false
+    };
+    const shots = request.events.filter(e => e.type === "insulin_injection" && e.insulinId === "rinfast")
+      .map(e => ({ id: e.id, units: e.units, administeredAt: e.administeredAt,
+        ageAtNowMinutes: (now - timestampMs(e.administeredAt)) / 60000 }));
+    const rows = [];
+    for (let offset = start; offset <= end; offset += step) {
+      const perShot = []; let totalActivityUnitsPerMinute = 0, totalRemainingModelUnits = 0;
+      for (const shot of shots) {
+        const age = shot.ageAtNowMinutes + offset;
+        const curve = age < 0 ? null : getCurve(age, profile);
+        const activityUnitsPerMinute = curve ? shot.units * curve.activityFractionPerMinute : 0;
+        const remainingModelUnits = curve ? shot.units * curve.remainingFraction : 0;
+        perShot.push({ id: shot.id, activityUnitsPerMinute, remainingModelUnits });
+        totalActivityUnitsPerMinute += activityUnitsPerMinute;
+        totalRemainingModelUnits += remainingModelUnits;
+      }
+      rows.push({ offsetMinutes: offset, totalActivityUnitsPerMinute, totalRemainingModelUnits, perShot });
+    }
+    if (rows.at(-1).offsetMinutes !== end) {
+      const tail = calculateTimeline(request, { startOffsetMinutes: end-1, endOffsetMinutes: end, stepMinutes: 1 });
+      // Include endpoint without duplicating previous data.
+      rows.push(tail.rows.at(-1));
+    }
+    return { status: "MODEL_ESTIMATE", modelVersion: ENGINE_VERSION,
+      profile: {diaMinutes: profile.diaMinutes, peakMinutes: profile.peakMinutes},
+      shotIds: shots.map(x => x.id), rows,
+      labelTiming: LABEL_TIME_RANGES, clinicalValidation: false };
+  }
+  /** Sensitivity analysis; NEVER chooses a patient-specific DIA. */
+  function compareDurations(request, durationMinutes = [300, 360]) {
+    if (!Array.isArray(durationMinutes) || durationMinutes.length < 2 || durationMinutes.length > 6 ||
+        new Set(durationMinutes).size !== durationMinutes.length) {
+      throw new Error("Нужны 2–6 уникальных вариантов исследовательского времени DIA.");
+    }
+    const baseline = validateProfile(request.profile || DEFAULT_PROFILE);
+    const alternatives = durationMinutes.map(diaMinutes => {
+      const profile = {...baseline, diaMinutes};
+      validateProfile(profile);
+      const r = calculate({...request, profile});
+      return {diaMinutes, peakMinutes: profile.peakMinutes, status: r.status,
+        modelRemainingUnits: r.modelRemainingUnits,
+        futureActionModelUnits: r.futureActionModelUnits, issues: r.issues};
+    });
+    return {status: alternatives.every(a => a.status === "MODEL_ESTIMATE") ? "MODEL_ESTIMATE" : "INCOMPLETE",
+      scenarios: alternatives, clinicalValidation: false,
+      note: "Диапазон сценариев НЕ является доверительным интервалом и НЕ предсказывает клиническую погрешность."};
+  }
+  return Object.freeze({ ENGINE_VERSION, DEFAULT_PROFILE, LABEL_TIME_RANGES, WARNINGS, getPhase,
+    validateProfile, getCurve, calculate, calculateTimeline, compareDurations });
+});
+</script>
+<script>
+(function(){'use strict';
+const E=globalThis.RinfastEngine,$=id=>document.getElementById(id), COLORS=['#e28d20','#0894a2','#9163d8','#e25c6b','#52a75e','#a57342'],SUM='#203f7f';
+const NOW='2026-11-13T14:00:00+03:00';
+let state=[],last=null;
+const fmt=(v,n=3)=>Number(v).toLocaleString('ru-RU',{minimumFractionDigits:n,maximumFractionDigits:n});
+function defaults(){state=[{id:'demo-1',units:1,ago:120,status:'confirmed'}, {id:'demo-2',units:0.5,ago:30,status:'confirmed'}];buildShots();recalc();}
+function buildShots(){const container=$('shots');container.replaceChildren();state.forEach((item,i)=>{
+ const box=document.createElement('div');box.className='shot';box.innerHTML=`<div class="shothead"><strong style="color:${COLORS[i%COLORS.length]}">● Инъекция ${i+1}</strong><button class="btn danger" type="button">Удалить</button></div><div class="fields"><div class="field"><label>Доза, ЕД</label><input class="units" type="number" min="0.5" max="20" step="0.5" value="${item.units}"></div><div class="field"><label>Минут назад</label><input class="ago" type="number" min="0" max="600" step="5" value="${item.ago}"></div></div><label>Статус записи</label><select class="status"><option value="confirmed" ${item.status==='confirmed'?'selected':''}>Введено</option><option value="planned" ${item.status==='planned'?'selected':''}>Запланировано</option></select>`;
+ const inputs={units:box.querySelector('.units'),ago:box.querySelector('.ago'),status:box.querySelector('.status')};
+ Object.entries(inputs).forEach(([key,el])=>{const update=()=>{item[key]=key==='status'?el.value:Number(el.value);recalc()};el.addEventListener('change',update);if(key!=='status')el.addEventListener('input',update)});
+ box.querySelector('button').addEventListener('click',()=>{state=state.filter(x=>x!==item);buildShots();recalc()});container.append(box);
+ });}
+const getProfile=()=>({...E.DEFAULT_PROFILE,diaMinutes:Number($('dia').value),peakMinutes:Number($('peak').value)});
+function buildRequest(){const events=state.map(x=>{if(!Number.isFinite(x.units)||x.units<=0||x.units>20||Math.round(x.units*2)!==x.units*2)throw Error('Тестовая доза должна быть от 0,5 до 20 ЕД с шагом 0,5 ЕД.');if(!Number.isInteger(x.ago)||x.ago<0||x.ago>600)throw Error('Время должно быть целым числом минут от 0 до 600.');return {id:x.id,type:'insulin_injection',insulinId:'rinfast',status:x.status,units:x.units,administeredAt:new Date(Date.parse(NOW)-x.ago*60000).toISOString()}});return {nowIso:NOW,events,profile:getProfile(),horizonsMinutes:[15,30,60,120]};}
+function legend(el){el.replaceChildren();[...state.map((s,i)=>({name:'Инъекция '+(i+1),color:COLORS[i%COLORS.length]})),{name:'Общее действие',color:SUM}].forEach(x=>{const div=document.createElement('span');const dot=document.createElement('i');dot.className='dot';dot.style.background=x.color;div.append(dot,document.createTextNode(x.name));el.append(div)});}
+function draw(canvas,points,key){const rect=canvas.getBoundingClientRect();let width=Math.max(rect.width,280),height=canvas.clientHeight||250,dpr=Math.min(window.devicePixelRatio||1,2);canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);const g=canvas.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,width,height);const pad={left:51,top:14,right:13,bottom:33},ww=width-pad.left-pad.right,hh=height-pad.top-pad.bottom;const shortKey=key==='totalActivityUnitsPerMinute'?'activityUnitsPerMinute':'remainingModelUnits';const scale=key==='totalActivityUnitsPerMinute'?60:1;const values=points.map(p=>Math.max(p[key],...p.perShot.map(s=>s[shortKey])));if(values.some(v=>!Number.isFinite(v)))throw Error('Ошибка данных для построения графика');let maximum=Math.max(0.0001,...values)*scale*1.12;const min=points[0].offsetMinutes,max=points.at(-1).offsetMinutes;const x=t=>pad.left+ww*(t-min)/(max-min),y=v=>pad.top+hh*(1-v/maximum);
+ g.font='11px system-ui';g.textAlign='right';g.textBaseline='middle';for(let i=0;i<=4;i++){const v=maximum*i/4;g.strokeStyle='#e4eaf2';g.beginPath();g.moveTo(pad.left,y(v));g.lineTo(width-pad.right,y(v));g.stroke();g.fillStyle='#63758a';g.fillText(v.toFixed(key==='totalActivityUnitsPerMinute'?2:2),pad.left-7,y(v));}
+ g.textAlign='center';g.textBaseline='top';for(let t=Math.ceil(min/60)*60;t<=max;t+=60){g.fillStyle='#65758b';g.fillText(t===0?'Сейчас':(t>0?'+':'')+(t/60)+' ч',x(t),height-pad.bottom+8)}
+ state.forEach(s=>{const tick=-s.ago;if(tick<min||tick>max)return;g.strokeStyle='#a7b8cf';g.setLineDash([3,4]);g.beginPath();g.moveTo(x(tick),pad.top);g.lineTo(x(tick),pad.top+hh);g.stroke();g.setLineDash([])});
+ if(min<=0&&max>=0){g.strokeStyle='#7c62c6';g.lineWidth=1.8;g.beginPath();g.moveTo(x(0),pad.top);g.lineTo(x(0),pad.top+hh);g.stroke();g.lineWidth=1;}
+ function line(getValue,color,thick){g.strokeStyle=color;g.lineWidth=thick;g.lineJoin='round';g.lineCap='round';g.beginPath();points.forEach((r,i)=>{const px=x(r.offsetMinutes),py=y(getValue(r)*scale);if(i===0)g.moveTo(px,py);else g.lineTo(px,py)});g.stroke()}
+ state.forEach((s,i)=>line(p=>p.perShot[i]?.[shortKey]||0,COLORS[i%COLORS.length],2));line(p=>p[key],SUM,3);
+}
+function clear(){['iob','rate','next30','next60','short','long','diff'].forEach(id=>$(id).textContent='—');$('detail').replaceChildren();for(const id of ['activityGraph','iobGraph']){const c=$(id);c.getContext('2d').clearRect(0,0,c.width,c.height)};last=null;}
+function recalc(){const err=$('err');err.style.display='none';try{const request=buildRequest(),r=E.calculate(request);if(r.status!=='MODEL_ESTIMATE')throw Error(r.issues.join('; ')||'Неполные данные');const timeline=E.calculateTimeline(request,{startOffsetMinutes:-240,endOffsetMinutes:360,stepMinutes:5});if(timeline.status!=='MODEL_ESTIMATE')throw Error('Нет расчётной серии');const compare=E.compareDurations(request,[300,360]);if(compare.status!=='MODEL_ESTIMATE')throw Error('Невозможно сравнить модели');last={r,timeline,compare};$('status').textContent='Программный расчёт';$('iob').textContent=fmt(r.modelRemainingUnits);$('rate').textContent=fmt(r.activityModelUnitsPerMinute*60);$('next30').textContent=fmt(r.futureActionModelUnits['30']);$('next60').textContent=fmt(r.futureActionModelUnits['60']);const a=compare.scenarios[0].modelRemainingUnits,b=compare.scenarios[1].modelRemainingUnits;$('short').textContent=fmt(a);$('long').textContent=fmt(b);$('diff').textContent=fmt(b-a);const body=$('detail');body.replaceChildren();r.contributions.forEach(con=>{const tr=document.createElement('tr');const items=[con.id.replace('demo-','Инъекция '),fmt(con.doseUnits,1),fmt(con.ageMinutes,0),con.phase.label,fmt(con.remainingModelUnits),fmt(con.futureActionModelUnits['30'])];for(const item of items){const td=document.createElement('td');td.textContent=item;tr.append(td)}body.append(tr)});if(!r.contributions.length){let tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=6;td.textContent='Нет текущих инъекций внутри выбранного модельного окна. Это не доказывает отсутствия действия в организме.';tr.append(td);body.append(tr)};legend($('legend1'));legend($('legend2'));draw($('activityGraph'),timeline.rows,'totalActivityUnitsPerMinute');draw($('iobGraph'),timeline.rows,'totalRemainingModelUnits');}
+catch(e){clear();$('status').textContent='Недостаточно данных';err.style.display='block';err.textContent=e.message}}
+$('recalc').addEventListener('click',recalc);$('add').addEventListener('click',()=>{if(state.length>=6){$('err').textContent='В тестовом стенде максимум шесть условных инъекций.';$('err').style.display='block';return}state.push({id:'demo-'+Date.now()+'-'+state.length,units:0.5,ago:0,status:'confirmed'});buildShots();recalc()});$('reset').addEventListener('click',()=>{$('dia').value='300';$('peak').value='75';defaults()});['dia','peak'].forEach(id=>$(id).addEventListener('change',recalc));window.addEventListener('resize',()=>{if(last){draw($('activityGraph'),last.timeline.rows,'totalActivityUnitsPerMinute');draw($('iobGraph'),last.timeline.rows,'totalRemainingModelUnits')}});defaults();
+})();
+</script></body></html>

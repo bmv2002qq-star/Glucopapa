@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ГлюкоПапа — Левемир · исследовательский стенд v0.1.2</title>
+<style>
+:root{color-scheme:light;--bg:#f5f7fb;--card:#fff;--ink:#172235;--muted:#536579;--line:#dce5ef;--blue:#275d9b;--teal:#037e75;--caution:#87540b;--danger:#a53e36;--accent:#684fb5}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,'Segoe UI',Arial,sans-serif}main{width:min(1100px,calc(100% - 28px));margin:26px auto 60px}
+header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:18px}h1{font-size:28px;letter-spacing:-.7px;margin:0}h2{font-size:18px;margin:0 0 12px}h3{font-size:15px;margin:0 0 10px}.sub{color:var(--muted);margin:6px 0 0}.pill{border-radius:30px;background:#e9e5f6;color:#5b459e;font-size:12px;font-weight:750;padding:8px 12px;white-space:nowrap}
+.warning{padding:13px 16px;border-left:4px solid #c28b34;background:#fff7e9;color:#664818;border-radius:10px;margin-bottom:16px}
+.layout{display:grid;grid-template-columns:350px 1fr;gap:16px}.panel{background:var(--card);padding:18px;border:1px solid var(--line);border-radius:14px;box-shadow:0 1px 3px #273b5410;min-width:0}.leftcol,.rightcol{display:grid;gap:16px;align-content:start}
+label{font-weight:650;display:block;margin-bottom:5px;font-size:13px}input,select{font:inherit;color:var(--ink);border:1px solid #b9c6d6;border-radius:8px;padding:9px 11px;background:white;width:100%;min-width:0}input:focus,select:focus{outline:2px solid #8caedc;outline-offset:0}
+.fieldnote{font-size:12px;color:var(--muted);margin:6px 0 10px}.shot{border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:10px;background:#fcfdff}.shothead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px}.shothead strong{font-size:13px}.shotcols{display:grid;grid-template-columns:1fr 1fr;gap:9px}.btnbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+button{font:inherit;font-weight:670;cursor:pointer;border:1px solid #b9c6d6;padding:9px 12px;border-radius:10px;background:white;color:#274262}button:hover{background:#f0f5fc}button.primary{background:#245a94;color:white;border-color:#245a94}button.primary:hover{background:#1c4d82}button.small{font-size:12px;padding:5px 9px}
+.kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.kpi{background:#f7fafd;border-radius:12px;border:1px solid #e1e9f1;padding:13px}.kpi .key{font-size:12px;color:var(--muted)}.kpi .val{font-size:27px;font-weight:780;line-height:1.15;margin:7px 0 2px;font-variant-numeric:tabular-nums}.kpi .unit{font-size:11px;color:var(--muted)}.ok{color:var(--teal)}.caution{color:var(--caution)}.bad{color:var(--danger)}
+#graph{display:block;width:100%;height:auto;min-height:230px;background:linear-gradient(180deg,#f9fbfd,white);border:1px solid var(--line);border-radius:8px}#graph text{font:11px system-ui,Arial;fill:#607086}.legend{font-size:12px;color:var(--muted);margin:7px 0 0}
+.status{background:#edf5f2;color:#1c675d;border-radius:9px;padding:10px 12px;font-weight:650;margin:12px 0}.status.error{background:#fff0ec;color:#a53e36}
+.table-wrap{overflow:auto}table{border-collapse:collapse;width:100%;font-size:12px;min-width:600px}th,td{text-align:left;padding:8px;border-bottom:1px solid var(--line);vertical-align:top}th{color:#485d74;background:#f5f8fc;font-weight:700}td{font-variant-numeric:tabular-nums}
+.source{font-size:12px;color:var(--muted);overflow-wrap:anywhere}.source a{color:var(--blue)}.mini{font-size:12px;color:var(--muted)}.anchor{width:auto;min-width:0}.anchor td,.anchor th{padding:5px 9px}footer{padding-top:16px;font-size:12px;color:var(--muted)}
+@media(max-width:850px){.layout{grid-template-columns:1fr}.kpi .val{font-size:23px}}@media(max-width:520px){header{flex-direction:column}.kpis{grid-template-columns:1fr 1fr}.shotcols{grid-template-columns:1fr 1fr}main{width:calc(100% - 18px);margin:12px auto}.panel{padding:13px}}
+</style>
+</head>
+<body>
+<main>
+<header><div><h1>Левемир · исследовательский модуль</h1><p class="sub">ГлюкоПапа · самостоятельный испытательный стенд v0.1.2 · работает без интернета</p></div><span class="pill">Не для назначения доз</span></header>
+<div class="warning"><strong>Важно.</strong> Здесь отображается иллюстративная математическая модель для инсулина детемир, а не измеренная активность инсулина. Она не рассчитывает сахар, дозы, углеводы или действия при передозировке. Продолжительность взята из среднего эффекта в исследовании взрослых; форма кривой — техническая гипотеза.</div>
+<div class="warning"><strong>Как понимать 12 часов:</strong> интервал между утренней и вечерней инъекциями может составлять 12 часов по назначенной схеме, но препарат не обязан прекращать действие через 12 часов. Эффекты отдельных доз могут перекрываться. На графике показаны −12…+24 ч относительно момента расчёта; отметка +6 ч не означает конец действия. Даже если две кривые не пересеклись, их эффекты могут накладываться во времени; условный провал к нулю не подтверждает прекращение реального действия.</div>
+<div class="layout">
+<div class="leftcol">
+<section class="panel">
+<h2>Исходные данные</h2>
+<label for="weight">Масса тела, кг</label><input id="weight" type="number" value="20" min="1" max="400" step="0.1" inputmode="decimal">
+<p class="fieldnote">Только вымышленные значения для испытаний. Расчётные временные точки — относительно условных 03:00 13.11.2026 (+03:00).</p>
+<div id="shots"></div>
+<div class="btnbar"><button id="add" type="button">+ Инъекция</button><button id="reset" type="button">Сбросить пример</button></div>
+<div class="btnbar"><button id="compute" class="primary" type="button">Пересчитать</button></div>
+<p class="fieldnote">Подтверждённые инъекции учитываются. Запланированные и отменённые исключаются. Повторные подтверждённые инъекции складываются. Вымышленные инъекции в примере не являются рекомендованным расписанием или дозами.</p>
+</section>
+<section class="panel"><h2>Границы исследования</h2><div class="table-wrap"><table class="anchor"><thead><tr><th>ЕД/кг</th><th>Среднее действие</th></tr></thead><tbody><tr><td>0,1</td><td>5,7 ч</td></tr><tr><td>0,2</td><td>12,1 ч</td></tr><tr><td>0,4</td><td>19,9 ч</td></tr><tr><td>0,8</td><td>22,7 ч</td></tr><tr><td>1,6</td><td>23,2 ч</td></tr></tbody></table></div><p class="mini">Между точками используется линейная интерполяция, вне диапазона расчёт отключён. Это не индивидуальная клиническая модель.</p></section>
+</div>
+<div class="rightcol">
+<section class="panel"><h2>Результат условной модели</h2><div id="status" class="status" role="status">Подготовка…</div>
+<div class="kpis">
+<div class="kpi"><div class="key">Остаток модельного действия</div><div class="val" id="remaining">—</div><div class="unit">условных эквивалентов ЕД, не концентрация и не доза</div></div>
+<div class="kpi"><div class="key">Активность сейчас</div><div class="val" id="activity">—</div><div class="unit">условных эквивалентов ЕД/ч</div></div>
+<div class="kpi"><div class="key">Действие за следующие 3 часа</div><div class="val" id="future180">—</div><div class="unit">условных эквивалентов ЕД</div></div>
+<div class="kpi"><div class="key">Действие за следующие 12 часов</div><div class="val" id="future720">—</div><div class="unit">условных эквивалентов ЕД</div></div>
+<div class="kpi"><div class="key">Действие за следующие 24 часа</div><div class="val" id="future1440">—</div><div class="unit">условных эквивалентов ЕД</div></div>
+<div class="kpi"><div class="key">Учтено подтверждённых инъекций</div><div class="val" id="included">—</div><div class="unit">при принятом полном журнале за 48 ч</div></div>
+</div><p class="mini">«Ноль» здесь означает только ноль выбранной формулы. Это не подтверждает отсутствие инсулина в организме.</p></section>
+<section class="panel"><h2>Модельный профиль — отдельные инъекции и сумма</h2><svg id="graph" viewBox="0 0 660 275" role="img" aria-label="Иллюстративная временная кривая относительной активности Левемира"></svg><div id="curveLegend" class="legend" aria-label="Обозначения линий"></div><p id="overlapnote" class="mini"></p><p class="legend">Ось X: время относительно момента расчёта, от −12 до +24 часов. +6 ч — лишь промежуточная отметка, НЕ окончание действия. Цветные линии показывают отдельные инъекции, тёмная — их сумму. Повторное введение через 12 часов не обнуляет предыдущую инъекцию. Ось Y: условная активность, экв. ЕД/ч. Кривая не воспроизводит клинически измеренную фармакодинамику.</p></section>
+<section class="panel"><h2>Расчёт по каждой инъекции</h2><div class="table-wrap"><table><thead><tr><th>Запись</th><th>Доза</th><th>ЕД/кг</th><th>Прошло</th><th>Средняя длительность, ч</th><th>Фаза модели</th><th>Остаток модели</th></tr></thead><tbody id="rows"><tr><td colspan="7">Пока нет расчёта</td></tr></tbody></table></div></section>
+<section class="panel"><h2>Источники и ограничения</h2><p class="source">Инструкция производителя (американская официальная маркировка): <a target="_blank" rel="noopener noreferrer" href="https://dailymed.nlm.nih.gov/dailymed/fda/fdaDrugXsl.cfm?setid=82192527-99aa-4b53-8ce9-9173668d309c">DailyMed — Levemir</a>.</p><p class="source">Исследование средних времён действия детемира при разных дозах: <a target="_blank" rel="noopener noreferrer" href="https://doi.org/10.2337/diacare.28.5.1107">Plank et al., Diabetes Care (2005)</a>.</p><p class="mini">В этом исследовании участвовали 12 взрослых с СД1. Для ребёнка у профиля нет индивидуальной клинической валидации. Использовать для изменения лечения нельзя.</p></section>
+</div></div>
+<footer>ГлюкоПапа · Левемир v0.1.2 · инженерная проверка алгоритмов. При подозрении на избыточную дозу базального инсулина нужна незамедлительная медицинская оценка.</footer>
+</main>
+<script>
+/*
+ * GlucoPapa Levemir (insulin detemir) exploratory action model, v0.1.
+ * THIS IS NOT a clinically validated PK/PD model and is NOT FOR DOSING.
+ * Time anchors are group means from 12 adults (Plank et al, Diabetes Care 2005).
+ * Piecewise linear interpolation + trapezoid shape are engineering assumptions.
+ * All inputs use actual confirmed injection records with explicit time zone.
+ */
+(function (root, factory) {
+  'use strict';
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  if (root) root.LevemirEngine = api;
+})(typeof globalThis !== 'undefined' ? globalThis : this, function () {
+  'use strict';
+  const VERSION = '0.1.0';
+  const SOURCE = 'https://doi.org/10.2337/diacare.28.5.1107';
+  const LABEL = 'https://dailymed.nlm.nih.gov/dailymed/fda/fdaDrugXsl.cfm?setid=82192527-99aa-4b53-8ce9-9173668d309c';
+  const DOSE_ANCHORS = Object.freeze([
+    Object.freeze({ unitsPerKg: 0.1, meanHours: 5.7 }),
+    Object.freeze({ unitsPerKg: 0.2, meanHours: 12.1 }),
+    Object.freeze({ unitsPerKg: 0.4, meanHours: 19.9 }),
+    Object.freeze({ unitsPerKg: 0.8, meanHours: 22.7 }),
+    Object.freeze({ unitsPerKg: 1.6, meanHours: 23.2 })
+  ]);
+  const PROFILE = Object.freeze({
+    drugId: 'levemir', name: 'Левемир', substance: 'инсулин детемир',
+    model: 'detemir_population_time_trapezoid', modelVersion: VERSION,
+    durationSource: SOURCE, labelSource: LABEL,
+    clinicalValidation: false, doseResponseInChildrenValidated: false,
+    minimumJournalHours: 48
+  });
+  const WARNINGS = Object.freeze([
+    'Исследовательская иллюстрация, НЕ медицинский алгоритм и НЕ прогноз глюкозы.',
+    'Продолжительность — интерполяция средних результатов исследования 12 взрослых с СД1; у детей значения могут отличаться.',
+    'Форма кривой (трапеция) задана разработчиком и НЕ восстановлена из измеренных кривых детемира.',
+    'Равное нулю действие по модели НЕ означает прекращения действия в организме.',
+    'Остаток условных единиц действия нельзя использовать для изменения доз Левемира, расчёта еды или лечения гипогликемии.',
+    'Даже полный журнал не исключает ошибок внесения записей: фактические инъекции должны быть подтверждены.',
+    'При подозрении на ошибочную/избыточную дозу инсулина нужна немедленная медицинская оценка.'
+  ]);
+  function finite(x) { return typeof x === 'number' && Number.isFinite(x); }
+  function clamp(x, lo, hi) { return Math.max(lo, Math.min(hi, x)); }
+  function parseTimestamp(iso) {
+    if (typeof iso !== 'string') throw new Error('Время должно быть ISO 8601 с явным часовым поясом.');
+    const m = iso.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,3}))?(Z|[+-]\d{2}:\d{2})$/);
+    if (!m) throw new Error('Требуется YYYY-MM-DDTHH:mm:ss+03:00 или Z.');
+    const [y, mo, d, h, mi, s] = m.slice(1, 7).map(Number);
+    const calendar = new Date(Date.UTC(y, mo - 1, d, 12, 0, 0));
+    if (calendar.getUTCFullYear() !== y || calendar.getUTCMonth() !== mo - 1 || calendar.getUTCDate() !== d ||
+        h > 23 || mi > 59 || s > 59 || y < 2000 || y > 2100) throw new Error('Недопустимая календарная дата или время.');
+    if (m[8] !== 'Z') {
+      const hrs = Number(m[8].slice(1, 3)), mins = Number(m[8].slice(4, 6));
+      if (hrs > 14 || mins > 59 || (hrs === 14 && mins !== 0)) throw new Error('Недопустимый часовой пояс.');
+    }
+    const ms = Date.parse(iso);
+    if (!Number.isFinite(ms)) throw new Error('Некорректная временная метка.');
+    return ms;
+  }
+  function estimateDuration(units, weightKg) {
+    if (!finite(units) || units <= 0 || !finite(weightKg) || weightKg <= 0 || weightKg > 400) {
+      throw new Error('Доза и масса должны быть положительными числами; масса не более 400 кг.');
+    }
+    const dosePerKg = units / weightKg;
+    const min = DOSE_ANCHORS[0].unitsPerKg;
+    const max = DOSE_ANCHORS[DOSE_ANCHORS.length-1].unitsPerKg;
+    if (dosePerKg < min - 1e-12 || dosePerKg > max + 1e-12) return {
+      supported: false, unitsPerKg: dosePerKg, populationMeanDurationHours: null,
+      warning: 'Доза на кг вне исследованного диапазона 0,1–1,6 ЕД/кг. Экстраполяция запрещена.'
+    };
+    for (let k=0; k<DOSE_ANCHORS.length; k++) {
+      const a = DOSE_ANCHORS[k];
+      if (Math.abs(dosePerKg-a.unitsPerKg) < 1e-11) return {
+        supported: true, unitsPerKg: dosePerKg, populationMeanDurationHours: a.meanHours,
+        basis: 'observed_adult_cohort_mean', interpolated: false
+      };
+      if (k+1<DOSE_ANCHORS.length && dosePerKg>a.unitsPerKg && dosePerKg<DOSE_ANCHORS[k+1].unitsPerKg) {
+        const b=DOSE_ANCHORS[k+1], w=(dosePerKg-a.unitsPerKg)/(b.unitsPerKg-a.unitsPerKg);
+        return {supported:true, unitsPerKg:dosePerKg,
+          populationMeanDurationHours:a.meanHours+w*(b.meanHours-a.meanHours),
+          basis:'piecewise_linear_interpolation_adult_means', interpolated:true};
+      }
+    }
+    throw new Error('Не удалось рассчитать интервал моделирования.');
+  }
+  // Illustrative non-biological trapezoid: linear onset, flat middle, linear tail.
+  // Exact integral allows tests for conservation and multi-dose consistency.
+  function curveGeometry(durationHours) {
+    if (!finite(durationHours) || durationHours < 1 || durationHours > 24) throw new Error('Длительность модели: 1–24 ч.');
+    const rise = Math.min(3, durationHours*0.3);
+    const fallStart = Math.max(rise, durationHours*0.72);
+    const area = rise/2 + (fallStart-rise) + (durationHours-fallStart)/2;
+    return {rise,fallStart,area};
+  }
+  function curve(elapsedHours, durationHours) {
+    if (!finite(elapsedHours) || elapsedHours<0) throw new Error('Возраст инъекции не может быть отрицательным.');
+    const {rise,fallStart,area}=curveGeometry(durationHours);
+    const t=clamp(elapsedHours,0,durationHours);
+    let cumulative=0, shape=0, phase='MODEL_WINDOW_END';
+    if (t === durationHours) {
+      cumulative=area;
+    } else if (t<rise) {
+      cumulative=t*t/(2*rise);shape=t/rise; phase='MODEL_RISE';
+    } else if (t<fallStart) {
+      cumulative=rise/2+(t-rise);shape=1;phase='MODEL_PLATEAU';
+    } else {
+      const z=t-fallStart, tail=durationHours-fallStart;
+      cumulative=rise/2+(fallStart-rise)+z-z*z/(2*tail);
+      shape=1-z/tail;phase='MODEL_FALL';
+    }
+    const usedFraction=clamp(cumulative/area,0,1);
+    return {usedFraction, remainingFraction:1-usedFraction,
+      activityFractionPerHour:shape/area, phase};
+  }
+  function validateHorizons(horizons) {
+    if (!Array.isArray(horizons) || horizons.length<1 || horizons.length>12 ||
+      horizons.some(x=>!Number.isInteger(x)||x<1||x>1440) ||
+      new Set(horizons).size!==horizons.length) throw new Error('Горизонты: уникальные целые минуты от 1 до 1440, максимум 12.');
+    return horizons;
+  }
+  function calculate(req) {
+    if (!req || typeof req!=='object') throw new Error('Нужен объект расчёта.');
+    const now=parseTimestamp(req.nowIso);
+    const weightKg=req.patientWeightKg;
+    if (!finite(weightKg)||weightKg<=0||weightKg>400) throw new Error('Нужна достоверная масса тела в кг.');
+    if (!Array.isArray(req.events)||req.events.length>10000) throw new Error('Нужен массив событий (не более 10000).');
+    const horizons=validateHorizons(req.horizonsMinutes||[60,180,360]);
+    const issues=[],ignored=[],accepted=[], completedModelWindows=[];
+    const ids=new Set();
+    if (!req.coverage || req.coverage.confirmedComplete!==true) issues.push('Журнал не подтверждён полным. Неизвестные инъекции нельзя считать отсутствующими.');
+    else {
+      try {
+        const start=parseTimestamp(req.coverage.startIso), end=parseTimestamp(req.coverage.endIso);
+        if (start>now-48*3600000 || end<now || start>end) issues.push('Требуется подтверждённая история инъекций минимум за 48 часов до расчёта.');
+      } catch (_) { issues.push('Некорректное покрытие журнала датами.'); }
+    }
+    for (const e of req.events) {
+      if (!e || typeof e!=='object') {issues.push('Повреждённая запись журнала.');continue;}
+      if (e.type!=='insulin_injection') {if(!e.type) issues.push('Запись без типа события.'); continue;}
+      const id=e.id;
+      const drugId=e.insulinId;
+      if (typeof drugId!=='string'||!drugId.trim()) {issues.push('Запись инъекции без названия препарата.');continue;}
+      if (drugId!=='levemir') {
+        const s=drugId.trim().toLowerCase();
+        if(s==='rinfast'||s==='rinfast-nik') {ignored.push({id:String(id||'?'),reason:'Другой препарат'});continue;}
+        issues.push('Неизвестный либо нестандартизованный ID препарата: '+drugId);continue;
+      }
+      if (typeof id!=='string'||!id.trim()||ids.has(id)) {issues.push('Повторяющийся или отсутствующий ID инъекции Левемира.'); continue;}
+      ids.add(id);
+      if(e.status==='planned'||e.status==='cancelled') { ignored.push({id,reason:'Запланирована/отменена, не подтверждена как введённая'}); continue; }
+      if(e.status!=='confirmed') {issues.push('Неподтверждённая запись Левемира: '+id);continue;}
+      if(!finite(e.units)||e.units<=0||e.units>200) {issues.push('Недостоверная доза Левемира: '+id);continue;}
+      let at;
+      try {at=parseTimestamp(e.administeredAt);} catch(_){issues.push('Некорректная дата введения: '+id);continue;}
+      if(at>now){issues.push('Подтверждённая инъекция Левемира в будущем: '+id);continue;}
+      if (e.doseErrorSuspected===true) {issues.push('Подозрение на ошибочную дозу Левемира: '+id+'; нужен медицинский разбор, а не математический прогноз.');continue;}
+      const est=estimateDuration(e.units,weightKg);
+      if(!est.supported) {issues.push('Инъекция '+id+': '+est.warning);continue;}
+      const ageHours=(now-at)/3600000;
+      const c=curve(ageHours,est.populationMeanDurationHours);
+      const record={id,units:e.units,administeredAt:e.administeredAt,ageHours,
+        unitsPerKg:est.unitsPerKg,populationMeanDurationHours:est.populationMeanDurationHours,
+        interpolated:est.interpolated};
+      if(c.phase==='MODEL_WINDOW_END') {
+        completedModelWindows.push({...record, warning:'Модельная граница — не доказательство прекращения действия.'});
+      } else accepted.push(record);
+    }
+    const base={engineVersion:VERSION,drugId:'levemir',drugName:'Левемир',model:PROFILE.model,
+      modelVersion:PROFILE.modelVersion, nowIso:req.nowIso, weightKg,
+      status:'INCOMPLETE', warnings:Array.from(WARNINGS),issues,ignored,completedModelWindows,
+      adultStudySource:SOURCE, labelSource:LABEL,clinicalValidation:false,
+      acceptedCount:accepted.length};
+    if(issues.length) return {...base,remainingModelActionUnits:null, currentModelActivityUnitsPerHour:null,
+      futureActionModelUnits:null, contributions:null};
+    let remain=0,activity=0;
+    const future=Object.fromEntries(horizons.map(h=>[String(h),0]));
+    const contributions=accepted.map(r=>{
+      const current=curve(r.ageHours,r.populationMeanDurationHours);
+      const next={};
+      for(const h of horizons){
+        const after=curve(r.ageHours+h/60,r.populationMeanDurationHours);
+        const amount=Math.max(0,r.units*(current.remainingFraction-after.remainingFraction));
+        next[String(h)]=amount;future[String(h)]+=amount;
+      }
+      const rem=r.units*current.remainingFraction;
+      const rate=r.units*current.activityFractionPerHour;
+      remain+=rem;activity+=rate;
+      return {...r,phase:current.phase,remainingFraction:current.remainingFraction,
+        usedFraction:current.usedFraction, remainingModelActionUnits:rem,
+        currentModelActivityUnitsPerHour:rate,
+        modelWindowEndsAtIso:new Date(parseTimestamp(r.administeredAt)+r.populationMeanDurationHours*3600000).toISOString(),
+        futureActionModelUnits:next};
+    });
+    return {...base,status:'MODEL_ESTIMATE',remainingModelActionUnits:remain,
+      currentModelActivityUnitsPerHour:activity,futureActionModelUnits:future,contributions};
+  }
+  return Object.freeze({VERSION,SOURCE,LABEL,DOSE_ANCHORS,PROFILE,WARNINGS,parseTimestamp,
+    estimateDuration,curveGeometry,curve,calculate});
+});
+
+</script>
+<script>
+(function(){
+'use strict';
+const M=globalThis.LevemirEngine;
+const $=id=>document.getElementById(id);
+const NOW='2026-11-13T03:00:00+03:00';
+let seq=0;
+const defaults=[{dose:'4',hours:'7',status:'confirmed'},{dose:'3',hours:'4',status:'confirmed'}];
+const fmt=(x,n=2)=>Number.isFinite(x)?Number(x).toFixed(n).replace('.',','):'—';
+function addShot(dose='4',hours='4',status='confirmed'){
+  if($('shots').children.length>=6)return;
+  const id='shot-'+(++seq), section=document.createElement('div');section.className='shot';section.dataset.id=id;
+  const head=document.createElement('div');head.className='shothead';
+  const name=document.createElement('strong');name.textContent='Инъекция '+seq;
+  const rm=document.createElement('button');rm.type='button';rm.className='small';rm.textContent='Удалить';rm.addEventListener('click',()=>{section.remove();compute()});
+  head.append(name,rm);section.append(head);
+  const cols=document.createElement('div');cols.className='shotcols';
+  function field(title,value,type,step){const wrap=document.createElement('div');const label=document.createElement('label');label.textContent=title;
+    const inp=document.createElement('input');inp.type=type;inp.value=value;inp.dataset.field=type==='dose'?'dose':'hours';
+    inp.step=step; inp.min=type==='dose'?'0':'0';inp.addEventListener('change',compute);wrap.append(label,inp);return wrap;}
+  const doseWrap=field('Доза, ЕД',dose,'dose','0.5');
+  doseWrap.querySelector('input').type='number';
+  const timeWrap=field('Часов назад',hours,'hours','0.25');timeWrap.querySelector('input').type='number';
+  const sw=document.createElement('div'); const sl=document.createElement('label');sl.textContent='Запись';const select=document.createElement('select');select.dataset.field='status';
+  for(const [val,label] of [['confirmed','Введено'],['planned','Запланировано'],['cancelled','Отменено'],['unconfirmed','Не подтверждено']]){
+    const o=document.createElement('option');o.value=val;o.textContent=label;select.append(o);}
+  select.value=status;select.addEventListener('change',compute);sw.append(sl,select);
+  cols.append(doseWrap,timeWrap,sw); section.append(cols);$('shots').append(section);
+}
+function reset(){seq=0;$('weight').value='20';$('shots').replaceChildren();for(const x of defaults)addShot(x.dose,x.hours,x.status);compute();}
+function makeRequest(){
+ const weight=Number($('weight').value);
+ const nowMs=Date.parse(NOW);
+ const events=[];
+ for(const node of $('shots').children){const doseText=node.querySelector('[data-field="dose"]').value;
+   const ageText=node.querySelector('[data-field="hours"]').value;
+   if(!doseText.trim()||!ageText.trim())throw new Error('Не заполнена доза или время инъекции.');
+   const dose=Number(doseText),age=Number(ageText); if(!Number.isFinite(age)||age<0||age>72)throw new Error('Возраст инъекции в стенде должен быть 0–72 часа.');
+   if(!Number.isFinite(dose)||dose<=0)throw new Error('Укажите положительную дозу.');
+   events.push({id:node.dataset.id,type:'insulin_injection',insulinId:'levemir',status:node.querySelector('[data-field="status"]').value,
+     units:dose,administeredAt:new Date(nowMs-age*3600000).toISOString()});
+ }
+ return {nowIso:NOW,patientWeightKg:weight,events,
+    coverage:{confirmedComplete:true,startIso:new Date(nowMs-72*3600000).toISOString(),endIso:NOW},
+    horizonsMinutes:[60,180,360,720,1440]};
+}
+function empty(){for(const id of ['remaining','activity','future180','future720','future1440','included'])$(id).textContent='—';$('rows').replaceChildren();$('graph').replaceChildren();$('curveLegend').replaceChildren();$('overlapnote').textContent='';}
+function renderGraph(result){
+ const el=$('graph');el.replaceChildren();
+ const legend=$('curveLegend');legend.replaceChildren();
+ const overlap=$('overlapnote');overlap.textContent='';
+ const NS='http://www.w3.org/2000/svg';
+ const create=(tag,props={})=>{const x=document.createElementNS(NS,tag);
+   for(const [k,v] of Object.entries(props))x.setAttribute(k,String(v));el.append(x);return x;};
+ const left=58,right=635,top=16,bottom=227;
+ const records=[...result.contributions,...result.completedModelWindows]
+   .sort((a,b)=>Date.parse(a.administeredAt)-Date.parse(b.administeredAt));
+ const colors=['#d97918','#08919b','#9260b8','#3879ce','#b83e65','#6b9e4f'];
+ const gridTimes=Array.from({length:145},(_,i)=>-12+i*.25);
+ const activity=(c,future)=>{const age=c.ageHours+future;
+   return age<0?0:c.units*M.curve(age,c.populationMeanDurationHours).activityFractionPerHour;};
+ const separated=records.map(c=>gridTimes.map(t=>activity(c,t)));
+ const total=gridTimes.map((_,i)=>separated.reduce((sum,line)=>sum+line[i],0));
+ const ymax=Math.max(.1,...total)*1.13;
+ const sx=h=>left+(h+12)/36*(right-left),sy=v=>bottom-v/ymax*(bottom-top);
+ for(let i=0;i<=4;i++){
+   const y=bottom-(bottom-top)*i/4;
+   create('line',{x1:left,y1:y,x2:right,y2:y,stroke:'#e1e8f2','stroke-width':1});
+   const t=create('text',{x:50,y:y+4,'text-anchor':'end'});t.textContent=fmt(ymax*i/4,2);
+ }
+ for(const h of [-12,-6,0,6,12,18,24]){
+   const x=sx(h);create('line',{x1:x,y1:top,x2:x,y2:bottom,stroke:h===0?'#6b61bb':'#edf0f6','stroke-width':h===0?2:1});
+   const t=create('text',{x,y:252,'text-anchor':'middle'});t.textContent=(h>0?'+':'')+h+' ч';
+ }
+ const pathFor=(ys)=>gridTimes.map((t,i)=>(i===0?'M':'L')+sx(t).toFixed(2)+','+sy(ys[i]).toFixed(2)).join(' ');
+ // Each dose has its own curve. Show it separately, instead of displaying only the sum.
+ for(let i=0;i<records.length;i++){
+   const c=records[i];const color=colors[i%colors.length];
+   const p=create('path',{d:pathFor(separated[i]),fill:'none',stroke:color,'stroke-width':2.2,
+     'stroke-linejoin':'round','stroke-linecap':'round','data-series':c.id});
+   const name=create('title');name.textContent=c.id+': отдельная условная кривая '+fmt(c.units,1)+' ЕД';
+   const item=document.createElement('span');item.style.display='inline-flex';item.style.alignItems='center';item.style.gap='5px';
+   item.style.marginRight='16px';item.style.marginBottom='5px';
+   const sw=document.createElement('i');sw.style.display='inline-block';sw.style.width='16px';sw.style.height='3px';sw.style.background=color;
+   const text=document.createElement('span');text.textContent='Инъекция '+(i+1)+' ('+fmt(c.units,1)+' ЕД, '+fmt(c.ageHours,1)+' ч назад)';
+   item.append(sw,text);legend.append(item);
+ }
+ const sum=create('path',{d:pathFor(total),fill:'none',stroke:'#202936','stroke-width':3.4,
+   'stroke-linejoin':'round','stroke-linecap':'round','data-series':'total'});
+ const sumTitle=create('title');sumTitle.textContent='Сумма отдельных условных кривых, не измеренная активность Левемира';
+ const item=document.createElement('span');item.style.display='inline-flex';item.style.alignItems='center';item.style.gap='5px';
+ const sw=document.createElement('i');sw.style.display='inline-block';sw.style.width='16px';sw.style.height='4px';sw.style.background='#202936';
+ const txt=document.createElement('strong');txt.textContent='Сумма всех инъекций';item.append(sw,txt);legend.append(item);
+ // Explain why the near-zero at t=0 is a property of the illustration, not physiology.
+ if(records.length>1){
+   const past=records.filter(c=>c.ageHours>0.000001);
+   if(past.length){
+     const residual=past.reduce((sum,c)=>sum+activity(c,0),0);
+     overlap.textContent='В момент 0 ч активность предыдущих доз по выбранной модели: '+fmt(residual,4)+
+       ' условных ЕД/ч. Если показатель почти ноль — это результат иллюстративной кривой, а НЕ доказательство прекращения действия Левемира. На участках, где цветные линии одновременно выше нуля, эффекты по модели перекрываются.';
+   }
+ }
+}
+function renderRows(r){const tbody=$('rows');tbody.replaceChildren();
+ const phase={MODEL_RISE:'Подъём (модель)',MODEL_PLATEAU:'Ровный участок (модель)',MODEL_FALL:'Спад (модель)'};
+ for(const c of r.contributions){const tr=document.createElement('tr');
+   for(const value of [c.id,fmt(c.units,1),fmt(c.unitsPerKg,3),fmt(c.ageHours,2)+' ч',
+       fmt(c.populationMeanDurationHours,2),phase[c.phase]||c.phase,
+       fmt(c.remainingModelActionUnits,3)+' усл. ЕД']){
+      const td=document.createElement('td');td.textContent=value;tr.append(td);}
+   tbody.append(tr);
+ }
+ for(const c of r.completedModelWindows){const tr=document.createElement('tr');
+   const td=document.createElement('td');td.colSpan=7;td.textContent=c.id+': завершено МОДЕЛЬНОЕ окно ('+fmt(c.populationMeanDurationHours,1)+' ч); реальное действие не исключено.';
+   tr.append(td);tbody.append(tr);}
+ if(!tbody.children.length){const tr=document.createElement('tr');const td=document.createElement('td');td.colSpan=7;td.textContent='Нет подтверждённых инъекций в расчётном окне (это не доказывает отсутствие инсулина).';tr.append(td);tbody.append(tr);}
+}
+function compute(){try{
+  const r=M.calculate(makeRequest());
+  if(r.status!=='MODEL_ESTIMATE'){empty();$('status').className='status error';$('status').textContent='РАСЧЁТ ОСТАНОВЛЕН: '+r.issues.join(' • ');return;}
+  $('status').className='status';$('status').textContent='Исследовательская оценка построена. Клиническая достоверность не подтверждена.';
+  $('remaining').textContent=fmt(r.remainingModelActionUnits,3);$('activity').textContent=fmt(r.currentModelActivityUnitsPerHour,3);
+  $('future180').textContent=fmt(r.futureActionModelUnits['180'],3);$('future720').textContent=fmt(r.futureActionModelUnits['720'],3);$('future1440').textContent=fmt(r.futureActionModelUnits['1440'],3);$('included').textContent=String(r.acceptedCount);
+  renderRows(r);renderGraph(r);
+ }catch(e){empty();$('status').className='status error';$('status').textContent='РАСЧЁТ ОСТАНОВЛЕН: '+e.message;}
+}
+$('add').addEventListener('click',()=>{addShot();compute()});$('reset').addEventListener('click',reset);
+$('compute').addEventListener('click',compute);$('weight').addEventListener('change',compute);
+reset();
+})();
+
+</script>
+</body></html>

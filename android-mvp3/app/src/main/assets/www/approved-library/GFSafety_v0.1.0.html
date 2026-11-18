@@ -1,0 +1,247 @@
+<!doctype html><html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ГлюкоПапа · GFSafety v0.1.0</title><style>
+:root{font-family:Inter,'Segoe UI',Arial,sans-serif;color:#172339;background:#f3f6fa;font-synthesis:none}*{box-sizing:border-box}body{margin:0}main{max-width:1100px;margin:auto;padding:24px}header{background:#10233e;color:white;padding:26px 30px;border-radius:20px;box-shadow:0 12px 36px #12294821}header h1{margin:3px 0 6px;font-size:27px}header p{color:#cfdbeb;margin:0;font-size:14px;line-height:1.6}.topline{letter-spacing:2px;font-size:11px;font-weight:700;color:#7be0cc}.layout{display:grid;grid-template-columns:1.12fr .88fr;gap:16px;margin-top:18px}.panel{background:#fff;border:1px solid #dce4ee;border-radius:18px;padding:20px;min-width:0;box-shadow:0 5px 26px #1c41600c}.panel h2{font-size:17px;margin:0 0 12px}.control-label{display:block;font-size:13px;color:#53637c;margin:0 0 6px}select,button{font:inherit}select{width:100%;background:#fff;border:1px solid #9aabc0;padding:12px;border-radius:10px;color:#182c43}button{border:0;border-radius:10px;padding:11px 16px;background:#1760a3;color:#fff;cursor:pointer;font-weight:650}button:hover{background:#124f88}button:focus-visible,select:focus-visible{outline:3px solid #48a0ee;outline-offset:2px}.button-light{background:#edf3f9;color:#233d5a}.button-light:hover{background:#dce9f6}.actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:12px}.status{padding:17px;border-radius:12px;border:1px solid #d5e2f0;background:#f6f9fd;margin:13px 0}.status strong{font-size:18px;display:block}.status small{color:#62728d}.status.blocked{border-color:#edb2b2;background:#fff5f4}.status.caution{border-color:#f4dc9a;background:#fffaf0}.status.good{border-color:#b7dccb;background:#effaf5}.metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}.metric{background:#f4f7fb;border-radius:10px;padding:12px}.metric b{font-size:20px;display:block}.metric small{color:#6b7b90}.issue{border-left:3px solid #d45a5a;padding:9px 13px;margin-top:9px;border-radius:4px;background:#fbfcfe}.issue.warn{border-color:#dfa740}.issue h3{margin:0 0 4px;font-size:14px}.issue p{margin:0;font-size:13px;color:#5a6b80;line-height:1.5}.issue code{font-size:11px;color:#567}.mono{font-family:ui-monospace,'Cascadia Code',monospace}table{width:100%;border-collapse:collapse;font-size:13px}td{border-bottom:1px solid #eef2f7;padding:10px 5px}td:first-child{color:#66778d}td:last-child{text-align:right;word-break:break-word}.notice{margin-top:17px;background:#fff6e6;padding:15px;border-radius:14px;line-height:1.55;font-size:13px;color:#684e26}.foot{color:#718095;font-size:12px;line-height:1.5;margin-top:24px}details{margin-top:13px}pre{background:#f4f7fb;color:#32455e;padding:12px;border-radius:10px;font-size:11px;white-space:pre-wrap;word-break:break-all;max-height:280px;overflow:auto}.pill{display:inline-flex;border-radius:7px;padding:4px 7px;background:#edf4fa;color:#375776;font-size:11px;font-weight:700;letter-spacing:.6px}#issueItems{max-height:475px;overflow:auto}@media(max-width:790px){main{padding:12px}.layout{grid-template-columns:1fr}header{padding:21px}header h1{font-size:24px}.panel{padding:16px}}@media(max-width:340px){.metrics{grid-template-columns:1fr 1fr}button{width:100%}}
+</style></head><body><main><header><div class="topline">ГЛЮКОПАПА · ОТДЕЛЬНЫЙ МОДУЛЬ</div><h1>GFSafety v0.1.0</h1><p>Проверка качества и полноты данных до расчётов. Без изменения GFStorage, РинФаста, GFForecast и других согласованных модулей.</p></header><div class="layout"><section class="panel"><span class="pill">УЧЕБНЫЕ СЦЕНАРИИ</span><h2 style="margin-top:12px">Проверка данных</h2><label class="control-label" for="scenario">Выберите условную ситуацию</label><select id="scenario"><option value="good">Обычная история</option><option value="stale">CGM устарел</option><option value="low">Низкий сахар</option><option value="spike">Резкий скачок CGM</option><option value="mixed">Два датчика</option><option value="duplicate">Возможный повтор инъекции</option><option value="incomplete">Неполная история</option><option value="delay">Задержка передачи</option><option value="noReceipt">Нет времени получения</option><option value="illness">Болезнь</option></select><p id="scenarioDetail" style="font-size:13px;color:#65788c;line-height:1.5"></p><div class="actions"><button id="rerun">Проверить заново</button><button id="download" class="button-light">Сохранить TXT</button></div><div id="status" class="status" role="status"><strong id="statusTitle"></strong><small id="statusExtra"></small></div><div class="metrics"><div class="metric"><b id="blocks">0</b><small>Блокировок</small></div><div class="metric"><b id="warns">0</b><small>Предупреждений</small></div><div class="metric"><b id="decision">НЕТ</b><small>Разрешения на дозы</small></div></div><h2 style="margin-top:18px">Обнаруженные обстоятельства</h2><div id="issueItems" aria-live="polite"></div></section><section class="panel"><h2>Данные проверенного снимка</h2><table><tbody id="meta"></tbody></table><details><summary>Машиночитаемый отчёт (JSON)</summary><pre id="raw" class="mono"></pre></details><div class="notice"><strong>Важно:</strong> GFSafety не рассчитывает дозы и не отменяет предупреждения xDrip+. Статус «технические проверки пройдены» означает только отсутствие выявленных ошибок в тестовом наборе. Реальные CGM, устройство и клиническая точность здесь не проверялись.</div></section></div><p class="foot">Автономный HTML без сети, без ввода личных данных и без записи в хранилище. Все события вымышленные. Формат лабораторного прототипа v0.1.0.</p></main><script>/* ГлюкоПапа GFSafety v0.1.0 — read-only input integrity diagnostics.
+ * Independent of forecast, storage, dose calculators and UI. MIT.
+ * NOT a clinical safety system. Never authorizes insulin decisions.
+ */
+(function(root,factory){'use strict';const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;if(root)root.GFSafety=api;})(typeof globalThis!=='undefined'?globalThis:this,function(){
+'use strict';
+const VERSION='0.1.0',MINUTE=60000,MAX_ITEMS=20000;
+const finite=x=>typeof x==='number'&&Number.isFinite(x);
+const clean=x=>typeof x==='string'&&x.length>0&&x===x.trim()&&x.length<=180;
+const median=a=>{const x=[...a].sort((u,v)=>u-v),p=x.length>>1;return x.length%2?x[p]:(x[p-1]+x[p])/2;};
+function parseIso(s){
+ if(!clean(s))throw new Error('Требуется ISO 8601 с часовым поясом');
+ const m=/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{1,3}))?)?(Z|([+-])(\d{2}):(\d{2}))$/.exec(s);
+ if(!m)throw new Error('Неверный ISO 8601');
+ const y=+m[1],mon=+m[2],d=+m[3],h=+m[4],min=+m[5],sec=+(m[6]||0),zh=+(m[10]||0),zm=+(m[11]||0);
+ if(y<2000||y>2100||h>23||min>59||sec>59||zh>14||zm>59||(zh===14&&zm!==0))throw new Error('Недопустимая дата или UTC-смещение');
+ const c=new Date(0);c.setUTCHours(0,0,0,0);c.setUTCFullYear(y,mon-1,d);
+ if(c.getUTCFullYear()!==y||c.getUTCMonth()!==mon-1||c.getUTCDate()!==d)throw new Error('Недопустимая календарная дата');
+ const t=Date.parse(s);if(!Number.isFinite(t))throw new Error('Дата вне диапазона');return t;
+}
+function safeCopy(v,depth=0,counter={n:0}){
+ if(++counter.n>500000)throw new Error('Слишком большой снимок');
+ if(depth>16)throw new Error('Слишком большая вложенность');
+ if(v===null||typeof v==='string'||typeof v==='boolean'||finite(v))return v;
+ if(Array.isArray(v)){if(v.length>MAX_ITEMS)throw new Error('Слишком большой массив');return v.map(e=>safeCopy(e,depth+1,counter));}
+ if(v&&typeof v==='object'&&(Object.getPrototypeOf(v)===Object.prototype||Object.getPrototypeOf(v)===null)){
+  const o=Object.create(null);for(const k of Reflect.ownKeys(v)){
+   if(typeof k!=='string'||['__proto__','constructor','prototype'].includes(k))throw new Error('Недопустимый ключ');
+   const d=Object.getOwnPropertyDescriptor(v,k);if(!d||!Object.hasOwn(d,'value'))throw new Error('Снимок содержит вычисляемое поле');
+   o[k]=safeCopy(d.value,depth+1,counter);
+  }return o;
+ }throw new Error('Недопустимый тип данных');
+}
+function freeze(v){if(v&&typeof v==='object'&&!Object.isFrozen(v)){for(const k of Object.keys(v))freeze(v[k]);Object.freeze(v);}return v;}
+function report(nowIso,issues,metadata={}){
+ const blocked=issues.some(x=>x.level==='block');
+ const caution=issues.some(x=>x.level==='warning');
+ const out={module:'GFSafety',version:VERSION,checkedAt:nowIso||null,
+  status:blocked?'BLOCKED':caution?'CAUTION':'DATA_OK',
+  forecastInputEligible:!blocked&&!caution,
+  clinicalUseAllowed:false,insulinDoseDecisionAllowed:false,automaticInjectionAllowed:false,
+  issues,summary:{blocks:issues.filter(x=>x.level==='block').length,warnings:issues.filter(x=>x.level==='warning').length},
+  metadata,notAClinicalValidation:true};
+ return freeze(out);
+}
+function evaluate(input){
+ const issues=[],seen=new Set(),meta={};
+ function add(code,level,message,details=''){
+  if(seen.has(code))return;seen.add(code);issues.push({code,level,message,details});
+ }
+ let s,now;
+ try{
+  s=safeCopy(input);
+  if(!s||typeof s!=='object'||Array.isArray(s))throw new Error('Ожидается объект');
+  now=parseIso(s.nowIso);
+  if(now<Date.UTC(2020,0,1))throw new Error('Некорректное время проверки');
+  if(!Array.isArray(s.readings)||!Array.isArray(s.injections)||!Array.isArray(s.meals))
+    throw new Error('Не хватает массивов readings/injections/meals');
+  if(!s.coverage||typeof s.coverage!=='object'||Array.isArray(s.coverage))
+    throw new Error('Нет сведений о полноте истории');
+ }catch(err){return report(null,[{code:'INVALID_SNAPSHOT',level:'block',message:'Некорректный входной снимок',details:String(err.message||err)}]);}
+ const iso=new Date(now).toISOString();meta.sourceSchema=s.sourceSchema||'normalized/1';
+ // Historical coverage is explicit user assertion, never inferred from an empty event array.
+ try{
+  const c=s.coverage;
+  if(c.confirmedComplete!==true||!['user','parent'].includes(c.declaredBy)||!['gfstorage','synthetic_demo','external_adapter'].includes(c.provenance))
+    add('INCOMPLETE_HISTORY','block','Не подтверждена полнота истории еды и инсулина');
+  else {
+   const start=parseIso(c.startIso),end=parseIso(c.endIso);
+   if(start>now-36*60*MINUTE||end<now-5*MINUTE||end>now+MINUTE)
+    add('COVERAGE_WINDOW','block','История не покрывает требуемое окно','Для этого прототипа требуется подтверждённая история за 36 часов и актуальное окончание интервала.');
+  }
+ }catch(e){add('COVERAGE_INVALID','block','Некорректная дата покрытия истории',String(e.message));}
+ // CGM: all rows must be reliable, duplicates idempotent only if identical.
+ const byTime=new Map(),readings=[];
+ for(const r of s.readings){
+  try{
+   if(!r||!finite(r.glucoseMmol)||r.glucoseMmol<1.5||r.glucoseMmol>33)throw new Error('Глюкоза вне формата');
+   if(!clean(r.sourceId))throw new Error('Нет подтверждённого sourceId');
+   for(const key of ['sensorId','patientId'])if(r[key]!==undefined&&r[key]!==null&&!clean(r[key]))throw new Error('Неверный '+key);
+   if(r.valid===false||r.qualityFlag==='invalid')add('CGM_INVALID_FLAG','block','Датчик пометил измерение недостоверным');
+   if(r.valid!==undefined&&typeof r.valid!=='boolean'||r.qualityFlag!==undefined&&!['ok','invalid'].includes(r.qualityFlag))throw new Error('Неверная метка качества');
+   const t=parseIso(r.measuredAt);
+   if(t>now+MINUTE)throw new Error('Измерение из будущего');
+   let received=null;
+   if(r.receivedAt!==undefined&&r.receivedAt!==null){received=parseIso(r.receivedAt);
+    if(received<t-MINUTE||received>now+MINUTE)throw new Error('Получение раньше измерения или в будущем');
+   }
+   const row={t,received,value:r.glucoseMmol,source:r.sourceId,sensor:r.sensorId||null,patient:r.patientId||null};
+   if(byTime.has(t)){
+    const other=byTime.get(t);
+    if(other.value!==row.value||other.source!==row.source||other.sensor!==row.sensor||other.patient!==row.patient)
+     add('CGM_CONFLICT','block','Противоречащие CGM в одно время');
+    if(other.received!==null&&received!==null)other.received=Math.min(other.received,received);
+    else other.received=null;
+   }else byTime.set(t,row);
+  }catch(e){add('CGM_INVALID_RECORD','block','Повреждённая запись CGM',String(e.message));}
+ }
+ readings.push(...byTime.values());readings.sort((a,b)=>a.t-b.t);
+ meta.cgmPoints=readings.length;
+ if(!readings.length)add('NO_CGM','block','Нет проверенных показаний CGM');
+ else {
+  const last=readings.at(-1),age=(now-last.t)/MINUTE;
+  meta.lastCgmMmol=last.value;meta.lastCgmMeasuredAt=new Date(last.t).toISOString();meta.cgmAgeMinutes=+age.toFixed(2);
+  if(age>12)add('STALE_CGM','block','Последний CGM старше 12 минут');
+  if(last.value<=3.9)add('LOW_CGM','block','Низкое значение CGM: численный прогноз недоступен','Показание датчика не заменяет проверку по установленному порядку действий.');
+  if(last.value<2||last.value>33)add('CGM_MODEL_RANGE','block','CGM вне диапазона модели прогноза');
+  const recent40=readings.filter(r=>last.t-r.t<=40*MINUTE),recent25=readings.filter(r=>last.t-r.t<=25*MINUTE);
+  const distinct=new Set(recent40.map(r=>r.source));
+  if(distinct.size!==1)add('CGM_MIXED_SOURCE','block','В рабочем окне смешаны источники CGM');
+  for(const key of ['sensor','patient']){
+   const set=new Set(recent40.map(r=>r[key]));if(set.size>1)add('CGM_MIXED_'+key.toUpperCase(),'block','Разные идентификаторы CGM: '+key);
+  }
+  if(recent40.some(r=>r.received===null))add('CGM_RECEIPT_UNKNOWN','warning','Неизвестно время получения хотя бы одного CGM','GFStorage v0.3.0 не сохраняет эту метку; не подменяем её временем измерения.');
+  if(last.received!==null){meta.transportLagMinutes=+((last.received-last.t)/MINUTE).toFixed(2);}
+  const delays=recent40.filter(r=>r.received!==null).map(r=>(r.received-r.t)/MINUTE);
+  if(delays.length){meta.maxTransportLagMinutes=+Math.max(...delays).toFixed(2);
+   if(meta.maxTransportLagMinutes>10)add('CGM_TRANSPORT_DELAY','warning','Значительная задержка поступления CGM');}
+  if(recent25.length>60)add('CGM_IMPLAUSIBLE_DENSITY','block','Неправдоподобная плотность CGM: защита от чрезмерных расчётов');
+  else if(recent25.length<4)add('CGM_FEW_POINTS','block','Для тренда меньше четырёх точек CGM за 25 минут');
+  else {
+   for(let i=1;i<recent25.length;i++)if(recent25[i].t-recent25[i-1].t>10*MINUTE)
+    add('CGM_GAP','block','Большой пропуск в последних показаниях CGM');
+   const slopes=[];
+   for(let i=0;i<recent25.length;i++)for(let j=i+1;j<recent25.length;j++){
+    const dt=(recent25[j].t-recent25[i].t)/MINUTE;if(dt>=4)slopes.push((recent25[j].value-recent25[i].value)/dt);
+   }
+   if(slopes.length<3)add('CGM_TREND_UNCERTAIN','block','Нельзя вычислить устойчивый тренд CGM');
+   else{
+    const slope=median(slopes);meta.trendMmolPerMinute=+slope.toFixed(5);
+    if(Math.abs(slope)>0.22)add('CGM_FAST_TREND','block','Тренд CGM слишком быстрый для модели');
+    const offsets=recent25.map(r=>r.value-slope*(r.t-last.t)/MINUTE);
+    const resid=median(offsets),mad=median(offsets.map(v=>Math.abs(v-resid)));
+    if(mad>0.9)add('CGM_NOISY','block','Сильный разброс CGM');
+    const before=recent25.slice(0,-1);
+    if(before.length>=3){
+     const baseSlopes=[];
+     for(let i=0;i<before.length;i++)for(let j=i+1;j<before.length;j++){
+      const dt=(before[j].t-before[i].t)/MINUTE;if(dt>=4)baseSlopes.push((before[j].value-before[i].value)/dt);
+     }
+     if(baseSlopes.length>=3){
+      const bSlope=median(baseSlopes),prev=before.at(-1),dt=(last.t-prev.t)/MINUTE;
+      const expect=prev.value+bSlope*dt;
+      const residuals=before.map(r=>r.value-(prev.value+bSlope*(r.t-prev.t)/MINUTE));
+      const med=median(residuals),scatter=median(residuals.map(v=>Math.abs(v-med)));
+      if(Math.abs(last.value-expect)>Math.max(1.25,0.22*dt+4*scatter))
+       add('CGM_LAST_SPIKE','block','Последний CGM резко расходится с предыдущими');
+     }
+    }
+   }
+  }
+ }
+ // Validate user-entered historical injections; do not decide whether the dose was correct.
+ const injectionIds=new Set(),injs=[];
+ for(const e of s.injections){
+  try{
+   if(!e||!clean(e.id))throw new Error('Нет ID');
+   if(injectionIds.has(e.id))add('INJECTION_DUPLICATE_ID','block','Повторяется идентификатор инъекции');
+   injectionIds.add(e.id);
+   if(!['rinfast','levemir'].includes(e.insulinId))throw new Error('Неизвестный вид инсулина');
+   if(e.status!=='confirmed')add('INJECTION_UNCONFIRMED','block','В истории есть неподтверждённая инъекция');
+   if(!finite(e.units)||e.units<=0||e.units>200)throw new Error('Некорректное количество единиц');
+   const t=parseIso(e.administeredAt);if(t>now+MINUTE)throw new Error('Время инъекции в будущем');
+   if(e.doseErrorSuspected===true)add('INJECTION_ERROR_MARKED','block','Отмечена возможная ошибка записи инъекции');
+   injs.push({id:e.id,t,insulinId:e.insulinId,units:e.units});
+  }catch(err){add('INJECTION_INVALID','block','Повреждённая запись инъекции',String(err.message));}
+ }
+ injs.sort((a,b)=>a.t-b.t);
+ const lastBySignature=new Map();
+ for(const cur of injs){
+  const signature=cur.insulinId+'|'+cur.units;
+  if(lastBySignature.has(signature)&&cur.t-lastBySignature.get(signature)<=3*MINUTE)
+   add('INJECTION_POSSIBLE_DUPLICATE','block','Возможный повтор записи инъекции','Два близких события могут быть и реальными отдельными уколами. Требуется проверить журнал, не удалять автоматически.');
+  lastBySignature.set(signature,cur.t);
+ }
+ meta.injections=injs.length;
+ // Meal history: recorded intent is not proof of eaten food.
+ const mealIds=new Set();
+ for(const e of s.meals){
+  try{
+   if(!e||!clean(e.id))throw new Error('Нет ID еды');
+   if(mealIds.has(e.id))add('MEAL_DUPLICATE_ID','block','Повтор ID приёма пищи');mealIds.add(e.id);
+   if(e.status!=='confirmed')add('MEAL_UNCONFIRMED','block','Еда не подтверждена как фактически съеденная');
+   if(!finite(e.carbsG)||e.carbsG<0||e.carbsG>500)throw new Error('Некорректные граммы углеводов');
+   const t=parseIso(e.eatenAt);if(t>now+MINUTE)throw new Error('Время еды в будущем');
+  }catch(err){add('MEAL_INVALID','block','Повреждённая запись еды',String(err.message));}
+ }
+ meta.meals=s.meals.length;
+ if(s.sourceStatus?.type==='synthetic')add('CGM_SYNTHETIC_SOURCE','block','Поток CGM помечен как синтетический, не реальный датчик');
+ const conditions=s.conditions||{};
+ if(conditions.illness===true)add('ILLNESS_CONTEXT','warning','Отмечена болезнь: численный эффект не определён');
+ if(conditions.activity===true||conditions.activity==='high'||conditions.activity==='low')
+  add('ACTIVITY_CONTEXT','warning','Отмечена активность: численный эффект не определён');
+ // Candidate only checks duplicate possibility; never commits a new injection.
+ if(s.candidateInjection!==undefined&&s.candidateInjection!==null){
+  const e=s.candidateInjection;
+  try{
+   if(!e||!clean(e.id)||!['rinfast','levemir'].includes(e.insulinId)||!finite(e.units)||e.units<=0||e.units>200)
+    throw new Error('Некорректная запись-предпросмотр');
+   const t=parseIso(e.administeredAt);if(t>now+MINUTE)throw new Error('Время в будущем');
+   if(injectionIds.has(e.id))add('CANDIDATE_REPEATED_ID','block','Инъекция уже есть в журнале');
+   if(injs.some(prev=>prev.insulinId===e.insulinId&&Math.abs(prev.units-e.units)<0.000001&&Math.abs(prev.t-t)<=3*MINUTE))
+    add('CANDIDATE_POSSIBLE_DUPLICATE','block','Новая запись может повторять существующую','Это проверка записи, не медицинское решение об инъекции.');
+  }catch(err){add('CANDIDATE_INVALID','block','Неверный предпросмотр записи инъекции',String(err.message));}
+ }
+ return report(iso,issues,meta);
+}
+return Object.freeze({VERSION,evaluate,parseIso});
+});
+</script><script>
+'use strict';
+const NOW='2026-11-14T12:00:00+03:00', NOW_MS=Date.parse(NOW);
+const iso=m=>new Date(NOW_MS+m*60000).toISOString();
+function base(){return {nowIso:NOW,coverage:{confirmedComplete:true,declaredBy:'user',provenance:'synthetic_demo',startIso:iso(-2400),endIso:iso(0)},
+readings:[-20,-15,-10,-5].map((m,i)=>({measuredAt:iso(m),receivedAt:iso(m+1),glucoseMmol:8+i*.08,sourceId:'demo-gs1',sensorId:'demo-A',patientId:'demo',valid:true,qualityFlag:'ok'})),
+injections:[{id:'demo-r1',insulinId:'rinfast',status:'confirmed',units:1.5,administeredAt:iso(-90)}],
+meals:[{id:'demo-m1',status:'confirmed',carbsG:24,eatenAt:iso(-80)}],conditions:{illness:false,activity:false}};}
+const cases={
+ good:{title:'Проверенная учебная история',details:'Достаточно данных для технической передачи в исследовательский прогноз.',modify:s=>s},
+ stale:{title:'CGM перестал обновляться',details:'Последние точки старше допустимого времени.',modify:s=>{s.readings.forEach((r,i)=>{r.measuredAt=iso(-45+i*5);r.receivedAt=iso(-44+i*5);});return s;}},
+ low:{title:'Низкое показание CGM',details:'Исследовательский пунктир не должен строиться при низком показании.',modify:s=>{s.readings.forEach((r,i)=>r.glucoseMmol=3.3+i*.1);return s;}},
+ spike:{title:'Неожиданный скачок CGM',details:'Одна последняя точка резко отличается от предыдущих.',modify:s=>{s.readings.at(-1).glucoseMmol=17.8;return s;}},
+ mixed:{title:'Смешаны датчики',details:'В последних 40 минутах появился другой идентификатор источника.',modify:s=>{s.readings[2].sourceId='another-device';return s;}},
+ duplicate:{title:'Возможный двойной учёт укола',details:'Два подтверждённых укола с одинаковыми данными записаны близко по времени; возможно, это разные события.',modify:s=>{s.injections.push({...s.injections[0],id:'demo-r2',administeredAt:iso(-89)});return s;}},
+ incomplete:{title:'Нет подтверждения полноты истории',details:'Пустой журнал нельзя приравнивать к отсутствию ранее введённого инсулина.',modify:s=>{s.coverage.confirmedComplete=false;return s;}},
+ delay:{title:'Задержка передачи',details:'Измерения получены телефоном заметно позже их времени измерения.',modify:s=>{s.readings[0].receivedAt=iso(-7);return s;}},
+ noReceipt:{title:'Время получения CGM неизвестно',details:'В GFStorage 0.3 нет отдельной временной метки получения датчика.',modify:s=>{s.readings.forEach(r=>delete r.receivedAt);return s;}},
+ illness:{title:'Отмечена болезнь',details:'Нельзя выдумывать точную численную поправку на болезнь.',modify:s=>{s.conditions.illness=true;return s;}}
+};
+const e=id=>document.getElementById(id),fmt=x=>x==null?'—':String(x);
+function row(name,value){const tr=document.createElement('tr'),a=document.createElement('td'),b=document.createElement('td');a.textContent=name;b.textContent=fmt(value);tr.append(a,b);return tr;}
+function render(){const key=e('scenario').value,v=cases[key],s=v.modify(base()),r=GFSafety.evaluate(s);
+e('scenarioDetail').textContent=v.details;e('status').className='status '+(r.status==='BLOCKED'?'blocked':r.status==='CAUTION'?'caution':'good');
+e('statusTitle').textContent=r.status==='BLOCKED'?'Данные заблокированы для численного прогноза':r.status==='CAUTION'?'Данные требуют уточнения':'Технические проверки пройдены';
+e('statusExtra').textContent='GFSafety · '+r.status+' · готовность входа для прогноза: '+(r.forecastInputEligible?'да':'нет');
+e('blocks').textContent=r.summary.blocks;e('warns').textContent=r.summary.warnings;
+e('decision').textContent='НЕТ';e('issueItems').replaceChildren();
+if(!r.issues.length){const p=document.createElement('p');p.textContent='Проверки не нашли проблем в искусственных данных. Это не означает медицинскую безопасность прогноза.';e('issueItems').append(p);}
+for(const issue of r.issues){const div=document.createElement('div');div.className='issue '+(issue.level==='warning'?'warn':'');const h=document.createElement('h3'),p=document.createElement('p'),code=document.createElement('code');h.textContent=issue.message;p.textContent=issue.details||'';code.textContent=issue.code;div.append(h,p,code);e('issueItems').append(div);}
+const tbl=e('meta');tbl.replaceChildren();for(const [name,value] of [['Версия',r.version],['Время проверки',r.checkedAt],['CGM точек',r.metadata.cgmPoints],['Последний CGM, ммоль/л',r.metadata.lastCgmMmol],['Возраст CGM, мин',r.metadata.cgmAgeMinutes],['Задержка приёма, мин',r.metadata.transportLagMinutes],['Исторических инъекций',r.metadata.injections],['Приёмов пищи',r.metadata.meals]])tbl.append(row(name,value));
+e('raw').textContent=JSON.stringify({scenario:key,report:r},null,2);
+e('download').onclick=()=>{const content=['ГлюкоПапа | GFSafety v'+GFSafety.VERSION,'Только вымышленные данные; не разрешает инъекции.','Сценарий: '+v.title,'',JSON.stringify(r,null,2)].join('\n');const url=URL.createObjectURL(new Blob([content],{type:'text/plain;charset=utf-8'}));const link=document.createElement('a');link.href=url;link.download='GFSafety_учебная_диагностика.txt';document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);};
+}
+e('scenario').addEventListener('change',render);e('rerun').addEventListener('click',render);render();
+</script></body></html>
