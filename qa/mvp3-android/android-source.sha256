@@ -111,7 +111,7 @@ e8ea5f37150b2d576aa04a39fd81d3f9c0445f63e5ee5666635f981e8022eee8  android-mvp3/a
 9bdc65e84c1ff3930afe554779bd6c7537bac1b04b71fc5095b654d617d5d30f  android-mvp3/app/src/main/assets/www/shared/RinfastEngine_v0.3.0_UNMODIFIED.js
 c4a88ec1250cedf153d529fd852589129769973854e46e422cb9078190efa6c3  android-mvp3/app/src/main/assets/www/styles.css
 3b80b2f53faa5607bfd806c29076ef1654d488d840fc0fadb497714bf18bcfee  android-mvp3/app/src/main/java/com/glucopapa/shell/GFNativeStorage.java
-83a3b92b4a356cba80a7335778c4f28314e26117acbecc64ac94e23cd527971e  android-mvp3/app/src/main/java/com/glucopapa/shell/MainActivity.java
+df85c0dc738880da12bcaafd3d5667cf46ed62bf8c110261b57c5b116761afd4  android-mvp3/app/src/main/java/com/glucopapa/shell/MainActivity.java
 d1bd47ceb68955ed5d99760e0b50e0b0fc48077a8c3370651fc4c2ac12a5de66  android-mvp3/build.gradle
 f9d9433a4345de54bfe367a178cac2af3ddad424291353aa0bb6d0bf2576322c  android-mvp3/build_windows.bat
 bcec3f41f03e1fcecc807afe61c5e1e8c922a1dfd8141bb684431b93b82770fa  android-mvp3/gradle.properties

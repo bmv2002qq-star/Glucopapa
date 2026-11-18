@@ -3,8 +3,13 @@ package com.glucopapa.shell;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.Insets;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.view.WindowInsets;
+import android.view.WindowInsetsController;
 import android.webkit.JavascriptInterface;
 import android.webkit.JsResult;
 import android.webkit.WebChromeClient;
@@ -13,6 +18,7 @@ import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.FrameLayout;
 import androidx.webkit.WebViewAssetLoader;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
@@ -33,7 +39,7 @@ public class MainActivity extends Activity {
     @Override public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         view = new WebView(this);
-        setContentView(view);
+        attachWebView();
         WebSettings settings = view.getSettings();
         settings.setJavaScriptEnabled(true); // Local, pinned V2 JS modules only
         settings.setDomStorageEnabled(true);
@@ -85,6 +91,35 @@ public class MainActivity extends Activity {
         nativeStorage = new GFNativeStorage(getApplicationContext());
         view.addJavascriptInterface(nativeStorage, "GFNativeStorage");
         view.loadUrl(BASE + "index.html");
+    }
+
+    private void attachWebView() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+            setContentView(view);
+            return;
+        }
+
+        // Android 15 lays out target-35 activities behind the system bars.
+        // Keep WebView controls inside the unobstructed native viewport.
+        FrameLayout viewport = new FrameLayout(this);
+        viewport.setBackgroundColor(Color.WHITE);
+        viewport.addView(view, new FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+        viewport.setOnApplyWindowInsetsListener((container, insets) -> {
+            Insets safe = insets.getInsets(WindowInsets.Type.systemBars()
+                | WindowInsets.Type.displayCutout() | WindowInsets.Type.ime());
+            container.setPadding(safe.left, safe.top, safe.right, safe.bottom);
+            return WindowInsets.CONSUMED;
+        });
+        setContentView(viewport);
+
+        WindowInsetsController controller = getWindow().getInsetsController();
+        if (controller != null) {
+            int lightBars = WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
+                | WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS;
+            controller.setSystemBarsAppearance(lightBars, lightBars);
+        }
+        viewport.requestApplyInsets();
     }
 
     public final class LocalExport {

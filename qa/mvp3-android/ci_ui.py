@@ -94,13 +94,14 @@ class CandidateUI:
         return node
 
     def home(self):
-        self.wait('openHigh', ('Высокий сахар',))
         self.wait('modeBadge', ('Тестовые данные',))
         require(any('Тестовые данные' in label(node) for node in self.last_root.iter('node')),
                 'The app did not enter its synthetic journal')
 
     def injection(self, confirmed):
-        self.tap('openHigh', ('Высокий сахар',))
+        self.home()
+        self.scroll()
+        self.tap('openHigh', ('Высокий сахар',), scroll=True)
         self.tap(captions=('Записать выполненный укол',))
         self.tap('injectionUnits', ('Фактически введено', 'Например: 0,5'))
         self.emulator.execute('shell', 'input', 'text', '0.5')
