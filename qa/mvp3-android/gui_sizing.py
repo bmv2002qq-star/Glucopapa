@@ -49,14 +49,24 @@ def interrupted_views(emulator, ui, output):
             try:
                 deadline = time.monotonic() + 35
                 while time.monotonic() < deadline:
-                    windows = emulator.text('shell', 'dumpsys', 'window', 'windows')
-                    if any('documentsui' in line.lower() for line in windows.splitlines()
-                           if 'mCurrentFocus' in line or 'mFocusedApp' in line):
+                    activities = emulator.text('shell', 'dumpsys', 'activity', 'activities')
+                    focus = emulator.text('shell', 'dumpsys', 'window')
+                    resumed = [line.strip() for line in activities.splitlines()
+                               if 'ResumedActivity' in line or 'Resumed:' in line]
+                    focused = [line.strip() for line in focus.splitlines() if 'mCurrentFocus' in line]
+                    if any('documentsui' in line.lower() for line in resumed + focused):
+                        (output / 'saf-foreground.log').write_text('\n'.join(resumed + focused) + '\n')
                         break
                     require(runner.poll() is None, 'Export instrumentation ended before opening the file chooser')
                     time.sleep(0.5)
                 else:
-                    raise RuntimeError('Android Storage Access Framework export chooser did not open')
+                    capture(emulator, output, 'saf-diagnostic.png')
+                    (output / 'saf-foreground.log').write_text('\n'.join(resumed + focused) + '\n')
+                    messages = emulator.text('logcat', '-d', '-t', '300')
+                    events = [line for line in messages.splitlines()
+                              if any(key in line.lower() for key in ('create_document', 'documentsui', 'glucopapa.shell'))]
+                    (output / 'saf-activity.log').write_text('\n'.join(events) + '\n')
+                    raise RuntimeError('Android Storage Access Framework export chooser was not detected')
                 capture(emulator, output, 'saf-before-interruption.png')
                 emulator.stop()
             finally:
@@ -125,7 +135,8 @@ def main():
     response = emulator.execute('shell', 'am', 'send-trim-memory', PACKAGE, 'HIDDEN', check=False)
     emulator.start()
     ui.home()
-    trimming = {'command_accepted': response.returncode == 0, 'resumed': True}
+    trimming = {'command_accepted': response.returncode == 0, 'resumed': True,
+                'diagnostic': (response.stderr or response.stdout).decode(errors='replace').strip()}
     data = {'fixture': 'SYNTHETIC', 'sizes': results, 'soak_seconds': real_soak, 'pss_kb': memory,
             'trim_memory_signal': trimming}
     result_path = output / 'android-gui.json'
