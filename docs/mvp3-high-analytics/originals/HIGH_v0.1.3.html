@@ -1,0 +1,571 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ГлюкоПапа V2 — Высокий сахар · согласованный экран v0.1.3</title>
+<style>
+:root{--ink:#173c45;--muted:#668089;--teal:#0f8680;--teald:#087069;--soft:#eef8f5;--edge:#d6e7e8;--orange:#c3812d;--amber:#fdf4e8;color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:#eaf3f2}
+*{box-sizing:border-box}html,body{margin:0}body{padding:26px 12px 45px}main{max-width:510px;margin:auto;background:#f8fbfb;border:1px solid #d8e7e8;border-radius:23px;box-shadow:0 14px 60px #163b4920;overflow:hidden}
+.head{background:#123d48;color:white;padding:17px 23px 15px;display:flex;justify-content:space-between;gap:10px;align-items:center}.head strong{font-size:12px;letter-spacing:.06em}.head small{font-size:10px;letter-spacing:.025em;color:#d6eeec}.headBadge{background:#325d65;border-radius:999px;color:#e8f5f2;font-size:10px;white-space:nowrap;padding:5px 9px}
+.content{padding:20px}h1{margin:0 0 8px;font-size:22px;font-weight:820}h2{font-size:15px;margin:0 0 9px;font-weight:800}h3{margin:0;font-size:13px}.sub{color:var(--muted);font-size:12px;margin:0 0 14px}.card{border:1px solid var(--edge);background:white;border-radius:16px;padding:15px;margin:12px 0}.hero{background:linear-gradient(120deg,#fff,#edf8f5)}.heroRow{display:flex;align-items:end;justify-content:space-between;gap:12px}.label{color:var(--muted);font-size:11px;font-weight:720}.glucose{font-size:52px;line-height:1.05;font-weight:830;letter-spacing:-2px;margin:5px 0}.glucose small{font-size:12px;color:#708b8e;letter-spacing:0;font-weight:650}.trend{font-size:12px;color:#ad7139}.goal{min-width:126px;max-width:138px}.goal input{font-size:21px;font-weight:770;padding:7px 9px;text-align:center}.src{font-size:11px;color:#718e90;margin-top:7px}
+.field{display:flex;flex-direction:column;gap:6px;margin:12px 0}label{color:#516e74;font-size:12px;font-weight:710}input,select{width:100%;min-width:0;min-height:43px;border:1px solid #cadddd;background:#fff;color:#23434a;border-radius:11px;font:inherit;padding:9px 12px}input:focus,select:focus{outline:2px solid #7dc9c0;outline-offset:1px}.columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.help{font-size:11px;color:#66838a;line-height:1.45}.primary{border:0;border-radius:11px;min-height:47px;padding:12px 14px;background:var(--teal);color:white;font-weight:800;font-size:15px;width:100%;cursor:pointer}.primary:hover{background:var(--teald)}.primary.amber{background:#b7772d}.primary.amber:hover{background:#996121}.primary:disabled{background:#aebfc1;cursor:not-allowed}
+.result{border:1px solid #efdab6;background:#fff9f0;border-radius:14px;padding:14px;margin:12px 0}.result .kicker{font-size:11px;color:#936331;font-weight:780;letter-spacing:.025em}.result .dose{font-size:32px;line-height:1.2;color:#9d6424;font-weight:850;margin:5px 0}.result .hint{font-size:12px;color:#826c51;line-height:1.55}.divider{height:1px;background:#dfeaec;margin:20px 0}.manualBlock{background:#effaf7;border:1px solid #cae4dd;border-radius:15px;padding:14px}.manualLine{display:flex;gap:12px;align-items:center}.manualLine input{font-size:22px;max-width:155px;font-weight:800;text-align:center;border:1px solid #94c7bd}.units{font-size:13px;font-weight:730;color:#426f68}.live{font-size:12px;color:#2e7166;margin-top:9px;line-height:1.5;min-height:18px}.live.warn{color:#aa4c37}.chartTitle{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:15px 0 9px}.chartTitle .cap{font-size:11px;color:#678588}.chart{width:100%;height:240px;display:block;border:1px solid #e0eeee;background:white;border-radius:13px}.legend{display:flex;gap:12px 16px;flex-wrap:wrap;margin:10px 0 4px;font-size:11px;color:#647f85}.swatch{width:13px;height:3px;display:inline-block;vertical-align:middle;margin-right:5px}.status{font-size:12px;line-height:1.5;border-radius:10px;background:#edf6f2;border:1px solid #cee6d9;color:#396459;padding:11px;margin-top:12px}.status.bad{background:#fff0ef;border-color:#efc9c2;color:#a24e3f}.chartStats{margin:9px 0 0;background:#f4f8fa;border-radius:10px;padding:10px;color:#4b707b;font-size:12px;line-height:1.5}
+.metrics{display:grid;grid-template-columns:1fr 1fr;gap:10px}.metric{padding:11px;border-radius:12px;background:#f3f8f8;border:1px solid #e2eded}.metric b{display:block;font-size:20px;margin-top:4px;color:#1f5d65}.metric small{color:#789296;font-size:10px}
+details{border-top:1px solid #d8e7e8;padding-top:12px;margin-top:13px}summary{cursor:pointer;font-size:13px;font-weight:780;color:#255f65}.settingDetail{padding:7px 2px 2px}.sideHeading{font-size:12px;font-weight:800;margin:13px 0 4px}.notice{font-size:11px;line-height:1.55;color:#69838a;margin:11px 0 3px}.foot{font-size:10px;color:#739097;padding:0 21px 20px}.fact{padding:15px;border-radius:15px;background:#fff;border:1px solid #dce9ea}.fact label{display:block;margin-bottom:6px}pre{white-space:pre-wrap;overflow:auto;max-height:300px;font-size:10.5px;line-height:1.6;color:#55757b;overflow-wrap:anywhere}
+@media(max-width:560px){body{padding:0;background:#f8fbfb}main{max-width:100%;border-radius:0;border:none;box-shadow:none}.content{padding:16px}.head{padding:16px}.chart{height:220px}.glucose{font-size:45px}}@media(max-width:355px){.goal{min-width:115px}.glucose{font-size:40px}.headBadge{white-space:normal}.columns{gap:8px}}
+.activityCard{padding:14px 15px;background:#f0faf7;border-color:#bfdbd7}.activityHead{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.activityHead h2{margin:0}.activitySelect{margin-top:11px}.activitySwitch{display:flex;align-items:center;gap:10px;margin:9px 0 0;color:#285d58;font-size:13px;font-weight:680;cursor:pointer}.activitySwitch input{width:20px;height:20px;min-height:20px;accent-color:#0f8680;flex:0 0 20px;margin:0}.coeffReadout{font-size:12px;color:#3d7973;margin:10px 0 0}.coeffSettings{display:grid;grid-template-columns:1fr 1fr;gap:10px}.coeffSettings .field{margin:5px 0}.fact{margin-top:13px}.fact .field{margin:9px 0 13px}
+</style></head><body><main>
+<header class="head"><div><strong>ГЛЮКОПАПА V2</strong><br><small>Высокий сахар · согласованный экран</small></div><div class="headBadge">Тестовый сценарий</div></header>
+<div class="content"><h1>↑ Высокий сахар</h1><p class="sub">Цель — выход к заданному уровню без выбора времени достижения</p>
+<section class="card hero" aria-label="Показания CGM"><div class="heroRow"><div><div class="label">ТЕКУЩИЙ САХАР · CGM</div><div class="glucose"><span id="gNow">12,0</span> <small>ммоль/л</small></div><div class="trend" id="trend">→ ровный тренд</div></div><div class="goal"><label for="target">Цель, ммоль/л</label><input id="target" type="number" min="4" max="13" step="0.1" value="6.0" inputmode="decimal"/></div></div><div class="src">Сейчас используется вымышленный датчик; в программе показания поступят через GFStorage.</div></section>
+<section class="card activityCard" aria-label="Физическая активность">
+<div class="activityHead"><h2>Физическая активность</h2></div>
+<div class="activitySelect field"><label for="act">Уровень</label><select id="act"><option value="normal" selected>Обычная</option><option value="high">Высокая</option><option value="sport">Спорт</option></select></div>
+<label class="activitySwitch" for="activityEnabled"><input id="activityEnabled" type="checkbox" checked>Учитывать активность</label>
+<div class="coeffReadout" id="activeCoeff" aria-live="polite">Коэффициент: 1,00</div></section>
+<section aria-label="Рассчитать коррекцию"><h2>Расчёт дозы по планируемой цели</h2><button id="compute" class="primary amber" type="button">Рассчитать</button>
+<div id="solution" class="result" aria-live="polite"><div class="kicker">РАССЧИТАННОЕ КОЛИЧЕСТВО ИНСУЛИНА</div><div id="dose" class="dose">— ЕД</div><div id="arrive" class="hint">Нажми «Рассчитать», чтобы найти модельный вариант выхода к цели.</div></div></section>
+<section class="manualBlock" aria-label="Проверка своей дозы"><label for="preview" style="font-size:14px;color:#175e59">Или введи свою дозу</label><div class="manualLine" style="margin-top:8px"><input id="preview" type="number" min="0" max="6" step="0.5" value="2.0" inputmode="decimal" aria-describedby="previewTip"/><span class="units">ЕД РинФаста</span></div><div id="previewTip" class="help" style="margin-top:6px">Измени количество — кривая ниже перестроится автоматически. Укол не записывается.</div><div id="previewStatus" class="live" aria-live="polite">—</div></section>
+<div class="chartTitle"><h2 style="margin:0">Как будет изменяться сахар</h2><span class="cap">Прогнозная кривая</span></div>
+<div class="legend"><span><i class="swatch" style="background:#2b78ac"></i>Без нового укола</span><span><i class="swatch" style="background:#168c78"></i>При выбранной дозе</span><span><i class="swatch" style="background:#a1d3be"></i>Целевой коридор</span></div>
+<svg id="chart" class="chart" role="img" aria-label="Модельная кривая сахара для собственной дозы и без нового укола" viewBox="0 0 670 240"></svg>
+<div class="fact" style="margin-top:14px"><h3>Фактическая инъекция</h3><p class="notice">После подключения к приложению только подтверждённый укол будет записан в дневник.</p><div class="field"><label for="site">Место укола</label><select id="site"><option>Живот</option><option>Плечо</option><option>Бедро</option><option>Ягодица</option></select></div><button class="primary" id="record" type="button" disabled>Сделал укол · записать в дневник</button><p class="notice">В автономном HTML запись отключена: здесь только тестирование интерфейса и математических сценариев.</p></div>
+
+<div id="manualEstimate" class="chartStats" aria-live="polite">Здесь появится прогноз для введённой дозы.</div>
+<div id="status" class="status" role="status">Исходные данные проверяются…</div>
+<div class="divider"></div>
+<div class="metrics" aria-label="Остаточное действие"><div class="metric"><small>РинФаст · IOB</small><b id="iob">— ЕД</b><small>Остаточное модельное действие</small></div><div class="metric"><small>Еда · COB</small><b id="cob">— г</b><small>Ещё не усвоенные углеводы</small></div></div>
+
+<details id="scenarioSettings"><summary>Исходные данные тестового сценария</summary><div class="settingDetail"><p class="help">Этот блок нужен для проверки. В программе параметры берутся из GFStorage и настроек ребёнка.</p>
+<div class="columns"><div class="field"><label for="glucose">Сахар CGM</label><input id="glucose" type="number" min="2" max="30" step="0.1" value="12" inputmode="decimal"></div><div class="field"><label for="isf">ФЧИ, ммоль/л/ЕД</label><input id="isf" type="number" min="0.1" max="50" step="0.1" value="3" inputmode="decimal"></div></div>
+<div class="columns"><div class="field"><label for="uk">УК, г/ЕД</label><input id="uk" type="number" min="1" max="200" step="1" value="10"></div><div class="field"><label for="model">Модель усвоения</label><select id="model"><option value="GFForecast">GFForecast (плавная)</option><option value="GFCOB">GFCOB (линейная)</option></select></div></div>
+<div class="sideHeading">Предыдущий РинФаст</div><div class="columns"><div class="field"><label for="oldDose">Ранее введено, ЕД</label><input id="oldDose" type="number" min="0" max="10" step="0.5" value="0"></div><div class="field"><label for="oldAge">Минут назад</label><input id="oldAge" type="number" min="0" max="400" step="5" value="75"></div></div>
+<div class="sideHeading">Еда</div><div class="columns"><div class="field"><label for="carbs">Углеводы, г</label><input id="carbs" type="number" min="0" max="150" step="1" value="0"></div><div class="field"><label for="foodAge">Минут назад</label><input id="foodAge" type="number" min="0" max="600" step="5" value="30"></div></div>
+<div class="field"><label for="slow">Профиль еды</label><select id="slow"><option value="90">Быстрая</option><option value="240">Средняя</option><option value="360">Жирная / медленная</option></select></div>
+<div class="field"><label for="illness">Болезнь</label><select id="illness"><option value="off">Нет</option><option value="on">Болеет</option></select></div>
+<div class="sideHeading">Коэффициенты активности</div>
+<div class="coeffSettings"><div class="field"><label for="coeffNormal">Обычная</label><input id="coeffNormal" type="number" min="0.5" max="2" step="0.01" value="1.00" inputmode="decimal"></div>
+<div class="field"><label for="coeffHigh">Высокая</label><input id="coeffHigh" type="number" min="0.5" max="2" step="0.01" value="1.05" inputmode="decimal"></div>
+<div class="field"><label for="coeffSport">Спорт</label><input id="coeffSport" type="number" min="0.5" max="2" step="0.01" value="1.10" inputmode="decimal"></div></div>
+<div class="help">Изменения в этом HTML действуют до закрытия страницы. В программе эти три значения хранятся в GFSettings через GFStorage.</div>
+<div class="help">При включённой активности её вклад меняет тестовую прогнозную кривую. Левемир не используется.</div></div></details>
+<details><summary>Справочная информация и подробный расчёт</summary><pre id="details">—</pre></details>
+</div><footer class="foot">GFHighTarget v0.1.3 · экран и настройки активности · РинФаст · Левемир исключён. Числа получены только из вымышленных сценариев; медицинская корректность доз не подтверждена.</footer>
+</main>
+<script>/*
+ * ГлюкоПапа: независимый исследовательский модуль IOB для РинФаста (инсулин аспарт).
+ * v0.3.0. Расчётная кривая OpenAPS exponential (rapid acting), не индивидуальная
+ * фармакодинамическая оценка и НЕ алгоритм назначения инсулина/еды.
+ * Не требуется сеть, CGM, журнал еды или другие модули.
+ * License of THIS implementation: MIT. Reference method: OpenAPS/oref0.
+ */
+(function (root, factory) {
+  "use strict";
+  const api = factory();
+  if (typeof module === "object" && module.exports) module.exports = api;
+  if (root) root.RinfastEngine = api;
+})(typeof globalThis !== "undefined" ? globalThis : this, function () {
+  "use strict";
+  const ENGINE_VERSION = "0.3.0";
+  const DEFAULT_PROFILE = Object.freeze({
+    drugId: "rinfast", drugName: "РинФаст", substance: "инсулин аспарт",
+    model: "openaps_exponential_rapid", modelVersion: "0.3.0",
+    diaMinutes: 300, peakMinutes: 75,
+    dataSource: "https://help.geropharm.ru/rinfast-insulin-aspart",
+    modelSource: "https://github.com/openaps/oref0/blob/master/lib/iob/calculate.js",
+    clinicalValidation: false
+  });
+  // Диапазоны — из инструкции производителя, НЕ параметры кривой OpenAPS.
+  const LABEL_TIME_RANGES = Object.freeze({
+    onsetMinutes: Object.freeze([10, 20]),
+    maximumEffectMinutes: Object.freeze([60, 180]),
+    durationMinutes: Object.freeze([180, 300]),
+    source: "https://help.geropharm.ru/rinfast-insulin-aspart"
+  });
+  const WARNINGS = Object.freeze([
+    "Расчёт — модель доли оставшегося эффекта, не измерение инсулина в крови.",
+    "Профиль 300/75 минут — исследовательские параметры OpenAPS, не индивидуальная кривая РинФаста.",
+    "Число IOB нельзя использовать самостоятельно для расчёта доз, углеводов или лечения гипогликемии.",
+    "Отсутствие записей в журнале не доказывает отсутствия введённого инсулина.",
+    "Ноль через выбранную DIA означает только завершение выбранной математической кривой, не гарантирует отсутствия действия в организме.",
+    "Начало 10–20 мин, максимум 1–3 ч, длительность 3–5 ч — диапазоны по инструкции, не персональные пороги.",
+    "Рост математической активности до 10 минут НЕ означает подтверждённый клинический эффект до 10 минут.",
+    "Модельная продолжительность 360+ минут выходит за пределы типичного диапазона 3–5 часов из инструкции и служит только анализу чувствительности."
+  ]);
+  function finiteNumber(v) { return typeof v === "number" && Number.isFinite(v); }
+  function clamp01(x) { return Math.max(0, Math.min(1, x)); }
+  function validateProfile(profile) {
+    const p = profile == null ? DEFAULT_PROFILE : profile;
+    if (!p || p.drugId !== "rinfast" || p.model !== "openaps_exponential_rapid") {
+      throw new Error("Профиль должен быть для РинФаста с моделью openaps_exponential_rapid.");
+    }
+    if (!finiteNumber(p.diaMinutes) || p.diaMinutes < 300 || p.diaMinutes > 480) {
+      throw new Error("Некорректная длительность DIA: разрешён исследовательский диапазон 300–480 мин.");
+    }
+    if (!finiteNumber(p.peakMinutes) || p.peakMinutes < 50 || p.peakMinutes > 120 || p.peakMinutes >= p.diaMinutes / 2) {
+      throw new Error("Некорректное время пика: 50–120 мин и строго меньше половины DIA.");
+    }
+    return p;
+  }
+  function parameters(profile) {
+    const p = validateProfile(profile);
+    const D = p.diaMinutes, P = p.peakMinutes;
+    const tau = P * (1 - P / D) / (1 - 2 * P / D);
+    const a = 2 * tau / D;
+    const scale = 1 / (1 - a + (1 + a) * Math.exp(-D / tau));
+    if (![tau, a, scale].every(Number.isFinite) || tau <= 0 || scale <= 0) {
+      throw new Error("Не удалось рассчитать устойчивые параметры кривой.");
+    }
+    return { D, P, tau, a, scale };
+  }
+  /** Returns a fraction of insulin GLUCOSE-LOWERING EFFECT remaining, not plasma insulin. */
+  function getCurve(ageMinutes, profile = DEFAULT_PROFILE) {
+    if (!finiteNumber(ageMinutes) || ageMinutes < 0) throw new Error("Возраст инъекции должен быть неотрицательным числом минут.");
+    const { D, tau, a, scale } = parameters(profile);
+    if (ageMinutes >= D) return { remainingFraction: 0, usedFraction: 1, activityFractionPerMinute: 0 };
+    if (ageMinutes === 0) return { remainingFraction: 1, usedFraction: 0, activityFractionPerMinute: 0 };
+    const t = ageMinutes;
+    const exp = Math.exp(-t / tau);
+    // Algebraically equivalent to OpenAPS iobContrib, but avoids / (1-a)
+    // singularity when peak makes a exactly 1.
+    const remaining = 1 - scale * ((t * t / (tau * D) - (1 - a) * (t / tau + 1)) * exp + (1 - a));
+    const activity = (scale / (tau * tau)) * t * (1 - t / D) * exp;
+    const r = clamp01(remaining);
+    return { remainingFraction: r, usedFraction: 1 - r, activityFractionPerMinute: Math.max(0, activity) };
+  }
+  /** Instruction-based qualitative phase, deliberately independent of model action. */
+  function getPhase(ageMinutes, profile = DEFAULT_PROFILE) {
+    const p = validateProfile(profile);
+    if (!finiteNumber(ageMinutes) || ageMinutes < 0) throw new Error("Возраст инъекции должен быть неотрицательным числом минут.");
+    if (ageMinutes >= p.diaMinutes) return {code:"MODEL_HORIZON_PASSED",label:"За пределами выбранного модельного интервала",modelMinutesRemaining:0};
+    const modelMinutesRemaining = p.diaMinutes - ageMinutes;
+    if (ageMinutes < 10) return {code:"BEFORE_TYPICAL_ONSET",label:"До типичного начала действия по инструкции",modelMinutesRemaining};
+    if (ageMinutes < 20) return {code:"ONSET_WINDOW",label:"Диапазон начала действия по инструкции",modelMinutesRemaining};
+    if (ageMinutes < 60) return {code:"BEFORE_MAX_EFFECT_WINDOW",label:"После начала, до диапазона максимального эффекта",modelMinutesRemaining};
+    if (ageMinutes <= 180) return {code:"MAX_EFFECT_WINDOW",label:"Диапазон максимального эффекта по инструкции",modelMinutesRemaining};
+    if (ageMinutes < 300) return {code:"LATE_EFFECT_WINDOW",label:"Поздняя часть диапазона действия по инструкции",modelMinutesRemaining};
+    return {code:"EXTENDED_RESEARCH_MODEL",label:"Исследовательское продление за 5 часов — вне типичного диапазона инструкции",modelMinutesRemaining};
+  }
+  function timestampMs(value) {
+    if (typeof value !== "string" || !/T\d\d:\d\d/.test(value) || !/(?:Z|[+\-]\d\d:\d\d)$/i.test(value)) {
+      throw new Error("Время должно быть ISO 8601 с часовым поясом, например 2026-11-13T13:00:00+03:00.");
+    }
+    const ms = Date.parse(value);
+    if (!Number.isFinite(ms)) throw new Error("Невозможно прочитать время.");
+    return ms;
+  }
+  function validateHorizons(horizons) {
+    if (!Array.isArray(horizons) || horizons.length < 1 || horizons.length > 12 ||
+        !horizons.every(v => Number.isInteger(v) && v > 0 && v <= 480) ||
+        new Set(horizons).size !== horizons.length) {
+      throw new Error("Горизонты прогноза: уникальные положительные целые минуты (1–480), не более 12.");
+    }
+    return horizons;
+  }
+  /**
+   * Input: {nowIso, events, profile, horizonsMinutes?}
+   * Event: {id, type:'insulin_injection', insulinId:'rinfast', status:'confirmed',
+   *         administeredAt:'ISO8601 with offset', units: positive number}
+   * On any ambiguous relevant record -> INCOMPLETE and ALL computed values null.
+   */
+  function calculate(request) {
+    if (!request || typeof request !== "object") throw new Error("Передайте объект запроса.");
+    const profile = validateProfile(request.profile || DEFAULT_PROFILE);
+    const now = timestampMs(request.nowIso);
+    if (!Array.isArray(request.events) || request.events.length > 10000) {
+      throw new Error("События журнала должны быть массивом длиной до 10 000.");
+    }
+    const horizons = validateHorizons(request.horizonsMinutes || [15, 30, 60]);
+    const issues = [], ignored = [];
+    const accepted = [], ids = new Set();
+    for (const event of request.events) {
+      if (!event || typeof event !== "object") {
+        issues.push("В журнале обнаружена повреждённая запись."); continue;
+      }
+      if (event.type !== "insulin_injection") {
+        if (!event.type) issues.push("В журнале запись без типа события.");
+        continue;
+      }
+      if (typeof event.insulinId !== "string" || !event.insulinId.trim()) {
+        issues.push("Инъекция без идентификатора инсулина."); continue;
+      }
+      if (event.insulinId !== "rinfast") {
+        if (event.insulinId === "levemir") {
+          ignored.push({ id: String(event.id || "?"), reason: "Левемир учитывается отдельным модулем" });
+        } else {
+          issues.push(`Инъекция ${String(event.id || "?")}: препарат ${event.insulinId} неизвестен этому модулю или является другим коротким инсулином; требуется сверка журнала.`);
+        }
+        continue;
+      }
+      if (typeof event.id !== "string" || !event.id.trim() || ids.has(event.id)) {
+        issues.push("Отсутствует или повторяется идентификатор инъекции РинФаста."); continue;
+      }
+      ids.add(event.id);
+      if (event.status !== "confirmed") {
+        issues.push(`Инъекция ${event.id}: нет подтверждения фактического введения (status=confirmed).`);
+        continue;
+      }
+      if (!finiteNumber(event.units) || event.units <= 0 || event.units > 200) {
+        issues.push(`Инъекция ${event.id}: недостоверная доза.`); continue;
+      }
+      let administration;
+      try { administration = timestampMs(event.administeredAt); }
+      catch (_) { issues.push(`Инъекция ${event.id}: недостоверное время.`); continue; }
+      if (administration > now) {
+        issues.push(`Инъекция ${event.id}: время в будущем относительно момента расчёта.`); continue;
+      }
+      const ageMinutes = (now - administration) / 60000;
+      if (ageMinutes >= profile.diaMinutes) {
+        ignored.push({ id: event.id, reason: "За пределами расчётной длительности действия" });
+        continue;
+      }
+      accepted.push({ id: event.id, units: event.units, ageMinutes, administeredAt: event.administeredAt });
+    }
+    const base = {
+      engineVersion: ENGINE_VERSION, modelVersion: profile.modelVersion || ENGINE_VERSION,
+      drugId: "rinfast", drugName: "РинФаст", model: profile.model,
+      diaMinutes: profile.diaMinutes, peakMinutes: profile.peakMinutes,
+      nowIso: request.nowIso, issues, ignored,
+      warnings: Array.from(WARNINGS), timingSource: LABEL_TIME_RANGES.source, instructionTiming: LABEL_TIME_RANGES, acceptedCount: accepted.length,
+      clinicalValidation: false,
+      statusMeaning: "MODEL_ESTIMATE означает математический расчёт, не индивидуально проверенное действие",
+      assumesCompleteJournal: true,
+      durationBeyondLabel: profile.diaMinutes > 300,
+      labelOnsetIsNotHardCutoff: true
+    };
+    if (issues.length) {
+      return { ...base, status: "INCOMPLETE", modelRemainingUnits: null,
+        activityModelUnitsPerMinute: null, futureActionModelUnits: null, contributions: null };
+    }
+    let modelRemainingUnits = 0, activityModelUnitsPerMinute = 0;
+    const futureActionModelUnits = Object.fromEntries(horizons.map(h => [String(h), 0]));
+    const contributions = accepted.map(inj => {
+      const atNow = getCurve(inj.ageMinutes, profile);
+      const actionNext = {};
+      for (const h of horizons) {
+        const after = getCurve(inj.ageMinutes + h, profile);
+        const part = Math.max(0, inj.units * (atNow.remainingFraction - after.remainingFraction));
+        actionNext[String(h)] = part;
+        futureActionModelUnits[String(h)] += part;
+      }
+      const remainingUnits = inj.units * atNow.remainingFraction;
+      const usedUnits = inj.units * atNow.usedFraction;
+      const activityUnitsPerMinute = inj.units * atNow.activityFractionPerMinute;
+      modelRemainingUnits += remainingUnits;
+      activityModelUnitsPerMinute += activityUnitsPerMinute;
+      return {
+        id: inj.id, administeredAt: inj.administeredAt, ageMinutes: inj.ageMinutes,
+        phase: getPhase(inj.ageMinutes, profile),
+        doseUnits: inj.units, remainingFraction: atNow.remainingFraction,
+        usedFraction: atNow.usedFraction, remainingModelUnits: remainingUnits,
+        usedModelUnits: usedUnits, activityModelUnitsPerMinute: activityUnitsPerMinute,
+        futureActionModelUnits: actionNext
+      };
+    });
+    return {
+      ...base, status: "MODEL_ESTIMATE", modelRemainingUnits,
+      activityModelUnitsPerMinute, futureActionModelUnits, contributions
+    };
+  }
+  /**
+   * Исследовательская серия по времени вокруг nowIso.
+   * Перед инъекцией её действие = 0, после DIA = 0 только в рамках модели.
+   * Данные используются только для построения отдельных и суммарных графиков.
+   * Не оценивает фактический сахар и не назначает терапию.
+   */
+  function calculateTimeline(request, options = {}) {
+    if (!request || typeof request !== "object") throw new Error("Нужен объект запроса.");
+    const profile = validateProfile(request.profile || DEFAULT_PROFILE);
+    const now = timestampMs(request.nowIso);
+    const start = options.startOffsetMinutes == null ? -240 : options.startOffsetMinutes;
+    const end = options.endOffsetMinutes == null ? 360 : options.endOffsetMinutes;
+    const step = options.stepMinutes == null ? 5 : options.stepMinutes;
+    if (![start, end, step].every(finiteNumber) || !Number.isInteger(start) || !Number.isInteger(end) ||
+        !Number.isInteger(step) || start < -600 || end > 600 || end <= start || step < 1 || step > 60 ||
+        Math.ceil((end - start) / step) > 1200) {
+      throw new Error("Некорректный интервал графика: -600..+600 минут, шаг 1–60 минут.");
+    }
+    const audit = calculate({ nowIso: request.nowIso, events: request.events, profile });
+    if (audit.status !== "MODEL_ESTIMATE") return {
+      status: "INCOMPLETE", issues: audit.issues, rows: null, shotIds: null, clinicalValidation: false
+    };
+    const shots = request.events.filter(e => e.type === "insulin_injection" && e.insulinId === "rinfast")
+      .map(e => ({ id: e.id, units: e.units, administeredAt: e.administeredAt,
+        ageAtNowMinutes: (now - timestampMs(e.administeredAt)) / 60000 }));
+    const rows = [];
+    for (let offset = start; offset <= end; offset += step) {
+      const perShot = []; let totalActivityUnitsPerMinute = 0, totalRemainingModelUnits = 0;
+      for (const shot of shots) {
+        const age = shot.ageAtNowMinutes + offset;
+        const curve = age < 0 ? null : getCurve(age, profile);
+        const activityUnitsPerMinute = curve ? shot.units * curve.activityFractionPerMinute : 0;
+        const remainingModelUnits = curve ? shot.units * curve.remainingFraction : 0;
+        perShot.push({ id: shot.id, activityUnitsPerMinute, remainingModelUnits });
+        totalActivityUnitsPerMinute += activityUnitsPerMinute;
+        totalRemainingModelUnits += remainingModelUnits;
+      }
+      rows.push({ offsetMinutes: offset, totalActivityUnitsPerMinute, totalRemainingModelUnits, perShot });
+    }
+    if (rows.at(-1).offsetMinutes !== end) {
+      const tail = calculateTimeline(request, { startOffsetMinutes: end-1, endOffsetMinutes: end, stepMinutes: 1 });
+      // Include endpoint without duplicating previous data.
+      rows.push(tail.rows.at(-1));
+    }
+    return { status: "MODEL_ESTIMATE", modelVersion: ENGINE_VERSION,
+      profile: {diaMinutes: profile.diaMinutes, peakMinutes: profile.peakMinutes},
+      shotIds: shots.map(x => x.id), rows,
+      labelTiming: LABEL_TIME_RANGES, clinicalValidation: false };
+  }
+  /** Sensitivity analysis; NEVER chooses a patient-specific DIA. */
+  function compareDurations(request, durationMinutes = [300, 360]) {
+    if (!Array.isArray(durationMinutes) || durationMinutes.length < 2 || durationMinutes.length > 6 ||
+        new Set(durationMinutes).size !== durationMinutes.length) {
+      throw new Error("Нужны 2–6 уникальных вариантов исследовательского времени DIA.");
+    }
+    const baseline = validateProfile(request.profile || DEFAULT_PROFILE);
+    const alternatives = durationMinutes.map(diaMinutes => {
+      const profile = {...baseline, diaMinutes};
+      validateProfile(profile);
+      const r = calculate({...request, profile});
+      return {diaMinutes, peakMinutes: profile.peakMinutes, status: r.status,
+        modelRemainingUnits: r.modelRemainingUnits,
+        futureActionModelUnits: r.futureActionModelUnits, issues: r.issues};
+    });
+    return {status: alternatives.every(a => a.status === "MODEL_ESTIMATE") ? "MODEL_ESTIMATE" : "INCOMPLETE",
+      scenarios: alternatives, clinicalValidation: false,
+      note: "Диапазон сценариев НЕ является доверительным интервалом и НЕ предсказывает клиническую погрешность."};
+  }
+  return Object.freeze({ ENGINE_VERSION, DEFAULT_PROFILE, LABEL_TIME_RANGES, WARNINGS, getPhase,
+    validateProfile, getCurve, calculate, calculateTimeline, compareDurations });
+});
+</script>
+<script>/* GFHighTarget v0.1.0 | trajectory research engine | GlucoPapa V2
+ * No basal insulin. No writes. A synthetic-only optimizer; live estimates
+ * cannot yield a correction dose until external independent clinical review.
+ * Original RinfastEngine is injected, not copied. No hidden defaults for dose.
+ */
+(function(root,factory){'use strict';const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;if(root)root.GFHighTarget=api;})(typeof globalThis!=='undefined'?globalThis:this,function(){
+'use strict';
+const VERSION='0.1.0',MS=60000,STEP=5;
+const finite=n=>typeof n==='number'&&Number.isFinite(n);
+const iso=t=>typeof t==='string'&&/(Z|[+-]\d\d:\d\d)$/.test(t)&&Number.isFinite(Date.parse(t))?Date.parse(t):NaN;
+const round=(v,n=3)=>+v.toFixed(n);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function block(code,reasons,extra={}){return {version:VERSION,status:'BLOCKED',code,reasons:Array.isArray(reasons)?reasons:[reasons],clinicalUse:false,canRecordInjection:false,canSuggestDose:false,...extra};}
+function median(a){const x=a.slice().sort((p,q)=>p-q),m=Math.floor(x.length/2);return x.length%2?x[m]:(x[m-1]+x[m])/2;}
+function validateCGM(rows,now){
+ if(!Array.isArray(rows)||rows.length<4)return {error:'CGM_HISTORY_INCOMPLETE'};
+ const dedup=new Map();
+ for(const r of rows){
+  if(!finite(r?.mmol)||r.mmol<2||r.mmol>33||!Number.isSafeInteger(r.ts)||r.ts>now||r.ts<now-24*3600000||r.valid===false||r.qualityFlag==='invalid'||!r.sourceDeviceId)return {error:'CGM_INVALID_OR_UNTRUSTED'};
+  if(r.receivedAt!==undefined){const received=iso(r.receivedAt);if(!finite(received)||received<r.ts-60000||received>now+60000||received-r.ts>10*MS)return {error:'CGM_RECEIPT_INVALID'};}
+  if(dedup.has(r.ts)&&(dedup.get(r.ts).mmol!==r.mmol||dedup.get(r.ts).sourceDeviceId!==r.sourceDeviceId))return {error:'CGM_CONFLICTING_DUPLICATE'};
+  dedup.set(r.ts,r);
+ }
+ const all=[...dedup.values()].sort((a,b)=>a.ts-b.ts),last=all.at(-1);if(now-last.ts>10*MS)return {error:'CGM_STALE'};
+ const a=all.filter(x=>last.ts-x.ts<=25*MS);if(a.length<4||a.at(-1).ts-a[0].ts<15*MS)return {error:'CGM_TREND_INCOMPLETE'};
+ if(a.some(r=>r.sourceDeviceId!==last.sourceDeviceId))return {error:'CGM_SOURCE_CHANGED'};
+ for(let i=1;i<a.length;i++)if(a[i].ts-a[i-1].ts>10*MS)return {error:'CGM_GAP'};
+ const slopes=[];for(let i=0;i<a.length;i++)for(let j=i+1;j<a.length;j++)if(a[j].ts-a[i].ts>=4*MS)slopes.push((a[j].mmol-a[i].mmol)/((a[j].ts-a[i].ts)/MS));
+ if(slopes.length<3)return {error:'CGM_TREND_INCOMPLETE'};
+ const slope=median(slopes),scatter=median(a.map(r=>Math.abs(r.mmol-(last.mmol+slope*(r.ts-last.ts)/MS))));
+ if(Math.abs(slope)>0.22||scatter>0.9)return {error:'CGM_TREND_UNSTABLE'};
+ const before=a.slice(0,-1);const baseSlopes=[];for(let i=0;i<before.length;i++)for(let j=i+1;j<before.length;j++)if(before[j].ts-before[i].ts>=4*MS)baseSlopes.push((before[j].mmol-before[i].mmol)/((before[j].ts-before[i].ts)/MS));
+ if(baseSlopes.length>=3){const expected=before.at(-1).mmol+median(baseSlopes)*(last.ts-before.at(-1).ts)/MS;if(Math.abs(last.mmol-expected)>1.3)return {error:'CGM_LAST_POINT_SPIKE'};}
+ return {last,latestMmol:last.mmol,slope,scatter,sourceId:last.sourceDeviceId,readingsUsed:a.length};
+}
+function validateShots(rows,now,engine){
+ if(!Array.isArray(rows)||rows.length>10000)return {error:'INJECTION_EVENTS_INVALID'};
+ if(!engine||typeof engine.getCurve!=='function'||engine.DEFAULT_PROFILE?.drugId!=='rinfast')return {error:'RINFAST_ENGINE_MISSING'};
+ const ids=new Set(),active=[];
+ for(const r of rows){
+  if(r?.type!=='insulin_injection')continue;
+  // Explicitly ignore basal insulin. This module never looks at its dose or schedule.
+  if(r.insulinId==='levemir')continue;
+  if(r.insulinId!=='rinfast')return {error:'OTHER_RAPID_INSULIN_UNMODELED'};
+  if(typeof r.id!=='string'||!r.id||ids.has(r.id)||r.status!=='confirmed'||!finite(r.units)||r.units<=0||r.units>200)return {error:'INJECTION_UNCONFIRMED_OR_CORRUPT'};
+  ids.add(r.id);const t=iso(r.administeredAt);if(!finite(t)||t>now)return {error:'INJECTION_TIME_INVALID'};
+  const age=(now-t)/MS;if(age<engine.DEFAULT_PROFILE.diaMinutes)active.push({id:r.id,units:r.units,age});
+ }
+ return {active};
+}
+function smoothCDF(t,tau){if(t<=0)return 0;return clamp(1-(1+t/tau)*Math.exp(-t/tau),0,1);}
+function smoothDerivative(t,tau){return t<=0?0:(t/(tau*tau))*Math.exp(-t/tau);}
+function linearCDF(t,lag,duration){return clamp((t-lag)/duration,0,1);}
+function foodCDF(meal,age,mode){return mode==='GFCOB'?linearCDF(age,meal.lag,meal.slowDuration):smoothCDF(Math.max(0,age-meal.lag),meal.slowDuration/5);}
+function foodRate(meal,age,mode){
+ if(mode==='GFCOB')return age>=meal.lag&&age<=meal.lag+meal.slowDuration?1/meal.slowDuration:0;
+ return smoothDerivative(Math.max(0,age-meal.lag),meal.slowDuration/5);
+}
+function validateMeals(rows,now,mode){
+ if(!Array.isArray(rows)||rows.length>10000)return {error:'MEALS_INVALID'};
+ const ids=new Set(),active=[];
+ for(const r of rows){
+  if(!r||typeof r.id!=='string'||!r.id||ids.has(r.id))return {error:'MEAL_ID_INVALID'};
+  ids.add(r.id);
+  if(r.status==='draft'||r.status==='planned'||r.status==='ready')continue;
+  if(r.status!=='completed')return {error:'MEAL_NOT_CONFIRMED'};
+  const t=iso(r.startedAt);if(!finite(t)||t>now)return {error:'MEAL_TIME_INVALID'};
+  const plate=r.actualPlate;
+  if(!plate||plate.containsEstimatedValues===true||!plate.totals||!finite(plate.totals.carbs)||plate.totals.carbs<0||!finite(plate.totals.fat)||!finite(plate.totals.protein))return {error:'MEAL_COMPOSITION_UNKNOWN'};
+  const k=r.kinetics;
+  if(!k||!['plate_auto_research_preset_v1','explicit_research_scenario'].includes(k.origin)||!finite(k.lagMinutes)||k.lagMinutes<0||k.lagMinutes>120||!finite(k.slowDurationMinutes)||k.slowDurationMinutes<20||k.slowDurationMinutes>720)return {error:'MEAL_KINETICS_UNKNOWN'};
+  const age=(now-t)/MS,lag=k.lagMinutes,slowDuration=k.slowDurationMinutes;
+  // Keep contributions until their hypothesized model tail becomes negligible.
+  if(age>lag+Math.max(720,slowDuration*7))continue;
+  if(plate.totals.carbs>0)active.push({id:r.id,carbs:plate.totals.carbs,age,lag,slowDuration,model:mode,origin:k.origin,fat:plate.totals.fat,protein:plate.totals.protein});
+ }
+ return {active};
+}
+function modifierAt(mod,h){
+ const ps=mod.points;if(h<=ps[0].t)return ps[0].delta;
+ for(let i=1;i<ps.length;i++){if(h<=ps[i].t){const a=ps[i-1],b=ps[i];return a.delta+(b.delta-a.delta)*(h-a.t)/(b.t-a.t);}}
+ return ps.at(-1).delta;
+}
+function checkModifiers(modifiers,context){
+ const active=[];
+ for(const k of ['activity','illness','physio']){
+  const relevant=k==='activity'?context.activity!=='low':k==='illness'?context.illness===true:context.physioApplied===true;
+  if(!relevant)continue;
+  const m=modifiers?.[k];
+  if(!m||typeof m.version!=='string'||!m.version||m.includesCurrentTrend!==false||!Array.isArray(m.points)||m.points.length<2||m.points.length>500||m.points[0].t!==0||m.points[0].delta!==0||!m.points.every((p,i)=>finite(p.t)&&finite(p.delta)&&p.t>=0&&p.t<=1440&&(i===0||p.t>m.points[i-1].t)))return {error:'UNVERIFIED_'+k.toUpperCase()+'_MODEL'};
+  // A valid technical modifier is NOT proof of calibration or disjoint effects.
+  active.push({key:k,curve:m});
+ }
+ return {active};
+}
+function findSettled(points,target,band,minimumMinutes){
+ for(let i=0;i<points.length;i++){
+  if(points.at(-1).t-points[i].t<minimumMinutes)break;
+  if(points.slice(i).every(p=>Math.abs(p.g-target)<=band))return points[i].t;
+ }
+ return null;
+}
+function analyse(req){
+ try{
+  if(!req||typeof req!=='object')return block('INPUT_MISSING','Нет входного снимка');
+  const now=iso(req.nowIso);if(!finite(now))return block('CLOCK_INVALID','Время должно включать часовой пояс');
+  const s=req.settings||{},cov=req.coverage||{},context=req.context||{};
+  if(!finite(s.target)||s.target<4||s.target>13||!finite(s.isf)||s.isf<=0||s.isf>50||!finite(s.uk)||s.uk<=0||s.uk>200)return block('COEFFICIENTS_MISSING','Нет датированных пользовательских цели/ФЧИ/УК');
+  if(!['GFForecast','GFCOB'].includes(s.foodModel))return block('FOOD_MODEL_NOT_SELECTED','Не выбран единый тип модели усвоения');
+  if(cov.injectionsConfirmed!==true||cov.mealsConfirmed!==true)return block('HISTORY_COVERAGE_UNKNOWN','Не подтверждена полнота истории еды и инсулина');
+  const cgm=validateCGM(req.readings,now);if(cgm.error)return block(cgm.error,'CGM требует достоверной последовательности и времени измерений');
+  if(cgm.latestMmol<=3.9)return block('LOW_CGM_USE_LOW_MODULE','При низкой глюкозе HIGH не используется');
+  const ins=validateShots(req.injections,now,req.rinfastEngine);if(ins.error)return block(ins.error,'Неопределённая история короткого инсулина или модель РинФаста');
+  const food=validateMeals(req.meals,now,s.foodModel);if(food.error)return block(food.error,'Нет проверенной фактической еды и модельной кинетики');
+  const modifiers=checkModifiers(req.modifiers,context);if(modifiers.error)return block(modifiers.error,'Для выбранного состояния отсутствует непересекающаяся исследовательская модель');
+  const profile=req.rinfastEngine.DEFAULT_PROFILE;
+  const remaining=a=>req.rinfastEngine.getCurve(Math.max(0,a)).remainingFraction;
+  const rate=a=>req.rinfastEngine.getCurve(Math.max(0,a)).activityFractionPerMinute;
+  const iob=ins.active.reduce((z,e)=>z+e.units*remaining(e.age),0);
+  const cob=food.active.reduce((z,m)=>z+m.carbs*(1-foodCDF(m,m.age,s.foodModel)),0);
+  const insulinNowRate=-s.isf*ins.active.reduce((z,e)=>z+e.units*rate(e.age),0);
+  const foodNowRate=s.isf/s.uk*food.active.reduce((z,m)=>z+m.carbs*foodRate(m,m.age,s.foodModel),0);
+  const residual=cgm.slope-insulinNowRate-foodNowRate;
+  if(Math.abs(residual)>0.28)return block('UNSTABLE_RESIDUAL','Прогноз слишком сильно расходится с фактической скоростью CGM',{diagnostics:{residual:round(residual)}});
+  const drift=h=>clamp(residual,-0.18,0.18)*35*(1-Math.exp(-h/35));
+  const lastMealTail=Math.max(0,...food.active.map(m=>m.lag+Math.max(m.slowDuration,s.foodModel==='GFForecast'?m.slowDuration*1.4:m.slowDuration)-m.age));
+  const horizon=Math.min(900,Math.ceil(Math.max(profile.diaMinutes+60,lastMealTail+120)/STEP)*STEP);
+  const horizonIncomplete=lastMealTail+120>900;
+  if(horizonIncomplete)return block('HORIZON_CAPPED','Модель еды не завершает влияние в допустимом исследовательском окне');
+  const baseline=[];
+  for(let h=0;h<=horizon;h+=STEP){
+   const pastInsulin=-s.isf*ins.active.reduce((z,e)=>z+e.units*(remaining(e.age)-remaining(e.age+h)),0);
+   const foodEffect=s.isf/s.uk*food.active.reduce((z,m)=>z+m.carbs*(foodCDF(m,m.age+h,s.foodModel)-foodCDF(m,m.age,s.foodModel)),0);
+   const modifierEffect=modifiers.active.reduce((z,m)=>z+modifierAt(m.curve,h),0);
+   baseline.push({t:h,g:cgm.latestMmol+drift(h)+pastInsulin+foodEffect+modifierEffect,insulinPast:pastInsulin,meal:foodEffect,drift:drift(h),modifiers:modifierEffect});
+  }
+  const resultBase={version:VERSION,clinicalUse:false,canRecordInjection:false,canSuggestDose:false,sourceRevision:req.revision??null,meta:{foodModel:s.foodModel,engine:'RinfastEngine '+(req.rinfastEngine.ENGINE_VERSION||'0.3.0'),horizonMin:horizon,sampleMin:STEP,sourceId:cgm.sourceId,modelUncertainty:'UNQUANTIFIED'},observations:{currentMmol:round(cgm.latestMmol),targetMmol:s.target,trendMmolPerMin:round(cgm.slope,5),iobModelU:round(iob,3),cobModelG:round(cob,2),isf:s.isf,uk:s.uk,activeInjections:ins.active.length,activeMeals:food.active.length,context:{activity:context.activity||'low',illness:!!context.illness,physioApplied:!!context.physioApplied}},baseline:baseline.map(p=>({t:p.t,g:round(p.g,3)}))};
+  // Actual sensor measurements MUST NEVER be used in an unvalidated numeric dose search.
+  if(req.origin!=='synthetic_fixture'||req.fixtureTag!=='SYNTHETIC_TEST_ONLY')return {...resultBase,status:'READ_ONLY',code:'CLINICAL_FORMULA_NOT_VALIDATED',reasons:['Дозовая оптимизация закрыта для реальных данных до независимой проверки детской формулы.'],candidate:null,points:resultBase.baseline};
+  if(!finite(s.maxDose)||s.maxDose<0||s.maxDose>20||!finite(s.step)||s.step!==0.5||Math.abs(s.maxDose/0.5-Math.round(s.maxDose/0.5))>1e-9)return block('TEST_DOSE_RANGE_INVALID','Для синтетического стенда нужен ограниченный диапазон и шаг 0,5 ЕД');
+  const candidates=[],band=0.5,stability=45;
+  for(let i=0;i<=Math.round(s.maxDose/s.step);i++){
+   const dose=i*s.step;
+   const pts=baseline.map(p=>({t:p.t,g:round(p.g-dose*s.isf*(1-remaining(p.t)),3)}));
+   const min=Math.min(...pts.map(p=>p.g)),max=Math.max(...pts.map(p=>p.g));
+   const entered=pts.find(p=>Math.abs(p.g-s.target)<=band)?.t??null;
+   const settled=findSettled(pts,s.target,band,stability);
+   const withinFloor=min>=3.9;
+   const terminalError=Math.abs(pts.at(-1).g-s.target);
+   candidates.push({dose,enteredAtMin:entered,settledAtMin:settled,min:round(min),max:round(max),final:pts.at(-1).g,terminalError:round(terminalError),acceptable:withinFloor&&settled!==null,points:pts});
+  }
+  const valid=candidates.filter(x=>x.acceptable).sort((a,b)=>a.terminalError-b.terminalError||a.settledAtMin-b.settledAtMin||a.dose-b.dose);
+  const chosen=valid[0]||null;
+  const previewDose=s.previewDose;
+  const preview=finite(previewDose)&&previewDose>=0&&Math.abs(previewDose/s.step-Math.round(previewDose/s.step))<1e-8?candidates.find(x=>x.dose===previewDose):null;
+  return {...resultBase,status:chosen?'SIMULATION_SOLUTION':'SIMULATION_NO_SOLUTION',code:chosen?'SYNTHETIC_TARGET_SETTLING':'NO_STABLE_TRAJECTORY',candidate:chosen?{dose:chosen.dose,enteredAtMin:chosen.enteredAtMin,settledAtMin:chosen.settledAtMin,finalMmol:chosen.final,minMmol:chosen.min,maxMmol:chosen.max}:null,points:preview?preview.points:(chosen?chosen.points:resultBase.baseline),manualPreview:preview?{dose:preview.dose,enteredAtMin:preview.enteredAtMin,settledAtMin:preview.settledAtMin,finalMmol:preview.final,minMmol:preview.min,acceptable:preview.acceptable}:null,candidates:candidates.map(({points,...rest})=>rest),reasons:chosen?[]:['В синтетической модели нет траектории, удовлетворяющей целевой полосе и ограничению снижения'],trace:{equation:'G(t,D)=Gnow+drift(t)+oldRinfastDelta(t)+mealDelta(t)+validatedIncrementalModifiers(t)-D*ISF*usedRinfastFraction(t)',notes:['IOB не вычитается второй раз: интеграл старых уколов уже включён в oldRinfastDelta','COB не добавляется повторно: усвоение еды считается только выбранной моделью','Базальный инсулин исключён'],modifiers:modifiers.active.map(x=>x.key),modelCalibrated:false}};
+ }catch(e){return block('CALC_EXCEPTION','Сбой в изолированном расчёте: '+String(e.message||e).slice(0,150));}
+}
+return Object.freeze({VERSION,analyse,validateCGM,smoothCDF,linearCDF});
+});
+</script>
+<script>
+(()=>{'use strict';
+ const $=id=>document.getElementById(id),now=Date.parse('2026-11-19T12:00:00.000Z');
+ const val=id=>{const s=$(id).value.trim();return s===''?NaN:Number(s);};
+ const fmt=(n,d=1)=>Number.isFinite(n)?Number(n).toFixed(d).replace('.',','):'—';
+ let calculated=false,lastResult=null;
+ function make(){
+  const glucose=val('glucose'),target=val('target'),oldDose=val('oldDose'),carbs=val('carbs'),foodModel=$('model').value,activity=$('act').value,illness=$('illness').value==='on';
+  const coeffByLevel={normal:val('coeffNormal'),high:val('coeffHigh'),sport:val('coeffSport')};
+  const activityEnabled=$('activityEnabled').checked,activityCoefficient=coeffByLevel[activity];
+  const activityModifier=activityEnabled&&Number.isFinite(activityCoefficient)&&activityCoefficient>=0.5&&activityCoefficient<=2?{
+    version:'HIGH_ACTIVITY_SCENARIO_V1',includesCurrentTrend:false,
+    points:[{t:0,delta:0},{t:120,delta:-(activityCoefficient-1)*val('isf')*0.4},{t:300,delta:-(activityCoefficient-1)*val('isf')},{t:900,delta:-(activityCoefficient-1)*val('isf')}]
+  }:null;
+  const shots=oldDose>0?[{type:'insulin_injection',id:'synthetic-prior',insulinId:'rinfast',status:'confirmed',units:oldDose,administeredAt:new Date(now-val('oldAge')*60000).toISOString()}]:[];
+  const meals=carbs>0?[{id:'synthetic-meal',status:'completed',startedAt:new Date(now-val('foodAge')*60000).toISOString(),actualPlate:{containsEstimatedValues:false,totals:{carbs,fat:20,protein:12}},kinetics:{origin:'explicit_research_scenario',lagMinutes:0,slowDurationMinutes:val('slow')}}]:[];
+  const rows=[20,15,10,5,0].map(m=>({mmol:glucose,ts:now-m*60000,sourceDeviceId:'synthetic-cgm',receivedAt:new Date(now-m*60000+10000).toISOString()}));
+  return {origin:'synthetic_fixture',fixtureTag:'SYNTHETIC_TEST_ONLY',nowIso:new Date(now).toISOString(),rinfastEngine:RinfastEngine,readings:rows,injections:shots,meals,coverage:{injectionsConfirmed:true,mealsConfirmed:true},settings:{target,isf:val('isf'),uk:val('uk'),foodModel,step:0.5,maxDose:6,previewDose:val('preview')},context:{activity:activityEnabled?activity:'low',activityLabel:activity,activityEnabled,illness,physioApplied:false},modifiers:activityModifier?{activity:activityModifier}:undefined};
+ }
+ function line(pts,xMax,yMin,yMax){return pts.map((p,i)=>(i?'L':'M')+(50+p.t/xMax*601).toFixed(2)+' '+(203-(p.g-yMin)/(yMax-yMin)*163).toFixed(2)).join(' ');}
+ function graph(r){
+  const manualDose=val('preview'),previewValid=Number.isFinite(manualDose)&&manualDose>=0&&manualDose<=6&&Math.abs(manualDose*2-Math.round(manualDose*2))<1e-6;
+  const p=previewValid&&r.manualPreview?r.points:[],q=r.baseline||[],chart=$('chart');
+  if(!q.length){chart.innerHTML='<text x="20" y="112" fill="#a55f4b" font-size="18">Нет надёжных данных для графика</text>';return;}
+  const xMax=q[q.length-1].t,target=r.observations.targetMmol,nums=[...p,...q].map(x=>x.g),yMin=Math.min(3,target-2,...nums)-0.5,yMax=Math.max(target+2,...nums)+0.5;
+  let svg=`<rect x="50" y="${203-(target+0.5-yMin)/(yMax-yMin)*163}" width="601" height="${163/(yMax-yMin)}" fill="#a1d3be" fill-opacity=".34"/>`;
+  for(let i=0;i<5;i++){const g=yMin+(yMax-yMin)*i/4,y=203-(g-yMin)/(yMax-yMin)*163;svg+=`<line x1="50" x2="651" y1="${y}" y2="${y}" stroke="#e0ecec"/><text x="6" y="${y+4}" font-size="11" fill="#7e9597">${fmt(g)}</text>`;}
+  for(let i=0;i<=4;i++){const t=xMax*i/4,x=50+t/xMax*601;svg+=`<text x="${x}" y="231" text-anchor="${i===0?'start':i===4?'end':'middle'}" font-size="11" fill="#7e9597">${Math.round(t)} мин</text>`;}
+  const targetY=203-(target-yMin)/(yMax-yMin)*163;
+  svg+=`<line x1="50" x2="651" y1="${targetY}" y2="${targetY}" stroke="#68ad90" stroke-dasharray="5 5" stroke-width="1"/>`;
+  svg+=`<path d="${line(q,xMax,yMin,yMax)}" fill="none" stroke="#2b78ac" stroke-width="2.5"/>`;
+  if(p.length)svg+=`<path d="${line(p,xMax,yMin,yMax)}" fill="none" stroke="#168c78" stroke-width="3.3"/>`;
+  chart.innerHTML=svg;
+ }
+ function refresh({compute=false,invalidate=false}={}){
+  if(invalidate)calculated=false;
+  let r;try{r=GFHighTarget.analyse(make());}catch(e){r={status:'INVALID_INPUT',reasons:[String(e)],points:[],baseline:[]};}
+  const selected=$('act').value,on=$('activityEnabled').checked,k=val(({normal:'coeffNormal',high:'coeffHigh',sport:'coeffSport'})[selected]);
+  $('activeCoeff').textContent=on?'Коэффициент: '+fmt(k,2):'Активность не учитывается';
+  if(on&&(!Number.isFinite(k)||k<0.5||k>2))r={status:'BLOCKED',code:'ACTIVITY_COEFFICIENT_INVALID',reasons:['Укажи коэффициент в диапазоне 0,50–2,00'],observations:null,baseline:[],points:[]};
+  lastResult=r;const o=r.observations;
+  $('gNow').textContent=fmt(val('glucose'));$('target').setAttribute('aria-label','Планируемая цель, ммоль/л');
+  if(o){$('iob').textContent=fmt(o.iobModelU,2)+' ЕД';$('cob').textContent=fmt(o.cobModelG,1)+' г';}else{$('iob').textContent='— ЕД';$('cob').textContent='— г';}
+  if(compute){calculated=true;if(r.status==='SIMULATION_SOLUTION'&&r.candidate){$('preview').value=Number(r.candidate.dose).toFixed(1);r=GFHighTarget.analyse(make());lastResult=r;}}
+  const solution=$('solution');solution.style.borderColor=calculated?'#efdab6':'#e6d9c7';
+  if(calculated&&r.status==='SIMULATION_SOLUTION'&&r.candidate){
+   $('dose').textContent=fmt(r.candidate.dose,1)+' ЕД';$('arrive').textContent='Модельная траектория выходит в целевой коридор и остаётся в нём до конца расчёта.';
+  }else if(calculated&&r.status==='SIMULATION_NO_SOLUTION'){$('dose').textContent='Нет решения';$('arrive').textContent='В рассмотренных тестовых дозах не найдено устойчивого выхода на цель.';}
+  else if(calculated){$('dose').textContent='Недоступно';$('arrive').textContent=(r.reasons||['Не хватает входных данных']).join(' ');}
+  else {$('dose').textContent='— ЕД';$('arrive').textContent='Нажми «Рассчитать» для нового вычисления. Ручная доза проверяется отдельно и перестраивает график сразу.';}
+  graph(r);
+  const dose=val('preview'),previewAllowed=Number.isFinite(dose)&&dose>=0&&dose<=6&&Math.abs(dose*2-Math.round(dose*2))<1e-6;
+  const ps=$('previewStatus');ps.className='live';
+  if(!previewAllowed){ps.textContent='Для теста введи дозу 0–6 ЕД с шагом 0,5 ЕД.';ps.classList.add('warn');$('manualEstimate').textContent='Нет прогноза для недопустимой дозы.';}
+  else if(r.manualPreview){
+   ps.textContent='Моя доза: '+fmt(dose,1)+' ЕД · график обновлён';
+   $('manualEstimate').textContent='При выбранной дозе модельный итог '+fmt(r.manualPreview.finalMmol)+' ммоль/л. '+(r.manualPreview.acceptable?'Траектория в модели удерживается около цели.':'Устойчивый выход в целевой коридор не подтверждён.');
+  }else{ps.textContent='Кривая для этой дозы недоступна: '+(r.reasons||[]).join(' ');ps.classList.add('warn');$('manualEstimate').textContent='Нет достаточного основания для прогноза.';}
+  const status=$('status');status.className='status';
+  if(r.status==='SIMULATION_SOLUTION'){status.textContent='Найдена модельная траектория для выбранных параметров.';}
+  else{status.classList.add('bad');status.textContent=r.status==='SIMULATION_NO_SOLUTION'?'Модель не нашла устойчивой траектории среди проверенных доз.':(r.reasons||['Недостоверные исходные данные']).join(' ');}
+  $('details').textContent=JSON.stringify({status:r.status,code:r.code,version:r.version,revision:r.sourceRevision,observations:r.observations,model:r.meta,manualPreview:r.manualPreview,equation:r.trace?.equation,notes:r.trace?.notes,candidates:r.candidates,reasons:r.reasons},null,2);
+ }
+ $('compute').addEventListener('click',()=>refresh({compute:true}));
+ document.querySelectorAll('input,select').forEach(n=>{
+  if(n.id==='site')return;
+  const invalidate=n.id!=='preview';
+  n.addEventListener('input',()=>refresh({invalidate}));
+  n.addEventListener('change',()=>refresh({invalidate}));
+ });
+ refresh();
+})();
+</script></body></html>
