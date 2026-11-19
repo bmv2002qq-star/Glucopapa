@@ -166,6 +166,11 @@
     return clone(x);
   }
 
+  function validateForecastVisibility(value){
+    requireFields(value,['GFForecast','GFxDrip','GFAPSEnhancer']);
+    if(Object.values(value).some(flag=>typeof flag!=='boolean'))fail('Неверная видимость прогноза');
+  }
+
   function validateForecastRow(row){
     requireFields(row,['id','kind','payload'],['id','kind','payload']);
     if(row.kind!=='research_forecast'||!object(row.payload))fail('Ожидался исследовательский прогноз');
@@ -216,6 +221,9 @@
     requireFields(s,expected,expected);
     for(const key of ['measurements','orders','coefficients','events','mealSessions','workflowLog','cgm','conditionPeriods','forecasts','forecastAssessments','syncInbox','results','proposals','history'])if(!Array.isArray(s[key]))fail('Повреждена таблица '+key);
     if(s.history.length!==s.revision)fail('Повреждён журнал ревизий');
+    if(!object(s.graphPreferences))fail('Повреждены настройки графика');
+    if('autoConsensus'in s.graphPreferences&&typeof s.graphPreferences.autoConsensus!=='boolean')fail('Неверный флаг объединения');
+    if('forecastVisibility'in s.graphPreferences)validateForecastVisibility(s.graphPreferences.forecastVisibility);
     if(!object(s.profile))fail('Повреждён профиль ребёнка');
     if(s.profile.sex===undefined||s.profile.exerciseGuidance===undefined||s.profile.exerciseGuidanceEnabled===undefined||s.profile.hypoActivityMultipliers===undefined||s.profile.hypoActivityEnabled===undefined||s.profile.activityBaseLevel===undefined||s.profile.coefficientModes===undefined||s.profile.illnessFactor===undefined)s=Object.assign({},s,{profile:Object.assign({},s.profile,{...(s.profile.sex===undefined?{sex:null}:{}),...(s.profile.exerciseGuidance===undefined?{exerciseGuidance:null}:{}),...(s.profile.exerciseGuidanceEnabled===undefined?{exerciseGuidanceEnabled:true}:{}),...(s.profile.hypoActivityMultipliers===undefined?{hypoActivityMultipliers:null}:{}),...(s.profile.hypoActivityEnabled===undefined?{hypoActivityEnabled:true}:{}),...(s.profile.activityBaseLevel===undefined?{activityBaseLevel:'low'}:{}),...(s.profile.coefficientModes===undefined?{coefficientModes:{carb_g_per_u:'manual',isf_mmol_per_u:'manual'}}:{}),...(s.profile.illnessFactor===undefined?{illnessFactor:null}:{})})});
     if(s.profile.sex!==null&&!['male','female'].includes(s.profile.sex))fail('Недопустимое значение поля');
@@ -817,10 +825,12 @@
       }
       if(role==='graph'){
         port.setPreferences=(patch,rev)=>commit(role,'graphPreferences','display_only',d=>{
-          requireFields(patch,['rangeHours','showRinfast','showTotal']);
+          requireFields(patch,['rangeHours','showRinfast','showTotal','forecastVisibility','autoConsensus']);
           if('rangeHours'in patch&&!([6,12,24].includes(patch.rangeHours)))fail('Разрешённые интервалы 6,12,24 часов');
           if('showRinfast'in patch&&typeof patch.showRinfast!=='boolean')fail('Неверный флаг');
           if('showTotal'in patch&&typeof patch.showTotal!=='boolean')fail('Неверный флаг');
+          if('autoConsensus'in patch&&typeof patch.autoConsensus!=='boolean')fail('Неверный флаг объединения');
+          if('forecastVisibility'in patch)validateForecastVisibility(patch.forecastVisibility);
           if(!Object.keys(patch).length)fail('Нет изменений');
           Object.assign(d.graphPreferences,clone(patch));return 'graphPreferences';
         },rev);

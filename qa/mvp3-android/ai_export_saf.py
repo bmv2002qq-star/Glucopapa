@@ -1,12 +1,16 @@
 """Exercise actual ACTION_CREATE_DOCUMENT and verify files exposed by Android."""
+from calendar import monthrange
+from contextlib import closing
+from datetime import datetime, timedelta, timezone
 import hashlib
 import json
 from pathlib import Path, PurePosixPath
-from shlex import quote
+import sqlite3
 import subprocess
 import sys
 import tempfile
 import time
+from zoneinfo import ZoneInfo
 
 from ci_ui import BOUNDS, CandidateUI, label
 from sqlite_smoke import DEMO_KEY, Emulator, require
@@ -22,7 +26,14 @@ def files(emulator):
                            '-type', 'f', check=False)
     paths = [line for line in output.splitlines() if PurePosixPath(line).name.startswith(BASE_NAME)]
     # DocumentsUI versions differ in where they insert duplicate-name suffixes.
-    return {path: emulator.execute('exec-out', 'cat', quote(path)).stdout for path in paths}
+    result = {}
+    with tempfile.TemporaryDirectory() as temporary:
+        local = Path(temporary) / 'snapshot.jsonl'
+        for path in paths:
+            emulator.execute('pull', path, str(local))
+            result[path] = local.read_bytes()
+            local.unlink()
+    return result
 
 
 def wait_for_picker(emulator, process):
@@ -65,13 +76,26 @@ def read_export(source, path, period, snapshot):
     require(first['type'] == 'manifest' and last['type'] == 'footer', 'Manifest or footer missing')
     require(first['period'] == period and first['mode'] == 'demo', 'Export changed period or mode')
     require(first['sourceRevision'] == snapshot['revision'], 'Incorrect durable revision')
+    through=datetime.fromisoformat(first['through'])
+    zone=timezone.utc if first['timezone']=='Z' else ZoneInfo(first['timezone'])
+    local=through.astimezone(zone)
+    count=int(period[:-1])
+    if period.endswith('d'):
+        expected=local-timedelta(days=count)
+    else:
+        months=local.year*12+local.month-1-count
+        year, month=divmod(months,12)
+        expected=local.replace(year=year,month=month+1,day=min(local.day,monthrange(year,month+1)[1]))
+    first_at=datetime.fromisoformat(first['from'])
+    require(first_at == expected and all(first_at <= datetime.fromisoformat(row['at']) <= through
+                                        for row in payload[1:-1]), 'Incorrect calendar bounds')
     measured = hashlib.sha256(b''.join(lines[:-1])).hexdigest()
     require(last['sha256'] == measured, 'Wrong JSONL digest')
     events = [row for row in payload[1:-1] if row['type'] == 'event']
     require(any(row['subtype'] == 'injection' and row['units'] == 0.5 for row in events), 'Known injection missing')
     require(all('sourceDeviceId' not in row and 'displayName' not in row for row in payload), 'Unexpected identifiers')
     return {'file': PurePosixPath(path).name, 'revision': first['sourceRevision'], 'rows': len(lines)-2,
-            'sha256': measured, 'bytes': len(source)}
+            'sha256': measured, 'bytes': len(source), 'from': first['from'], 'through': first['through']}
 
 
 def main():
@@ -122,6 +146,8 @@ def main():
             emulator.stop()
         after = emulator.read_persisted(folder / 'after')
         require(after == before, 'System file operations changed SQLite')
+        with closing(sqlite3.connect((folder/'after/gfstorage_v5.db').resolve().as_uri()+'?mode=ro',uri=True)) as database:
+            require(database.execute('PRAGMA integrity_check').fetchall() == [('ok',)], 'SQLite integrity_check failed')
     (output / 'ai-saf.json').write_text(json.dumps({'status':'PASS','fixture':'SYNTHETIC','sqliteUnchanged':True,
         'picker':'ANDROID_DOCUMENTS_UI','cases':results}, indent=2) + '\n')
     print('PASS Android DocumentsUI cancellation and six saved JSONL periods')

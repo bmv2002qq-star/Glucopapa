@@ -35,6 +35,13 @@
   <section id="screen-cgm" class="screen"><div class="section-header"><h2>Глюкоза (CGM)</h2><p>Показания и время измерения из GFStorage.</p></div>
    <article class="card"><div id="cgmDetailChart" class="chart-wrap"></div><div class="chart-options"><label><input id="showRinfast" type="checkbox" checked> Кривые РинФаста</label><button class="inline-link" type="button" data-screen="analytics">Исследовательский расчёт прогноза</button></div></article>
    <article class="card">
+    <details id="forecastGraphOptions"><summary>Исследовательские прогнозы</summary>
+      <label class="check"><input type="checkbox" data-model-visibility="GFForecast" checked> GFForecast</label>
+      <label class="check"><input type="checkbox" data-model-visibility="GFAPSEnhancer" checked> GFAPSEnhancer</label>
+      <label class="check"><input type="checkbox" data-model-visibility="GFxDrip" checked> GFxDrip (источник не подключён)</label>
+      <label class="check"><input id="forecastAutoConsensus" type="checkbox" checked> Объединять при достаточной истории</label>
+      <p id="forecastGraphLegend" class="hint" role="status"></p>
+    </details>
     <div class="between"><h3>Источник данных</h3><span id="cgmSource" class="chip">Не подключён</span></div>
     <div id="cgmMeta" class="soft">Нет сохранённых показаний</div>
     <div id="xdripControls" hidden>
@@ -260,6 +267,7 @@
 <script src="integration/GFCalculationEvidence_v0.1.0.js"></script>
 <script src="integration/GFConsensusReview_v0.1.0.js"></script>
 <script src="integration/GFResearchForecastRun_v0.1.0.js"></script>
+<script src="integration/GFResearchForecastGraph_v0.1.0.js"></script>
 <script src="integration/GFLevemirReview_v0.1.0.js"></script>
 <script src="app.js"></script>
 <script src="integration/GFModuleUI_v0.2.1.js"></script><script src="integration/GFModuleDirectory_v0.1.0.js"></script><script src="integration/GFSettingsPanel_v0.1.0.js"></script><script src="integration/GFMealActualPanel_v0.1.0.js"></script>

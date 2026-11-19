@@ -90,7 +90,7 @@ function getDriver(selectedMode){
   // Desktop/browser preview only.
   return {load(){const v=localStorage.getItem(key);return v?JSON.parse(v):null;},save(s){localStorage.setItem(key,JSON.stringify(s));}};
 }
-function ensureDependencies(){const required=['GFTimeGrid','GFStorage','GFMealController','GFSettings','GFJournal','GFJournalStorageAdapter','GFCgmEvidencePolicy','GFSafetyStorageBridge','GFSafety','GFAuditExportStorageAdapter','GFCoefficients','GFCoefficientReview','GFHighLowReadOnly','GFHighLowInputGate','GFCOBResearch','GFCalculationEvidence','GFForecastStorageAdapter','GFForecastReadout','GFResearchForecastRun','GFFoodMealEntry','GFProviderCgm','GFJournalBackup','GPModuleHub','LevemirEngine','GPCgmWhiteChart','GFInjectionAnalytics','GFPhysioExerciseContext'];return required.filter(name=>!globalThis[name]);}
+function ensureDependencies(){const required=['GFTimeGrid','GFStorage','GFMealController','GFSettings','GFJournal','GFJournalStorageAdapter','GFCgmEvidencePolicy','GFSafetyStorageBridge','GFSafety','GFAuditExportStorageAdapter','GFCoefficients','GFCoefficientReview','GFHighLowReadOnly','GFHighLowInputGate','GFCOBResearch','GFCalculationEvidence','GFForecastStorageAdapter','GFForecastReadout','GFResearchForecastRun','GFResearchForecastGraph','GFFoodMealEntry','GFProviderCgm','GFJournalBackup','GPModuleHub','LevemirEngine','GPCgmWhiteChart','GFInjectionAnalytics','GFPhysioExerciseContext'];return required.filter(name=>!globalThis[name]);}
 function boot(selectedMode=mode){
  const missing=ensureDependencies();
  if(missing.length)throw new Error('Отсутствуют модули: '+missing.join(', '));
@@ -259,21 +259,45 @@ function render(){if(!host)return;try{
  $('homeSafety').textContent=lastSafety?'GFSafety: '+lastSafety.status+'; вход для прогноза: '+(lastSafety.forecastInputEligible?'технически допустим':'заблокирован'):'GFSafety не запускался для текущей ревизии.';
  $('resetDemo').disabled=mode!=='demo'||!!globalThis.GFNativeStorage;
  }catch(e){notify('Ошибка отображения: '+String(e.message||e),true);console.error(e);}}
+function renderForecastOverlay(out,view,nowMs){
+ if(out.id!=='cgmDetailChart')return;
+ const g=port('graph'), data=g.getSnapshot(), prefs=data.graphPreferences;
+ $('forecastGraphOptions').hidden=mode!=='local';
+ $('forecastAutoConsensus').checked=prefs.autoConsensus!==false;
+ for(const control of document.querySelectorAll('[data-model-visibility]')){
+   control.checked=prefs.forecastVisibility?.[control.dataset.modelVisibility]!==false;
+ }
+ const legend=$('forecastGraphLegend');
+ legend.textContent='Нет исследовательских прогнозов для текущего источника.';
+ if(mode!=='local'||!view||view.status!=='OK'||view.sourceStatus!=='DEVICE_DECLARED'||
+    view.sourceRevision!==data.revision||g.getRevision()!==data.revision)return;
+ try{
+   const result=GFResearchForecastGraph.select({forecasts:data.forecasts,cgm:data.cgm,sourceId:view.sensorSourceId,
+     sourceTime:Date.parse(view.latestAt),nowMs,preferences:prefs});
+   GFResearchForecastGraph.overlay(out.querySelector('svg'),GPCgmWhiteChart,view.window,result.lines);
+   if(result.lines.length){
+     legend.textContent='Пунктир · исследовательские прогнозы · '+result.lines.map(x=>
+       (x.highlight?'★ ':'')+x.modelId).join(', ');
+   }else if(result.status!=='NO_CURRENT_FORECAST')legend.textContent='Сохранённые линии скрыты в настройках.';
+ }catch{
+   legend.textContent='Исследовательские линии временно недоступны.';
+ }
+}
 function renderChart(out,readings,nowMs,hours){
  if(readings.length<2){
    out.textContent=readings.length?'Сохранено одно показание. Для графика нужны два.':'Нет сохранённых показаний CGM';
-   out.classList.remove('full-chart');return;
+   out.classList.remove('full-chart');renderForecastOverlay(out,null,nowMs);return;
  }
  try{
    const view=GPModuleHub.chart(host,{now:nowMs,hours,showInsulin:$('showRinfast').checked});
    if(['OK','OBSERVED_ONLY','STALE','QUALITY_BLOCKED','FUTURE_BLOCKED'].includes(view.status)&&view.svg){
      out.classList.add('full-chart');out.innerHTML=view.svg;
      const note=document.createElement('div');note.className='hint';note.textContent='График А v0.2 · '+view.count+' точек CGM · '+view.shotCount+' схематических кривых. '+view.reason;
-     out.appendChild(note);return;
+     out.appendChild(note);renderForecastOverlay(out,view,nowMs);return;
    }
-   out.classList.remove('full-chart');out.textContent='График недоступен: '+(view.reason||view.code||'нет достоверных данных');return;
+   renderForecastOverlay(out,null,nowMs);out.classList.remove('full-chart');out.textContent='График недоступен: '+(view.reason||view.code||'нет достоверных данных');return;
  }catch(error){console.warn('CGM Chart v0.2 отказал:',error);}
- out.classList.remove('full-chart');out.textContent='График временно недоступен. Сохранённые данные остались в GFStorage.';
+ renderForecastOverlay(out,null,nowMs);out.classList.remove('full-chart');out.textContent='График временно недоступен. Сохранённые данные остались в GFStorage.';
 }
 function runSafety(){lastSafety=GFCgmEvidencePolicy.checkSafety(host,bridge);const summary=lastSafety.status+' · '+(lastSafety.code?'Причина: '+lastSafety.code:'источник '+(lastSafety.forecastInputEligible?'прошёл технический контроль':'не допущен к прогнозу'))+' · назначения запрещены';$('analysisSafety').textContent=summary;notify('Техническая проверка завершена: '+lastSafety.status);render();}
 function clearForecast(){
@@ -302,10 +326,21 @@ async function runForecast(){
      foodHistoryDeclaration:options.foodHistoryDeclaration,mealCoverageRevision:options.mealCoverageRevision});
    if(!isCurrent())return;
    const engineStatuses=(result.engines||[]).map(({modelId,status,code,details})=>({modelId,status,code,details}));
+   const lead=result.engines?.find(x=>x.modelId==='GFForecast');
    recordDiagnostic('forecast_attempt',result.sourceRevision??host.diagnostics().revision,{
-     status:result.status==='ARCHIVED'?'EXPERIMENTAL':result.status,
-     code:result.code,modelId:'GFForecast',modelVersion:GFForecast.VERSION,
+     status:lead?.status??result.status,code:lead?.code??result.code,
+     modelId:'GFForecast',modelVersion:GFForecast.VERSION,
+     measuredAt:lead?.row?.payload.sourceTime,receivedAt:lead?.row?.payload.sourceReceivedAt,
+     formula:lead?.row?'GFFORECAST_V01':null,baselineMmol:lead?.summary?.baselineMmol,
+     slopeMmolMin:lead?.summary?.observedSlopeMmolPerMin,points:lead?.row?.payload.points,
    });
+   for(const alternate of result.engines?.filter(x=>x.modelId!=='GFForecast')??[]){
+     recordDiagnostic('forecast_attempt',result.sourceRevision??host.diagnostics().revision,{
+       status:alternate.status,code:alternate.code,modelId:alternate.modelId,
+       modelVersion:alternate.row?.payload.modelVersion,measuredAt:alternate.row?.payload.sourceTime,
+       receivedAt:alternate.row?.payload.sourceReceivedAt,points:alternate.row?.payload.points,
+     });
+   }
    $('analysisForecast').textContent=result.status==='ARCHIVED'?
      'Исследовательские прогнозы сохранены. Ревизия входа '+result.sourceRevision+'.':
      (result.reason||'Данных для сохранения прогноза недостаточно')+' ('+result.code+').';
@@ -503,6 +538,14 @@ function setupLocalFilesAndSource(){
 }
 function wrap(fn){return e=>{try{fn(e);}catch(ex){console.error(ex);notify(String(ex.message||ex),true);}};}
 function setupEvents(){
+ for(const control of document.querySelectorAll('[data-model-visibility]'))control.addEventListener('change',wrap(()=>{
+   const g=port('graph'), snapshot=g.getSnapshot();
+   g.setPreferences({forecastVisibility:{...snapshot.graphPreferences.forecastVisibility,
+     [control.dataset.modelVisibility]:control.checked}},snapshot.revision);
+ }));
+ $('forecastAutoConsensus').addEventListener('change',wrap(e=>{
+   const g=port('graph');g.setPreferences({autoConsensus:e.target.checked},g.getRevision());
+ }));
  $('runBasalReview').addEventListener('click',wrap(runBasalReview));
  $('basalReviewPeriod').addEventListener('change',clearResearchReviews);
  $('runConsensusReview').addEventListener('click',wrap(runConsensusReview));

@@ -258,11 +258,12 @@ final class AiJsonlExport {
             default:
                 out.put("operation", known(row, "operation","storage_commit","forecast_attempt","basal_review","app_error","cgm_rejected"))
                    .put("sourceRevision", number(row,"sourceRevision")).put("modelVersion",version(row,"modelVersion"))
-                   .put("modelId",known(row,"modelId","GFForecast","GFLevemirReview","GFConsensus"))
+                   .put("modelId",known(row,"modelId","GFForecast","GFAPSEnhancer","GFxDrip","GFLevemirReview","GFConsensus"))
                    .put("measuredAt",stamp(row,"measuredAt")).put("receivedAt",stamp(row,"receivedAt"))
                    .put("status",known(row,"status","OK","BLOCKED","UNAVAILABLE","EXPERIMENTAL","NOT_ESTIMABLE","FORMULA_SPEC_GAP"))
                    .put("code",known(row,"code","FORMULA_SPEC_GAP","SOURCE_NOT_TRUSTED","NO_SOURCE",
-                       "MEAL_COVERAGE","INJECTION_COVERAGE","COEFFICIENT_UNKNOWN","STALE_CGM","REVISION_CHANGED","INPUT_READ_FAILED"))
+                       "MEAL_COVERAGE","INJECTION_COVERAGE","COEFFICIENT_UNKNOWN","STALE_CGM","REVISION_CHANGED","INPUT_READ_FAILED","LICENSE_BLOCKED","HORIZON_ANCHOR_MISMATCH",
+                       "ENGINE_FAILED","ENGINE_REFUSED","SOURCE_TIME_UNAVAILABLE","FORECAST_ARCHIVE_FAILED"))
                    .put("formula",known(row,"formula","OBSERVED_WINDOW_DELTA","GFFORECAST_V01"))
                    .put("baselineMmol",number(row,"baselineMmol")).put("slopeMmolMin",number(row,"slopeMmolMin"))
                    .put("eligibleWindows",number(row,"eligibleWindows"))
