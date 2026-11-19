@@ -90,7 +90,7 @@ function getDriver(selectedMode){
   // Desktop/browser preview only.
   return {load(){const v=localStorage.getItem(key);return v?JSON.parse(v):null;},save(s){localStorage.setItem(key,JSON.stringify(s));}};
 }
-function ensureDependencies(){const required=['GFTimeGrid','GFStorage','GFMealController','GFSettings','GFJournal','GFJournalStorageAdapter','GFCgmEvidencePolicy','GFSafetyStorageBridge','GFSafety','GFAuditExportStorageAdapter','GFCoefficients','GFCoefficientReview','GFHighLowReadOnly','GFHighLowInputGate','GFCOBResearch','GFCalculationEvidence','GFForecastStorageAdapter','GFForecastReadout','GFFoodMealEntry','GFProviderCgm','GFJournalBackup','GPModuleHub','LevemirEngine','GPCgmWhiteChart','GFInjectionAnalytics','GFPhysioExerciseContext'];return required.filter(name=>!globalThis[name]);}
+function ensureDependencies(){const required=['GFTimeGrid','GFStorage','GFMealController','GFSettings','GFJournal','GFJournalStorageAdapter','GFCgmEvidencePolicy','GFSafetyStorageBridge','GFSafety','GFAuditExportStorageAdapter','GFCoefficients','GFCoefficientReview','GFHighLowReadOnly','GFHighLowInputGate','GFCOBResearch','GFCalculationEvidence','GFForecastStorageAdapter','GFForecastReadout','GFResearchForecastRun','GFFoodMealEntry','GFProviderCgm','GFJournalBackup','GPModuleHub','LevemirEngine','GPCgmWhiteChart','GFInjectionAnalytics','GFPhysioExerciseContext'];return required.filter(name=>!globalThis[name]);}
 function boot(selectedMode=mode){
  const missing=ensureDependencies();
  if(missing.length)throw new Error('Отсутствуют модули: '+missing.join(', '));
@@ -167,7 +167,10 @@ function renderSport(s,all){
  $('approvedSportRows').innerHTML=rowsMarkup(rows,r=>eventMarkup(r.description,r.status==='active'?'Занятие продолжается':'Завершено · '+fmt(r.durationMinutes)+' мин',r.time),30);
 }
 function chooseActivity(value){
- const s=state();if(activeSport(s))throw Error('Сначала завершите текущую тренировку');
+ if(activeSport(state())){
+   $('activityChoice').value='sport';
+   throw Error('Сначала завершите текущую тренировку');
+ }
  if(value==='sport'){sportMenuOpen=true;render();return;}
  if(!['low','usual','high'].includes(value))throw Error('Неизвестная активность');
  sportMenuOpen=false;port('activityUi').setBaseLevel(value,host.connect('activityUi').getRevision());render();
@@ -285,26 +288,33 @@ function recordDiagnostic(operation,revision,fields={}){
    catch{/* Diagnostics never roll back a result or a journal commit. */}
  }
 }
-function runForecast(){
+async function runForecast(){
+ const button=$('runForecastGate');
+ if(button.disabled)return;
+ button.disabled=true;
  clearForecast();
- const nowMs=Date.now(),safetyVerdict=GFCgmEvidencePolicy.checkSafety(host,bridge,{nowMs});
- const options=globalThis.GFCOBStudyPanel?.optionsForRevision?.(host,nowMs)||{};
- const r=GFForecastReadout.run({host,mode,nowMs,safetyVerdict,foodHistoryDeclaration:options.foodHistoryDeclaration,mealCoverageRevision:options.mealCoverageRevision});
- const cgm=GFCgmEvidencePolicy.inspect(host,{nowMs});
- recordDiagnostic('forecast_attempt',r.sourceRevision??host.diagnostics().revision,{
-   status:r.status,code:r.code,modelId:'GFForecast',modelVersion:GFForecast.VERSION,
-   measuredAt:cgm.latestAt,receivedAt:cgm.readings.at(-1)?.receivedAt,
-   formula:'GFFORECAST_V01',baselineMmol:r.snapshot?.baselineMmol,
-   slopeMmolMin:r.snapshot?.observedSlopeMmolPerMin,points:r.points
- });
- $('analysisForecast').textContent=r.status==='EXPERIMENTAL'?
-   'Результат расчёта модели. Диапазон неопределённости эвристический. Для расчёта использована ревизия '+r.sourceRevision+'.':
-   (r.reason||'Данных для модели недостаточно')+' ('+r.code+')';
- if(r.status==='EXPERIMENTAL'){
+ const sourceHost=host,requestedMode=mode;
+ const isCurrent=()=>sourceHost===host&&requestedMode===mode;
+ try{
+   const nowMs=Date.now(),safetyVerdict=GFCgmEvidencePolicy.checkSafety(host,bridge,{nowMs});
+   const options=globalThis.GFCOBStudyPanel?.optionsForRevision?.(host,nowMs)||{};
+   const result=await GFResearchForecastRun.run({host:sourceHost,mode:requestedMode,nowMs,safetyVerdict,isCurrent,
+     foodHistoryDeclaration:options.foodHistoryDeclaration,mealCoverageRevision:options.mealCoverageRevision});
+   if(!isCurrent())return;
+   const engineStatuses=(result.engines||[]).map(({modelId,status,code,details})=>({modelId,status,code,details}));
+   recordDiagnostic('forecast_attempt',result.sourceRevision??host.diagnostics().revision,{
+     status:result.status==='ARCHIVED'?'EXPERIMENTAL':result.status,
+     code:result.code,modelId:'GFForecast',modelVersion:GFForecast.VERSION,
+   });
+   $('analysisForecast').textContent=result.status==='ARCHIVED'?
+     'Исследовательские прогнозы сохранены. Ревизия входа '+result.sourceRevision+'.':
+     (result.reason||'Данных для сохранения прогноза недостаточно')+' ('+result.code+').';
    $('forecastTrace').hidden=false;
-   $('forecastValues').textContent=JSON.stringify({вход:r.snapshot,коэффициенты:r.coefficients,
-     точки_модели:r.points,версии:r.modelVersions},null,2);
- }
+   $('forecastValues').textContent=JSON.stringify({движки:engineStatuses,коэффициенты:result.coefficients,
+     прогнозы:result.engines?.filter(x=>x.row).map(x=>({источник:x.summary,ряд:x.row.payload}))},null,2);
+ }catch(error){
+   if(isCurrent())$('analysisForecast').textContent='Ошибка подготовки прогноза ('+String(error.message||error)+').';
+ }finally{button.disabled=false;}
 }
 function clearResearchReviews(){
  $('basalReviewStatus').textContent='Обзор выполняется по нажатию.';
@@ -336,12 +346,15 @@ function runBasalReview(){
    eligibleWindows:groups?groups.morning.eligibleWindows+groups.evening.eligibleWindows:null});
 }
 function runConsensusReview(){
- const result=GFConsensusReview.fromHost(host);
+ const result=mode==='local'?GFConsensusReview.archiveAssessment(host):GFConsensusReview.fromHost(host);
  const rows=result.results||[];
  const count=rows.map(row=>row.horizon+' мин · '+row.n+' пар').join(' · ');
  $('consensusReviewStatus').textContent=(result.status==='NO_LEADER'?'Сопоставимых данных для лидера недостаточно.':
    result.status==='BLOCKED'?'Снимок данных изменился.':'Статус сравнения '+result.status+'.')+
-   (count?' '+count:'')+' Рабочие лечебные расчёты не меняются.';
+   (count?' '+count:'')+
+   (result.assessed?.length?' Сверено исследовательских рядов: '+result.assessed.length+'.':'')+
+   (result.archived?' Сохранено сверок: '+result.archived+'.':'')+
+   (result.assessmentStatus?' '+result.assessmentStatus+'.':'');
 }
 function numericField(id){const n=Number($(id).value);if(!Number.isFinite(n))throw Error('Проверьте числовые поля');return n;}
 function doMeal(method){

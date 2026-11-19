@@ -237,8 +237,9 @@ final class AiJsonlExport {
                 break;
             case "forecast":
                 JSONObject f = row.getJSONObject("payload");
-                out.put("modelId",model(f)).put("modelVersion",version(f,"version"))
-                   .put("sourceTime",stamp(f,"sourceTime")).put("sourceRevision",number(f,"sourceRevision"))
+                out.put("modelId",model(f)).put("modelVersion",version(f,f.has("modelVersion") ? "modelVersion" : "version"))
+                   .put("sourceTime",stamp(f,"sourceTime")).put("sourceReceivedAt",stamp(f,"sourceReceivedAt"))
+                   .put("sourceRevision",number(f,"sourceRevision"))
                    .put("points", values(f.optJSONArray("points"), "horizonMin","glucoseMmol","lower","upper"));
                 JSONObject input = f.optJSONObject("snapshot");
                 if (input != null) out.put("source", alias("sensor:" + input.optString("sensorSourceId")));
@@ -247,6 +248,12 @@ final class AiJsonlExport {
                 JSONObject assessment = row.getJSONObject("payload");
                 out.put("forecast",alias("forecast:"+assessment.optString("forecastId")))
                     .put("checks", values(assessment.optJSONArray("checks"),"horizonMin","predictedMmol","actualMmol","absoluteErrorMmol","errorMmol"));
+                if (assessment.has("metricVersion")) {
+                    out.put("modelId",model(assessment)).put("metricVersion",version(assessment,"metricVersion"))
+                        .put("errorConvention","prediction_minus_observation")
+                        .put("intervals",values(assessment.optJSONArray("intervals"),"fromMin","toMin","available","n",
+                            "mae","rmse","bias","missedLow","falseLow"));
+                }
                 break;
             default:
                 out.put("operation", known(row, "operation","storage_commit","forecast_attempt","basal_review","app_error","cgm_rejected"))

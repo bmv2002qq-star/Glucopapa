@@ -170,17 +170,88 @@
       therapyUse:false,trainedThrough:review.asOf,points:Array.from({length:25},(_,i)=>sample(i*5)),sample};
   }
 
-  function fromHost(host, asOf = Date.now()) {
-    const port = host.connect('research'), data = port.getSnapshot();
-    const issued = data.forecasts.map(r => ({...r.payload,modelId:r.payload.modelId??'GFForecast',
-      modelVersion:r.payload.modelVersion??r.payload.version,sourceId:r.payload.snapshot?.sensorSourceId}));
-    const actual = data.cgm.map(row=>({...row,sourceId:row.sourceDeviceId}));
-    const review = evaluate({issued,actual,asOf});
-    if (port.getRevision()!==data.revision) return {status:'BLOCKED',reason:'REVISION_CHANGED'};
-    return {...review, sourceRevision:data.revision};
+  // Descriptive assessment of already archived curves, including when a third model is unavailable.
+  // These rows never qualify an incomplete set for ranking or an automatic combined curve.
+  const RANGES = Object.freeze([[0,30],[30,60],[60,120]]);
+  function assessStored({issued, actual, asOf}) {
+    const end = ts(asOf), begin = subtractMonths(end);
+    const facts = indexFacts(actual,end);
+    return issued.filter(row=>row && row.contract==='glucopapa.research-forecast/2' &&
+      validForecast(row,end) && ts(row.forecastAt)>=begin && ts(row.forecastAt)+120*MIN+TOLERANCE<=end)
+      .map(row=>{
+        const origin=ts(row.forecastAt), used=new Set(), matches=[];
+        const series=facts.get(row.sourceId)||[];
+        for (const point of row.points.slice(1)) {
+          const fact=nearest(series,ts(point.at),origin);
+          const check={horizonMin:point.horizonMin,predictedMmol:point.glucoseMmol,status:'MISSING_CGM'};
+          if (!fact || used.has(fact.at)) { matches.push(check); continue; }
+          used.add(fact.at);
+          const errorMmol=point.glucoseMmol-fact.mmol;
+          matches.push({...check,status:'MATCHED',actualMmol:fact.mmol,errorMmol,absoluteErrorMmol:Math.abs(errorMmol),
+            actualMeasuredAt:new Date(fact.at).toISOString(),actualReceivedAt:new Date(fact.received).toISOString()});
+        }
+        const intervals=RANGES.map(([from,to])=>{
+          const selected=matches.filter(p=>p.horizonMin>from&&p.horizonMin<=to);
+          const pairs=selected.filter(p=>p.status==='MATCHED');
+          const errors=pairs.map(p=>p.errorMmol);
+          return {fromMin:from,toMin:to,available:selected.length,n:pairs.length,
+            mae:errors.length?mean(errors.map(Math.abs)):null,rmse:errors.length?Math.sqrt(mean(errors.map(x=>x*x))):null,
+            bias:errors.length?mean(errors):null,
+            missedLow:pairs.filter(p=>p.actualMmol<LOW&&p.predictedMmol>=LOW).length,
+            falseLow:pairs.filter(p=>p.actualMmol>=LOW&&p.predictedMmol<LOW).length};
+        });
+        return {forecastId:row.id,modelId:row.modelId,modelVersion:row.modelVersion,sourceRevision:row.sourceRevision,
+          forecastAt:row.forecastAt,checks:matches,intervals};
+      });
   }
 
-  const api = Object.freeze({VERSION,MODELS,evaluate,compose,fromHost});
+  function readHistory(data) {
+    const issued=data.forecasts.map(r=>({...r.payload,id:r.id,modelId:r.payload.modelId??'GFForecast',
+      modelVersion:r.payload.modelVersion??r.payload.version,sourceId:r.payload.snapshot?.sensorSourceId}));
+    const actual=data.cgm.map(row=>({...row,sourceId:row.sourceDeviceId}));
+    return {issued,actual};
+  }
+
+  function archiveAssessment(host, asOf = Date.now()) {
+    const research=host.connect('research'), data=research.getSnapshot();
+    const reports=assessStored({...readHistory(data),asOf});
+    const lastByForecast=new Map();
+    for (const record of data.forecastAssessments) {
+      const p=record.payload;
+      if (!lastByForecast.has(p.forecastId)||ts(lastByForecast.get(p.forecastId).assessedAt)<ts(p.assessedAt)) {
+        lastByForecast.set(p.forecastId,p);
+      }
+    }
+    const assessedAt=new Date(ts(asOf)).toISOString();
+    // Limit one manual transaction. A subsequent run skips rows that already match.
+    const update=reports.filter(report=>report.checks.some(row=>row.status==='MATCHED') &&
+      JSON.stringify(report.checks)!==JSON.stringify(lastByForecast.get(report.forecastId)?.checks)).slice(0,128);
+    const writer=host.connect('forecastWriter');
+    if (writer.getRevision()!==data.revision) return {status:'BLOCKED',reason:'REVISION_CHANGED',archived:0};
+    const report=fromHost(host,asOf);
+    if (report.status==='BLOCKED') return {...report,archived:0};
+    if (!update.length) return {...report,archived:0};
+    const assessments=update.map(row=>({id:row.forecastId+'|'+assessedAt,kind:'research_forecast_assessment',
+      payload:{...row,assessedAt,peaks:[],metricVersion:VERSION}}));
+    try {
+      const receipt=writer.appendResearchEvents({schema:'gfforecast.research-events/1',writerRequired:true,
+        forecasts:[],assessments},data.revision);
+      return {...report,archived:update.length,archiveRevision:receipt.revision};
+    } catch {
+      return {...report,archived:0,assessmentStatus:'ASSESSMENT_ARCHIVE_FAILED'};
+    }
+  }
+
+  function fromHost(host, asOf = Date.now()) {
+    const port = host.connect('research'), data = port.getSnapshot();
+    const inputs = {...readHistory(data), asOf};
+    const review = evaluate(inputs);
+    const assessed = assessStored(inputs);
+    if (port.getRevision()!==data.revision) return {status:'BLOCKED',reason:'REVISION_CHANGED'};
+    return {...review, sourceRevision:data.revision, assessed};
+  }
+
+  const api = Object.freeze({VERSION,MODELS,evaluate,compose,fromHost,assessStored,archiveAssessment});
   root.GFConsensusReview = api;
   if (typeof module === 'object' && module.exports) module.exports = api;
 })(globalThis);

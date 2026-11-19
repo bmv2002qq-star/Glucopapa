@@ -32,7 +32,8 @@ function aaps(host,now=Date.now()){
  if(metadata.sourceType!=='device_recorded'||!metadata.sourceDeviceId||!finite(metadata.qualityScore)||metadata.qualityScore<0.8)
   return {status:BLOCKED,reason:'Нет проверенного реального источника CGM: демонстрационные данные не допускаются к исследовательской кривой',canDose:false,revision:s.revision};
  if(s.coverage?.confirmedComplete!==true)return {status:BLOCKED,reason:'Не подтверждена полнота истории инъекций',canDose:false,revision:s.revision};
- try{const v=root.GFAPSEnhancer.compute({researchSnapshot:s,nowTs:now});
+ try{const v=root.GFAPSEnhancer.compute({researchSnapshot:s,nowTs:now,storageSnapshot:{...s,
+   forecasts:s.forecasts.filter(row=>!row.payload.modelId||row.payload.modelId==='GFForecast')}});
  return {status:'RESEARCH_ONLY',revision:s.revision,canDose:false,canWritePump:false,clinicalValidation:false,
  availableModels:v.comparison?.rows?.[0]?.count||0,reason:'Только исследовательская сверка; личная точность не доказана.'};}
  catch(e){return {status:BLOCKED,reason:'Модель отклонила входные данные: '+String(e.message||e),canDose:false,revision:s.revision};}

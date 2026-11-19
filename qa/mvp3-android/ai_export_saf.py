@@ -2,7 +2,7 @@
 import hashlib
 import json
 from pathlib import Path, PurePosixPath
-import re
+from shlex import quote
 import subprocess
 import sys
 import tempfile
@@ -14,16 +14,18 @@ from sqlite_smoke import DEMO_KEY, Emulator, require
 AVD = 'GlucoPapaMvp3CiQa'
 RUNNER = 'com.glucopapa.shell.test/com.glucopapa.shell.qa.StorageInstrumentation'
 PERIODS = ('1d', '2d', '5d', '1m', '3m', '6m')
-EXPORTED_NAME = re.compile(r'Glucopapa_AI_Export(?: \(\d+\))?\.jsonl\Z')
+BASE_NAME = 'Glucopapa_AI_Export'
 
 
-def filenames(emulator):
+def files(emulator):
     output = emulator.text('shell', 'find', '/sdcard/Download', '/sdcard/Documents',
                            '-type', 'f', check=False)
-    return {line for line in output.splitlines() if EXPORTED_NAME.fullmatch(PurePosixPath(line).name)}
+    paths = [line for line in output.splitlines() if PurePosixPath(line).name.startswith(BASE_NAME)]
+    # DocumentsUI versions differ in where they insert duplicate-name suffixes.
+    return {path: emulator.execute('exec-out', 'cat', quote(path)).stdout for path in paths}
 
 
-def picker_click(emulator, ui, process):
+def wait_for_picker(emulator, process):
     deadline = time.monotonic() + 45
     while time.monotonic() < deadline and process.poll() is None:
         top = emulator.text('shell', 'dumpsys', 'window')
@@ -55,10 +57,7 @@ def save(emulator, ui, process):
     raise RuntimeError('No enabled Save action in DocumentsUI')
 
 
-def read_export(emulator, path, period, snapshot):
-    # Use shlex.quote because adb shell joins arguments before remote parsing.
-    from shlex import quote
-    source = emulator.execute('exec-out', 'cat', quote(path)).stdout
+def read_export(source, path, period, snapshot):
     lines = source.splitlines(keepends=True)
     require(len(lines) >= 3 and source.endswith(b'\n'), 'Expected complete JSONL')
     payload = [json.loads(line) for line in lines]
@@ -89,14 +88,14 @@ def main():
         require(set(before) == {DEMO_KEY} and before[DEMO_KEY]['events'], 'Expected completed synthetic journal')
         results = {}
         for period, outcome in [('6m','cancel'), *((period,'save') for period in PERIODS)]:
-            existing = filenames(emulator)
+            existing = files(emulator)
             args = emulator.prefix + ['shell','am','instrument','-w','-r','-e','fixture','SYNTHETIC',
                                        '-e','phase','stock','-e','step',f'ai-export:{period}:{outcome}',RUNNER]
             log = output / f'ai-saf-{period}-{outcome}.log'
             with log.open('wb') as trace:
                 runner = subprocess.Popen(args, stdout=trace, stderr=subprocess.STDOUT)
                 try:
-                    picker_click(emulator, ui, runner)
+                    wait_for_picker(emulator, runner)
                     if outcome == 'cancel':
                         emulator.execute('shell','input','keyevent','KEYCODE_BACK')
                     else:
@@ -108,14 +107,17 @@ def main():
                         runner.wait(timeout=10)
             result = log.read_text()
             require('QA_PASS stock' in result, result)
-            created = filenames(emulator) - existing
+            present = files(emulator)
+            changed = {path for path, data in present.items() if existing.get(path) != data}
             if outcome == 'cancel':
-                require(not created, 'Cancellation created an export file')
+                require(present == existing, 'Cancellation changed an export file')
                 results['cancel'] = 'PASS'
             else:
-                require(len(created) == 1, f'Expected one new JSONL, found {created}')
-                path, = created
-                results[period] = read_export(emulator,path,period,before[DEMO_KEY])
+                require(len(changed) == 1, f'Expected one new JSONL for {period}; before={sorted(existing)}, after={sorted(present)}')
+                path, = changed
+                if period == '1d':
+                    require(PurePosixPath(path).name == BASE_NAME + '.jsonl', 'Incorrect suggested export filename')
+                results[period] = read_export(present[path],path,period,before[DEMO_KEY])
         if emulator.pid():
             emulator.stop()
         after = emulator.read_persisted(folder / 'after')

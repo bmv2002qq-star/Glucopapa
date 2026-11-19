@@ -173,6 +173,17 @@
     iso(f.forecastAt);iso(f.sourceTime);
     if(f.status!=='EXPERIMENTAL'||f.mode!=='RESEARCH_FORECAST'||typeof f.version!=='string'||!f.version||!Array.isArray(f.points)||f.points.length!==25)fail('Недействительный прогноз');
     if(row.id!==f.forecastAt+'|'+f.sourceTime+'|'+f.version)fail('Несовпадение ID прогноза');
+    if(f.contract!==undefined){
+      if(f.contract!=='glucopapa.research-forecast/2'||
+        !['GFForecast','GFAPSEnhancer','GFxDrip','GFConsensus'].includes(f.modelId)||
+        typeof f.modelVersion!=='string'||!/^\d+\.\d+\.\d+$/.test(f.modelVersion)||
+        f.version!==f.modelId+'@'+f.modelVersion||typeof f.inputDigest!=='string'||!/^[0-9a-f]{64}$/.test(f.inputDigest)||
+        !Number.isSafeInteger(f.sourceRevision)||f.sourceRevision<0||
+        f.clinicalUse!==false||f.modelValidated!==false)fail('Недопустимое происхождение прогноза');
+      iso(f.sourceReceivedAt);
+      if(Date.parse(f.sourceTime)>Date.parse(f.sourceReceivedAt)||Date.parse(f.sourceReceivedAt)>Date.parse(f.forecastAt))
+        fail('Времена CGM после выдачи или до измерения');
+    }
     for(let i=0;i<25;i++){const p=f.points[i];if(!object(p)||p.horizonMin!==i*5||typeof p.glucoseMmol!=='number'||!Number.isFinite(p.glucoseMmol)||p.glucoseMmol<0||p.glucoseMmol>40)fail('Повреждена точка прогноза');iso(p.at);if(Date.parse(p.at)!==Date.parse(f.forecastAt)+i*300000)fail('Неверное время прогноза');}
     if(!object(f.snapshot)||typeof f.snapshot.sensorSourceId!=='string'||!f.snapshot.sensorSourceId)fail('Нет доверенного источника CGM в прогнозе');
     return clone(row);
@@ -643,6 +654,8 @@
           let changes=0;
           for(const row of batch.forecasts){validateForecastRow(row);const old=d.forecasts.find(x=>x.id===row.id);
             if(old){if(JSON.stringify(old)!==JSON.stringify(row))fail('Конфликт прогноза с таким ID');continue;}
+            if(row.payload.contract==='glucopapa.research-forecast/2' && row.payload.sourceRevision!==rev)
+              fail('Прогноз подготовлен по другой ревизии');
             d.forecasts.push(clone(row));changes++;
           }
           for(const row of batch.assessments){validateAssessmentRow(row);

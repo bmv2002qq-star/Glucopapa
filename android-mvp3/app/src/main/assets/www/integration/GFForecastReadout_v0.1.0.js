@@ -4,7 +4,7 @@
   const HOUR = 3_600_000;
   const stopped = (code, reason) => ({status: 'UNAVAILABLE', code, reason, points: []});
 
-  function run({host, safetyVerdict, foodHistoryDeclaration, mealCoverageRevision, nowMs = Date.now(), mode}) {
+  function prepare({host, safetyVerdict, foodHistoryDeclaration, mealCoverageRevision, nowMs = Date.now(), mode}) {
     if (mode !== 'local') return stopped('TEST_JOURNAL', 'Тестовый журнал проверяется в изолированном стенде.');
     const trusted = root.GFForecastStorageAdapter.trustedReadings(host, {safetyVerdict});
     if (!trusted.available) return stopped(trusted.code, 'Требуются свежие показания с известным качеством и проверка GFSafety.');
@@ -49,19 +49,32 @@
     }
     const active = kind => snapshot.conditionPeriods.some(p => p.kind === kind && at(p.start) <= nowMs &&
       (p.end === null || at(p.end) > nowMs));
-    const input = {nowIso, readings: trusted.readings.filter(r => at(r.measuredAt) >= nowMs - HOUR),
+    const readings = trusted.readings.filter(r => at(r.measuredAt) >= nowMs - HOUR &&
+      at(r.measuredAt) <= nowMs && at(r.receivedAt) <= nowMs);
+    if (!readings.length || readings.length !== trusted.readings.filter(r => at(r.measuredAt) >= nowMs - HOUR).length) {
+      return stopped('SOURCE_TIME_UNAVAILABLE', 'Измерение или его получение позже времени расчёта.');
+    }
+    const input = {nowIso, readings,
       injections: snapshot.events.filter(e => e.type === 'insulin_injection' && e.status === 'confirmed' &&
         at(e.administeredAt) >= nowMs - 48 * HOUR),
       meals: started.map(m => ({id: m.id, status: 'confirmed', eatenAt: m.startedAt, carbsG: m.actualPlate.totals.carbs})),
       settings, conditions: {illness: active('illness'), activity: active('sport') || active('activity')},
       sourceIsComplete: true, rinfastEngine: root.RinfastEngine};
-    const result = root.GFForecast.predict(input);
     return research.getRevision() === snapshot.revision
-      ? {...result, sourceRevision: snapshot.revision, coefficients}
+      ? {status:'READY', input, snapshot, coefficients, foodHistoryDeclaration}
+      : stopped('REVISION_CHANGED', 'История изменилась во время подготовки.');
+  }
+
+  function run(options) {
+    const state = prepare(options);
+    if (state.status !== 'READY') return state;
+    const result = root.GFForecast.predict(state.input);
+    return options.host.connect('research').getRevision() === state.snapshot.revision
+      ? {...result, sourceRevision:state.snapshot.revision, coefficients:state.coefficients}
       : stopped('REVISION_CHANGED', 'История изменилась во время вычисления.');
   }
 
-  const api = Object.freeze({run});
+  const api = Object.freeze({run, prepare});
   root.GFForecastReadout = api;
   if (typeof module === 'object' && module.exports) module.exports = api;
 })(globalThis);

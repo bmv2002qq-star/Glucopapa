@@ -46,7 +46,7 @@ def main():
     entry.feed((web / 'index.html').read_text(encoding='utf-8'))
     order = [line.strip() for line in (web / 'runtime/LOAD_ORDER.txt').read_text().splitlines()
              if line.strip() and not line.startswith('#')]
-    assert order == entry.scripts and len(set(order)) == len(order) == 68
+    assert order == entry.scripts and len(set(order)) == len(order) == 69
     assert order[0] == 'runtime/webview-compat.js'
     core = [name for name in order if re.search(r'GFStorage.*gfstorage_core\.js$', name)]
     assert core == ['modules/GFStorage_v0.5.11/src/gfstorage_core.js']
@@ -71,7 +71,7 @@ def main():
     assert len(databases) == 1
 
     files = {p.relative_to(web).as_posix(): p.read_bytes() for p in web.rglob('*') if p.is_file()}
-    assert len(files) == 116
+    assert len(files) == 117
     unchanged = None
     changes = []
     if args.archive_web:
@@ -80,7 +80,7 @@ def main():
         allowed_additions = {'runtime/webview-compat.js', 'integration/GFProviderCgm_v0.1.0.js',
                              'integration/GFJournalBackup_v0.1.0.js', 'integration/GFForecastReadout_v0.1.0.js',
                              'integration/GFCalculationEvidence_v0.1.0.js', 'integration/GFConsensusReview_v0.1.0.js',
-                             'integration/GFLevemirReview_v0.1.0.js', core[0]}
+                             'integration/GFLevemirReview_v0.1.0.js', 'integration/GFResearchForecastRun_v0.1.0.js', core[0]}
         assert set(files) - set(archived) <= allowed_additions
         assert set(archived).issubset(files)
         changes = sorted(name for name in archived if files[name] != archived[name])
@@ -89,6 +89,7 @@ def main():
             'integration/GFCOBAutoPanel_v0.2.0.js', 'integration/GFGraphEvidenceBridge_v0.1.0.js',
             'integration/GFModuleDirectory_v0.1.0.js', 'integration/GFModuleHub_v0.2.0.js',
             'integration/GFModuleUI_v0.2.1.js', 'integration/GPMvp3ResearchUI_v0.1.0.js',
+            'modules/GFSettings_v0.1.8/src/gfsettings.js',
         }, changes
         unchanged = len(archived) - len(changes)
     if args.apk:

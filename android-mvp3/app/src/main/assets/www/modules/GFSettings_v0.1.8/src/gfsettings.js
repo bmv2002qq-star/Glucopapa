@@ -119,7 +119,14 @@
       const active=(s.conditionPeriods||[]).filter(p=>p.kind==='illness'&&Date.parse(p.start)<=t&&(p.end===null||t<Date.parse(p.end)));
       if(active.length>1)return {status:'CONFLICT',active:true,effectiveFactor:null,source:'ambiguous',periodIds:active.map(x=>x.id),clinicalValidation:false};
       if(active.length===0)return {status:'OFF',active:false,effectiveFactor:1,source:'none',periodIds:[],clinicalValidation:false};
-      const f=s.profile.illnessFactor;
+      let f=s.profile.illnessFactor??null;
+      // Roll future edits back through the ordered GFStorage audit. This also covers
+      // explicit clears, whose effective time is the commit time.
+      for(let i=s.history.length-1;i>=0;i--){
+        const row=s.history[i], change=row.domain==='profile'?row.changes?.illnessFactor:null;
+        if(change&&Date.parse(row.at)>t)f=change.before??null;
+      }
+      if(f&&!(Date.parse(f.editedAt)<=t))f=null;
       return {status:f?'USER_ENTERED_RESEARCH_ONLY':'INCOMPLETE',active:true,effectiveFactor:f?f.value:null,source:f?f.source:'not_set',periodIds:[active[0].id],clinicalValidation:false};
     }
     function setCoefficientMode(kind, mode, expectedRevision){
