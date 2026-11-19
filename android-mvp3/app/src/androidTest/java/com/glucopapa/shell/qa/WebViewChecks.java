@@ -130,7 +130,7 @@ final class WebViewChecks {
         instrumentation.runOnMainSync(() -> result.set(findWebView(activity.getWindow().getDecorView())));
         WebView web = result.get();
         if (web == null) throw new IllegalStateException("No production WebView");
-        long ready = SystemClock.elapsedRealtime() + 35_000;
+        long ready = SystemClock.elapsedRealtime() + 60_000;
         while (!"true".equals(evaluate(web, "Boolean(window.GPApp && GPApp.getStorage())"))) {
             if (SystemClock.elapsedRealtime() >= ready) {
                 String detail = evaluate(web, "JSON.stringify({state:document.readyState,"

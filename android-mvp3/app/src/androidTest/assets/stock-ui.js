@@ -76,6 +76,13 @@
         } else if (action === 'meal-model-save' || action === 'meal-model-restored') {
             GPApp.open('approved-settings');
             const selector = by('gfMealAbsorptionModel');
+            const expectedModel = action === 'meal-model-save' ? 'GFForecast' : 'GFCOB';
+            // GPApp is published before the final settings scripts are loaded on a cold WebView.
+            const initialized = Date.now()+10_000;
+            while ((!window.GFSettingsPanel || selector.value !== expectedModel) && Date.now()<initialized) {
+                await new Promise(resolve=>setTimeout(resolve,50));
+            }
+            assert(window.GFSettingsPanel && selector.value === expectedModel, 'Settings panel did not reflect the saved model');
             const original = snapshot();
             if (action === 'meal-model-save') {
                 assert(selector.value === 'GFForecast', 'Unexpected default model');
