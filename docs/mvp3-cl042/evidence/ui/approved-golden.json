@@ -1,0 +1,11 @@
+{
+  "status": "PASS",
+  "scope": "protected standalone screens",
+  "width": 390,
+  "pixels": {
+    "plate": true,
+    "low-high": true,
+    "settings": true,
+    "journal": true
+  }
+}

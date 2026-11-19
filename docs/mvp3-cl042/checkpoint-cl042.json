@@ -1,0 +1,51 @@
+{
+  "stage": "CL-042.1",
+  "date": "2026-11-19",
+  "sourceCommit": "b15f44ef1fb772bfe598be68d1684feaba01d3fd",
+  "baseline": "d54157a2c8c8e48648c8424891bcc6140935eabb",
+  "archiveBaseline": "777370e65e8065d1c9ce767b3b18ad332605c3ce",
+  "branch": "qa/mvp3-cl042-formula-recovery-20261119",
+  "acceptance": "PARTIAL",
+  "matrix": {
+    "PASS": 75,
+    "BLOCKED": 37,
+    "NOT_RUN": 11
+  },
+  "workflow": "https://github.com/bmv2002qq-star/Glucopapa/actions/runs/44509938057",
+  "api31Accessibility": "ENV_BLOCKED",
+  "checks": {
+    "CODE": "PASS",
+    "BROWSER_SINGLE_FILE": "PASS_LOOPBACK",
+    "BROWSER_MULTI_FILE": "PASS",
+    "ANDROID_EMULATOR": {
+      "api31": "PASS",
+      "api34": "PASS",
+      "api35core": "PASS",
+      "api35extended": "PASS",
+      "api36": "PASS"
+    },
+    "ANDROID_DEVICE": "NOT_TESTED",
+    "REAL_XDRIP": "NOT_TESTED",
+    "CLINICAL": "NOT_VALIDATED"
+  },
+  "foodModelSQLite": {
+    "api31": "PASS",
+    "api34": "PASS",
+    "api35": "PASS",
+    "api35-extended": "PASS",
+    "api36": "PASS"
+  },
+  "library": "SOURCE_UNAVAILABLE",
+  "apkSha256": "eacec407442edd953bd7fc0fb99c8a48ba31675543f7b92d34e8b84ddeaf6e74",
+  "sourceZipSha256": "c56f4ee6a256951a2cee1cec712ea0b96355575e01a88fe23ee32654d5f0c4e4",
+  "mainObserved": "2151fbbf2b40ac6eca4f5b02c2ba355c4e9a75f8",
+  "next": [
+    "CL042-TAU",
+    "CL042-LINEAR-POINT",
+    "CL042-XDRIP",
+    "CL042-LOW",
+    "CL042-HIGH",
+    "CL042-MEAL",
+    "CL042-LEV"
+  ]
+}

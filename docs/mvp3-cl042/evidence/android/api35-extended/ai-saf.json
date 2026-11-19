@@ -1,0 +1,63 @@
+{
+  "status": "PASS",
+  "fixture": "SYNTHETIC",
+  "sqliteUnchanged": true,
+  "picker": "ANDROID_DOCUMENTS_UI",
+  "cases": {
+    "cancel": "PASS",
+    "1d": {
+      "file": "Glucopapa_AI_Export.jsonl",
+      "revision": 7,
+      "rows": 9,
+      "sha256": "0ff31d300597df1e7e2722aab3fc62d36f50203ba49678785c8ebfeeda96b05a",
+      "bytes": 3870,
+      "from": "2026-11-18T10:59:50.308339Z",
+      "through": "2026-11-19T10:59:50.308339Z"
+    },
+    "2d": {
+      "file": "Glucopapa_AI_Export.jsonl (1)",
+      "revision": 7,
+      "rows": 9,
+      "sha256": "182d3c676933fb8fed9764a8fff89e646651773f02023d944af5af62a2971158",
+      "bytes": 3870,
+      "from": "2026-11-17T11:00:01.101688Z",
+      "through": "2026-11-19T11:00:01.101688Z"
+    },
+    "5d": {
+      "file": "Glucopapa_AI_Export.jsonl (2)",
+      "revision": 7,
+      "rows": 9,
+      "sha256": "bf8f07739c64792d67070c5cc2ab2d7a00f74d5de38d00cd05baa64455b7c7d1",
+      "bytes": 3870,
+      "from": "2026-11-14T11:00:11.734384Z",
+      "through": "2026-11-19T11:00:11.734384Z"
+    },
+    "1m": {
+      "file": "Glucopapa_AI_Export.jsonl (3)",
+      "revision": 7,
+      "rows": 9,
+      "sha256": "035d50ff2cdedcd0d13e91eb82cb8834c83297ab1e47f5ff0d1dd68a6f1da43e",
+      "bytes": 3870,
+      "from": "2026-10-19T11:00:21.442208Z",
+      "through": "2026-11-19T11:00:21.442208Z"
+    },
+    "3m": {
+      "file": "Glucopapa_AI_Export.jsonl (4)",
+      "revision": 7,
+      "rows": 9,
+      "sha256": "6c6d12b1608e83211b1af7f486d5210e1c96c70b375354f29be76f0c07c0b604",
+      "bytes": 3870,
+      "from": "2026-08-19T11:00:31.725697Z",
+      "through": "2026-11-19T11:00:31.725697Z"
+    },
+    "6m": {
+      "file": "Glucopapa_AI_Export.jsonl (5)",
+      "revision": 7,
+      "rows": 9,
+      "sha256": "e58c33faaa82ebe872d715e5af3796cdf1c49efd5ce6e4c789dd6ca1b073f0cc",
+      "bytes": 3870,
+      "from": "2026-05-19T11:00:42.041953Z",
+      "through": "2026-11-19T11:00:42.041953Z"
+    }
+  }
+}

@@ -1,0 +1,20 @@
+INSTRUMENTATION_RESULT: stream=
+QA_PASS stock
+
+INSTRUMENTATION_RESULT: webview={"fixture":"SYNTHETIC","fresh_local":true,"status":"PASS","step":"select-demo"}
+INSTRUMENTATION_CODE: -1
+Tap openHigh at (768, 1552)
+Tap ('Записать выполненный укол',) at (386, 1149)
+Tap injectionUnits at (540, 1325)
+Tap injectionRegion at (540, 1756)
+Tap ('Живот',) at (540, 993)
+Tap ('Сохранить фактический укол',) at (540, 1373)
+Tap openHigh at (768, 1359)
+Tap ('Записать выполненный укол',) at (386, 1149)
+Tap injectionUnits at (540, 1325)
+Tap injectionRegion at (540, 1756)
+Tap ('Живот',) at (540, 993)
+Tap injectionConfirm at (131, 1201)
+Tap ('Сохранить фактический укол',) at (540, 1342)
+Tap ('Дневник',) at (276, 2118)
+PASS Android emulator UI and native SQLite smoke

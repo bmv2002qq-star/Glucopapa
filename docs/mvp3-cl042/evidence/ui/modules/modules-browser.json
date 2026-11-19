@@ -1,0 +1,278 @@
+{
+  "modules": [
+    {
+      "id": "low",
+      "version": "v5 · UI v0.3.9",
+      "integration": "partial",
+      "route": "approved-low",
+      "card": "PASS",
+      "unrecognized_route": "PASS",
+      "navigation_without_mutation": "PASS"
+    },
+    {
+      "id": "high",
+      "version": "v5 · UI v0.3.9",
+      "integration": "partial",
+      "route": "approved-high",
+      "card": "PASS",
+      "unrecognized_route": "PASS",
+      "navigation_without_mutation": "PASS"
+    },
+    {
+      "id": "nutrition",
+      "version": "v0.4.6",
+      "integration": "connected",
+      "route": "approved-nutrition",
+      "card": "PASS",
+      "unrecognized_route": "PASS",
+      "navigation_without_mutation": "PASS"
+    },
+    {
+      "id": "journal",
+      "version": "v0.1.1 LIVE · экран-кандидат v0.1.2",
+      "integration": "connected",
+      "route": "approved-journal",
+      "card": "PASS",
+      "unrecognized_route": "PASS",
+      "navigation_without_mutation": "PASS"
+    },
+    {
+      "id": "cgmchart",
+      "version": "v0.2 A",
+      "integration": "partial",
+      "route": "cgm",
+      "card": "PASS",
+      "unrecognized_route": "PASS",
+      "navigation_without_mutation": "PASS"
+    },
+    {
+      "id": "xdrip-follower",
+      "version": "Локальный ContentProvider",
+      "integration": "partial",
+      "route": "cgm",
+      "card": "PASS",
+      "unrecognized_route": "PASS",
+      "navigation_without_mutation": "PASS"
+    },
+    {
+      "id": "levemir",
+      "version": "v0.1.2",
+      "integration": "connected",
+      "route": "insulin-models",
+      "card": "PASS",
+      "unrecognized_route": "PASS",
+      "navigation_without_mutation": "PASS"
+    },
+    {
+      "id": "rinfast",
+      "version": "v0.3.1 · интегр. ядро v0.3.0",
+      "integration": "connected",
+      "route": "insulin-models",
+      "card": "PASS",
+      "unrecognized_route": "PASS",
+      "navigation_without_mutation": "PASS"
+    },
+    {
+      "id": "sport",
+      "version": "v0.1.0 · оболочка v0.3.9",
+      "integration": "connected",
+      "route": "home",
+      "card": "PASS",
+      "unrecognized_route": "PASS",
+      "navigation_without_mutation": "PASS"
+    },
+    {
+      "id": "settings",
+      "version": "экран v0.1.4 · ядро v0.1.8",
+      "integration": "connected",
+      "route": "approved-settings",
+      "card": "PASS",
+      "unrecognized_route": "PASS",
+      "navigation_without_mutation": "PASS"
+    },
+    {
+      "id": "coefficients",
+      "version": "v0.1.2 · сетка 4×6 ч",
+      "integration": "partial",
+      "route": null,
+      "card": "PASS",
+      "unrecognized_route": "PASS",
+      "navigation_without_mutation": "PASS"
+    },
+    {
+      "id": "activity",
+      "version": "v0.1.1",
+      "integration": "partial",
+      "route": "home",
+      "card": "PASS",
+      "unrecognized_route": "PASS",
+      "navigation_without_mutation": "PASS"
+    },
+    {
+      "id": "mealcalc",
+      "version": "ядро v0.1.4 · UI v0.3.0",
+      "integration": "partial",
+      "route": "meals",
+      "card": "PASS",
+      "unrecognized_route": "PASS",
+      "navigation_without_mutation": "PASS"
+    },
+    {
+      "id": "injection-analytics",
+      "version": "v0.1.1",
+      "integration": "connected",
+      "route": "injection-sites",
+      "card": "PASS",
+      "unrecognized_route": "PASS",
+      "navigation_without_mutation": "PASS"
+    },
+    {
+      "id": "audit",
+      "version": "v0.1.2 · адаптер v0.1.4",
+      "integration": "partial",
+      "route": "reports",
+      "card": "PASS",
+      "unrecognized_route": "PASS",
+      "navigation_without_mutation": "PASS"
+    },
+    {
+      "id": "highlow",
+      "version": "v0.1.1 · адаптер v0.1.4",
+      "integration": "connected",
+      "route": "highlow",
+      "card": "PASS",
+      "unrecognized_route": "PASS",
+      "navigation_without_mutation": "PASS"
+    },
+    {
+      "id": "forecast",
+      "version": "ядро v0.1.2 · адаптер v0.1.3",
+      "integration": "partial",
+      "route": "analytics",
+      "card": "PASS",
+      "unrecognized_route": "PASS",
+      "navigation_without_mutation": "PASS"
+    },
+    {
+      "id": "physio",
+      "version": "ядро v0.1.2 · спорт v0.1.3",
+      "integration": "partial",
+      "route": "research",
+      "card": "PASS",
+      "unrecognized_route": "PASS",
+      "navigation_without_mutation": "PASS"
+    },
+    {
+      "id": "sync",
+      "version": "v0.2.0 · адаптер v0.2.2",
+      "integration": "partial",
+      "route": "sync",
+      "card": "PASS",
+      "unrecognized_route": "PASS",
+      "navigation_without_mutation": "PASS"
+    },
+    {
+      "id": "safety",
+      "version": "v0.1.0 · мост v0.1.1",
+      "integration": "connected",
+      "route": "analytics",
+      "card": "PASS",
+      "unrecognized_route": "PASS",
+      "navigation_without_mutation": "PASS"
+    },
+    {
+      "id": "storage",
+      "version": "v0.5.11 / schema 5",
+      "integration": "connected",
+      "route": "system",
+      "card": "PASS",
+      "unrecognized_route": "PASS",
+      "navigation_without_mutation": "PASS"
+    },
+    {
+      "id": "shell",
+      "version": "v0.3.14-prototype",
+      "integration": "connected",
+      "route": "home",
+      "card": "PASS",
+      "unrecognized_route": "PASS",
+      "navigation_without_mutation": "PASS"
+    },
+    {
+      "id": "gfxdrip",
+      "version": "v0.1.0 (исследовательский)",
+      "integration": "missing",
+      "route": null,
+      "card": "PASS",
+      "unrecognized_route": "PASS",
+      "navigation_without_mutation": "PASS"
+    },
+    {
+      "id": "aaps-enhancer",
+      "version": "v0.1.1",
+      "integration": "partial",
+      "route": "research",
+      "card": "PASS",
+      "unrecognized_route": "PASS",
+      "navigation_without_mutation": "PASS"
+    },
+    {
+      "id": "aaps-research",
+      "version": "v0.1.0",
+      "integration": "partial",
+      "route": "research",
+      "card": "PASS",
+      "unrecognized_route": "PASS",
+      "navigation_without_mutation": "PASS"
+    },
+    {
+      "id": "physio-profiles",
+      "version": "v0.2.0",
+      "integration": "partial",
+      "route": "research",
+      "card": "PASS",
+      "unrecognized_route": "PASS",
+      "navigation_without_mutation": "PASS"
+    },
+    {
+      "id": "replay",
+      "version": "v0.1.0",
+      "integration": "standalone",
+      "route": null,
+      "card": "PASS",
+      "unrecognized_route": "PASS",
+      "navigation_without_mutation": "PASS"
+    },
+    {
+      "id": "normalized",
+      "version": "v0.1.0 / v0.2.0",
+      "integration": "connected",
+      "route": null,
+      "card": "PASS",
+      "unrecognized_route": "PASS",
+      "navigation_without_mutation": "PASS"
+    },
+    {
+      "id": "cob",
+      "version": "v0.1.1 · auto-profile",
+      "integration": "partial",
+      "route": "analytics",
+      "card": "PASS",
+      "unrecognized_route": "PASS",
+      "navigation_without_mutation": "PASS"
+    }
+  ],
+  "fresh_local_no_synthetic": "PASS",
+  "frames": [
+    "approved/GFJournal_v0.1.2_3COL_CANDIDATE.html",
+    "approved/GFNutrition_v0.4.6_LIVE.html",
+    "approved/GFSettings_v0.1.4_LIVE.html"
+  ],
+  "wrong_source": "PASS",
+  "viewport_widths": [
+    320,
+    390,
+    428,
+    1280
+  ]
+}
