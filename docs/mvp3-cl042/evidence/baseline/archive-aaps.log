@@ -1,0 +1,31 @@
+✔ Independent AAPS-informed forecast builds 25 points on documented synthetic fixture (6.79773ms)
+✔ No model fabricates absent GFForecast or GFxDrip (0.867031ms)
+✔ Confirmed full coverage is mandatory (0.340971ms)
+✔ Old CGM disables third curve (0.503365ms)
+✔ CGM below 3.9 disables third curve (0.484216ms)
+✔ Ambiguous coefficients fail closed (0.65044ms)
+✔ Invalid exact CGM duplicate disables third curve (0.950162ms)
+✔ Planned rather than confirmed insulin never counted (0.484336ms)
+✔ Unfinished meals block third curve (0.812177ms)
+✔ Valid model input with aligned timestamps shows spread (2.488721ms)
+✔ Forecast made 20 min ago is not a valid current comparison (0.992122ms)
+✔ Malformed model grid fails gracefully (0.11958ms)
+✔ Cannot compare future model projections masquerading as observations (0.352151ms)
+✔ Assessment computes descriptive MAE and missed low (0.292349ms)
+✔ Assessment does not use future observations outside target window (0.178179ms)
+✔ GFStorage host only opens research read connection and unsubscribe works (3.021714ms)
+✔ Can connect to a real empty GFStorage v5 without errors and without writes (3.395599ms)
+✔ No unsupported GFStorage schema accepted (0.553393ms)
+✔ Forecast must not claim clinical validation (0.752329ms)
+✔ Forecast with no source CGM timestamp is rejected when comparing with live CGM (0.903911ms)
+✔ Forecast based on previous CGM point (5 min ago) is rejected (0.547991ms)
+✔ Forecast source timestamp ISO is accepted when it matches last CGM (0.956881ms)
+✔ Third curve retains its observed source CGM timestamp (0.885491ms)
+ℹ tests 23
+ℹ suites 0
+ℹ pass 23
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 38.794787

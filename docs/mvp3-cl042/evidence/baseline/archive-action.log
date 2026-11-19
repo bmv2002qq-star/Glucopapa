@@ -1,0 +1,50 @@
+OK high correct arithmetic
+OK high half-unit floor
+OK high 0 on below target
+OK high no default isf
+OK high no IOB
+OK high no known insulin
+OK high no complete history
+OK high IOB age
+OK high no IOB time
+OK high known food
+OK high uncertain food
+OK high ketones unknown
+OK high ketones positive
+OK high illness
+OK high dangerous symptoms
+OK high uncertain recent shot
+OK high dose above maximum
+OK high no confirmed plan
+OK high unknown trend
+OK high falling trend
+OK high recent activity
+OK high basal missed
+OK high no current sugar
+OK high CGM age two days
+OK high CGM fresh
+OK high CGM lag too long
+OK high CGM lag >10min
+OK high source id missing
+OK high unconfirmed fingerstick
+OK high manual old
+OK high blank time
+OK high future reading
+OK high empty max
+OK high comma numeric
+OK low amount
+OK low product gram unit
+OK low no plan
+OK low no nutrition label
+OK low no product
+OK low swallow trouble
+OK low dangerous symptoms
+OK low already treated
+OK low not low
+OK low nutrition 0
+OK low plan unconfirmed
+OK low amount > 500
+OK low CGM age old
+OK snapshot missing no value
+OK snapshot ts and metadata
+Passed 49 tests
