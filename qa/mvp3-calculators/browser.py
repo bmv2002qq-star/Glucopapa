@@ -41,7 +41,7 @@ def verify(browser, origin, artifact):
             panel.locator('summary').click()
             summary = panel.locator('[data-calc-trace]').inner_text()
             assert f'GFStorage · ревизия {before}' in summary
-            assert 'IOB РинФаста · неизвестно' in summary and 'FOOD_COVERAGE_MISSING' in summary
+            assert 'IOB РинФаста · неизвестно' in summary and 'NO_CONFIRMED_MEALS_IN_WINDOW' in summary
             assert 'INPUT_READ_FAILED' not in summary
             assert page.evaluate('GPApp.getStorage().diagnostics().revision') == before
             assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')

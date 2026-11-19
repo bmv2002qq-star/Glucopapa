@@ -3,9 +3,10 @@
 (()=>{'use strict';
  const $=id=>document.getElementById(id);
  const b=$('gfContextPanel'); if(!b)return;
- let lastHost=null,lastService=null,dispose=null;
+ const modelSelect=$('gfMealAbsorptionModel');
+ let lastHost=null,lastService=null,dispose=null,mealModelDraft=null;
  const get=()=>{const host=globalThis.GPApp?.getStorage?.();if(!host)throw Error('GFStorage недоступен');
-   if(host!==lastHost){if(typeof dispose==='function')dispose();lastHost=host;lastService=GFSettings.createSettingsService({settingsPort:host.connect('settings')});
+   if(host!==lastHost){if(typeof dispose==='function')dispose();mealModelDraft=null;lastHost=host;lastService=GFSettings.createSettingsService({settingsPort:host.connect('settings')});
     const sub=host.connect('settings').subscribe(()=>refresh());dispose=typeof sub==='function'?sub:null;}
    return {host,service:lastService};};
  const period=(s)=>s.conditionPeriods.filter(p=>p.kind==='illness'&&p.end===null).at(-1)||null;
@@ -13,7 +14,7 @@
  function refresh(){try{const {host,service}=get();const s=host.connect('settings').getSnapshot(),view=service.getView();
    $('gfCarbMode').value=s.profile.coefficientModes.carb_g_per_u;
    $('gfIsfMode').value=s.profile.coefficientModes.isf_mmol_per_u;
-   $('gfMealAbsorptionModel').value=GFMealAbsorption.selected(s.profile).id;
+   modelSelect.value=mealModelDraft??GFMealAbsorption.selected(s.profile).id;
    $('gfIllnessFactor').value=s.profile.illnessFactor?.value??'';
    const p=period(s);
    $('gfIllnessStart').disabled=!!p;
@@ -29,8 +30,10 @@
    if(s.profile.coefficientModes.carb_g_per_u!==c)service.setCoefficientMode('carb_g_per_u',c,host.connect('settings').getRevision());
    if(s.profile.coefficientModes.isf_mmol_per_u!==i)service.setCoefficientMode('isf_mmol_per_u',i,host.connect('settings').getRevision());
  }));
+ modelSelect.addEventListener('change',()=>{mealModelDraft=modelSelect.value;});
  $('gfMealAbsorptionSave').addEventListener('click',()=>run(()=>{const {service}=get();
-   service.setMealAbsorptionModel($('gfMealAbsorptionModel').value,service.getRevision());
+   service.setMealAbsorptionModel(mealModelDraft??modelSelect.value,service.getRevision());
+   mealModelDraft=null;
  }));
  $('gfIllnessFactorSave').addEventListener('click',()=>run(()=>{const {host,service}=get();const raw=$('gfIllnessFactor').value;
    if(!raw.trim())throw Error('Укажите коэффициент для сохранения');

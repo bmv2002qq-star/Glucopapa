@@ -1,7 +1,7 @@
 7a65e1fcd9346f9c3ec5e264cd9395524297d7338b2c148ae2ad2275b72ea546  android-mvp3/.github/workflows/build-apk.yml
 d883e4afc8125dc3f4356efdd0ac09239bfd8259878aa332f06a50ac5b3cb37e  android-mvp3/.gitignore
 fed9aa982d1aa1a49a65497b1d02d08173beda824c0421e58e36dfadc06666dc  android-mvp3/app/build.gradle
-5c8bf9467cfb412520b1f93b61f66996ee21e4e9232f23cb4a8e984cac09796f  android-mvp3/app/src/androidTest/assets/stock-ui.js
+46a86058ad9b56fedd307188e126f8ef71ce434de21fecd8ddbc2221f8cafbae  android-mvp3/app/src/androidTest/assets/stock-ui.js
 76f60c92d33699a4776505c150ddb43fe96b11a07e45959f3c429c7803610625  android-mvp3/app/src/androidTest/assets/webview-qa.js
 ed7dc4d9c0474c08d2c83d2b61abbaac255dc3ae02ef2004ec93a21830d0ada5  android-mvp3/app/src/androidTest/java/com/glucopapa/shell/ExportAndTraceChecks.java
 5b7d75572a425a31e4dd8622edef1cf074f3c38af107d5b852150b191180a1af  android-mvp3/app/src/androidTest/java/com/glucopapa/shell/ProviderContractChecks.java
@@ -58,7 +58,7 @@ e5b39de043e8b43b6d52c66894bfec8a6a63196e99ab29d0333f175583511309  android-mvp3/a
 4b2cddc69351a7a9c27a35c3d4f6d492dd682c90642c473a13b1e8ab161fac85  android-mvp3/app/src/main/assets/www/integration/GFResearchForecastRun_v0.1.0.js
 08c5d18528a3a49fdc601cb1835fafa22849b33de23df5c8703850390f58efef  android-mvp3/app/src/main/assets/www/integration/GFSafetyBridge_v0.1.1/reference/gfsafety_v0.1.0_from_approved_demo_UNMODIFIED.js
 0d0230c5052b3a6e67fb924473a66c15ae49f41e56ee4cc45626880cd048d67d  android-mvp3/app/src/main/assets/www/integration/GFSafetyBridge_v0.1.1/src/gfsafety_storage_bridge.js
-e45688f67b75c27ae30ae97cbb8d1f867e854527a1ac71bd6fc34acf271dfb8c  android-mvp3/app/src/main/assets/www/integration/GFSettingsPanel_v0.1.0.js
+2fa8f3e0b966d99bd76bc43c15fd70dc2f361a74da38b7374d031550ab2b2f9e  android-mvp3/app/src/main/assets/www/integration/GFSettingsPanel_v0.1.0.js
 dd0e8afdefdf56292a699cc75bdce8526ed1e674986e9e94929fc11ab4951c9c  android-mvp3/app/src/main/assets/www/integration/GPMvp3ResearchUI_v0.1.0.js
 278dcd83ca100f3a0b0e9ba26323a1b124072b19f91a480b7b499cef8e1ed1a0  android-mvp3/app/src/main/assets/www/integration/approved_routes/GFHighLow_HIGH_DIRECT.html
 cddb0be035a94ea7aa547205d5f5206e13fdb3fe8342a70dcd970de00a27f298  android-mvp3/app/src/main/assets/www/integration/approved_routes/GFHighLow_LOW_DIRECT.html

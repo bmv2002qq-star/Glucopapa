@@ -73,6 +73,34 @@
             assert(message === (outcome === 'cancel' ? 'Выгрузка отменена' : 'Выгрузка сохранена'), message);
             assert(JSON.stringify(snapshot()) === before, 'Export changed GFStorage');
             return {status: 'PASS', fixture: 'SYNTHETIC', step: action, revision: snapshot().revision, outcome};
+        } else if (action === 'meal-model-save' || action === 'meal-model-restored') {
+            GPApp.open('approved-settings');
+            const selector = by('gfMealAbsorptionModel');
+            const original = snapshot();
+            if (action === 'meal-model-save') {
+                assert(selector.value === 'GFForecast', 'Unexpected default model');
+                selector.value = 'GFCOB';
+                selector.dispatchEvent(new Event('change', {bubbles:true}));
+                GFSettingsPanel.refresh();
+                assert(selector.value === 'GFCOB', 'Refresh discarded the selected model');
+                click('gfMealAbsorptionSave');
+            }
+            const state = snapshot();
+            assert(state.profile.mealAbsorptionModel?.id === 'GFCOB' &&
+                state.profile.mealAbsorptionModel.version === '0.1.1', 'Selected version missing in GFStorage');
+            assert(selector.value === 'GFCOB', 'UI and GFStorage do not agree');
+            const key='GFV2SHELL_DATA_v1_demo';
+            const saved=JSON.parse(GFNativeStorage.readSnapshot(key));
+            assert(saved.code === 'FOUND' && saved.revision === state.revision, 'No SQLite confirmation');
+            assert(JSON.parse(saved.data).profile.mealAbsorptionModel.version === '0.1.1',
+                'Model version missing in native record');
+            assert(JSON.stringify(state.events) === JSON.stringify(original.events) &&
+                JSON.stringify(state.mealSessions) === JSON.stringify(original.mealSessions), 'Setting changed facts');
+            if (action === 'meal-model-save') {
+                assert(state.revision === original.revision+1, 'Duplicate or missing revision');
+            }
+            return {status:'PASS',fixture:'SYNTHETIC',step:action,revision:state.revision,
+                model:state.profile.mealAbsorptionModel,sqlite:true};
         } else if (action === 'export') {
             GPApp.open('system');
             assert(by('screen-system').classList.contains('active'), 'System route did not open');

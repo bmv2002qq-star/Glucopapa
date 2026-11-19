@@ -123,3 +123,32 @@ test('an assessment cohort cannot mix food model versions or fill a missing thir
     assert.equal(Review.evaluate({issued,actual:[],asOf:at,mealModel:other}).matchedIssueGroups,1);
     assert.equal(Review.evaluate({issued,actual:[],asOf:at,mealModel:current}).status,'NO_LEADER');
 });
+
+test('E2E-02: no hybrid forecast after simultaneous facts, CGM, sport, illness and coefficient changes',async()=>{
+    const {host,request,revision}=snapshot(1);
+    const pending=Run.run(request);
+    mutate(host,'cgmAdapter','ingestReadings',[{ts:at,sourceDeviceId:source,mmol:7,receivedAt:iso(at),valid:true,qualityFlag:'ok'}]);
+    mutate(host,'actionWriter','recordInjection',{id:'RACE-SHOT',insulinId:'rinfast',units:0.5,administeredAt:iso(at-12*minute)});
+    mutate(host,'sport','startSport',{id:'RACE-SPORT',start:iso(at)});
+    mutate(host,'context','openPeriod',{id:'RACE-ILLNESS',kind:'illness',start:iso(at-10*minute)});
+    const settings=host.connect('settings');
+    settings.updateProfile({coefficientModes:{carb_g_per_u:'manual',isf_mmol_per_u:'auto'}},settings.getRevision());
+    const plan={schema:'GFPlate.v1',source:'GFFoodOnly',createdAt:iso(at),containsEstimatedValues:false,
+        items:[{kind:'manual',foodId:null,name:'SYNTHETIC-RACE',amount:75,unit:'г',carbs:14.925,fat:0,protein:0,
+            kcal:59.7,glycemicIndex:49,glycemicIndexStatus:'verified',nutritionStatus:'label_verified'}],
+        totals:{amount:75,count:1,carbs:14.925,fat:0,protein:0,kcal:59.7}};
+    const controller=globalThis.GFMealController.createController(host);
+    controller.createFromFood(plan,'race-food');
+    controller.ready('race-food');
+    controller.startMeal('race-food',iso(at-10*minute),{actuallyStarted:true});
+    mutate(host,'actionWriter','recordActualPlate',{sessionId:'race-food',expectedVersion:controller.lookup('race-food').version,
+        plate:plan,opId:'race-food-fact'});
+    controller.finishMeal('race-food',iso(at-minute),{confirmed:true});
+    assert.equal((await pending).code,'REVISION_CHANGED');
+    assert.equal(host.exportState().forecasts.length,0);
+    const later=host.connect('research').getRevision();
+    assert.ok(later>revision);
+    assert.equal((await Run.run({...request,mealCoverageRevision:later,
+        safetyVerdict:{...request.safetyVerdict,sourceRevision:later}})).code,'SMOOTH_PROFILE_MISSING');
+    assert.equal(host.exportState().forecasts.length,0);
+});

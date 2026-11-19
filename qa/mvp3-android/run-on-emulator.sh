@@ -61,3 +61,14 @@ fi
 if [[ ${ANDROID_QA_EXTENDED:-false} == true && $api != 31 ]]; then
     python3 qa/mvp3-android/gui_sizing.py "$adb" "$serial" "$evidence" 2>&1 | tee "$evidence/android-gui.log"
 fi
+
+# Exercise the real settings panel against production GFStorage and its native SQLite driver.
+runner=com.glucopapa.shell.test/com.glucopapa.shell.qa.StorageInstrumentation
+for step in meal-model-save meal-model-restored; do
+    "$adb" -s "$serial" shell am instrument -w -r -e fixture SYNTHETIC -e phase stock -e step "$step" "$runner" \
+      | tee "$evidence/$step.log"
+    grep -F 'QA_PASS stock' "$evidence/$step.log"
+    if [[ $step == meal-model-save ]]; then
+        "$adb" -s "$serial" shell am force-stop com.glucopapa.shell
+    fi
+done
