@@ -13,3 +13,9 @@ GFxDrip остаётся LICENSE_BLOCKED. Включение персональ�
 Исследовательский прогноз v2 хранит model ID/version, inputDigest, sourceRevision и времена измерения, получения и выпуска. SQLite принимает факты через прежний GFStorage. На несовпадающей сетке GFAPSEnhancer возвращает HORIZON_ANCHOR_MISMATCH. GFxDrip LICENSE_BLOCKED. Оценка двух доступных моделей через CGM работает отдельно от квалификации рейтинга трёх серий.
 
 Для повтора `node --test qa/mvp3-cl041/*.test.cjs` и `bash qa/mvp3-android/run-on-emulator.sh` в Actions. Попытки и итоговый статус сохраняются в `evidence/`.
+
+## Точка продолжения после регрессии
+
+Исходники и проверенная сборка соответствуют d54157a2c8c8e48648c8424891bcc6140935eabb. Сводка 62 PASS, 32 BLOCKED, 29 NOT_RUN. Подробности в GLUCOPAPA_CL041_REPORT.md, TEST_MATRIX.csv, AUDIT_CL041.md и checkpoint-cl041.json. Основной Actions run 44438602617.
+
+Дальнейшие этапы требуют выбора лицензированного GFxDrip, согласования временной сетки AAPS, спецификаций недостающих формул и отдельных сценариев из открытой матрицы. Пользовательские данные, реальные устройства и `main` вне выполненных действий.

@@ -1,0 +1,17 @@
+{
+  "status": "PASS",
+  "protected_assets": 26,
+  "load_order": 70,
+  "active_storage": "modules/GFStorage_v0.5.11/src/gfstorage_core.js",
+  "native_helpers": 1,
+  "web_assets": 118,
+  "archive_verified": false,
+  "archive_unchanged_assets": null,
+  "archive_changed_assets": [],
+  "apk_mirror": true,
+  "frames": [
+    "approved/GFNutrition_v0.4.6_LIVE.html",
+    "approved/GFJournal_v0.1.2_3COL_CANDIDATE.html",
+    "approved/GFSettings_v0.1.4_LIVE.html"
+  ]
+}
