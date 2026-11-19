@@ -1,0 +1,1 @@
+{"status": "PASS", "fixture": "SYNTHETIC_BROWSER_PROFILE", "activity_options": ["low", "usual", "high", "sport"], "restored_session": true, "sport_diary_duration_minutes": 30, "illness_history_restored": true, "illness_effective_when_off": 1, "no_double_sessions": true, "revision": 7}

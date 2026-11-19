@@ -1,0 +1,10 @@
+INSTRUMENTATION_RESULT: stream=
+QA_FAIL java.lang.IllegalStateException: WebView startup timed out: null
+	at com.glucopapa.shell.qa.WebViewChecks.startWebView(WebViewChecks.java:138)
+	at com.glucopapa.shell.qa.WebViewChecks.exercise(WebViewChecks.java:30)
+	at com.glucopapa.shell.qa.StorageInstrumentation.onStart(StorageInstrumentation.java:63)
+	at android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2594)
+
+
+INSTRUMENTATION_CODE: 0
+FAIL: Installed stock WebView failed select-demo

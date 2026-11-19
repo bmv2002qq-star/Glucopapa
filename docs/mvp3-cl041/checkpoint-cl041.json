@@ -1,0 +1,30 @@
+{
+  "stage": "CL-041",
+  "sourceCommit": "d54157a2c8c8e48648c8424891bcc6140935eabb",
+  "baseline": "a0b2befe239a445d1f64d640cefaaec8697b8ac7",
+  "matrix": {
+    "PASS": 62,
+    "BLOCKED": 32,
+    "NOT_RUN": 29
+  },
+  "acceptance": "OPEN",
+  "androidEmulator": {
+    "12": "PASS",
+    "14": "PASS",
+    "15": "PASS",
+    "16": "PASS"
+  },
+  "androidSaf": "PASS",
+  "workflow": "https://github.com/bmv2002qq-star/Glucopapa/actions/runs/44438602617",
+  "clinical": "NOT_VALIDATED",
+  "realPhone": "NOT_TESTED",
+  "liveCgm": "NOT_TESTED",
+  "library": "SOURCE_UNAVAILABLE",
+  "apkSha256": "5efabf76f6ff3beaf3c870da5fb5d09dbcf652d03ba7d56189fdde8d60cbe173",
+  "next": [
+    "LICENSE_GF_XDRIP",
+    "AAPS_TIME_GRID_ANCHOR",
+    "APPROVED_CALC_FORMULAS",
+    "EXACT_OPEN_CASES"
+  ]
+}
