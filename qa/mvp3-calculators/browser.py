@@ -24,7 +24,7 @@ def verify(browser, origin, artifact):
     evidence = []
     for width in (320, 390, 428, 1280):
         page.set_viewport_size({'width': width, 'height': 900})
-        for route, panel_name in [('approved-low', 'Low'), ('approved-high', 'High'), ('approved-nutrition', 'Meal')]:
+        for route, panel_name in [('approved-low', 'Low'), ('approved-nutrition', 'Meal')]:
             before = page.evaluate('GPApp.getStorage().diagnostics().revision')
             page.evaluate('(route) => GPApp.open(route)', route)
             panel = page.locator('#calcEvidence' + panel_name)

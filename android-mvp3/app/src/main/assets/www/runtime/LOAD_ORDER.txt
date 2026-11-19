@@ -28,6 +28,8 @@ integration/GFSafetyBridge_v0.1.1/src/gfsafety_storage_bridge.js
 modules/Levemir_v0.1.2/levemir_engine.js
 modules/CGMChart_v0.2/xdrip_chart.js
 modules/GFInjectionAnalytics_v0.1.1/gf_injection_analytics.js
+modules/GFInjectionAnalytics_v0.2.1/GFInjectionAnalytics_v0.2.1.js
+integration/GFInjectionTimingStorage_v0.1.0.js
 integration/GFInsulinEvidenceGate_v0.1.0.js
 integration/GFCgmEvidencePolicy_v0.1.0.js
 integration/GFGraphEvidenceBridge_v0.1.0.js
@@ -35,6 +37,8 @@ integration/GFCOBResearch_v0.1.1.js
 integration/GFAutoCOBProfile_v0.1.0.js
 integration/GFMealCoverageStudy_v0.1.1.js
 integration/GFMealAbsorption_v0.1.0.js
+modules/GFHighTarget_v0.1.4/gfhigh_target_core.js
+integration/GFHighTargetStorage_v0.1.1.js
 integration/GFHighLowInputGate_v0.1.0.js
 integration/GFModuleHub_v0.2.0.js
 integration/GFProviderCgm_v0.1.0.js
@@ -51,6 +55,8 @@ integration/GFModuleDirectory_v0.1.0.js
 integration/GFSettingsPanel_v0.1.0.js
 integration/GFMealActualPanel_v0.1.0.js
 integration/GFCOBAutoPanel_v0.2.0.js
+integration/GFHighTargetView_v0.1.0.js
+integration/GFInjectionTimingPanel_v0.1.0.js
 integration/GFResearchBoot_v0.1.0.js
 modules/GFAAPSResearch_v0.1.0/core/utils.js
 modules/GFAAPSResearch_v0.1.0/core/GFAPSInputGuard.js

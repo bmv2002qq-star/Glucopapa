@@ -64,11 +64,11 @@ fi
 
 # Exercise the real settings panel against production GFStorage and its native SQLite driver.
 runner=com.glucopapa.shell.test/com.glucopapa.shell.qa.StorageInstrumentation
-for step in meal-model-save meal-model-restored; do
+for step in meal-model-save meal-model-restored high-settings-save high-settings-restored; do
     "$adb" -s "$serial" shell am instrument -w -r -e fixture SYNTHETIC -e phase stock -e step "$step" "$runner" \
       | tee "$evidence/$step.log"
     grep -F 'QA_PASS stock' "$evidence/$step.log"
-    if [[ $step == meal-model-save ]]; then
+    if [[ $step == *-save ]]; then
         "$adb" -s "$serial" shell am force-stop com.glucopapa.shell
     fi
 done

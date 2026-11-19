@@ -12,7 +12,7 @@
   if (root) root.GFStorage = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this, function(TimeGrid){
   'use strict';
-  const VERSION = '0.5.11-cl042-CANDIDATE', SCHEMA_VERSION = 5;
+  const VERSION = '0.5.11-high-analytics-CANDIDATE', SCHEMA_VERSION = 5;
   if(!TimeGrid)throw Error('GFTimeGrid dependency required');
   const XDRIP_ID='xdrip-local-provider', XDRIP_TYPE='xdrip_local';
   // xDrip+ Constants.MMOLL_TO_MGDL. Store both the upstream value and the converted observation.
@@ -37,6 +37,7 @@
     GFForecast: Object.freeze({id:'GFForecast',version:'0.1.2'}),
     GFCOB: Object.freeze({id:'GFCOB',version:'0.1.1'})
   });
+  const HIGH_ACTIVITY_DEFAULTS=Object.freeze({normal:1,high:1.05,sport:1.10});
   const FORECAST_INPUT_DOMAINS=new Set([
     'profile','measurements','coefficients','mealSessions','events','coverage','cgm','cgmMetadata','conditionPeriods','syncInbox'
   ]);
@@ -88,6 +89,20 @@
     requireFields(x,['carb_g_per_u','isf_mmol_per_u'],['carb_g_per_u','isf_mmol_per_u']);
     for(const kind of ['carb_g_per_u','isf_mmol_per_u'])if(!['manual','auto'].includes(x[kind]))fail('Неподдерживаемый режим коэффициента');
     return clone(x);
+  }
+  function validateHighActivity(x){
+    requireFields(x,['version','enabled','selectedLevel','coefficients','source','editedAt'],
+      ['version','enabled','selectedLevel','coefficients','source','editedAt']);
+    if(x.version!==1||typeof x.enabled!=='boolean'||!Object.hasOwn(HIGH_ACTIVITY_DEFAULTS,x.selectedLevel)||
+      x.source!=='user_configured')fail('Неподдерживаемая настройка активности HIGH');
+    requireFields(x.coefficients,Object.keys(HIGH_ACTIVITY_DEFAULTS),Object.keys(HIGH_ACTIVITY_DEFAULTS));
+    for(const value of Object.values(x.coefficients))range(value,0.5,2);
+    iso(x.editedAt);
+  }
+  function validateHighTarget(x){
+    requireFields(x,['version','valueMmol','source','editedAt'],['version','valueMmol','source','editedAt']);
+    if(x.version!==1||x.source!=='user_input')fail('Неизвестный источник цели HIGH');
+    range(x.valueMmol,4,13);iso(x.editedAt);
   }
   function validateIllnessFactor(x){
     requireFields(x,['value','source','editedAt'],['value','source','editedAt']);
@@ -256,6 +271,8 @@
     if(!['low','usual','high'].includes(s.profile.activityBaseLevel))fail('Неверный базовый уровень активности');
     validateCoefficientModes(s.profile.coefficientModes);
     if(s.profile.mealAbsorptionModel!==undefined)validateMealModel(s.profile.mealAbsorptionModel);
+    if(s.profile.highActivity!==undefined)validateHighActivity(s.profile.highActivity);
+    if(s.profile.highTarget!=null)validateHighTarget(s.profile.highTarget);
     if(s.profile.illnessFactor!==null)validateIllnessFactor(s.profile.illnessFactor);
     if(s.cgmMetadata!==null){validateCgmMetadata(s.cgmMetadata);
       if(s.cgm.some(x=>x.sourceDeviceId!==undefined&&x.sourceDeviceId!==s.cgmMetadata.sourceDeviceId))fail('CGM содержит записи другого источника');
@@ -508,6 +525,31 @@
         };
       }
       if(role==='settings'){
+        port.setHighSettings=(patch,rev)=>commit(role,'profile','set_high_settings',(d,now)=>{
+          requireFields(patch,['targetMmol','activity']);
+          if(!Object.keys(patch).length)fail('Нет настроек HIGH для сохранения');
+          let changed=false;
+          if('targetMmol'in patch){
+            const value=patch.targetMmol;
+            if(value!==null)range(value,4,13);
+            if(value!==(d.profile.highTarget?.valueMmol??null)){
+              d.profile.highTarget=value===null?null:{version:1,valueMmol:value,source:'user_input',editedAt:now};
+              changed=true;
+            }
+          }
+          if('activity'in patch){
+            requireFields(patch.activity,['enabled','selectedLevel','coefficients'],['enabled','selectedLevel','coefficients']);
+            const next={...clone(patch.activity),version:1,source:'user_configured',editedAt:now};
+            validateHighActivity(next);
+            const prev=d.profile.highActivity;
+            if(!prev||prev.enabled!==next.enabled||prev.selectedLevel!==next.selectedLevel||
+              Object.keys(HIGH_ACTIVITY_DEFAULTS).some(level=>prev.coefficients[level]!==next.coefficients[level])){
+              d.profile.highActivity=next;
+              changed=true;
+            }
+          }
+          return changed?'profile':null;
+        },rev);
         port.setMealAbsorptionModel=(modelId,rev)=>commit(role,'profile','set_meal_absorption_model',d=>{
           if(typeof modelId!=='string'||!Object.hasOwn(MEAL_MODELS,modelId))fail('Неизвестная модель усвоения еды');
           const selected=d.profile.mealAbsorptionModel??MEAL_MODELS.GFForecast;
@@ -880,5 +922,5 @@
       // Host-only import is intentionally absent: restore must be verified by a future native adapter.
     });
   }
-  return Object.freeze({VERSION,SCHEMA_VERSION,DRUGS,MODELS,MEAL_MODELS,createHost});
+  return Object.freeze({VERSION,SCHEMA_VERSION,DRUGS,MODELS,MEAL_MODELS,HIGH_ACTIVITY_DEFAULTS,createHost});
 });

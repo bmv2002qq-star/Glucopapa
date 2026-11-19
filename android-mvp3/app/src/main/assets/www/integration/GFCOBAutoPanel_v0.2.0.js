@@ -71,9 +71,10 @@ function populate(node,state){node.replaceChildren();node.append(el('strong','И
   const now=Date.now();
   ack={source:'user_declared',scope:'all_meals',confirmedComplete:true,sourceRevision:rev,startIso:new Date(now-12.25*3600000).toISOString(),endIso:new Date(now+15*60000).toISOString(),declaredAtIso:new Date(now).toISOString()};
   render();
+  root.GFHighTargetView?.render();
  });
  node.append(btn);
- const reset=el('button','Сбросить подтверждение полноты');reset.type='button';reset.addEventListener('click',()=>{ack=null;render()});node.append(reset);
+ const reset=el('button','Сбросить подтверждение полноты');reset.type='button';reset.addEventListener('click',()=>{ack=null;render();root.GFHighTargetView?.render();});node.append(reset);
  if(result.status==='RESEARCH_INTERVAL')node.append(el('p','Исследовательский интервал COB: '+result.lowerG.toFixed(1)+'–'+result.upperG.toFixed(1)+' г.'));
  if(result.status==='MODEL_ZERO')node.append(el('p','В окне модели отсутствует вклад подтверждённой еды.'));
 }

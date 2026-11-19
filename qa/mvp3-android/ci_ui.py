@@ -117,24 +117,17 @@ class CandidateUI:
         self.home()
         self.scroll()
         self.tap('openHigh', ('Высокий сахар',), scroll=True)
-        self.tap(captions=('Записать выполненный укол',))
-        self.tap('injectionUnits', ('Фактически введено', 'Например: 0,5'))
+        self.tap('preview', ('Или введи свою дозу',), scroll=True)
         self.emulator.execute('shell', 'input', 'text', '0.5')
         keyboard = self.emulator.text('shell', 'dumpsys', 'input_method')
         if re.search(r'\b(?:mInputShown|mIsInputViewShown)=true', keyboard):
             self.emulator.execute('shell', 'input', 'keyevent', 'KEYCODE_BACK')
-        self.tap('injectionRegion', ('Не указано', 'Место укола'), scroll=True)
+        self.tap('site', ('Место укола',), scroll=True)
         self.tap(captions=('Живот',))
-        checkbox, _ = self.wait('injectionConfirm', ('Я подтверждаю',), scroll=True, tappable=True)
-        require(checkbox.get('checked') != 'true', 'A new injection must start unconfirmed')
-        if confirmed:
-            self.tap('injectionConfirm', ('Я подтверждаю',), scroll=True)
-            checked, _ = self.wait('injectionConfirm', ('Я подтверждаю',), scroll=True, tappable=True)
-            if checked.get('checkable') == 'true':
-                require(checked.get('checked') == 'true', 'Confirmation was not selected')
-        self.tap(captions=('Сохранить фактический укол',), scroll=True)
-        if confirmed:
-            self.wait(captions=('0,5 ЕД · abdomen',), scroll=True)
+        self.tap('record', ('Сделал укол',), scroll=True)
+        self.tap(captions=('Подтвердить' if confirmed else 'Отмена',))
+        message='Подтверждённая инъекция сохранена' if confirmed else 'Подтверждение отменено'
+        self.wait(captions=(message,), scroll=True)
 
     def journal(self):
         self.tap(captions=('Дневник',))

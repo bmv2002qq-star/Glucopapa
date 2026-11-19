@@ -43,18 +43,37 @@
             const revision = snapshot().revision;
             click('openHigh');
             assert(by('screen-approved-high').classList.contains('active'), 'HIGH route did not open');
-            by('screen-approved-high').querySelector('button[data-screen="injections"]').click();
-            assert(by('screen-injections').classList.contains('active'), 'Injection route did not open');
-            by('injectionUnits').value = '0.5';
-            by('injectionRegion').value = 'abdomen';
-            assert(!by('injectionConfirm').checked, 'New injection was already confirmed');
-            if (action === 'confirmed') click('injectionConfirm');
-            by('injectionForm').querySelector('button[type="submit"]').click();
-            const state = snapshot();
-            if (action === 'confirmed') {
-                assert(state.revision === revision + 1 && state.events.length === 1, 'Fact was not saved exactly once');
+            const deadline=Date.now()+10_000;
+            const frame=by('iframeHighTarget');
+            while ((!window.GFHighTargetView || !frame.contentDocument?.getElementById('record')) && Date.now()<deadline) {
+                await new Promise(resolve=>setTimeout(resolve,50));
+            }
+            assert(window.GFHighTargetView, 'HIGH bridge did not load');
+            const ui=frame.contentDocument;
+            const dose=ui.getElementById('preview'), site=ui.getElementById('site'), record=ui.getElementById('record');
+            dose.value='0.5';
+            dose.dispatchEvent(new Event('input',{bubbles:true}));
+            site.value='abdomen';
+            site.dispatchEvent(new Event('change',{bubbles:true}));
+            assert(snapshot().revision === revision && !snapshot().events.length, 'Manual amount wrote a fact');
+            assert(!record.disabled, 'Confirmed fact control is unavailable');
+            const ask=window.confirm;
+            let prompts=0;
+            try{
+                window.confirm=message=>{
+                    assert(message.includes('уже введён')&&message.includes('живот'), 'Wrong fact confirmation');
+                    prompts++;
+                    return action==='confirmed';
+                };
+                record.click();
+                if(action==='confirmed')record.click();
+            } finally {window.confirm=ask;}
+            const state=snapshot();
+            if(action==='confirmed') {
+                assert(prompts===1 && state.revision===revision+1 && state.events.length===1, 'Fact did not save exactly once');
+                assert(state.events[0].injectionSite.region==='abdomen', 'Wrong HIGH site');
             } else {
-                assert(state.revision === revision && !state.events.length, 'Unconfirmed action modified GFStorage');
+                assert(state.revision===revision&&!state.events.length, 'Cancelled action modified the journal');
             }
         } else if (action.startsWith('ai-export:')) {
             const [, period, outcome] = action.split(':');
@@ -108,6 +127,38 @@
             }
             return {status:'PASS',fixture:'SYNTHETIC',step:action,revision:state.revision,
                 model:state.profile.mealAbsorptionModel,sqlite:true};
+        } else if(action==='high-settings-save'||action==='high-settings-restored'){
+            GPApp.open('approved-high');
+            const frame=by('iframeHighTarget');
+            const until=Date.now()+10_000;
+            while(!frame.contentDocument?.getElementById('status')?.dataset.code&&Date.now()<until){
+                await new Promise(resolve=>setTimeout(resolve,50));
+            }
+            const form=frame.contentDocument;
+            assert(form.getElementById('status').dataset.code==='CGM_SOURCE_UNKNOWN','HIGH placeholder gate missing');
+            const state=snapshot();
+            if(action==='high-settings-save'){
+                for(const [id,value] of [['target','5'],['act','high'],['coeffHigh','1.07']]){
+                    const field=form.getElementById(id);
+                    field.value=value;
+                    field.dispatchEvent(new Event('change',{bubbles:true}));
+                }
+                const toggle=form.getElementById('activityEnabled');
+                toggle.checked=false;
+                toggle.dispatchEvent(new Event('change',{bubbles:true}));
+            }
+            const current=snapshot(), profile=current.profile;
+            assert(profile.highTarget?.valueMmol===5&&profile.highActivity?.selectedLevel==='high'&&
+                profile.highActivity.enabled===false&&profile.highActivity.coefficients.high===1.07,
+                'HIGH preferences missing from GFStorage');
+            assert(profile.activityBaseLevel===state.profile.activityBaseLevel, 'HIGH reset global activity');
+            assert(form.getElementById('target').value==='5'&&!form.getElementById('activityEnabled').checked,
+                'HIGH UI did not reflect its preferences');
+            assert(JSON.stringify(current.events)===JSON.stringify(state.events), 'HIGH settings wrote a medical fact');
+            const disk=JSON.parse(GFNativeStorage.readSnapshot('GFV2SHELL_DATA_v1_demo'));
+            assert(disk.code==='FOUND'&&disk.revision===current.revision&&
+                JSON.parse(disk.data).profile.highActivity.coefficients.high===1.07,'HIGH preferences missing from SQLite');
+            return {status:'PASS',fixture:'SYNTHETIC',step:action,revision:current.revision,sqlite:true};
         } else if (action === 'export') {
             GPApp.open('system');
             assert(by('screen-system').classList.contains('active'), 'System route did not open');

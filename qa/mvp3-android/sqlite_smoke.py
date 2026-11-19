@@ -187,9 +187,8 @@ def run(args):
         if ui:
             ui.injection(confirmed=False)
         else:
-            prompt('Откройте HIGH, затем «Записать выполненный укол». '
-                   'Введите тестовый факт РинФаст 0,5 ЕД, место «Живот». '
-                   'Нажмите сохранить с пустым флажком подтверждения.')
+            prompt('Откройте HIGH, введите тестовый факт РинФаст 0,5 ЕД и место «Живот». '
+                   'Нажмите «Сделал укол» и отмените подтверждение.')
         unconfirmed, unconfirmed_pid = emulator.capture(args.output / '02_unconfirmed', start_if_stopped=args.stock_webview)
         require(unconfirmed == baseline, 'Unconfirmed input changed SQLite')
         outcome['checks'].append({'unconfirmed_injection_no_write': True, 'stopped_pid': unconfirmed_pid})
@@ -198,8 +197,8 @@ def run(args):
         if ui:
             ui.injection(confirmed=True)
         else:
-            prompt('Введите ту же синтетическую запись, явно отметьте подтверждение и сохраните один раз. '
-                   'Проверьте появление записи на экране инъекций.')
+            prompt('Введите ту же синтетическую запись и подтвердите один раз. '
+                   'Проверьте сообщение о сохранении факта в дневнике.')
         committed, committed_pid = emulator.capture(args.output / '03_committed', start_if_stopped=args.stock_webview)
         outcome['checks'].append({'confirmed_injection_sqlite': injection_in(committed), 'stopped_pid': committed_pid})
 

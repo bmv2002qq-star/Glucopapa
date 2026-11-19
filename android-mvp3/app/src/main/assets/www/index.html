@@ -139,6 +139,14 @@
   <section id="screen-injection-sites" class="screen"><div class="section-header"><h2>Места инъекций</h2><p>GFInjectionAnalytics v0.1.1 — сопоставление только достаточно похожих событий по журналу; не время начала действия и не основание для изменения техники или дозы.</p></div>
    <article class="panel"><h3>История и качество данных</h3><div id="siteStats" class="soft">Нет анализа</div><button class="btn secondary" id="runSiteAnalytics">Проанализировать места</button></article>
    <article class="panel"><h3>Отдельные зоны</h3><div id="siteDetails" class="soft">Нет данных</div></article>
+   <details class="panel" id="timingHistoryPanel">
+    <summary>Время укола и еды · история</summary>
+    <label for="timingHistorySession">Завершённый приём пищи</label>
+    <select id="timingHistorySession"></select>
+    <button id="timingHistoryRun" class="btn secondary" type="button" disabled>Сравнить прежние интервалы</button>
+    <p class="hint" id="timingHistorySummary" role="status">Откройте историю для выбора записи.</p>
+    <pre class="gf-evidence-text" id="timingHistoryResult"></pre>
+   </details>
   </section>
   <section id="screen-reports" class="screen"><div class="section-header"><h2>Отчёты и экспорт</h2><p>GFJournal и GFAuditExport читают только одну историю из GFStorage. Никаких повторных записей.</p></div>
    <article class="panel"><div id="reportSummary" class="soft">Нет отчёта</div><div class="actions"><button id="downloadReportTxt" class="btn secondary">Сохранить TXT</button><button id="openPrintReport" class="btn primary">Печать / PDF</button></div><p class="hint">Полная история CGM экспортируется штатной кнопкой JSON в разделе «Ещё». PDF формируется через системную печать браузера, не через отдельную медицинскую базу.</p></article>
@@ -188,18 +196,10 @@
  </article>
 </section>
 <section id="screen-approved-high" class="screen">
- <div class="section-header"><button type="button" class="inline-link" data-screen="home">← На главную</button><h2>Высокий сахар</h2></div>
- <article class="panel" id="localActionsHigh">
-  <p>Здесь можно проверить показания и записать выполненное действие.</p>
-  <button type="button" class="btn primary" data-screen="injections">Записать выполненный укол</button>
-  <button type="button" class="btn secondary" data-screen="home">Активность</button>
- </article>
- <article class="panel"><h3>Показания CGM</h3><p id="observedHigh"></p></article>
- <details class="panel"><summary>Исследовательский профиль COB</summary><div id="w06cStudyHigh">Подготовка исследовательских параметров</div></details>
- <article class="panel gf-calc-evidence" id="calcEvidenceHigh">
-  <details><summary>Расчёт</summary><pre class="gf-calc-trace" data-calc-trace>Снимок данных недоступен.</pre></details>
-  <p class="gf-calc-error" data-calc-summary>Расчёт недоступен</p><ul class="gf-calc-error" data-calc-blockers></ul>
- </article>
+ <div class="section-header"><button type="button" class="inline-link" data-screen="home">← На главную</button></div>
+ <iframe class="approved-frame high-target-frame" id="iframeHighTarget" title="Высокий сахар"
+  sandbox="allow-same-origin" src="integration/approved_routes/GFHighTarget_v0.1.3_VIEW.html"></iframe>
+ <details class="panel"><summary>Подтверждение истории еды</summary><div id="w06cStudyHigh">Подготовка истории</div></details>
 </section>
 
   <section id="screen-modules" class="screen">
@@ -253,6 +253,8 @@
 <script src="modules/Levemir_v0.1.2/levemir_engine.js"></script>
 <script src="modules/CGMChart_v0.2/xdrip_chart.js"></script>
 <script src="modules/GFInjectionAnalytics_v0.1.1/gf_injection_analytics.js"></script>
+<script src="modules/GFInjectionAnalytics_v0.2.1/GFInjectionAnalytics_v0.2.1.js"></script>
+<script src="integration/GFInjectionTimingStorage_v0.1.0.js"></script>
 
 
 <script src="integration/GFInsulinEvidenceGate_v0.1.0.js"></script>
@@ -262,6 +264,8 @@
 <script src="integration/GFAutoCOBProfile_v0.1.0.js"></script>
 <script src="integration/GFMealCoverageStudy_v0.1.1.js"></script>
 <script src="integration/GFMealAbsorption_v0.1.0.js"></script>
+<script src="modules/GFHighTarget_v0.1.4/gfhigh_target_core.js"></script>
+<script src="integration/GFHighTargetStorage_v0.1.1.js"></script>
 <script src="integration/GFHighLowInputGate_v0.1.0.js"></script>
 <script src="integration/GFModuleHub_v0.2.0.js"></script>
 <script src="integration/GFProviderCgm_v0.1.0.js"></script>
@@ -275,6 +279,8 @@
 <script src="app.js"></script>
 <script src="integration/GFModuleUI_v0.2.1.js"></script><script src="integration/GFModuleDirectory_v0.1.0.js"></script><script src="integration/GFSettingsPanel_v0.1.0.js"></script><script src="integration/GFMealActualPanel_v0.1.0.js"></script>
   <script src="integration/GFCOBAutoPanel_v0.2.0.js"></script>
+<script src="integration/GFHighTargetView_v0.1.0.js"></script>
+<script src="integration/GFInjectionTimingPanel_v0.1.0.js"></script>
 <script src="integration/GFResearchBoot_v0.1.0.js"></script>
 <script src="modules/GFAAPSResearch_v0.1.0/core/utils.js"></script>
 <script src="modules/GFAAPSResearch_v0.1.0/core/GFAPSInputGuard.js"></script>

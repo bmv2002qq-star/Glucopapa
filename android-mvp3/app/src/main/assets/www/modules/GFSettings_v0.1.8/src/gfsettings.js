@@ -217,6 +217,9 @@
     }
     function subscribe(callback){if(typeof callback!=='function')fail('Требуется функция');return settingsPort.subscribe(e=>callback(frozen(e)));}
     return Object.freeze({VERSION,getView,getRevision:()=>settingsPort.getRevision(),saveProfile,refreshNutritionReference,addMeasurement,addOrder,addCoefficient,setCoefficientMode,setIllnessFactor,subscribe,
+      setHighSettings:(patch,expectedRevision)=>{
+        revNumber(expectedRevision);return settingsPort.setHighSettings(patch,expectedRevision);
+      },
       setMealAbsorptionModel:(modelId,expectedRevision)=>{
         revNumber(expectedRevision);return settingsPort.setMealAbsorptionModel(modelId,expectedRevision);
       },

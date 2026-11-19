@@ -90,7 +90,7 @@ function getDriver(selectedMode){
   // Desktop/browser preview only.
   return {load(){const v=localStorage.getItem(key);return v?JSON.parse(v):null;},save(s){localStorage.setItem(key,JSON.stringify(s));}};
 }
-function ensureDependencies(){const required=['GFTimeGrid','GFStorage','GFMealController','GFSettings','GFJournal','GFJournalStorageAdapter','GFCgmEvidencePolicy','GFSafetyStorageBridge','GFSafety','GFAuditExportStorageAdapter','GFCoefficients','GFCoefficientReview','GFHighLowReadOnly','GFHighLowInputGate','GFCOBResearch','GFMealAbsorption','GFCalculationEvidence','GFForecastStorageAdapter','GFForecastReadout','GFResearchForecastRun','GFResearchForecastGraph','GFFoodMealEntry','GFProviderCgm','GFJournalBackup','GPModuleHub','LevemirEngine','GPCgmWhiteChart','GFInjectionAnalytics','GFPhysioExerciseContext'];return required.filter(name=>!globalThis[name]);}
+function ensureDependencies(){const required=['GFTimeGrid','GFStorage','GFMealController','GFSettings','GFJournal','GFJournalStorageAdapter','GFCgmEvidencePolicy','GFSafetyStorageBridge','GFSafety','GFAuditExportStorageAdapter','GFCoefficients','GFCoefficientReview','GFHighLowReadOnly','GFHighLowInputGate','GFHighTargetBridge','GFInjectionTimingStorage','GFCOBResearch','GFMealAbsorption','GFCalculationEvidence','GFForecastStorageAdapter','GFForecastReadout','GFResearchForecastRun','GFResearchForecastGraph','GFFoodMealEntry','GFProviderCgm','GFJournalBackup','GPModuleHub','LevemirEngine','GPCgmWhiteChart','GFInjectionAnalytics','GFPhysioExerciseContext'];return required.filter(name=>!globalThis[name]);}
 function boot(selectedMode=mode){
  const missing=ensureDependencies();
  if(missing.length)throw new Error('Отсутствуют модули: '+missing.join(', '));
@@ -227,11 +227,11 @@ function renderCgm(cgm,active,nowMs){
  if(screenId==='cgm')renderChart($('cgmDetailChart'),cgm,nowMs,24);
  if(screenId==='home')renderChart($('cgmChart'),cgm,nowMs,12);
  if(screenId==='approved-nutrition')renderCalculationEvidence('meal',nowMs);
- if(screenId==='approved-low'||screenId==='approved-high'){
-   const low=screenId==='approved-low';
-   $('observed'+(low?'Low':'High')).textContent=statusCgm.value+' · '+statusCgm.text;
-   renderCalculationEvidence(low?'low':'high',nowMs);
+ if(screenId==='approved-low'){
+   $('observedLow').textContent=statusCgm.value+' · '+statusCgm.text;
+   renderCalculationEvidence('low',nowMs);
  }
+ if(screenId==='approved-high')globalThis.GFHighTargetView?.render();
 }
 function refreshClockDisplays(){
  if(!host||document.hidden)return;

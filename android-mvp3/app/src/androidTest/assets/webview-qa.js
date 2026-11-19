@@ -52,7 +52,7 @@
             assert(!by('screen-' + name).querySelector('#calcDose, #calcFood'),
                 'Treatment calculator is exposed');
         }
-        for (const [route, suffix] of [['approved-low', 'Low'], ['approved-high', 'High'], ['approved-nutrition', 'Meal']]) {
+        for (const [route, suffix] of [['approved-low', 'Low'], ['approved-nutrition', 'Meal']]) {
             await stage(route);
             const panel = by('calcEvidence' + suffix);
             assert(panel.querySelector('summary').textContent === 'Расчёт', 'Calculation disclosure missing ' + route);
@@ -63,6 +63,23 @@
             assert(panel.querySelector('[data-calc-trace]').textContent.includes('ревизия ' + baseline.revision),
                 'Calculation diagnostics did not bind to snapshot revision');
         }
+        await stage('approved-high');
+        const high=await until(()=>{
+            const node=by('iframeHighTarget').contentDocument?.getElementById('status');
+            return node?.dataset.code?node:null;
+        },'Approved HIGH frame failed to load');
+        assert(high.dataset.code==='CGM_SOURCE_UNKNOWN', 'HIGH missing-input gate did not run');
+        const doc=high.ownerDocument;
+        assert(doc.getElementById('dose').textContent==='— ЕД', 'HIGH reported an unsupported dose');
+        assert(doc.getElementById('details').textContent.includes('"revision": '+baseline.revision),
+            'HIGH diagnostics did not bind to the current revision');
+        await stage('injection-sites');
+        by('timingHistoryPanel').open=true;
+        GFInjectionTimingPanel.refresh();
+        assert(typeof GFInjectionAnalytics.analyze==='function'||GFInjectionAnalytics.VERSION.startsWith('0.1.1'),
+            'Site analyzer was replaced');
+        assert(GFInjectionAnalyticsV2.VERSION==='0.2.1-history-only'&&by('timingHistoryRun').disabled,
+            'Historical candidate did not safely start without verified history');
         assert(snapshot().revision === baseline.revision, 'Navigation wrote to GFStorage');
 
         const plate = await until(() => by('iframeApprovedNutrition').contentDocument?.getElementById('catalogSearch'),
