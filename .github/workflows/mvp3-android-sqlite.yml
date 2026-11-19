@@ -7,6 +7,7 @@ on:
       - qa/mvp3-prototype-integration
       - qa/mvp3-calculators-20261119
       - qa/mvp3-cl039-cl040-20261119
+      - qa/mvp3-cl041-20261119
 
 permissions:
   contents: read

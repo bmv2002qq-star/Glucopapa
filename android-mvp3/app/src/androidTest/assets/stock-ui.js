@@ -56,6 +56,23 @@
             } else {
                 assert(state.revision === revision && !state.events.length, 'Unconfirmed action modified GFStorage');
             }
+        } else if (action.startsWith('ai-export:')) {
+            const [, period, outcome] = action.split(':');
+            const before = JSON.stringify(snapshot());
+            GPApp.open('system');
+            assert(!by('aiExportControls').hidden, 'Native JSONL controls unavailable');
+            by('aiExportPeriod').value = period;
+            assert(by('aiExportPeriod').value === period, 'Requested export period unavailable');
+            click('saveAiExport');
+            assert(by('saveAiExport').disabled, 'Export request did not enter pending state');
+            const deadline = Date.now() + 65_000;
+            while (by('saveAiExport').disabled && Date.now() < deadline) {
+                await new Promise(resolve => setTimeout(resolve, 150));
+            }
+            const message = by('aiExportStatus').textContent;
+            assert(message === (outcome === 'cancel' ? 'Выгрузка отменена' : 'Выгрузка сохранена'), message);
+            assert(JSON.stringify(snapshot()) === before, 'Export changed GFStorage');
+            return {status: 'PASS', fixture: 'SYNTHETIC', step: action, revision: snapshot().revision, outcome};
         } else if (action === 'export') {
             GPApp.open('system');
             assert(by('screen-system').classList.contains('active'), 'System route did not open');

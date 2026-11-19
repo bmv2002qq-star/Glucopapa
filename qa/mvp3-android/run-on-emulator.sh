@@ -55,6 +55,9 @@ python3 qa/mvp3-android/sqlite_smoke.py "${smoke_options[@]}" --adb "$adb" --ser
 
 test "$("$adb" -s "$serial" shell getprop ro.build.version.sdk | tr -d '\r')" = "$api"
 bash qa/mvp3-android/run-native-stress.sh "$adb" "$serial" "$evidence"
+if [[ ${ANDROID_QA_EXTENDED:-false} == true && $api == 35 ]]; then
+    python3 qa/mvp3-android/ai_export_saf.py "$adb" "$serial" "$evidence" 2>&1 | tee "$evidence/ai-saf.log"
+fi
 if [[ ${ANDROID_QA_EXTENDED:-false} == true && $api != 31 ]]; then
     python3 qa/mvp3-android/gui_sizing.py "$adb" "$serial" "$evidence" 2>&1 | tee "$evidence/android-gui.log"
 fi
