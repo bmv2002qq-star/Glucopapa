@@ -74,16 +74,18 @@ test('PRED-05: two pinned engines share one immutable edition and later data lea
     assert.equal(JSON.stringify(open().connect('research').getSnapshot().forecasts),bytes);
 });
 
-test('engine isolation: preserve true sample time, other series survives', async () => {
+test('delayed source timestamps survive aligning both curves without relabeling observations', async () => {
     const {host,options}=prepare({delayed:true});
     const result=await Run.run(options);
     assert.equal(result.status,'ARCHIVED');
-    assert.equal(result.engines.find(row=>row.modelId==='GFAPSEnhancer').code,'HORIZON_ANCHOR_MISMATCH');
-    const [row]=host.connect('research').getSnapshot().forecasts;
-    assert.equal(row.payload.modelId,'GFForecast');
-    assert.equal(row.payload.sourceTime,iso(at-minute));
-    assert.equal(row.payload.points[0].at,iso(at));
-    assert.equal(host.exportState().forecasts.length,1);
+    assert.equal(result.engines.find(row=>row.modelId==='GFAPSEnhancer').status,'EXPERIMENTAL');
+    const [gff,aaps]=host.connect('research').getSnapshot().forecasts.map(row=>row.payload);
+    assert.equal(gff.modelId,'GFForecast');
+    assert.equal(gff.sourceTime,iso(at-minute));
+    assert.equal(gff.points[0].at,iso(at));
+    assert.deepEqual(aaps.timeAlignment,{originalOrigin:iso(at-minute),method:'linear-on-measured-grid-v1'});
+    assert.equal(aaps.sourceReceivedAt,gff.sourceReceivedAt);
+    assert.deepEqual(aaps.points,gff.points.map(({horizonMin,at,glucoseMmol})=>({horizonMin,at,glucoseMmol,lower:null,upper:null})));
 });
 
 test('front door refuses future receipt, concurrent revision and failed durable commit', async () => {

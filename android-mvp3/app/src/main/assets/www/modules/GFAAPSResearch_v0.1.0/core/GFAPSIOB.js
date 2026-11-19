@@ -20,7 +20,18 @@ function at(injections,time,params){U.assert(Array.isArray(injections),'Нет �
   for(const e of injections){U.assert(e.status==='actual','Нельзя учитывать плановый укол');
     if(e.type==='basal'){ignoredBasal++;continue;}
     U.assert(e.type==='rapid','Неизвестный тип инсулина');
-    const k=single(e.units,(n-U.ts(e.ts))/U.MIN,params.diaMinutes,params.peakMinutes);iobU+=k.iobU;activityUPerMin+=k.activityUPerMin;
+    const age=(n-U.ts(e.ts))/U.MIN;
+    if(params.rapidCurve){
+      U.requireFinite(e.units,'units',0,100);
+      if(age<0||e.units===0)continue;
+      const curve=params.rapidCurve(age);
+      iobU+=e.units*curve.remainingFraction;
+      activityUPerMin+=e.units*curve.activityFractionPerMinute;
+    }else{
+      const k=single(e.units,age,params.diaMinutes,params.peakMinutes);
+      iobU+=k.iobU;
+      activityUPerMin+=k.activityUPerMin;
+    }
   }return {iobU:U.round(iobU,5),activityUPerMin:U.round(activityUPerMin,8),ignoredBasal};
 }
 return {single,at};

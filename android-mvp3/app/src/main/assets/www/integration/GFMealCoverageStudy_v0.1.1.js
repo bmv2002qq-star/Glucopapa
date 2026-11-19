@@ -36,17 +36,19 @@ function inspect({host,nowMs=Date.now(),acknowledgement=null,kineticsByMealId=nu
    inside.push({id:meal.id,startedAt:meal.startedAt,completedAt:meal.completedAt,carbsRecordedG:plate.totals.carbs});
   }
   if(research.getRevision()!==rev)return report('BLOCKED','REVISION_CHANGED',rev);
-  if(!inside.length)return report('BLOCKED','NO_CONFIRMED_MEALS_IN_WINDOW',rev,{mealRows:inside});
   const base={mealIds:inside.map(x=>x.id),mealRows:inside,sourceRevision:rev};
   const ack=acknowledgement;
   if(!ack||ack.source!=='user_declared'||ack.scope!=='all_meals'||ack.confirmedComplete!==true||ack.sourceRevision!==rev||!Number.isFinite(goodTime(ack.declaredAtIso))||goodTime(ack.declaredAtIso)>nowMs||nowMs-goodTime(ack.declaredAtIso)>MAX_ACK_AGE_MS||goodTime(ack.startIso)>cutoff||goodTime(ack.endIso)<nowMs||!Number.isFinite(goodTime(ack.startIso))||!Number.isFinite(goodTime(ack.endIso)))
-   return report('UNKNOWN','NEEDS_FRESH_USER_ATTESTATION',rev,base);
-  const acknowledged={...base,coverageLabel:'PARENT_DECLARED_UNVERIFIED',attestationVerified:false};
+   return report('UNKNOWN',inside.length?'NEEDS_FRESH_USER_ATTESTATION':'NO_CONFIRMED_MEALS_IN_WINDOW',rev,base);
+  const declared={source:'user_declared',confirmedComplete:true,startIso:ack.startIso,endIso:ack.endIso,declaredAtIso:ack.declaredAtIso};
+  const acknowledged={...base,coverageLabel:'PARENT_DECLARED_UNVERIFIED',attestationVerified:false,historyDeclaration:declared};
+  if(!inside.length)return report('RESEARCH_READY','PARENT_ATTESTED_EMPTY_WINDOW',rev,{
+   ...acknowledged,eligible:true,researchOptions:{historyDeclaration:declared,kineticsByMealId:{}}
+  });
   if(!kineticsByMealId||typeof kineticsByMealId!=='object'||Array.isArray(kineticsByMealId))return report('UNKNOWN','RESEARCH_PARAMETERS_REQUIRED',rev,acknowledged);
   for(const meal of inside){const p=kineticsByMealId[meal.id];if(!p||!['explicit_research_scenario','plate_auto_research_preset_v1'].includes(p.origin)||!num(p.lagMinutes)||p.lagMinutes<0||p.lagMinutes>120||!num(p.fastDurationMinutes)||p.fastDurationMinutes<15||p.fastDurationMinutes>720||!num(p.slowDurationMinutes)||p.slowDurationMinutes<p.fastDurationMinutes||p.slowDurationMinutes>720)return report('UNKNOWN','RESEARCH_PARAMETERS_REQUIRED',rev,acknowledged)}
   if(research.getRevision()!==rev)return report('BLOCKED','REVISION_CHANGED',rev);
-  const declared={source:'user_declared',confirmedComplete:true,startIso:ack.startIso,endIso:ack.endIso,declaredAtIso:ack.declaredAtIso};
-  const options={historyDeclaration:declared,foodHistoryDeclaration:declared,kineticsByMealId:Object.fromEntries(inside.map(m=>[m.id,{...kineticsByMealId[m.id]}]))};
+  const options={historyDeclaration:declared,kineticsByMealId:Object.fromEntries(inside.map(m=>[m.id,{...kineticsByMealId[m.id]}]))};
   return report('RESEARCH_READY','PARENT_ATTESTED_AND_SCENARIO_ENTERED',rev,{...acknowledged,eligible:true,researchOptions:options});
  }catch(e){return report('BLOCKED','READ_FAILED',null,{errorCode:String(e?.code||'CONTRACT')})}
 }

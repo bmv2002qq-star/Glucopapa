@@ -9,6 +9,7 @@
   const MMM = value => typeof value === 'number' && Number.isFinite(value) && value >= 1.5 && value <= 40;
   const ts = value => typeof value === 'string' && /(?:Z|[+-]\d\d:\d\d)$/.test(value)
     ? Date.parse(value) : Number.isSafeInteger(value) ? value : NaN;
+  const cohort = model=>model ? model.id+'@'+model.version : null;
   const mean = xs => xs.reduce((total, x) => total + x, 0) / xs.length;
 
   function subtractMonths(end) {
@@ -97,15 +98,15 @@
     return {...base, status:ahead?'LEADER':'TIE', leader:ahead?first:null, reason:ahead?null:'MARGIN_NOT_REPRODUCED'};
   }
 
-  function evaluate({issued, actual, asOf}) {
+  function evaluate({issued,actual,asOf,mealModel}) {
     const end = ts(asOf);
     if (!Number.isFinite(end) || !Array.isArray(issued) || !Array.isArray(actual)) throw Error('CONSENSUS_INPUT');
     const start = subtractMonths(end), grouped = new Map();
     let rejected = 0;
     for (const row of issued) {
       if (!validForecast(row,end)) { rejected++; continue; }
-      if (ts(row.forecastAt) < start) continue;
-      const key = JSON.stringify([ts(row.forecastAt),ts(row.sourceTime),row.sourceId,row.sourceRevision,row.inputDigest]);
+      if (ts(row.forecastAt)<start || (mealModel!==undefined && cohort(row.mealModel)!==cohort(mealModel))) continue;
+      const key = JSON.stringify([ts(row.forecastAt),ts(row.sourceTime),row.sourceId,row.sourceRevision,row.inputDigest,cohort(row.mealModel)]);
       if (!grouped.has(key)) grouped.set(key,{origin:ts(row.forecastAt),sourceId:row.sourceId,byModel:new Map(),conflict:false});
       const group = grouped.get(key), prior = group.byModel.get(row.modelId);
       if (prior && JSON.stringify(prior)!==JSON.stringify(row)) group.conflict = true;
@@ -115,7 +116,9 @@
       .sort((a,b) => a.origin-b.origin);
     const latestGroup = complete.at(-1);
     const trainedVersions = Object.fromEntries(MODELS.map(id => [id,latestGroup?.byModel.get(id)?.modelVersion??null]));
-    const all = complete.filter(group => MODELS.every(id=>group.byModel.get(id).modelVersion===trainedVersions[id]));
+    const trainedMealModel = cohort(latestGroup?.byModel.get(MODELS[0]).mealModel);
+    const all = complete.filter(group => MODELS.every(id=>group.byModel.get(id).modelVersion===trainedVersions[id] &&
+      cohort(group.byModel.get(id).mealModel)===trainedMealModel));
     const facts = indexFacts(actual,end);
     const results = HORIZONS.map(horizon => {
       const rows = [], paired = new Set();
@@ -138,7 +141,7 @@
     const status = winners.has(null) ? results.some(row => row.status === 'TIE') ? 'TIE' : 'NO_LEADER' :
       winners.size === 1 ? 'LEADER' : 'COMPOSITE';
     return {version:VERSION,status,leader:status==='LEADER'?[...winners][0]:null,asOf:end,windowStart:start,
-      windowZone:'UTC',trainedVersions,rejected,matchedIssueGroups:all.length,results,therapeuticUse:false};
+      windowZone:'UTC',trainedVersions,trainedMealModel,rejected,matchedIssueGroups:all.length,results,therapeuticUse:false};
   }
 
   const blend = (a,b,t) => a+(b-a)*t*t*(3-2*t);
@@ -149,7 +152,8 @@
     const origin = ts(first.forecastAt);
     if (review.asOf>origin || forecasts.some(f=>!f) || new Set(forecasts.map(f=>f.modelId)).size!==3 ||
         forecasts.some(f=>!validForecast(f,origin) || f.modelVersion!==review.trainedVersions[f.modelId] || ts(f.forecastAt)!==origin || ts(f.sourceTime)!==ts(first.sourceTime) ||
-          f.sourceRevision!==first.sourceRevision || f.sourceId!==first.sourceId || f.inputDigest!==first.inputDigest)) return null;
+          f.sourceRevision!==first.sourceRevision || f.sourceId!==first.sourceId || f.inputDigest!==first.inputDigest ||
+          cohort(f.mealModel)!==(review.trainedMealModel??null))) return null;
     const anchorWeights = review.results.map(row => {
       const values = MODELS.map(id=>1/(0.05+row.metrics[id].mae)**2);
       const total = values.reduce((sum,x)=>sum+x,0);

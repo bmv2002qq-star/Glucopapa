@@ -1,10 +1,12 @@
 /* Explicit, read-only model run from a single GFStorage revision. No treatment output. */
 (function (root) {
   'use strict';
+  const absorption = typeof module === 'object' && module.exports
+    ? require('./GFMealAbsorption_v0.1.0.js') : root.GFMealAbsorption;
   const HOUR = 3_600_000;
   const stopped = (code, reason) => ({status: 'UNAVAILABLE', code, reason, points: []});
 
-  function prepare({host, safetyVerdict, foodHistoryDeclaration, mealCoverageRevision, nowMs = Date.now(), mode}) {
+  function prepare({host,safetyVerdict,foodHistoryDeclaration,mealCoverageRevision,kineticsByMealId,nowMs = Date.now(),mode}) {
     if (mode !== 'local') return stopped('TEST_JOURNAL', 'Тестовый журнал проверяется в изолированном стенде.');
     const trusted = root.GFForecastStorageAdapter.trustedReadings(host, {safetyVerdict});
     if (!trusted.available) return stopped(trusted.code, 'Требуются свежие показания с известным качеством и проверка GFSafety.');
@@ -19,12 +21,20 @@
         !(Date.parse(coverage.startIso) <= nowMs - 48 * HOUR && Date.parse(coverage.endIso) >= nowMs)) {
       return stopped('INJECTION_COVERAGE', 'Требуется подтверждённая история инъекций за 48 часов.');
     }
-    const mealCoverage = foodHistoryDeclaration;
-    if (!mealCoverage || mealCoverage.source !== 'user_declared' || mealCoverage.confirmedComplete !== true ||
-        mealCoverageRevision !== snapshot.revision ||
-        !(Date.parse(mealCoverage.startIso) <= nowMs - 12 * HOUR && Date.parse(mealCoverage.endIso) >= nowMs &&
-          Date.parse(mealCoverage.declaredAtIso) <= nowMs && Date.parse(mealCoverage.declaredAtIso) >= nowMs - 15 * 60_000)) {
-      return stopped('MEAL_COVERAGE', 'Для этой ревизии нужна подтверждённая история фактической еды.');
+    const food = absorption.inspect({host,snapshot,nowMs,
+      options:{historyDeclaration:foodHistoryDeclaration,mealCoverageRevision,kineticsByMealId}});
+    if (!food.historyDeclaration) {
+      const code = food.code === 'REVISION_CHANGED' ? food.code : 'MEAL_COVERAGE';
+      return {...stopped(code,'Для этой ревизии нужна подтверждённая история фактической еды.'),foodCode:food.code};
+    }
+    if (!food.forecastReady) {
+      const code = food.forecastCode ?? food.code;
+      const reasons = {
+        SMOOTH_PROFILE_MISSING:'Для плавной модели не определён параметр усвоения из состава блюда.',
+        LINEAR_INTERVAL_NO_POINT_MODEL:'Выбранная линейная модель даёт диапазон. Точечный вклад в прогноз не определён.',
+        RESEARCH_PARAMETERS_REQUIRED:'Для линейной модели не хватает параметров записанного блюда.'
+      };
+      return {...stopped(code,reasons[code] ?? 'Вклад записанной еды не определён.'),mealModel:food.model};
     }
     const nowIso = new Date(nowMs).toISOString();
     const timeline = root.GFSettings.coefficientTimeline(snapshot.coefficients, nowIso, snapshot.profile.timeZone);
@@ -40,13 +50,6 @@
       coefficients.push({kind, id: rows[0].id, value: rows[0].value, source: rows[0].source});
     }
     const at = date => Date.parse(date);
-    const started = snapshot.mealSessions.filter(m => at(m.startedAt) >= nowMs - 12 * HOUR);
-    if (started.some(m => m.status !== 'completed' || at(m.startedAt) > nowMs ||
-        !Number.isFinite(at(m.completedAt)) || at(m.completedAt) > nowMs || !m.actualPlate ||
-        m.actualPlate.containsEstimatedValues || m.actualPlate.items.some(x => x.amount == null) ||
-        !Number.isFinite(m.actualPlate.totals?.carbs))) {
-      return stopped('ACTUAL_PLATE_INCOMPLETE', 'В окне расчёта есть еда с неполным фактическим составом или временем.');
-    }
     const active = kind => snapshot.conditionPeriods.some(p => p.kind === kind && at(p.start) <= nowMs &&
       (p.end === null || at(p.end) > nowMs));
     const readings = trusted.readings.filter(r => at(r.measuredAt) >= nowMs - HOUR &&
@@ -54,14 +57,23 @@
     if (!readings.length || readings.length !== trusted.readings.filter(r => at(r.measuredAt) >= nowMs - HOUR).length) {
       return stopped('SOURCE_TIME_UNAVAILABLE', 'Измерение или его получение позже времени расчёта.');
     }
-    const input = {nowIso, readings,
-      injections: snapshot.events.filter(e => e.type === 'insulin_injection' && e.status === 'confirmed' &&
-        at(e.administeredAt) >= nowMs - 48 * HOUR),
-      meals: started.map(m => ({id: m.id, status: 'confirmed', eatenAt: m.startedAt, carbsG: m.actualPlate.totals.carbs})),
+    const injections = snapshot.events.filter(e=>e.type==='insulin_injection'&&e.status==='confirmed'&&
+      at(e.administeredAt)>=nowMs-48*HOUR);
+    if (injections.some(e=>at(e.administeredAt)>nowMs))
+      return stopped('INJECTION_TIME_UNAVAILABLE','Подтверждённая инъекция находится в будущем относительно расчёта.');
+    const engine = root.RinfastEngine;
+    const profile = snapshot.models?.rinfast?.profile;
+    if (!profile || profile.modelVersion!==engine?.ENGINE_VERSION)
+      return stopped('RINFAST_PROFILE_UNKNOWN','Версия профиля РинФаста не определена.');
+    engine.validateProfile(profile);
+    const input = {nowIso,readings,injections,
+      // The selected model established zero modeled carbs. Do not reinsert meals into another model.
+      meals: [],
       settings, conditions: {illness: active('illness'), activity: active('sport') || active('activity')},
-      sourceIsComplete: true, rinfastEngine: root.RinfastEngine};
+      sourceIsComplete:true,rinfastEngine:{ENGINE_VERSION:engine.ENGINE_VERSION,DEFAULT_PROFILE:profile,
+        getCurve:age=>engine.getCurve(age,profile)}};
     return research.getRevision() === snapshot.revision
-      ? {status:'READY', input, snapshot, coefficients, foodHistoryDeclaration}
+      ? {status:'READY',input,snapshot,coefficients,foodHistoryDeclaration:food.historyDeclaration,mealModel:food.model}
       : stopped('REVISION_CHANGED', 'История изменилась во время подготовки.');
   }
 
@@ -70,7 +82,7 @@
     if (state.status !== 'READY') return state;
     const result = root.GFForecast.predict(state.input);
     return options.host.connect('research').getRevision() === state.snapshot.revision
-      ? {...result, sourceRevision:state.snapshot.revision, coefficients:state.coefficients}
+      ? {...result,sourceRevision:state.snapshot.revision,coefficients:state.coefficients,mealModel:state.mealModel}
       : stopped('REVISION_CHANGED', 'История изменилась во время вычисления.');
   }
 

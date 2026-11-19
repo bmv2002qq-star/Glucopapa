@@ -6,12 +6,12 @@
   const SVG = 'http://www.w3.org/2000/svg';
   const MAX_AGE = 12*60_000;
   const safePoint = p => Number.isFinite(Date.parse(p?.at)) && Number.isFinite(p?.glucoseMmol);
-  const key = f => JSON.stringify([f.forecastAt,f.sourceTime,f.snapshot.sensorSourceId,f.sourceRevision,f.inputDigest]);
+  const key = f => JSON.stringify([f.forecastAt,f.sourceTime,f.snapshot.sensorSourceId,f.sourceRevision,f.inputDigest,f.mealModel?.id??null,f.mealModel?.version??null]);
   const input = r => ({...r,sourceId:r.snapshot.sensorSourceId});
 
-  function select({forecasts,cgm,sourceId,sourceTime,nowMs,preferences}) {
+  function select({forecasts,cgm,sourceId,sourceTime,nowMs,preferences,minimumSourceRevision=0}) {
     const eligible = forecasts.map(x=>x.payload).filter(f=> f.contract==='glucopapa.research-forecast/2' &&
-      IDS.includes(f.modelId) && f.snapshot.sensorSourceId===sourceId && Date.parse(f.sourceTime)===sourceTime &&
+      IDS.includes(f.modelId) && f.sourceRevision>=minimumSourceRevision && f.snapshot.sensorSourceId===sourceId && Date.parse(f.sourceTime)===sourceTime &&
       Date.parse(f.forecastAt)<=nowMs && nowMs-Date.parse(f.forecastAt)<=MAX_AGE &&
       f.points.length===25 && f.points.every(safePoint));
     eligible.sort((a,b)=>Date.parse(b.forecastAt)-Date.parse(a.forecastAt)||b.sourceRevision-a.sourceRevision);
@@ -28,7 +28,7 @@
     const review=root.GFConsensusReview.evaluate({
       issued:forecasts.map(x=>x.payload)
         .filter(f=>f.contract==='glucopapa.research-forecast/2').map(input),
-      actual:cgm.map(r=>({...r,sourceId:r.sourceDeviceId})),asOf,
+      actual:cgm.map(r=>({...r,sourceId:r.sourceDeviceId})),asOf,mealModel:latest.mealModel??null,
     });
     if (review.status==='COMPOSITE') {
       const curve=root.GFConsensusReview.compose(review,grouped.map(input));

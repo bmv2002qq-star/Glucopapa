@@ -34,6 +34,7 @@ integration/GFGraphEvidenceBridge_v0.1.0.js
 integration/GFCOBResearch_v0.1.1.js
 integration/GFAutoCOBProfile_v0.1.0.js
 integration/GFMealCoverageStudy_v0.1.1.js
+integration/GFMealAbsorption_v0.1.0.js
 integration/GFHighLowInputGate_v0.1.0.js
 integration/GFModuleHub_v0.2.0.js
 integration/GFProviderCgm_v0.1.0.js

@@ -166,6 +166,8 @@
 <div class="gf-context-grid"><label>УК · режим<select id="gfCarbMode"><option value="manual">Вручную</option><option value="auto">Авто (исследование; без применения)</option></select></label>
 <label>ФЧИ · режим<select id="gfIsfMode"><option value="manual">Вручную</option><option value="auto">Авто (исследование; без применения)</option></select></label></div>
 <button id="gfModeSave" class="btn secondary" type="button">Сохранить режимы</button>
+<label>Модель усвоения еды<select id="gfMealAbsorptionModel"><option value="GFForecast">GFForecast · плавная</option><option value="GFCOB">GFCOB · линейная</option></select></label>
+<button id="gfMealAbsorptionSave" class="btn secondary" type="button">Сохранить модель усвоения</button>
 <div class="gf-context-grid gf-illness-context"><label>Коэффициент болезни, введённый пользователем<input id="gfIllnessFactor" type="number" min="0.1" max="10" step="0.01" placeholder="Не задан"/></label><div><p class="hint" id="gfIllnessState">Состояние болезни не прочитано</p><p class="hint">При выключении эффективное значение 1,00. Введённый коэффициент и период сохраняются в истории.</p></div></div>
 <div class="actions"><button id="gfIllnessFactorSave" class="btn secondary" type="button">Сохранить коэффициент</button><button id="gfIllnessStart" class="btn secondary" type="button">Начало болезни</button><button id="gfIllnessFinish" class="btn secondary" type="button">Болезнь закончилась</button><button id="gfContextRefresh" class="btn secondary" type="button">Обновить</button></div>
 <p class="hint" id="gfResearchRev"></p><p id="gfContextMessage" class="gf-context-message" aria-live="polite"></p>
@@ -259,6 +261,7 @@
 <script src="integration/GFCOBResearch_v0.1.1.js"></script>
 <script src="integration/GFAutoCOBProfile_v0.1.0.js"></script>
 <script src="integration/GFMealCoverageStudy_v0.1.1.js"></script>
+<script src="integration/GFMealAbsorption_v0.1.0.js"></script>
 <script src="integration/GFHighLowInputGate_v0.1.0.js"></script>
 <script src="integration/GFModuleHub_v0.2.0.js"></script>
 <script src="integration/GFProviderCgm_v0.1.0.js"></script>

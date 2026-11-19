@@ -1,10 +1,10 @@
 /* Research only. Captures independent engines and commits a single revisioned archive packet. */
 (function (root) {
   'use strict';
-  const VERSION = '0.1.0';
+  const VERSION = '0.1.1';
   const CONTRACT = 'glucopapa.research-forecast/2';
   const IDS = Object.freeze(['GFForecast', 'GFAPSEnhancer', 'GFxDrip']);
-  const STEP = 300_000;
+  const STEP = 300_000, FORECAST_STEPS = 24;
 
   function canonical(value) {
     if (Array.isArray(value)) return value.map(canonical);
@@ -48,38 +48,50 @@
       sourceReceivedAt: new Date(Date.parse(last.receivedAt)).toISOString(),
       sourceId:last.sourceId, readings, injections, meals, settings, conditions, sourceIsComplete:true,
       timezone:research.profile.timeZone, coefficients:state.coefficients,
-      mealCoverage:state.foodHistoryDeclaration,
+      mealCoverage:state.foodHistoryDeclaration,mealModel:state.mealModel,
       rapidProfile:research.models?.rinfast?.profile ?? null, aapsSnapshot: virtualPort,
     }));
   }
 
-  function gff(frame) {
+  function gff(frame,rapid) {
     const {forecastAt:nowIso, readings, injections, meals, settings, conditions, sourceIsComplete} = frame;
     const run = root.GFForecast.predict({
-      nowIso,readings,injections,meals,settings,conditions,sourceIsComplete,rinfastEngine:root.RinfastEngine,
+      nowIso,readings,injections,meals,settings,conditions,sourceIsComplete,rinfastEngine:rapid,
     });
     if (run.status !== 'EXPERIMENTAL') return {code:run.code ?? 'ENGINE_REFUSED', details:run.reason ?? null};
     return {version:run.version,points:run.points,uncertainty:run.uncertainty ?? null,
       flags:run.snapshot.flags,summary:run.snapshot};
   }
 
-  function aaps(frame) {
+  function aaps(frame,rapid) {
     if (!root.GFAPSResearch || !root.GFAPSEnhancer) return {code:'ENGINE_UNAVAILABLE'};
-    const profile = frame.rapidProfile;
+    const profile = rapid.DEFAULT_PROFILE;
     const input = root.GFAPSResearch.adapter.fromGFStorage({getSnapshot:()=>frame.aapsSnapshot},{
       nowTs:Date.parse(frame.forecastAt),
       parameters:{
         isfMmolPerU:frame.settings.isfMmolPerUnit,crGPerU:frame.settings.carbRatioGPerUnit,
-        diaMinutes:profile?.diaMinutes??null,peakMinutes:profile?.peakMinutes??null,
+        diaMinutes:profile.diaMinutes,peakMinutes:profile.peakMinutes,rapidCurve:rapid.getCurve,
       },historyHours:7,
     });
-    // This model's branch begins at the measured sample. Its output is rejected if that
-    // grid differs from the issue grid. Relabelling the times would misstate the horizon.
-    const result = root.GFAPSResearch.forecast.predict(input,{horizonMinutes:120,stepMinutes:5});
+    const measuredAt = Date.parse(frame.sourceTime);
+    const issueAt = Date.parse(frame.forecastAt);
+    const offset = (issueAt-measuredAt)/STEP;
+    if (offset<0 || offset>3 || input.cgm.at(-1)?.ts!==measuredAt) return {code:'HORIZON_ANCHOR_MISMATCH'};
+    const sampleCount = FORECAST_STEPS+Math.ceil(offset);
+    const result = root.GFAPSResearch.forecast.predict(input,{horizonMinutes:sampleCount*5,stepMinutes:5});
     if (!result.ok) return {code:'ENGINE_REFUSED', details:result.errors?.join(' · ') ?? null};
-    return {version:root.GFAPSEnhancer.VERSION, uncertainty:null,
-      flags:[...(frame.conditions.activity?['activity_unmodeled']:[]),...(frame.conditions.illness?['illness_unmodeled']:[])],
-      points:result.points.map(p=>({horizonMin:p.minute,at:new Date(p.ts).toISOString(),glucoseMmol:p.COB}))};
+    if (result.points.length!==sampleCount+1 ||
+        !result.points.every((p,i)=>p.ts===measuredAt+i*STEP&&Number.isFinite(p.COB))) return {code:'HORIZON_ANCHOR_MISMATCH'};
+
+    const whole = Math.floor(offset), fraction = offset-whole;
+    const points = Array.from({length:FORECAST_STEPS+1},(_,i)=>{
+      const left = result.points[whole+i].COB;
+      const value = fraction===0 ? left : left+fraction*(result.points[whole+i+1].COB-left);
+      return {horizonMin:i*5,at:new Date(issueAt+i*STEP).toISOString(),glucoseMmol:value};
+    });
+    return {version:root.GFAPSEnhancer.VERSION,uncertainty:null,points,
+      timeAlignment:{originalOrigin:frame.sourceTime,method:offset===0?'direct':'linear-on-measured-grid-v1'},
+      flags:[...(frame.conditions.activity?['activity_unmodeled']:[]),...(frame.conditions.illness?['illness_unmodeled']:[])]};
   }
 
   function prepareRow(frame, modelId, result, inputDigest) {
@@ -104,6 +116,7 @@
       contract:CONTRACT,modelId,modelVersion:result.version,version,mode:'RESEARCH_FORECAST',
       status:'EXPERIMENTAL',forecastAt:frame.forecastAt,sourceTime:frame.sourceTime,
       sourceReceivedAt:frame.sourceReceivedAt,sourceRevision:frame.sourceRevision,inputDigest,
+      mealModel:frame.mealModel,...(result.timeAlignment?{timeAlignment:result.timeAlignment}:{}),
       snapshot:{sensorSourceId:frame.sourceId,flags:result.flags??[]},
       clinicalUse:false,modelValidated:false,horizonMinutes:120,stepMinutes:5,
       uncertainty:result.uncertainty??null,points,
@@ -126,7 +139,7 @@
     const engines = [unavailable];
     for (const [modelId, engine] of [[IDS[0],gff],[IDS[1],aaps]]) {
       try {
-        const result = engine(frame);
+        const result = engine(frame,capture.input.rinfastEngine);
         const prepared = result.code ? result : prepareRow(frame,modelId,result,inputDigest);
         if (prepared.row) {
           rows.push(prepared.row);
@@ -146,7 +159,7 @@
       const receipt = writer.appendResearchEvents({schema:'gfforecast.research-events/1',
         writerRequired:true,forecasts:rows,assessments:[]},frame.sourceRevision);
       return {status:'ARCHIVED',sourceRevision:frame.sourceRevision,archiveRevision:receipt.revision,
-        inputDigest,coefficients:capture.coefficients,engines};
+        inputDigest,mealModel:frame.mealModel,coefficients:capture.coefficients,engines};
     } catch {
       return {status:'UNAVAILABLE',code:'FORECAST_ARCHIVE_FAILED',sourceRevision:frame.sourceRevision,engines:[unavailable]};
     }

@@ -90,7 +90,7 @@ function getDriver(selectedMode){
   // Desktop/browser preview only.
   return {load(){const v=localStorage.getItem(key);return v?JSON.parse(v):null;},save(s){localStorage.setItem(key,JSON.stringify(s));}};
 }
-function ensureDependencies(){const required=['GFTimeGrid','GFStorage','GFMealController','GFSettings','GFJournal','GFJournalStorageAdapter','GFCgmEvidencePolicy','GFSafetyStorageBridge','GFSafety','GFAuditExportStorageAdapter','GFCoefficients','GFCoefficientReview','GFHighLowReadOnly','GFHighLowInputGate','GFCOBResearch','GFCalculationEvidence','GFForecastStorageAdapter','GFForecastReadout','GFResearchForecastRun','GFResearchForecastGraph','GFFoodMealEntry','GFProviderCgm','GFJournalBackup','GPModuleHub','LevemirEngine','GPCgmWhiteChart','GFInjectionAnalytics','GFPhysioExerciseContext'];return required.filter(name=>!globalThis[name]);}
+function ensureDependencies(){const required=['GFTimeGrid','GFStorage','GFMealController','GFSettings','GFJournal','GFJournalStorageAdapter','GFCgmEvidencePolicy','GFSafetyStorageBridge','GFSafety','GFAuditExportStorageAdapter','GFCoefficients','GFCoefficientReview','GFHighLowReadOnly','GFHighLowInputGate','GFCOBResearch','GFMealAbsorption','GFCalculationEvidence','GFForecastStorageAdapter','GFForecastReadout','GFResearchForecastRun','GFResearchForecastGraph','GFFoodMealEntry','GFProviderCgm','GFJournalBackup','GPModuleHub','LevemirEngine','GPCgmWhiteChart','GFInjectionAnalytics','GFPhysioExerciseContext'];return required.filter(name=>!globalThis[name]);}
 function boot(selectedMode=mode){
  const missing=ensureDependencies();
  if(missing.length)throw new Error('Отсутствуют модули: '+missing.join(', '));
@@ -273,7 +273,7 @@ function renderForecastOverlay(out,view,nowMs){
     view.sourceRevision!==data.revision||g.getRevision()!==data.revision)return;
  try{
    const result=GFResearchForecastGraph.select({forecasts:data.forecasts,cgm:data.cgm,sourceId:view.sensorSourceId,
-     sourceTime:Date.parse(view.latestAt),nowMs,preferences:prefs});
+     sourceTime:Date.parse(view.latestAt),nowMs,preferences:prefs,minimumSourceRevision:g.getForecastInputRevision()});
    GFResearchForecastGraph.overlay(out.querySelector('svg'),GPCgmWhiteChart,view.window,result.lines);
    if(result.lines.length){
      legend.textContent='Пунктир · исследовательские прогнозы · '+result.lines.map(x=>
@@ -323,7 +323,8 @@ async function runForecast(){
    const nowMs=Date.now(),safetyVerdict=GFCgmEvidencePolicy.checkSafety(host,bridge,{nowMs});
    const options=globalThis.GFCOBStudyPanel?.optionsForRevision?.(host,nowMs)||{};
    const result=await GFResearchForecastRun.run({host:sourceHost,mode:requestedMode,nowMs,safetyVerdict,isCurrent,
-     foodHistoryDeclaration:options.foodHistoryDeclaration,mealCoverageRevision:options.mealCoverageRevision});
+     foodHistoryDeclaration:options.historyDeclaration,mealCoverageRevision:options.mealCoverageRevision,
+     kineticsByMealId:options.kineticsByMealId});
    if(!isCurrent())return;
    const engineStatuses=(result.engines||[]).map(({modelId,status,code,details})=>({modelId,status,code,details}));
    const lead=result.engines?.find(x=>x.modelId==='GFForecast');
@@ -345,7 +346,7 @@ async function runForecast(){
      'Исследовательские прогнозы сохранены. Ревизия входа '+result.sourceRevision+'.':
      (result.reason||'Данных для сохранения прогноза недостаточно')+' ('+result.code+').';
    $('forecastTrace').hidden=false;
-   $('forecastValues').textContent=JSON.stringify({движки:engineStatuses,коэффициенты:result.coefficients,
+   $('forecastValues').textContent=JSON.stringify({движки:engineStatuses,модельПитания:result.mealModel,состояниеДанныхЕды:result.foodCode,коэффициенты:result.coefficients,
      прогнозы:result.engines?.filter(x=>x.row).map(x=>({источник:x.summary,ряд:x.row.payload}))},null,2);
  }catch(error){
    if(isCurrent())$('analysisForecast').textContent='Ошибка подготовки прогноза ('+String(error.message||error)+').';

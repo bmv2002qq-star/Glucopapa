@@ -1,6 +1,8 @@
 /* Read-only calculation evidence for the three MVP3 routes. No recommendation or action-writing API. */
 (function (root) {
   'use strict';
+  const absorption = typeof module === 'object' && module.exports
+    ? require('./GFMealAbsorption_v0.1.0.js') : root.GFMealAbsorption;
   const minute = 60_000;
   const kindLabels = {carb_g_per_u: 'Углеводный коэффициент', isf_mmol_per_u: 'Чувствительность к инсулину'};
   const messages = {
@@ -18,6 +20,10 @@
     JOURNAL_COVERAGE_UNKNOWN: 'Полнота истории инъекций не подтверждена.',
     JOURNAL_COVERAGE_INSUFFICIENT: 'Заявленное покрытие истории инъекций не включает последние 48 часов.',
     FOOD_COVERAGE_MISSING: 'Не подтверждена полнота еды за последние 12 часов.',
+    NEEDS_FRESH_USER_ATTESTATION: 'Подтвердите полноту еды за последние 12 часов.',
+    NO_CONFIRMED_MEALS_IN_WINDOW: 'Подтверждённых приёмов пищи нет; нужна декларация полноты.',
+    SMOOTH_PROFILE_MISSING: 'Для плавной модели нет проверенного правила выбора параметра усвоения по составу блюда.',
+    RESEARCH_PARAMETERS_REQUIRED: 'Линейной модели нужны известные параметры усвоения всех записанных блюд.',
     MEAL_NOT_CONFIRMED: 'В истории есть начатая и незавершённая еда.',
     FOOD_COMPOSITION_INCOMPLETE: 'Фактический состав одного или нескольких приёмов пищи неизвестен.',
     KINETICS_NOT_DEFINED: 'У одного или нескольких приёмов пищи нет модельного профиля усвоения.',
@@ -92,11 +98,13 @@
 
     const rapid = root.GFInsulinEvidenceGate.calculateFromHost(host, checkedAt, root.RinfastEngine);
     if (rapid.status !== 'MODEL_ESTIMATE') blockers.push(issue(rapid.code, 'iob', messages[rapid.code] || rapid.detail));
-    const declaredFood = cobOptions.mealCoverageRevision === revision ? cobOptions : {};
-    const cob = root.GFCOBResearch.inspect({host, nowMs,
-      historyDeclaration: declaredFood.historyDeclaration, kineticsByMealId: declaredFood.kineticsByMealId});
-    if (cob.status !== 'RESEARCH_INTERVAL') blockers.push(issue(cob.code, 'cob'));
-    else uncertainties.push(issue('COB_MODEL_INTERVAL', 'cob', 'COB оценён модельным диапазоном.'));
+    const cob = absorption.inspect({host,nowMs,options:cobOptions});
+    if (cob.status === 'RESEARCH_INTERVAL')
+      uncertainties.push(issue('COB_MODEL_INTERVAL', 'cob', 'COB оценён модельным диапазоном.'));
+    else if (cob.status !== 'MODEL_ZERO') {
+      const absent = ['NEEDS_FRESH_USER_ATTESTATION','NO_CONFIRMED_MEALS_IN_WINDOW'].includes(cob.code);
+      blockers.push(issue(absent?'FOOD_COVERAGE_MISSING':cob.code,'cob',messages[cob.code]));
+    }
     const timeline = root.GFSettings.coefficientTimeline(settings.coefficients, checkedAt, settings.profile.timeZone);
     const needed = route === 'meal' ? ['isf_mmol_per_u', 'carb_g_per_u'] : ['isf_mmol_per_u'];
     const coefficients = Object.fromEntries(needed.map(kind => [kind, coefficient(timeline, settings.profile, kind)]));
@@ -132,7 +140,7 @@
           measuredAt: cgm.latestAt, ageMinutes: cgm.ageMinutes ?? null, observedMmol: cgm.currentMmol ?? cgm.reportedMmol ?? null},
         trend, iob: {status: rapid.status, method: rapid.method, coverageStartIso: rapid.coverageStartIso,
           contributions: rapid.parts, valueU: rapid.totalModelUnits},
-        cob: {status: cob.status, code: cob.code, lowerG: cob.lowerG, upperG: cob.upperG, contributions: cob.contributions},
+        cob: {model:cob.model,status:cob.status,code:cob.code,lowerG:cob.lowerG,upperG:cob.upperG,contributions:cob.contributions},
         levemir: {status: basal.status, valueU: basal.remainingModelActionUnits}},
     };
   }
@@ -166,7 +174,7 @@
       'IOB РинФаста · ' + quantity(s.iob.valueU, 'ЕД модели') + ' · ' + (s.iob.method || s.iob.status),
       ...(s.iob.contributions || []).map(row => '  ' + row.id + ' · введено ' + quantity(row.units, 'ЕД') +
         ' · прошло ' + quantity(row.ageMinutes, 'мин') + ' · вклад ' + quantity(row.remainingModelUnits, 'ЕД модели')),
-      'COB · ' + (s.cob.status === 'RESEARCH_INTERVAL' ?
+      'COB · '+s.cob.model.id+' '+s.cob.model.version+' · ' + (['RESEARCH_INTERVAL','MODEL_ZERO'].includes(s.cob.status) ?
         quantity(s.cob.lowerG, 'г') + ' – ' + quantity(s.cob.upperG, 'г') : s.cob.code),
       ...(s.cob.contributions || []).map(row => '  ' + row.mealId + ' · всего ' + quantity(row.carbsRecordedG, 'г') +
         ' · модельный вклад ' + quantity(row.lowerG, 'г') + ' – ' + quantity(row.upperG, 'г')),

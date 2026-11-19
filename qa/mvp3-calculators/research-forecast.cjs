@@ -2,6 +2,7 @@
 
 const {at, minute, iso, fromWeb, Rinfast, Evidence} = require('./fixture.cjs');
 const forecast = fromWeb('modules/GFForecast_v0.1.3/src/gfforecast.js');
+const linear = fromWeb('integration/GFCOBResearch_v0.1.1.js');
 const autoProfile = fromWeb('integration/GFAutoCOBProfile_v0.1.0.js');
 
 function study(host, nowMs = at) {
@@ -17,6 +18,7 @@ function study(host, nowMs = at) {
     }
     const historyDeclaration = {source: 'user_declared', confirmedComplete: true,
         startIso: iso(nowMs - 12 * 60 * minute), endIso: iso(nowMs), declaredAtIso: iso(nowMs)};
+    const cob = linear.inspect({host,nowMs,historyDeclaration,kineticsByMealId:profile.kineticsByMealId || {}});
     const evidence = Evidence.inspect({host, route: 'meal', nowMs,
         cobOptions: {mealCoverageRevision: snapshot.revision, historyDeclaration, kineticsByMealId: profile.kineticsByMealId || {}}});
     const isf = evidence.trace?.coefficients.isf_mmol_per_u.value;
@@ -24,7 +26,7 @@ function study(host, nowMs = at) {
     if (evidence.revision !== snapshot.revision || provenance.revision !== snapshot.revision ||
         profile.sourceRevision !== snapshot.revision || port.getRevision() !== snapshot.revision) return stop('REVISION_CHANGED');
     if (!Number.isFinite(isf) || !Number.isFinite(ratio) ||
-        evidence.trace.cob.status !== 'RESEARCH_INTERVAL' || evidence.trace.iob.status !== 'MODEL_ESTIMATE') {
+        cob.status !== 'RESEARCH_INTERVAL' || evidence.trace.iob.status !== 'MODEL_ESTIMATE') {
         return stop('FIXTURE_EVIDENCE_INCOMPLETE');
     }
 
@@ -43,7 +45,7 @@ function study(host, nowMs = at) {
         sourceIsComplete: true, rinfastEngine: Rinfast};
     return {status: 'RESEARCH_ONLY', revision: snapshot.revision, clinical: 'NOT_VALIDATED',
         inputs: {injections, meals, settings: request.settings, readings: request.readings},
-        cob: evidence.trace.cob, iob: evidence.trace.iob, profiles: profile.rows,
+        cob, iob: evidence.trace.iob, profiles: profile.rows,
         modelGap: 'FORECAST_KINETICS_NOT_EQUIVALENT_TO_GFCOB',
         forecast: forecast.predict(request)};
 }

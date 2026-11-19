@@ -24,24 +24,34 @@ function data(nowMs=Date.now()){
  const host=getHost();
  bindHost(host);
  if(!host||!root.GFAutoCOBProfile||!root.GFMealCoverageStudy)return null;
- const profile=root.GFAutoCOBProfile.inspect({host,nowMs});
- const coverage=root.GFMealCoverageStudy.inspect({host,nowMs,acknowledgement:ack,kineticsByMealId:profile.kineticsByMealId});
- return {host,profile,coverage};
+ const snapshot=host.connect('research').getSnapshot();
+ const model=root.GFMealAbsorption.selected(snapshot.profile);
+ const profile=model.id==='GFCOB'?root.GFAutoCOBProfile.inspect({host,nowMs}):null;
+ const coverage=root.GFMealCoverageStudy.inspect({host,nowMs,acknowledgement:ack,kineticsByMealId:profile?.kineticsByMealId});
+ return {host,model,profile,coverage,nowMs};
 }
 function optionsForRevision(host,nowMs=Date.now()){
  if(!host||host!==getHost()||!root.GFAutoCOBProfile||!root.GFMealCoverageStudy)return {};
  bindHost(host);
- const profile=root.GFAutoCOBProfile.inspect({host,nowMs});
- if(profile.status!=='RESEARCH_PROFILES_READY')return {};
- const coverage=root.GFMealCoverageStudy.inspect({host,nowMs,acknowledgement:ack,kineticsByMealId:profile.kineticsByMealId});
- return coverage.eligible&&coverage.researchOptions?{...coverage.researchOptions,mealCoverageRevision:coverage.sourceRevision}:{};
+ const state=data(nowMs);
+ return state?.coverage.historyDeclaration?{
+  historyDeclaration:state.coverage.historyDeclaration,mealCoverageRevision:state.coverage.sourceRevision,
+  kineticsByMealId:state.coverage.researchOptions?.kineticsByMealId
+ }:{};
 }
-function populate(node,state){node.replaceChildren();node.append(el('strong','Профиль усвоения из «Моей тарелки» · исследовательский'));
- node.append(el('p','Профиль выбирается автоматически по углеводно-взвешенному ГИ и жирам фактически съеденной порции. Ручной ввод времени не нужен. Часы — непроверенные модельные ориентиры, не фактическая скорость усвоения.'));
+function populate(node,state){node.replaceChildren();node.append(el('strong','История фактической еды'));
  if(!state){node.append(el('p','GFStorage недоступен'));return;}
- const {host,profile,coverage}=state;
- const subtitle=el('p','Данные: '+(profile.status||'UNKNOWN')+' · проверка истории: '+(coverage.code||'UNKNOWN'));subtitle.className='soft';node.append(subtitle);
- for(const row of profile.rows||[]){const box=el('div');box.className='w06c-meal';
+ const {host,model,profile,coverage,nowMs}=state;
+ const result=root.GFMealAbsorption.inspect({host,nowMs,options:{
+  historyDeclaration:coverage.historyDeclaration,mealCoverageRevision:coverage.sourceRevision,
+  kineticsByMealId:coverage.researchOptions?.kineticsByMealId
+ }});
+ const subtitle=el('p',model.id+' '+model.version+' · история: '+coverage.code);subtitle.className='soft';node.append(subtitle);
+ if(model.id==='GFForecast'&&result.code==='SMOOTH_PROFILE_MISSING')
+  node.append(el('p','Для плавной модели не определено, как получить параметр усвоения из состава записанного блюда.'));
+ if(model.id==='GFCOB'&&profile?.rows?.length)
+  node.append(el('p','Линейный профиль использует ГИ и жиры фактически съеденной порции.'));
+ for(const row of profile?.rows||[]){const box=el('div');box.className='w06c-meal';
   box.append(el('div',String(row.mealId)+' · съедено углеводов: '+(row.recordedCarbsG??'неизвестно')+' г'));
   if(row.status==='RESEARCH_PROFILE'){
    box.append(el('div','Профиль: '+row.label));
@@ -51,10 +61,10 @@ function populate(node,state){node.replaceChildren();node.append(el('strong','П
   }else box.append(el('div','Профиль не вычислен: '+row.code+' (исходные данные недостаточны).'));
   node.append(box);
  }
- if(profile.status!=='RESEARCH_PROFILES_READY')node.append(el('p','Для полного расчётного интервала нужны известные поля ГИ у всех углеводных продуктов. Старые приёмы пищи без перенесённого ГИ остаются неизвестными.'));
- node.append(el('p','Заявление о полноте истории — отдельная проверка, а не время усвоения. Даже подтверждение не гарантирует объективную полноту записей.'));
- const btn=el('button','Подтверждаю, что вся съеденная еда за последние 12 ч 15 мин записана');btn.type='button';
- btn.disabled=profile.status!=='RESEARCH_PROFILES_READY'||!coverage.mealRows?.length||['AMBIGUOUS_MEAL_TIME','UNFINISHED_MEAL','CROSS_WINDOW_MEAL','FOOD_DATA_UNKNOWN','FUTURE_MEAL','REVISION_CHANGED','NO_CONFIRMED_MEALS_IN_WINDOW'].includes(coverage.code);
+ const label=coverage.mealRows?.length?'Подтверждаю, что вся съеденная еда за последние 12 часов записана':
+  'Подтверждаю, что еды за последние 12 часов не было';
+ const btn=el('button',label);btn.type='button';
+ btn.disabled=coverage.status==='BLOCKED'||coverage.historyDeclaration!=null;
  btn.addEventListener('click',()=>{
   const active=getHost(),rev=bindHost(active);
   if(active!==host||rev!==coverage.sourceRevision){render();return;}
@@ -64,7 +74,8 @@ function populate(node,state){node.replaceChildren();node.append(el('strong','П
  });
  node.append(btn);
  const reset=el('button','Сбросить подтверждение полноты');reset.type='button';reset.addEventListener('click',()=>{ack=null;render()});node.append(reset);
- if(coverage.eligible&&coverage.researchOptions){const cob=root.GFCOBResearch?.inspect?.({host,nowMs:Date.now(),...coverage.researchOptions});if(cob?.status==='RESEARCH_INTERVAL'){node.append(el('p','Исследовательский интервал COB: '+cob.lowerG.toFixed(1)+'–'+cob.upperG.toFixed(1)+' г. Не использовать для определения дозы или лечения.'));}}
+ if(result.status==='RESEARCH_INTERVAL')node.append(el('p','Исследовательский интервал COB: '+result.lowerG.toFixed(1)+'–'+result.upperG.toFixed(1)+' г.'));
+ if(result.status==='MODEL_ZERO')node.append(el('p','В окне модели отсутствует вклад подтверждённой еды.'));
 }
 function render(){if(!root.document)return;const state=data();for(const id of IDS){const node=root.document.getElementById(id);if(node)populate(node,state)}}
 function clear(){revision=null;ack=null;render()}

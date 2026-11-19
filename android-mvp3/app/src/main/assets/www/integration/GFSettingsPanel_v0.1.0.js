@@ -13,6 +13,7 @@
  function refresh(){try{const {host,service}=get();const s=host.connect('settings').getSnapshot(),view=service.getView();
    $('gfCarbMode').value=s.profile.coefficientModes.carb_g_per_u;
    $('gfIsfMode').value=s.profile.coefficientModes.isf_mmol_per_u;
+   $('gfMealAbsorptionModel').value=GFMealAbsorption.selected(s.profile).id;
    $('gfIllnessFactor').value=s.profile.illnessFactor?.value??'';
    const p=period(s);
    $('gfIllnessStart').disabled=!!p;
@@ -27,6 +28,9 @@
    // Only changed values are written; no duplicate history when clicking save twice.
    if(s.profile.coefficientModes.carb_g_per_u!==c)service.setCoefficientMode('carb_g_per_u',c,host.connect('settings').getRevision());
    if(s.profile.coefficientModes.isf_mmol_per_u!==i)service.setCoefficientMode('isf_mmol_per_u',i,host.connect('settings').getRevision());
+ }));
+ $('gfMealAbsorptionSave').addEventListener('click',()=>run(()=>{const {service}=get();
+   service.setMealAbsorptionModel($('gfMealAbsorptionModel').value,service.getRevision());
  }));
  $('gfIllnessFactorSave').addEventListener('click',()=>run(()=>{const {host,service}=get();const raw=$('gfIllnessFactor').value;
    if(!raw.trim())throw Error('Укажите коэффициент для сохранения');

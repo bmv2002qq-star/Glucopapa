@@ -217,6 +217,9 @@
     }
     function subscribe(callback){if(typeof callback!=='function')fail('Требуется функция');return settingsPort.subscribe(e=>callback(frozen(e)));}
     return Object.freeze({VERSION,getView,getRevision:()=>settingsPort.getRevision(),saveProfile,refreshNutritionReference,addMeasurement,addOrder,addCoefficient,setCoefficientMode,setIllnessFactor,subscribe,
+      setMealAbsorptionModel:(modelId,expectedRevision)=>{
+        revNumber(expectedRevision);return settingsPort.setMealAbsorptionModel(modelId,expectedRevision);
+      },
       getHistory:()=>frozen(check().history.slice().reverse()),
       getHomeGrowthSummary:(at=clock())=>{const s=check();return frozen(GROWTH.evaluate(s.profile,s.measurements,at));},
       getModelRegistry:()=>frozen(check().models),

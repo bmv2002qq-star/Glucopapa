@@ -12,7 +12,7 @@
   if (root) root.GFStorage = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this, function(TimeGrid){
   'use strict';
-  const VERSION = '0.5.11-local-cgm-CANDIDATE', SCHEMA_VERSION = 5;
+  const VERSION = '0.5.11-cl042-CANDIDATE', SCHEMA_VERSION = 5;
   if(!TimeGrid)throw Error('GFTimeGrid dependency required');
   const XDRIP_ID='xdrip-local-provider', XDRIP_TYPE='xdrip_local';
   // xDrip+ Constants.MMOLL_TO_MGDL. Store both the upstream value and the converted observation.
@@ -33,6 +33,13 @@
       profile:Object.freeze({drugId:'levemir',name:'Левемир',substance:'инсулин детемир',model:'detemir_population_time_trapezoid',
         modelVersion:'0.1.0',clinicalValidation:false,doseResponseInChildrenValidated:false,minimumJournalHours:48})})
   });
+  const MEAL_MODELS = Object.freeze({
+    GFForecast: Object.freeze({id:'GFForecast',version:'0.1.2'}),
+    GFCOB: Object.freeze({id:'GFCOB',version:'0.1.1'})
+  });
+  const FORECAST_INPUT_DOMAINS=new Set([
+    'profile','measurements','coefficients','mealSessions','events','coverage','cgm','cgmMetadata','conditionPeriods','syncInbox'
+  ]);
   const READ={
     settings:['profile','measurements','drugs','models','orders','coefficients','graphPreferences','history','conditionPeriods'],
     journal:['profile','measurements','drugs','orders','events','coverage','mealSessions','workflowLog','conditionPeriods','forecasts','forecastAssessments'],
@@ -171,6 +178,12 @@
     if(Object.values(value).some(flag=>typeof flag!=='boolean'))fail('Неверная видимость прогноза');
   }
 
+  function validateMealModel(value){
+    requireFields(value,['id','version'],['id','version']);
+    if(!Object.hasOwn(MEAL_MODELS,value.id)||value.version!==MEAL_MODELS[value.id].version)
+      fail('Неизвестная версия модели усвоения еды');
+  }
+
   function validateForecastRow(row){
     requireFields(row,['id','kind','payload'],['id','kind','payload']);
     if(row.kind!=='research_forecast'||!object(row.payload))fail('Ожидался исследовательский прогноз');
@@ -185,6 +198,15 @@
         f.version!==f.modelId+'@'+f.modelVersion||typeof f.inputDigest!=='string'||!/^[0-9a-f]{64}$/.test(f.inputDigest)||
         !Number.isSafeInteger(f.sourceRevision)||f.sourceRevision<0||
         f.clinicalUse!==false||f.modelValidated!==false)fail('Недопустимое происхождение прогноза');
+      if(f.mealModel!==undefined)validateMealModel(f.mealModel);
+      if(f.timeAlignment!==undefined){
+        const alignment=f.timeAlignment;
+        requireFields(alignment,['originalOrigin','method'],['originalOrigin','method']);
+        iso(alignment.originalOrigin);
+        if(f.modelId!=='GFAPSEnhancer'||Date.parse(alignment.originalOrigin)!==Date.parse(f.sourceTime)||
+          !['direct','linear-on-measured-grid-v1'].includes(alignment.method)||
+          (alignment.method==='direct')!==(Date.parse(f.sourceTime)===Date.parse(f.forecastAt)))fail('Несогласованное выравнивание прогноза');
+      }
       iso(f.sourceReceivedAt);
       if(Date.parse(f.sourceTime)>Date.parse(f.sourceReceivedAt)||Date.parse(f.sourceReceivedAt)>Date.parse(f.forecastAt))
         fail('Времена CGM после выдачи или до измерения');
@@ -233,6 +255,7 @@
     if(typeof s.profile.hypoActivityEnabled!=='boolean')fail('Учёт множителя низкого сахара: true/false');
     if(!['low','usual','high'].includes(s.profile.activityBaseLevel))fail('Неверный базовый уровень активности');
     validateCoefficientModes(s.profile.coefficientModes);
+    if(s.profile.mealAbsorptionModel!==undefined)validateMealModel(s.profile.mealAbsorptionModel);
     if(s.profile.illnessFactor!==null)validateIllnessFactor(s.profile.illnessFactor);
     if(s.cgmMetadata!==null){validateCgmMetadata(s.cgmMetadata);
       if(s.cgm.some(x=>x.sourceDeviceId!==undefined&&x.sourceDeviceId!==s.cgmMetadata.sourceDeviceId))fail('CGM содержит записи другого источника');
@@ -485,6 +508,12 @@
         };
       }
       if(role==='settings'){
+        port.setMealAbsorptionModel=(modelId,rev)=>commit(role,'profile','set_meal_absorption_model',d=>{
+          if(typeof modelId!=='string'||!Object.hasOwn(MEAL_MODELS,modelId))fail('Неизвестная модель усвоения еды');
+          const selected=d.profile.mealAbsorptionModel??MEAL_MODELS.GFForecast;
+          if(selected.id===modelId)return null;
+          d.profile.mealAbsorptionModel=clone(MEAL_MODELS[modelId]);return 'profile';
+        },rev);
         port.updateProfile=(patch,rev)=>commit(role,'profile','update',d=>{
           requireFields(patch,['birthDate','timeZone','displayName','sex','allergies','dailyNutritionReference','exerciseGuidance','exerciseGuidanceEnabled','hypoActivityMultipliers','hypoActivityEnabled','coefficientModes','illnessFactor']);
           if(!Object.keys(patch).length)fail('Нет изменений');
@@ -824,6 +853,13 @@
         },rev);
       }
       if(role==='graph'){
+        port.getForecastInputRevision=()=>{
+          for(let index=state.history.length-1;index>=0;index--){
+            const entry=state.history[index];
+            if(FORECAST_INPUT_DOMAINS.has(entry.domain))return entry.revision;
+          }
+          return 0;
+        };
         port.setPreferences=(patch,rev)=>commit(role,'graphPreferences','display_only',d=>{
           requireFields(patch,['rangeHours','showRinfast','showTotal','forecastVisibility','autoConsensus']);
           if('rangeHours'in patch&&!([6,12,24].includes(patch.rangeHours)))fail('Разрешённые интервалы 6,12,24 часов');
@@ -844,5 +880,5 @@
       // Host-only import is intentionally absent: restore must be verified by a future native adapter.
     });
   }
-  return Object.freeze({VERSION,SCHEMA_VERSION,DRUGS,MODELS,createHost});
+  return Object.freeze({VERSION,SCHEMA_VERSION,DRUGS,MODELS,MEAL_MODELS,createHost});
 });
