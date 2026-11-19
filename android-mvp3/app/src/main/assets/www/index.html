@@ -59,7 +59,10 @@
 <section id="screen-analytics" class="screen"><div class="section-header"><h2>Модули анализа</h2><p>Все результаты исследовательские и не могут использоваться для дозирования.</p></div><div class="cols"><article class="panel"><h3>GFSafety · диагностика входа</h3><div id="analysisSafety" class="soft">Нет проверки</div><button id="runSafety" class="btn secondary">Проверить технические данные</button></article><article class="panel"><h3>GFHighLow · эпизоды CGM</h3><div id="analysisHighLow" class="soft">Нет анализа</div><button id="runHighLow" class="btn secondary">Посмотреть эпизоды</button></article><article class="panel"><h3>GFCoefficients · статистика истории</h3><div id="analysisCoefficients" class="soft">Нет анализа</div><button id="runCoefficients" class="btn secondary">Проанализировать историю</button></article><article class="panel"><h3>GFForecast · расчёт модели</h3>
 <div id="analysisForecast" class="soft" role="status">Для запуска нужны свежие показания с подтверждённым качеством и полная история.</div>
 <button id="runForecastGate" class="btn secondary" type="button">Выполнить расчёт модели</button>
-<details id="forecastTrace" hidden><summary>Исходные данные и результат</summary><pre class="gf-evidence-text" id="forecastValues"></pre></details></article></div></section>
+<details id="forecastTrace" hidden><summary>Исходные данные и результат</summary><pre class="gf-evidence-text" id="forecastValues"></pre></details></article>
+<article class="panel"><h3>Сравнение сохранённых прогнозов</h3>
+ <button type="button" class="btn secondary" id="runConsensusReview">Сопоставить с CGM</button>
+ <p id="consensusReviewStatus" role="status">Проверка ещё не запускалась.</p></article></div></section>
   <section id="screen-settings" class="screen"><div class="section-header"><h2>Настройки</h2><p>GFSettings изменяет только пользовательские параметры через GFStorage.</p></div><article class="panel narrow"><form id="settingsForm" class="fields"><label>Часовой пояс<select id="settingsTZ"><option value="Europe/Minsk">Europe/Minsk</option><option value="Europe/London">Europe/London</option><option value="Europe/Moscow">Europe/Moscow</option><option value="Europe/Warsaw">Europe/Warsaw</option><option value="UTC">UTC</option></select></label><button class="btn primary" type="submit">Сохранить настройку</button></form><p class="hint">GFSettings v0.1.6: ниже доступны имя, дата рождения, аллергии, рост и вес. Остальные параметры пока отображаются через исходный модуль.</p><div id="settingsInfo" class="soft">—</div></article><article class="panel narrow"><h3>Профиль ребёнка</h3><form id="childProfileForm" class="fields">
  <label>Имя для отображения<input id="childName" maxlength="120" placeholder="Имя"></label><label>Дата рождения<input id="childBirth" type="date"></label>
  <label>Аллергии (через запятую)<input id="childAllergies" maxlength="300" placeholder="Например: молоко"></label>
@@ -84,6 +87,14 @@
    </div><p class="hint">Тестовые события сохраняются отдельно от локального журнала.</p></article>
    <article class="panel"><h3>Состав сборки</h3><div id="moduleTable"></div></article>
    <article class="panel"><h3>Хранилище</h3><div id="storageInfo" class="soft">—</div>
+     <div id="aiExportControls" hidden>
+       <label>Период <select id="aiExportPeriod">
+         <option value="1d">1 день</option><option value="2d">2 дня</option><option value="5d">5 дней</option>
+         <option value="1m">1 месяц</option><option value="3m">3 месяца</option><option value="6m">6 месяцев</option>
+       </select></label>
+       <button type="button" id="saveAiExport" class="btn secondary">Экспортировать данные для анализа ИИ</button>
+       <p id="aiExportStatus" class="hint" role="status">Файл создаётся локально в выбранной папке.</p>
+     </div>
      <div class="actions"><button id="exportState" class="btn secondary">Экспорт аналитического JSON</button>
        <button id="resetDemo" class="btn danger" hidden>Очистить тестовый журнал в браузере</button></div>
      <div id="backupControls" hidden>
@@ -106,6 +117,15 @@
   <section id="screen-insulin-models" class="screen"><div class="section-header"><h2>РинФаст и Левемир</h2><p>Утверждённые модели действия инсулинов. Графики только исследовательские; численные итоги недоступны при неполной истории.</p></div>
    <article class="panel"><h3>РинФаст · активные кривые</h3><div id="rinfastModels" class="soft">Нет данных</div><button type="button" class="btn secondary" id="refreshInsulinModels">Обновить анализ</button></article>
    <article class="panel"><h3>Левемир v0.1.2</h3><div id="levemirModels" class="soft">Нет данных</div><p class="hint">При неизвестном весе или неподтверждённой полноте журнала численный расчёт заблокирован.</p></article>
+   <article class="panel"><h3>Обзор Левемира по фактам</h3>
+    <label>Период <select id="basalReviewPeriod">
+      <option value="3">3 дня</option><option value="7" selected>7 дней</option><option value="14">14 дней</option>
+    </select></label>
+    <button type="button" class="btn secondary" id="runBasalReview">Пересчитать дозу</button>
+    <p id="basalReviewStatus" role="status">Обзор выполняется по нажатию.</p>
+    <details id="basalReviewDetails" hidden><summary>Окна и причины исключения</summary>
+      <pre class="gf-calc-trace" id="basalReviewTrace"></pre></details>
+   </article>
    <button class="btn secondary full" data-screen="injections">Перейти к записи фактического укола</button>
    <details class="panel" id="insulinModelTrace" hidden><summary>Исходные факты и вклад инъекций</summary><ul id="insulinModelInputs"></ul></details>
   </section>
@@ -238,6 +258,8 @@
 <script src="integration/GFJournalBackup_v0.1.0.js"></script>
 <script src="integration/GFForecastReadout_v0.1.0.js"></script>
 <script src="integration/GFCalculationEvidence_v0.1.0.js"></script>
+<script src="integration/GFConsensusReview_v0.1.0.js"></script>
+<script src="integration/GFLevemirReview_v0.1.0.js"></script>
 <script src="app.js"></script>
 <script src="integration/GFModuleUI_v0.2.1.js"></script><script src="integration/GFModuleDirectory_v0.1.0.js"></script><script src="integration/GFSettingsPanel_v0.1.0.js"></script><script src="integration/GFMealActualPanel_v0.1.0.js"></script>
   <script src="integration/GFCOBAutoPanel_v0.2.0.js"></script>

@@ -120,9 +120,11 @@ function boot(selectedMode=mode){
    $('gfMealActualConfirm').checked=false;
    $('gfMealActualCorrectionReason').value='';
  }
- unsub=nextJournal.subscribe(()=>{
+ unsub=nextJournal.subscribe(change=>{
+   recordDiagnostic('storage_commit', change.revision, {status:'OK'});
    lastSafety=null;
    clearForecast();
+   clearResearchReviews();
    render();
    setTimeout(broadcastApproved,0);
  });
@@ -134,8 +136,10 @@ function boot(selectedMode=mode){
  $('xdripControls').hidden=mode!=='local'||!globalThis.GFNativeXDrip;
  $('xdripEnabled').checked=xdripEnabled();
  $('backupControls').hidden=!globalThis.AndroidExporter?.saveBackup;
+ $('aiExportControls').hidden=!globalThis.AndroidExporter?.saveAiExport;
  $('resetDemo').hidden=mode!=='demo'||!!globalThis.GFNativeStorage;
  if(switched||!xdripEnabled())xdripStatus='';
+ clearResearchReviews();
  render();
  globalThis.GFCOBStudyPanel?.render?.();
  setTimeout(broadcastApproved,0);
@@ -274,11 +278,25 @@ function clearForecast(){
  $('forecastValues').textContent='';
  $('analysisForecast').textContent='Выполните проверку для текущей ревизии данных.';
 }
+function recordDiagnostic(operation,revision,fields={}){
+ const bridge=globalThis.AndroidDiagnostics;
+ if(bridge&&Number.isSafeInteger(revision)&&revision>=0){
+   try{bridge.record(mode,JSON.stringify({operation,sourceRevision:revision,...fields}));}
+   catch{/* Diagnostics never roll back a result or a journal commit. */}
+ }
+}
 function runForecast(){
  clearForecast();
  const nowMs=Date.now(),safetyVerdict=GFCgmEvidencePolicy.checkSafety(host,bridge,{nowMs});
  const options=globalThis.GFCOBStudyPanel?.optionsForRevision?.(host,nowMs)||{};
  const r=GFForecastReadout.run({host,mode,nowMs,safetyVerdict,foodHistoryDeclaration:options.foodHistoryDeclaration,mealCoverageRevision:options.mealCoverageRevision});
+ const cgm=GFCgmEvidencePolicy.inspect(host,{nowMs});
+ recordDiagnostic('forecast_attempt',r.sourceRevision??host.diagnostics().revision,{
+   status:r.status,code:r.code,modelId:'GFForecast',modelVersion:GFForecast.VERSION,
+   measuredAt:cgm.latestAt,receivedAt:cgm.readings.at(-1)?.receivedAt,
+   formula:'GFFORECAST_V01',baselineMmol:r.snapshot?.baselineMmol,
+   slopeMmolMin:r.snapshot?.observedSlopeMmolPerMin,points:r.points
+ });
  $('analysisForecast').textContent=r.status==='EXPERIMENTAL'?
    'Результат расчёта модели. Диапазон неопределённости эвристический. Для расчёта использована ревизия '+r.sourceRevision+'.':
    (r.reason||'Данных для модели недостаточно')+' ('+r.code+')';
@@ -287,6 +305,43 @@ function runForecast(){
    $('forecastValues').textContent=JSON.stringify({вход:r.snapshot,коэффициенты:r.coefficients,
      точки_модели:r.points,версии:r.modelVersions},null,2);
  }
+}
+function clearResearchReviews(){
+ $('basalReviewStatus').textContent='Обзор выполняется по нажатию.';
+ $('basalReviewTrace').textContent='';
+ $('basalReviewDetails').hidden=true;
+ $('consensusReviewStatus').textContent='Проверка текущей ревизии ещё не запускалась.';
+}
+function runBasalReview(){
+ const result=GFLevemirReview.inspect(host,Number($('basalReviewPeriod').value));
+ const reason=result.code==='FORMULA_SPEC_GAP'?'Формула оценки дозы не утверждена.':
+   result.code==='INSUFFICIENT_HISTORY'?'Недостаточно пригодных окон CGM.':'Снимок неполный ('+result.code+').';
+ $('basalReviewStatus').textContent='Расчёт дозы недоступен. '+reason;
+ const groups=result.sections;
+ if(groups){
+   const lines=['GFStorage · ревизия '+result.sourceRevision+' · '+result.days+' дн. · '+result.timezone];
+   for(const [name,key] of [['Утро','morning'],['Вечер','evening']]){
+     const group=groups[key];
+     lines.push(name+' · последняя подтверждённая доза '+(group.lastConfirmedUnits==null?'неизвестна':group.lastConfirmedUnits+' ЕД'));
+     lines.push('Пригодных окон '+group.eligibleWindows+' · медиана изменений CGM '+fmt(group.observedMedianDelta,2)+' ммоль/л');
+     for(const window of group.windows)lines.push(window.startedAt+' – '+window.endedAt+
+       (window.issues.length?' · '+window.issues.join(', '):' · ΔCGM '+fmt(window.observedDelta,2))+
+       (window.possibleBasalOverlap?' · возможное перекрытие базального действия':''));
+   }
+   $('basalReviewTrace').textContent=lines.join('\n');
+ }
+ $('basalReviewDetails').hidden=!groups;
+ recordDiagnostic('basal_review',result.sourceRevision,{modelId:'GFLevemirReview',modelVersion:result.version,
+   status:result.status,code:result.code,formula:result.model,
+   eligibleWindows:groups?groups.morning.eligibleWindows+groups.evening.eligibleWindows:null});
+}
+function runConsensusReview(){
+ const result=GFConsensusReview.fromHost(host);
+ const rows=result.results||[];
+ const count=rows.map(row=>row.horizon+' мин · '+row.n+' пар').join(' · ');
+ $('consensusReviewStatus').textContent=(result.status==='NO_LEADER'?'Сопоставимых данных для лидера недостаточно.':
+   result.status==='BLOCKED'?'Снимок данных изменился.':'Статус сравнения '+result.status+'.')+
+   (count?' '+count:'')+' Рабочие лечебные расчёты не меняются.';
 }
 function numericField(id){const n=Number($(id).value);if(!Number.isFinite(n))throw Error('Проверьте числовые поля');return n;}
 function doMeal(method){
@@ -347,6 +402,17 @@ function setFileOperation(next){
  $('saveBackup').disabled=!!next;
  $('openBackup').disabled=!!next;
  $('exportState').disabled=!!next;
+ $('saveAiExport').disabled=!!next;
+}
+function saveAiExport(){
+ if(fileOperation)return;
+ setFileOperation({mode,kind:'ai'});
+ $('aiExportStatus').textContent='Выберите локальный файл для выгрузки.';
+ try{AndroidExporter.saveAiExport(mode,$('aiExportPeriod').value);}
+ catch{
+   $('aiExportStatus').textContent='Не удалось открыть системный выбор файла.';
+   setFileOperation(null);
+ }
 }
 async function saveBackup(){
  if(fileOperation)return;
@@ -380,6 +446,12 @@ async function consumeFileResult(){
  if(!raw)return;
  try{
    const result=JSON.parse(raw),operation=fileOperation;
+   if(result.aiExport){
+     setFileOperation(null);
+     $('aiExportStatus').textContent=result.status==='FILE_SAVED'?'Выгрузка сохранена':
+       result.status==='FILE_CANCELLED'?'Выгрузка отменена':'Выгрузка не завершена ('+result.status+')';
+     return;
+   }
    if(result.report){
      setFileOperation(null);
      notify(result.status==='FILE_SAVED'?'Аналитический отчёт сохранён':

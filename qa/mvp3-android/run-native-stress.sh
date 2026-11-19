@@ -38,6 +38,8 @@ if [[ ${ANDROID_QA_API:-35} == 31 ]]; then
 fi
 
 if [[ ${ANDROID_QA_EXTENDED:-false} == true ]]; then
+    instrument trace-export | tee "$evidence/native-trace-export.log"
+    grep -F 'QA_PASS trace-export' "$evidence/native-trace-export.log"
     instrument web | tee "$evidence/native-web.log"
     grep -F 'QA_PASS web' "$evidence/native-web.log"
     python3 qa/mvp3-android/check_native_meal.py "$1" "$2" "$evidence"

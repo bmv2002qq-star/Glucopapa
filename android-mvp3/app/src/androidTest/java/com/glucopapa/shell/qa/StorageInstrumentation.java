@@ -10,6 +10,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.util.Log;
+import com.glucopapa.shell.ExportAndTraceChecks;
 import com.glucopapa.shell.GFNativeStorage;
 import com.glucopapa.shell.ProviderContractChecks;
 import java.io.File;
@@ -45,6 +46,9 @@ public final class StorageInstrumentation extends Instrumentation {
                         exercise(store, directory, getTargetContext());
                         checkMigration(getTargetContext(), directory);
                         ProviderContractChecks.run();
+                        break;
+                    case "trace-export":
+                        output.putString("cl040", ExportAndTraceChecks.run(directory.toPath()).toString());
                         break;
                     case "interrupt": interrupt(store); break;
                     case "reopen": reopen(store); break;

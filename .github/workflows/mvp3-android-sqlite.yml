@@ -6,6 +6,7 @@ on:
       - qa/mvp3-android-sqlite
       - qa/mvp3-prototype-integration
       - qa/mvp3-calculators-20261119
+      - qa/mvp3-cl039-cl040-20261119
 
 permissions:
   contents: read
@@ -32,6 +33,9 @@ jobs:
           python3 qa/mvp3-full/integrity.py | tee qa-evidence/integrity.json
           node --test --test-reporter=tap qa/mvp3-full/*.test.cjs > qa-evidence/node.tap
           node --test --test-reporter=tap qa/mvp3-calculators/*.test.cjs > qa-evidence/calculators.tap
+          if [[ -d qa/mvp3-cl040 ]]; then
+            node --test --test-reporter=tap qa/mvp3-cl040/*.test.cjs > qa-evidence/cl040.tap
+          fi
           node qa/mvp3-calculators/stress.cjs qa-evidence > qa-evidence/stress.log
           node qa/mvp3-calculators/physio-stress.cjs qa-evidence > qa-evidence/physio.log
           gzip -n qa-evidence/*-cases.jsonl
