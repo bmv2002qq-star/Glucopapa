@@ -1,0 +1,26 @@
+{
+  "stage": "CL-039/040",
+  "sourceCommit": "a0b2befe239a445d1f64d640cefaaec8697b8ac7",
+  "matrix": {
+    "PASS": 42,
+    "BLOCKED": 38,
+    "NOT_RUN": 42,
+    "ENV_BLOCKED": 1
+  },
+  "acceptance": "OPEN",
+  "CODE": "PASS_AVAILABLE_REGRESSIONS",
+  "BROWSER_SINGLE_FILE": "NOT_RUN",
+  "BROWSER_MULTI_FILE": "PASS",
+  "ANDROID_EMULATOR": {
+    "12": "PASS_ON_RETRY_TOUCH_A11Y_ENV_BLOCKED",
+    "14": "PASS",
+    "15": "PASS",
+    "16": "PASS"
+  },
+  "ANDROID_DEVICE": "NOT_TESTED",
+  "LIVE_CGM": "NOT_TESTED",
+  "CLINICAL": "NOT_VALIDATED",
+  "githubRun": "https://github.com/bmv2002qq-star/Glucopapa/actions/runs/44426753390",
+  "library": "NOT_SAVED_REMOTE",
+  "localDebugSha256": "b46faa3b7ca4dc31e7b46809fa5c9f4086765c867a24e8c8d7e586399739506b"
+}
