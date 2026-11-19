@@ -8,7 +8,7 @@ ed7dc4d9c0474c08d2c83d2b61abbaac255dc3ae02ef2004ec93a21830d0ada5  android-mvp3/a
 b911e1dd02ab789de93febf1dde20c14d94fca021d3d04c0a2fbb0fa50276a5b  android-mvp3/app/src/androidTest/java/com/glucopapa/shell/qa/StorageInstrumentation.java
 6ec96f9c295df8e9c75de9290aed5c60131801e14f3bf6220d7369fe1f333662  android-mvp3/app/src/androidTest/java/com/glucopapa/shell/qa/WebViewChecks.java
 b035e34c7c0546cad430b4c79d1c14ae5fe62cac14a33ec79d083af38fa76e79  android-mvp3/app/src/main/AndroidManifest.xml
-93f349e5021f87dc854f46ba823e4c4863659ab1c74fe80941b997396167f5bc  android-mvp3/app/src/main/assets/www/app.js
+74822928acbe5a9fce0cb8760599689208ae32df3f363f3a8f2ff21c2a17e15a  android-mvp3/app/src/main/assets/www/app.js
 0abc9b584922377403d2edca6de42f9aea5f31e152415bcda186b6c9f35dc84b  android-mvp3/app/src/main/assets/www/approved-library/CGM_Chart_v0.2A.html
 d78a8ef8d236fc89ecb4776ff5e086fb0202b5b4f522c6290421d6d7ff1ac6a2  android-mvp3/app/src/main/assets/www/approved-library/GFAPSEnhancer_v0.1.1.html
 5cc5433d2d4b340106570360fe325b54cf2c4597c22a31e18e58ad620b016a9e  android-mvp3/app/src/main/assets/www/approved-library/GFAuditExport_v0.1.2.html
