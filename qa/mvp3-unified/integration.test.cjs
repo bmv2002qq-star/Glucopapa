@@ -200,3 +200,23 @@ test('missing IOB evidence does not prevent an explicit atomic fact; missing or 
   assert.equal(host.exportState().events[0].iobEvidence,undefined);
   assert.deepEqual(host.exportState().mealSessions[0].injectionIds,[item.id]);
 });
+
+test('home publishes the latest ten factual IDs from the journal and respects the profile day',()=>{
+  const Journal=fromWeb('modules/GFJournal_v0.1.3/src/gfjournal.js');
+  const zone='America/New_York';
+  const boundary=Date.parse('2026-03-08T05:00:00Z');
+  const now=boundary+3*60*minute;
+  const row=(id,ts,kind,status,meal)=>({id,ts,day:Journal.ymd(ts,zone),kind,status,meal});
+  const plate={carbs:14.925,protein:3,fat:2,kcal:85};
+  const rows=[
+    row('previous-day',boundary-1,'meal','completed',plate),
+    ...Array.from({length:11},(_,i)=>row('injection-'+i,boundary+i*minute,'injection','confirmed')),
+    row('corrected-actual',boundary+15*minute,'meal','completed',{...plate,carbs:9.95}),
+    row('plan',boundary+20*minute,'meal','planned',plate),
+    row('future',now+minute,'injection','confirmed'),
+  ];
+  const result=Main.summarize({journal:{zone,rows},profile:{},journalApi:Journal,nowMs:now});
+  assert.deepEqual(result.actions.map(entry=>entry.id),
+    ['corrected-actual',...Array.from({length:9},(_,i)=>'injection-'+(10-i))]);
+  assert.equal(result.nutrition.rows.find(x=>x.key==='carbs').eaten,9.95);
+});
