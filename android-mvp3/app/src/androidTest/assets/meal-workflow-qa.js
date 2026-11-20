@@ -2,10 +2,6 @@
     'use strict';
     const wait = ms => new Promise(resolve=>setTimeout(resolve,ms));
     const ensure = (value,msg) => { if(!value) throw Error(msg); };
-    const localInput = value => {
-        const date = new Date(value);
-        return new Date(value-date.getTimezoneOffset()*60000).toISOString().slice(0,16);
-    };
     window.__glucopapaQA = null;
     (async () => {
         ensure(GPApp.mode()==='local','Expected isolated fixture in its local journal');
@@ -29,14 +25,16 @@
         if(phase==='write'){
             window.__glucopapaQAStage='historical-preview';
             get('doseChosen').value='2';
-            get('shotTime').value=localInput(now);
+            // The shot is confirmed after the synthetic activity settings were stored.
+            // A backdated form must not claim that newer settings were effective.
+            get('shotTime').value='';
             get('shotSite').value='abdomen';
             get('shotSite').dispatchEvent(new Event('input',{bubbles:true}));
             const proposed=store.connect('mealTiming').readPreview(id);
             if(!get('minutesChosen').readOnly||Number(get('minutesChosen').value)<10||
                 !get('minutesExplain').textContent.includes('6 случаев')){
                 const reference=GFMealTimingService.refresh(store,{sessionId:id,units:2,site:'abdomen',
-                    atIso:new Date(now).toISOString(),mode:'local'});
+                    atIso:new Date().toISOString(),mode:'local'});
                 throw Error('Meal timing preview: '+JSON.stringify({computed:reference.code||reference.estimate?.matchedCases,
                     shown:get('minutesChosen').value,reason:proposed?.code,explanation:get('minutesExplain').textContent,
                     time:get('shotTime').value,validDose:get('doseChosen').checkValidity(),selected:get('chooseMeal').value}));

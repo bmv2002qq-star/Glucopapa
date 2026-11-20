@@ -45,6 +45,11 @@ def check(browser, origin, width, output):
     estimate=int(panel.locator('#minutesChosen').input_value())
     assert 10<=estimate<=15
     assert page.evaluate("GPApp.getStorage().exportState().events.length")==6
+    panel.locator('#shotTime').fill('2026-11-20T08:31')
+    panel.locator('#confirmInjection').click()
+    expect(panel.locator('#mealOperationStatus')).to_contain_text('которое уже наступило')
+    assert page.evaluate("GPApp.getStorage().exportState().events.length")==6
+    panel.locator('#shotTime').fill('')
     page.once('dialog',lambda dlg:dlg.dismiss())
     panel.locator('#confirmInjection').click()
     assert page.evaluate("GPApp.getStorage().exportState().events.length")==6
@@ -80,7 +85,7 @@ def check(browser, origin, width, output):
     assert page.evaluate("GPApp.getStorage().exportState().events.length")==7
     page.screenshot(path=output/f'meal-{width}.png')
     page.close()
-    return {'width':width,'cards':CARDS,'matched':6,'historySaved':True,'writeCount':1,'restart':True,'correctionGrams':50}
+    return {'width':width,'cards':CARDS,'matched':6,'historySaved':True,'writeCount':1,'restart':True,'correctionGrams':50,'futureInjectionRejected':True}
 
 
 def main():

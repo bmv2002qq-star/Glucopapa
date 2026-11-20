@@ -298,6 +298,7 @@ def check_journal_periods(browser, origin, output):
     expect(sport).to_contain_text('Длительность: 30 мин')
     expect(illness).to_contain_text('10:00')
     expect(illness_end).to_contain_text('12:00')
+    expect(illness_end).to_contain_text('Длительность: 120 мин')
     expect(journal.locator('.legend')).to_contain_text('Период спорта')
     expect(journal.locator('.legend')).to_contain_text('Период болезни')
     sport_color = sport.locator('td').first.evaluate('(td)=>getComputedStyle(td).backgroundColor')
@@ -314,7 +315,7 @@ def check_journal_periods(browser, origin, output):
     return {
         'status': 'PASS_SCOPED', 'mode': 'SYNTHETIC_ONLY', 'environment': 'BROWSER_MULTI_FILE',
         'sport': {'start': '09:00', 'end': '09:30', 'minutesDisplayed': 30, 'background': sport_color},
-        'illness': {'start': '10:00', 'end': '12:00', 'background': illness_color},
+        'illness': {'start': '10:00', 'end': '12:00', 'minutesDisplayed': 120, 'background': illness_color},
         'persistedDurationsMinutes': durations, 'bothIntervalsAfterReload': True, 'androidRendering': 'NOT_TESTED',
     }
 

@@ -129,7 +129,8 @@
         reasons[current?.code]||'Подходящий исторический интервал недоступен.');
       set('sampleMatches',estimate?'По '+estimate.distinctDays+' дням наблюдений':'');
       set('doseSuggested','—');
-      set('doseExplain','Расчётная доза недоступна. Можно записать фактически введённую.');
+      set('doseExplain',meal?'Расчётная доза недоступна. Можно записать фактически введённую.':
+        'Сначала соберите и сохраните тарелку.');
       set('injectionHint',displayedShot?'Подтверждённый укол записан.':'Подтвердите выполненный укол.');
       set('plateChip',stages[status]||'Нет тарелки');
       set('calcChip',displayedShot?'Укол записан':'РинФаст');
@@ -160,8 +161,8 @@
       enable('showCorrection',status==='completed'&&!saving);
       field('afterStart').hidden=!['started','completed'].includes(status);
       const token=[meal?.id,data.revision,new Date().toISOString().slice(0,16)].join('|');
-      if(meal&&token!==detailsKey){
-        const evidence=root.GFCalculationEvidence.inspect({host,route:'meal',activeMeal:meal.id});
+      if(token!==detailsKey){
+        const evidence=root.GFCalculationEvidence.inspect({host,route:'meal',activeMeal:meal?.id??null});
         root.GFCalculationEvidence.render(details,evidence);
         detailsKey=token;
       }

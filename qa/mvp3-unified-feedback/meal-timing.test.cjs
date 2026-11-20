@@ -95,6 +95,8 @@ test('earlier actual meal time and subsequent edits leave the accepted interval 
     control.actualFood(s.meal.mealId,s.meal.plate,{parentConfirmed:true});
     control.finishMeal(s.meal.mealId,new Date(s.now()).toISOString(),{confirmed:true});
     control.actualFood(s.meal.mealId,s.meal.plate,{parentConfirmed:true,reason:'SYNTHETIC correction'});
+    const settings=s.host.connect('settings');
+    GFSettings.createSettingsService({settingsPort:settings}).setCoefficientMode('carb_g_per_u','auto',settings.getRevision());
     assert.deepEqual(s.open().exportState().events.at(-1),original);
     assert.ok(Date.parse(control.lookup(s.meal.mealId).startedAt)<Date.parse(original.administeredAt));
     const corrupt=structuredClone(s.open().exportState());

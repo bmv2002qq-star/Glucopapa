@@ -2,7 +2,7 @@
 d883e4afc8125dc3f4356efdd0ac09239bfd8259878aa332f06a50ac5b3cb37e  android-mvp3/.gitignore
 b46346be4e2bf4d54b88e770f1d8d799d8824150c1c32dbe3c1f75fff202f4f8  android-mvp3/app/build.gradle
 8b430e7f1b5f80871c17c4612418c50d8adb779f1c72304e27a0b1726049fcaa  android-mvp3/app/src/androidTest/assets/meal-timing-case.js
-79be523d0ea920be1df1a15f5d04d23cd73c2c418eacbe95193a84ac2113d66a  android-mvp3/app/src/androidTest/assets/meal-workflow-qa.js
+2a27a5fe842353e2e699de98ef0f26a858efa14a45ab51e8702fff56c84ed706  android-mvp3/app/src/androidTest/assets/meal-workflow-qa.js
 c7e9fc8e0c802a63aba446c56661e579b6449f3d6e52f80c568487eebd40e25b  android-mvp3/app/src/androidTest/assets/pilot-replay-qa.js
 81c77b6e2b2de2c3b654b9751d8713fdfbebfa475adfb7d2d1ce0e8f1d7bf230  android-mvp3/app/src/androidTest/assets/production-qa.js
 f2686f381e5777fe1584334c77772b1d0bd3b36f125bf7051fd9c5a244e26ba7  android-mvp3/app/src/androidTest/assets/stock-ui.js
@@ -15,7 +15,7 @@ e6f089b5027c4ee24c57dd0a5fe10394d60d2e0ab1ffa6c77f5e06c964676cef  android-mvp3/a
 ad01b310a69cc81c6d064a53533c5c84927fe6b3fcc230881d4c2668da5e0b89  android-mvp3/app/src/androidTest/java/com/glucopapa/shell/qa/WebViewChecks.java
 8b8a40ceddf4d042e18531c57c18c62c1f8be576d5f9215dc1a05b0b45e404ad  android-mvp3/app/src/fixture/assets/www/qa-shell.js
 acccd0a2c5bdfabfa36849c255b7fb80499e92770368d12d768ca07c78442192  android-mvp3/app/src/main/AndroidManifest.xml
-16504e5d92afe1dfdef74d268ebb7799ec0806f05d29949ba17494bd1f8223e5  android-mvp3/app/src/main/assets/www/app.js
+e9b6e463059ddd36cc092254933c3d59716bb09fd3379956710448be0233414e  android-mvp3/app/src/main/assets/www/app.js
 0abc9b584922377403d2edca6de42f9aea5f31e152415bcda186b6c9f35dc84b  android-mvp3/app/src/main/assets/www/approved-library/CGM_Chart_v0.2A.html
 d78a8ef8d236fc89ecb4776ff5e086fb0202b5b4f522c6290421d6d7ff1ac6a2  android-mvp3/app/src/main/assets/www/approved-library/GFAPSEnhancer_v0.1.1.html
 5cc5433d2d4b340106570360fe325b54cf2c4597c22a31e18e58ad620b016a9e  android-mvp3/app/src/main/assets/www/approved-library/GFAuditExport_v0.1.2.html
@@ -34,7 +34,7 @@ d4944efb1a4093e5b1a3e5885bf7b3642371650b4ed10bf2db663e5a31bbc8aa  android-mvp3/a
 fbde2baf61372dee40cb8615482032d657d95a0c518eac07f797ac27d59ba742  android-mvp3/app/src/main/assets/www/approved/GFNutrition_v0.4.6_APPROVED_SOURCE.html
 6b9da4dfe3655f4d18fc8e361f050a75127e17eae7399fb3605c222d4c957cfb  android-mvp3/app/src/main/assets/www/approved/GFNutrition_v0.4.6_LIVE.html
 b583f8e3cd16590a4ebdfe76daa50328cac65117c3866d5e16b62cb65f228901  android-mvp3/app/src/main/assets/www/approved/GFSettings_v0.1.4_LIVE.html
-8620a3b711190d99d9bc5f71d940620057b351f4cbebeb34aa9a8e5e8d19362a  android-mvp3/app/src/main/assets/www/index.html
+0f12e334226ca6cf4224219ae3da8c18c56e2938421434ac41e205713280432b  android-mvp3/app/src/main/assets/www/index.html
 9caf15586559ddbb369ffebbe5f7d28d8ffd9ee15ca5e0676e8491504f08e9bb  android-mvp3/app/src/main/assets/www/integration/GFAutoCOBProfile_v0.1.0.js
 246c0ff4a7402fe9698312212d3eaab538aa8b6fa997974fbb39277ed685ed60  android-mvp3/app/src/main/assets/www/integration/GFCOBAutoPanel_v0.2.0.js
 b312c5a58bdd60ab9dd8c280045bfd473e30460ac073c4b255c2a6a6ba210033  android-mvp3/app/src/main/assets/www/integration/GFCOBResearch_v0.1.0.js
@@ -58,7 +58,7 @@ c8dc959bc5f40582f7d028ee54470485cf832257daaa1b287e0a340685d3c430  android-mvp3/a
 1ed4b508d4e3e87ff102ebf20ef8ef7bf4871ded16319b06b753daae90ab58ab  android-mvp3/app/src/main/assets/www/integration/GFInjectionTimingStorage_v0.1.0.js
 7c1ccb9ccef6eda39487846b7dea2322222c40e3efd21e78d0dbc8df6eefa38a  android-mvp3/app/src/main/assets/www/integration/GFInsulinEvidenceGate_v0.1.0.js
 21d4fb6b4ac10850b19b2cb61a817f05d8c1752da985e8352b6cb99aaac065c3  android-mvp3/app/src/main/assets/www/integration/GFJournalBackup_v0.1.0.js
-53a2dd86a14a4d7bcf235ffa1eccaa31e7a2d8c4fba049dee61716799f277a19  android-mvp3/app/src/main/assets/www/integration/GFJournalPresentation_v0.1.0.js
+1ad7b2c319068d0dd018027b4f8b39da917011755a23fcd8c19c4fcd89ea04c2  android-mvp3/app/src/main/assets/www/integration/GFJournalPresentation_v0.1.0.js
 2f09de150906159260ddce9005e1d41780a973dde592642b4fc296962b614c93  android-mvp3/app/src/main/assets/www/integration/GFLOWStorage_v0.4.1.js
 9f169aa8dfef484f3fc21ede0623591d1cdd15a160994c954688a9a50ff2ca96  android-mvp3/app/src/main/assets/www/integration/GFLOWView_v0.4.1.js
 6b2cb837c174e7dba7280cde557684962df17c55ae96fad52ddaf1727dcd81e9  android-mvp3/app/src/main/assets/www/integration/GFLevemirReview_v0.1.0.js
@@ -70,7 +70,7 @@ bef25b24e03a1de3bafb727efcf603e928f35b713ab9a8f3750ce614f12ee1d8  android-mvp3/a
 98e98ce214c3c72d1cbf235842d4e20b4e273206963d6cb14cc76a088536daf8  android-mvp3/app/src/main/assets/www/integration/GFMealCoverageStudy_v0.1.0.js
 6d1830e62a83924b960c13a2a4d9a7f885e93cf5ee66cf2eed4da4a8e72a670d  android-mvp3/app/src/main/assets/www/integration/GFMealCoverageStudy_v0.1.1.js
 f33b5e1c21927fe7fa67c837aeceffe9b74e505fb00bd9dc3a9c651282d1920f  android-mvp3/app/src/main/assets/www/integration/GFMealTimingService_v0.1.0.js
-f738153ad269226601c5ba897d09208488cbbcd5191ac128ef1f6e3756ccccad  android-mvp3/app/src/main/assets/www/integration/GFMealWorkflowView_v0.1.0.js
+b9b7ac59f0844240bb7687eefeee26b902556b347e177cf749535659843ecd76  android-mvp3/app/src/main/assets/www/integration/GFMealWorkflowView_v0.1.0.js
 87c68e3f8fc6122f2886cabf60d8bc706a2fb9cb55d7b42bef4ad8020ef65cc5  android-mvp3/app/src/main/assets/www/integration/GFModuleDirectory_v0.1.0.js
 05cd1152fc3d33fff56e4406f5e5b7d2dd52a41e17d5f60653e7b1562386db55  android-mvp3/app/src/main/assets/www/integration/GFModuleHub_v0.2.0.js
 b14d3b12f9d65330ec2b973f247d2ddf34ff6fd66e5bfa4217eebc6c1aa77a4f  android-mvp3/app/src/main/assets/www/integration/GFModuleUI_v0.2.0.js

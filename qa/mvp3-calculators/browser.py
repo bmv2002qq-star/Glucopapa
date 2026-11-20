@@ -24,31 +24,24 @@ def verify(browser, origin, artifact):
     evidence = []
     for width in (320, 390, 428, 1280):
         page.set_viewport_size({'width': width, 'height': 900})
-        for route, panel_name in [('approved-nutrition', 'Meal')]:
-            before = page.evaluate('GPApp.getStorage().diagnostics().revision')
-            page.evaluate('(route) => GPApp.open(route)', route)
-            panel = page.locator('#calcEvidence' + panel_name)
-            panel.scroll_into_view_if_needed()
-            assert panel.locator('summary').inner_text() == 'Расчёт'
-            assert panel.locator('[data-calc-summary]').inner_text() == 'Расчёт недоступен'
-            for code in ['CGM_SOURCE_UNKNOWN', 'JOURNAL_COVERAGE_UNKNOWN', 'FOOD_COVERAGE_MISSING']:
-                row = panel.locator('[data-code="' + code + '"]')
-                assert row.is_visible() and row.evaluate('(el) => getComputedStyle(el).color') == 'rgb(155, 28, 36)'
-            if panel_name == 'Meal':
-                assert panel.locator('[data-code="PLATE_MISSING"]').is_visible()
-                assert page.frame_locator('#iframeApprovedNutrition').locator('#catalogSearch').is_visible()
-            assert panel.locator('details').get_attribute('open') is None
-            panel.locator('summary').click()
-            summary = panel.locator('[data-calc-trace]').inner_text()
-            assert f'GFStorage · ревизия {before}' in summary
-            assert 'IOB РинФаста · неизвестно' in summary and 'NO_CONFIRMED_MEALS_IN_WINDOW' in summary
-            assert 'INPUT_READ_FAILED' not in summary
-            assert page.evaluate('GPApp.getStorage().diagnostics().revision') == before
-            assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
-            if width == 390:
-                page.screenshot(path=artifact / (panel_name.lower() + '-390.png'))
-            panel.locator('summary').click()
-            evidence.append({'route': route, 'width': width, 'revision': before, 'warnings_outside_details': 'PASS'})
+        before = page.evaluate('GPApp.getStorage().diagnostics().revision')
+        page.evaluate("GPApp.open('approved-meal')")
+        panel = page.frame_locator('#iframeApprovedMeal')
+        panel.locator('#doseExplain').get_by_text('Сначала соберите',exact=False).wait_for()
+        assert panel.locator('details').get_attribute('open') is None
+        panel.locator('summary').click()
+        for code in ['CGM_SOURCE_UNKNOWN', 'JOURNAL_COVERAGE_UNKNOWN', 'FOOD_COVERAGE_MISSING', 'PLATE_MISSING']:
+            assert panel.locator('[data-code="' + code + '"]').is_visible(), code
+        trace = panel.locator('[data-calc-trace]').inner_text()
+        assert f'GFStorage · ревизия {before}' in trace
+        assert 'IOB РинФаста · неизвестно' in trace and 'NO_CONFIRMED_MEALS_IN_WINDOW' in trace
+        assert 'INPUT_READ_FAILED' not in trace
+        assert page.evaluate('GPApp.getStorage().diagnostics().revision') == before
+        assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+        if width == 390:
+            page.screenshot(path=artifact / 'meal-390.png')
+        panel.locator('summary').click()
+        evidence.append({'route': 'approved-meal', 'width': width, 'revision': before, 'reasons_in_details': 'PASS'})
     page.evaluate("GPApp.open('approved-nutrition')")
     frame = page.frame_locator('#iframeApprovedNutrition')
     frame.locator('#catalogSearch').fill('гречка')
@@ -56,8 +49,10 @@ def verify(browser, origin, artifact):
     frame.locator('#portionAmount').fill('75')
     frame.locator('#addToPlate').click()
     page.locator('#approvedSavePlate').click()
-    page.locator('#approvedPlateStatus').get_by_text('План зарегистрирован:', exact=False).wait_for()
-    panel = page.locator('#calcEvidenceMeal')
+    page.locator('#approvedPlateStatus').get_by_text('План питания сохранён.', exact=False).wait_for()
+    page.evaluate("GPApp.open('approved-meal')")
+    panel = page.frame_locator('#iframeApprovedMeal')
+    panel.locator('#minutesChosen').wait_for()
     assert panel.locator('[data-code="PLATE_MISSING"]').count() == 0
     panel.locator('summary').click()
     assert 'Тарелка · план' in panel.locator('[data-calc-trace]').inner_text()

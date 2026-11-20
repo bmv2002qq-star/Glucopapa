@@ -260,19 +260,6 @@ function cgmDisplayStatus(x){
  if(x.status==='OBSERVED_ONLY')return {state:'invalid',text:'xDrip+ не сообщил о свежести показания · '+Math.floor(x.ageMinutes)+' мин назад',value:'—'};
  return {state:'invalid',text:'Нет актуального показания CGM ('+x.code+')',value:'—'};
 }
-function renderCalculationEvidence(route,nowMs){
- const out=$('calcEvidence'+{low:'Low',high:'High',meal:'Meal'}[route]);
- if(!out||!host)return;
- let evidence;
- try{
-   const cobOptions=globalThis.GFCOBStudyPanel?.optionsForRevision?.(host,nowMs)||{};
-   evidence=GFCalculationEvidence.inspect({host,route,nowMs,activeMeal,cobOptions});
- }catch(error){
-   console.error(error);
-   evidence={blockers:[{code:'INPUT_READ_FAILED',message:'Не удалось прочитать согласованный снимок GFStorage.'}],trace:null};
- }
- GFCalculationEvidence.render(out,evidence);
-}
 function selectForecasts(evidence,nowMs){
  const g=port('graph'),data=g.getSnapshot(),prefs=data.graphPreferences;
  $('forecastGraphOptions').hidden=mode!=='local';
@@ -311,7 +298,6 @@ function renderCgm(cgm,active,nowMs,journal){
        now:nowMs,timezone:all.zone,forecastLines:result.lines,actions:all.rows.slice(-30)});
    }else renderChart($('cgmDetailChart'),cgm,nowMs,24,result.lines);
  }
- if(screenId==='approved-nutrition')renderCalculationEvidence('meal',nowMs);
  if(screenId==='approved-low')globalThis.GFLOWView?.render();
  if(screenId==='approved-high')globalThis.GFHighTargetView?.render();
 }

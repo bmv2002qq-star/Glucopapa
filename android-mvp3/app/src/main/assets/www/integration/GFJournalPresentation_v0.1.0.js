@@ -113,7 +113,8 @@
     doc.getElementById('kind').append(sport);
     for(const id of ['date','kind'])doc.getElementById(id).addEventListener('change',()=>entry.refresh());
     for(const id of ['prev','next'])doc.getElementById(id).addEventListener('click',()=>entry.refresh());
-    const style=textElement(doc,'style','tr.sport-period td { background: #e7f6ff; } .sport-swatch { background: #b6def5; }');
+    const style=textElement(doc,'style','tr.ill td{background:#ffe8ef}.sick-swatch{background:#f5bbd1}'+
+      'tr.sport-period td{background:#e7f6ff}.sport-swatch{background:#b6def5}');
     doc.head.append(style);
     const legend=textElement(doc,'span','Период спорта');legend.className='key';
     const swatch=doc.createElement('i');swatch.className='swatch sport-swatch';
@@ -142,8 +143,12 @@
     const rows=within(all.rows,range), monthly=within(all.rows,month);
     entry.result={range,month,rows:matching(rows,doc.getElementById('kind').value),monthly,
       norms:nutritionRange(settings,range,all.zone,today),monthlyNorms:nutritionRange(settings,month,all.zone,today)};
-    return {...all,rows:rows.map(row=>({...row,day:date.value,
-      time:range.start!==range.end?row.day+' '+row.time:row.time}))};
+    const illnessEnds=new Map(all.illness.filter(p=>p.end!==null).map(p=>[p.id+'-end',Math.round((p.end-p.start)/60000)]));
+    return {...all,rows:rows.map(row=>{
+      const duration=illnessEnds.get(row.id);
+      return {...row,...(duration===undefined?{}:{ill:true,durationMinutes:duration}),day:date.value,
+        time:range.start!==range.end?row.day+' '+row.time:row.time};
+    })};
   }
   root.GFJournalPresentation=Object.freeze({prepare});
 })(globalThis);
