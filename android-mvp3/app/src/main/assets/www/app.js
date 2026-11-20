@@ -90,7 +90,7 @@ function getDriver(selectedMode){
   // Desktop/browser preview only.
   return {load(){const v=localStorage.getItem(key);return v?JSON.parse(v):null;},save(s){localStorage.setItem(key,JSON.stringify(s));}};
 }
-function ensureDependencies(){const required=['GFTimeGrid','GFStorage','GFMealController','GFSettings','GFJournal','GFJournalStorageAdapter','GFCgmEvidencePolicy','GFSafetyStorageBridge','GFSafety','GFAuditExportStorageAdapter','GFCoefficients','GFCoefficientReview','GFHighLowReadOnly','GFHighLowInputGate','GFCOBResearch','GFMealAbsorption','GFCalculationEvidence','GFForecastStorageAdapter','GFForecastReadout','GFResearchForecastRun','GFResearchForecastGraph','GFFoodMealEntry','GFProviderCgm','GFJournalBackup','GPModuleHub','LevemirEngine','GPCgmWhiteChart','GFInjectionAnalytics','GFPhysioExerciseContext'];return required.filter(name=>!globalThis[name]);}
+function ensureDependencies(){const required=['GFTimeGrid','GFStorage','GFMealController','GFSettings','GFJournal','GFJournalStorageAdapter','GFCgmEvidencePolicy','GFSafetyStorageBridge','GFSafety','GFAuditExportStorageAdapter','GFCoefficients','GFCoefficientReview','GFHighLowReadOnly','GFHighLowInputGate','GFCOBResearch','GFMealAbsorption','GFCalculationEvidence','GFForecastStorageAdapter','GFForecastReadout','GFResearchForecastRun','GFResearchForecastGraph','GFConsensusAutoSelection','GFGraphFourLines','GFFoodMealEntry','GFProviderCgm','GFJournalBackup','GPModuleHub','LevemirEngine','GPCgmWhiteChart','GFInjectionAnalytics','GFPhysioExerciseContext'];return required.filter(name=>!globalThis[name]);}
 function boot(selectedMode=mode){
  const missing=ensureDependencies();
  if(missing.length)throw new Error('Отсутствуют модули: '+missing.join(', '));
@@ -260,27 +260,28 @@ function render(){if(!host)return;try{
  $('resetDemo').disabled=mode!=='demo'||!!globalThis.GFNativeStorage;
  }catch(e){notify('Ошибка отображения: '+String(e.message||e),true);console.error(e);}}
 function renderForecastOverlay(out,view,nowMs){
- if(out.id!=='cgmDetailChart')return;
- const g=port('graph'), data=g.getSnapshot(), prefs=data.graphPreferences;
+ const g=port('graph'),data=g.getSnapshot(),prefs=data.graphPreferences;
  $('forecastGraphOptions').hidden=mode!=='local';
  $('forecastAutoConsensus').checked=prefs.autoConsensus!==false;
  for(const control of document.querySelectorAll('[data-model-visibility]')){
    control.checked=prefs.forecastVisibility?.[control.dataset.modelVisibility]!==false;
  }
- const legend=$('forecastGraphLegend');
- legend.textContent='Нет исследовательских прогнозов для текущего источника.';
+ const setLegend=message=>{
+   $('forecastGraphLegend').textContent=message;
+   $('forecastHomeLegend').textContent=message;
+ };
+ setLegend('Нет исследовательских прогнозов для текущего источника.');
  if(mode!=='local'||!view||view.status!=='OK'||view.sourceStatus!=='DEVICE_DECLARED'||
     view.sourceRevision!==data.revision||g.getRevision()!==data.revision)return;
  try{
-   const result=GFResearchForecastGraph.select({forecasts:data.forecasts,cgm:data.cgm,sourceId:view.sensorSourceId,
-     sourceTime:Date.parse(view.latestAt),nowMs,preferences:prefs,minimumSourceRevision:g.getForecastInputRevision()});
-   GFResearchForecastGraph.overlay(out.querySelector('svg'),GPCgmWhiteChart,view.window,result.lines);
-   if(result.lines.length){
-     legend.textContent='Пунктир · исследовательские прогнозы · '+result.lines.map(x=>
-       (x.highlight?'★ ':'')+x.modelId).join(', ');
-   }else if(result.status!=='NO_CURRENT_FORECAST')legend.textContent='Сохранённые линии скрыты в настройках.';
- }catch{
-   legend.textContent='Исследовательские линии временно недоступны.';
+   const result=GFGraphFourLines.select({forecasts:data.forecasts,sourceId:view.sensorSourceId,
+     sourceTime:Date.parse(view.latestAt),nowMs,preferences:prefs,
+     minimumSourceRevision:g.getForecastInputRevision()});
+   GFGraphFourLines.overlay(out.querySelector('svg'),GPCgmWhiteChart,view.window,result.lines);
+   setLegend(GFGraphFourLines.statusText(result));
+ }catch(error){
+   console.warn('Four-line CGM overlay unavailable:',error);
+   setLegend('Исследовательские линии временно недоступны.');
  }
 }
 function renderChart(out,readings,nowMs,hours){
@@ -382,15 +383,20 @@ function runBasalReview(){
    eligibleWindows:groups?groups.morning.eligibleWindows+groups.evening.eligibleWindows:null});
 }
 function runConsensusReview(){
- const result=mode==='local'?GFConsensusReview.archiveAssessment(host):GFConsensusReview.fromHost(host);
- const rows=result.results||[];
- const count=rows.map(row=>row.horizon+' мин · '+row.n+' пар').join(' · ');
- $('consensusReviewStatus').textContent=(result.status==='NO_LEADER'?'Сопоставимых данных для лидера недостаточно.':
-   result.status==='BLOCKED'?'Снимок данных изменился.':'Статус сравнения '+result.status+'.')+
-   (count?' '+count:'')+
-   (result.assessed?.length?' Сверено исследовательских рядов: '+result.assessed.length+'.':'')+
-   (result.archived?' Сохранено сверок: '+result.archived+'.':'')+
-   (result.assessmentStatus?' '+result.assessmentStatus+'.':'');
+ const previous=mode==='local'?GFConsensusReview.archiveAssessment(host):GFConsensusReview.fromHost(host);
+ const result=GFConsensusAutoSelection.fromHost(host);
+ const counts=(result.results||[]).map(row=>row.horizon+' мин: '+row.n+' пар').join(' · ');
+ const label=result.status==='LEADER'?'Лидер: '+result.leader:
+   result.status==='COMPOSITE'?'Разные лидеры на горизонтах; возможен составной прогноз.':
+   result.status==='TIE'?'Сравнимая точность; надёжный лидер не установлен.':
+   result.status==='BLOCKED'?'Чтение согласованного снимка заблокировано.':
+   'Истории или сопоставимых моделей пока недостаточно.';
+ const models=result.modelIds?.join(', ')||'нет сопоставимой пары';
+ $('consensusReviewStatus').textContent='GFConsensus Auto v'+GFConsensusAutoSelection.VERSION+
+   ' · '+label+' · модели: '+models+(counts?' · '+counts:'')+
+   (previous.archived?' · сохранено проверок: '+previous.archived:'')+
+   (previous.assessmentStatus?' · '+previous.assessmentStatus:'')+
+   ' · только анализ исторических прогнозов, без дозировок.';
 }
 function numericField(id){const n=Number($(id).value);if(!Number.isFinite(n))throw Error('Проверьте числовые поля');return n;}
 function doMeal(method){
