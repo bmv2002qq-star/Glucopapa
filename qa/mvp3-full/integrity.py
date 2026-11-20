@@ -51,8 +51,9 @@ def main():
     core = [name for name in order if re.search(r'GFStorage.*gfstorage_core\.js$', name)]
     assert core == ['modules/GFStorage_v0.5.12/src/gfstorage_core.js']
     assert not any(token in name for name in order for token in ('ReplayLab', 'GFxDrip', 'GFNutrition_FALLBACK'))
-    assert len(entry.frames) == 5 and all(name.startswith('approved/') for name in entry.frames[:3])
-    assert entry.frames[3:] == ['integration/approved_routes/LOW_v0.2_VIEW.html',
+    assert len(entry.frames) == 6 and all(name.startswith('approved/') for name in entry.frames[:3])
+    assert entry.frames[3:] == ['integration/approved_routes/GFMealCalc_v0.3.0_VIEW.html',
+                                'integration/approved_routes/LOW_v0.2_VIEW.html',
                                 'integration/approved_routes/GFHighTarget_v0.1.3_VIEW.html']
     for resource in entry.scripts + entry.frames:
         url = urlsplit(resource)
@@ -97,6 +98,8 @@ def main():
                              'modules/GFStorage_v0.5.11/src/gfstorage_core.js', core[0],
                              'integration/GFJournalPresentation_v0.1.0.js','integration/GFGraphFourLines_v0.1.0.js','integration/GFConsensusAutoSelection_v0.1.2.js',
                              'integration/GFConsensusEvidence_v0.1.0.js','integration/GFInjectionFact_v0.1.0.js',
+                             'integration/GFMealTimingService_v0.1.0.js','integration/GFMealWorkflowView_v0.1.0.js',
+                             'integration/approved_routes/GFMealCalc_v0.3.0_VIEW.html',
                              'integration/GFMainScreen_v1.0.0/gfmain_core.js','integration/GFMainScreen_v1.0.0/gfmain_ui.js',
                              'integration/GFMainScreen_v1.0.0/gfmain_home_scoped.css'}
         assert set(files) - set(archived) <= allowed_additions

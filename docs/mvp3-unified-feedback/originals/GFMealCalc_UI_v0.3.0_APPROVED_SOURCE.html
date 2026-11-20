@@ -1,0 +1,1137 @@
+<!doctype html><html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ГлюкоПапа · GFMealCalc UI v0.2.0 · учебная демоверсия</title><style>
+:root{--bg:#f3f7f9;--white:#fff;--ink:#193343;--sub:#667f8c;--teal:#107d84;--teal-light:#e5f5f3;--blue:#316eaa;--line:#dce7eb;--amber:#ad7014;--amberbg:#fff5df;--red:#ae344a;--redbg:#ffedf0;--green:#148465}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,'Segoe UI',Arial,sans-serif}main{max-width:1180px;margin:auto;padding:18px 18px 65px}header{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}.eyebrow{color:var(--teal);letter-spacing:.08em;font-size:12px;font-weight:800;text-transform:uppercase}h1{font-size:26px;line-height:1.2;margin:4px 0}h2{font-size:18px;line-height:1.3;margin:0 0 10px}h3{font-size:15px;margin:0 0 6px}.sub,small{font-size:12px;color:var(--sub)}.badge{border-radius:30px;background:var(--teal-light);color:var(--teal);padding:7px 13px;font-weight:800;font-size:12px}.dangerbadge{background:var(--redbg);color:var(--red)}.warning{margin:16px 0;background:var(--amberbg);border:1px solid #efdbb3;border-radius:15px;padding:12px 17px;color:#7c4f14;font-size:13px}.stepbar{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:18px}.stepbar span{font-size:12px;border:1px solid var(--line);padding:9px 12px;color:var(--sub);border-radius:30px;background:white;font-weight:700}.stepbar span.on{background:var(--teal);color:white;border-color:var(--teal)}.grid{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(270px,.8fr);gap:16px}.card{background:white;border:1px solid var(--line);border-radius:18px;padding:19px;box-shadow:0 3px 15px #24455b09;margin-bottom:14px}.card.locked{opacity:.7}.card.locked .contents{pointer-events:none}.cardhead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}.labelchip{font-size:11px;background:#ecf3f5;color:#37616d;border-radius:30px;padding:5px 9px;font-weight:800;white-space:nowrap}.activechip{background:var(--teal-light);color:var(--teal)}.twocol{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}.threecol{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}.metric{border:1px solid #e3ecef;background:#f8fbfb;border-radius:12px;padding:12px}.metric span{display:block;color:var(--sub);font-size:11px}.metric strong{display:block;font-weight:800;font-size:22px;line-height:1.3;margin-top:3px}.metric small{display:block}.row{display:flex;justify-content:space-between;align-items:center;gap:12px}.hint{font-size:12px;color:var(--sub);margin:7px 0}.subtle{border-radius:12px;background:#f5f9fa;padding:12px;margin-top:10px;font-size:13px}.notice{border:1px solid #d9ede9;background:#eef8f6;border-radius:12px;padding:11px 13px;margin:10px 0;font-size:12px}.alarm{border:1px solid #f2c3cb;background:var(--redbg);color:#87283c}.foodrow{display:grid;grid-template-columns:1fr 130px;gap:12px;align-items:center;border-bottom:1px solid var(--line);padding:11px 0}.foodrow:last-child{border:0}.foodrow h3{margin:0}.foodrow p{margin:1px 0}.foodrow input{max-width:140px}label{font-size:13px;font-weight:700;display:block;margin:10px 0 5px}input,select{width:100%;min-height:42px;border:1px solid #b9d0d5;background:white;padding:9px 10px;border-radius:10px;color:var(--ink);font:inherit;font-size:15px}input:focus-visible,select:focus-visible,button:focus-visible{outline:3px solid #91c4ca;outline-offset:2px}.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:13px}.actions button{flex:1 1 150px}button{font-family:inherit;font-weight:800;font-size:13px;color:#fff;background:var(--teal);border:0;border-radius:11px;min-height:44px;padding:10px 14px;cursor:pointer}button.secondary{background:var(--teal-light);color:var(--teal)}button.ghost{background:white;color:var(--ink);border:1px solid var(--line)}button.danger{background:#ffedf0;color:var(--red)}button:disabled{cursor:not-allowed;opacity:.4}.fine{font-size:11px;color:var(--sub);margin:8px 0}#clockFace{font-variant-numeric:tabular-nums;font-size:16px;font-weight:800}.timer{text-align:center;border-radius:14px;padding:18px;background:var(--teal-light);border:1px solid #bce1da}.timer strong{font:800 clamp(32px,6vw,52px)/1.25 ui-monospace,Consolas,monospace;color:var(--teal);display:block;margin:5px 0}.timer.over{background:#f0f4f5}.timer label{margin:0}.statusok{color:var(--green);font-weight:700}.statuserr{color:var(--red);font-weight:700}#err{min-height:21px;color:var(--red);font-size:13px;font-weight:650;margin:8px 0}#chartSvg{display:block;width:100%;max-height:300px;min-height:190px}#chartSvg text{font-size:11px;font-family:system-ui;fill:#6b8088}#eventsFeed{max-height:440px;overflow:auto}#eventsFeed .event{border-left:3px solid #c9e5e2;padding:4px 0 12px 12px;margin:8px 0;font-size:12px}#eventsFeed strong{display:block;font-size:13px}.kv{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 0;border-bottom:1px solid #e8eff1;font-size:13px}.kv strong{white-space:nowrap}.count{display:inline-block;background:#eef5f8;padding:4px 7px;border-radius:7px;color:var(--blue);font-size:12px}.legend summary{font-weight:800;cursor:pointer;padding:8px 0}.legend p{margin:7px 0;font-size:13px}.divider{height:1px;background:var(--line);margin:13px 0}footer{margin-top:20px;text-align:center;font-size:12px;color:var(--sub)}.inlinealert{color:var(--red);font-weight:750}#editPanel{margin-top:12px;border:1px solid #c5dfdf;background:#f5faf9;padding:12px;border-radius:14px}.pills{display:flex;gap:7px;flex-wrap:wrap}.pills span{font-size:12px;border-radius:8px;padding:6px 9px;background:#eef4f6;color:#456674}#plateTotal{font-size:19px}svg{touch-action:pan-y}@media(max-width:850px){.grid{grid-template-columns:1fr}header{align-items:start}.card{padding:15px}}@media(max-width:450px){main{padding:12px 9px 55px}h1{font-size:23px}.foodrow{grid-template-columns:1fr 110px}.metric strong{font-size:19px}.threecol{grid-template-columns:1fr 1fr}.stepbar span{padding:7px 8px;font-size:11px}}
+</style></head><body><main>
+<header><div><div class="eyebrow">ГлюкоПапа · утверждённый сценарий UI</div><h1>Инсулин и приём пищи</h1><div class="sub">GFMealCalc · экран v0.3.0 (балансировка еды) · GFStorage v0.2.0 без изменений</div></div><span class="badge dangerbadge">СИМУЛЯЦИЯ · НЕ ДЛЯ ЛЕЧЕНИЯ</span></header>
+<div class="warning"><b>Все сахар, еда, коэффициенты, дозы, интервалы и события в этой версии вымышлены.</b> Демоверсия только проверяет интерфейс, таймер и сохранение истории. Никогда не применяйте показанные числа для ребёнка: это не медицинский калькулятор. Обычный РинФаст используется как название выбранного препарата, а не как проверенный алгоритм дозирования. Личные медицинские данные не вводите — локальная база не шифруется.</div>
+<nav class="stepbar" id="stepbar"><span>1 · Тарелка</span><span>2 · Решение</span><span>3 · Таймер</span><span>4 · Еда</span><span>5 · Итог</span></nav>
+<div class="grid"><div>
+<section class="card"><div class="cardhead"><h2>Демо xDrip+ · синтетический график</h2><span class="labelchip">Не живые данные</span></div>
+<div class="twocol"><div><label for="scenario">Учебный сценарий сахара</label><select id="scenario"><option value="normal">7,0 ммоль/л · ровно →</option><option value="high">12,0 ммоль/л · растёт ↗</option><option value="falling">5,2 ммоль/л · снижается ↘</option><option value="low">3,6 ммоль/л · гипо ↓</option></select></div><div><label for="activity">Состояние ребёнка (условное)</label><select id="activity"><option value="rest">Спокойный день</option><option value="walk">Прогулка</option><option value="sport">Спорт / нагрузка</option></select></div></div><div style="max-width:340px"><label for="giMode">Скорость усвоения еды · условный ГИ для теста</label><select id="giMode"><option value="mixed">Смешанная тарелка</option><option value="fast">Более быстрые углеводы (условно)</option><option value="slow">Более медленные углеводы (условно)</option></select></div>
+<div class="row" style="margin:12px 0 0"><div><strong id="glucoseFace" style="font-size:26px">7,0 →</strong> <small>ммоль/л</small></div><div class="sub">Виртуальное время <span id="clockFace">12:00:00</span></div></div>
+<svg id="chartSvg" viewBox="0 0 620 226" role="img" aria-label="Вымышленный график глюкозы xDrip за последние три часа"></svg>
+<div class="pills"><span>— CGM (синтетика)</span><span>Зелёная полоса — пример целевой зоны</span><span>▸ Отметки укола и еды</span></div><div id="cgmSafety" class="hint">Синтетический источник; не соединён с xDrip+.</div><p class="fine">Смена сценария доступна до подтверждения тарелки и сдвигает учебное время на 3 часа 5 минут: прошлые CGM-записи и история не затираются.</p></section>
+<section class="card" id="plateCard"><div class="cardhead"><h2>1. Моя тарелка</h2><span id="plateChip" class="labelchip activechip">Черновик</span></div><p class="hint">В реальном приложении тарелку формирует GFNutrition v0.3.1 и сохраняет GFStorage. Здесь можно прямо менять граммы углеводов для проверки передачи.</p>
+<div class="contents" id="foodFields"><div class="foodrow"><div><h3>Вымышленная овсяная каша</h3><p class="sub">100 г · ГИ: средний (условно)</p></div><div><label for="carb1">Углеводы, г</label><input type="number" step="0.5" min="0" max="250" id="carb1" value="18"></div></div><div class="foodrow"><div><h3>Вымышленное яблоко</h3><p class="sub">100 г · ГИ: низкий (условно)</p></div><div><label for="carb2">Углеводы, г</label><input type="number" step="0.5" min="0" max="250" id="carb2" value="10"></div></div><div class="row" style="margin-top:9px"><span>Всего запланировано</span><strong id="plateTotal">28 г углеводов</strong></div><div class="actions"><button class="secondary" id="savePlan">Сохранить изменения</button><button id="confirmPlate">Подтвердить тарелку →</button></div></div><p class="fine" id="plateNote">Все БЖУ условные. Балансировка под шаг 0,5 ЕД не меняет еду автоматически; можно вручную отредактировать граммы углеводов.</p></section>
+<section class="card" id="calcCard"><div class="cardhead"><h2>2. Результат расчёта и решение</h2><span id="calcChip" class="labelchip">После тарелки</span></div><div class="contents"><p class="hint">Верхняя строка — исключительно учебная иллюстрация расчёта на вымышленном профиле. Нижнее поле — самостоятельное значение пользователя для симуляции укола.</p>
+<div class="twocol"><div class="metric"><span>Условная оценка по тарелке</span><strong id="doseSuggested">—</strong><small id="doseExplain">Сначала подтвердите еду</small></div><div class="metric"><span>Пример интервала до еды</span><strong id="minutesSuggested">—</strong><small id="minutesExplain">По синтетической истории</small></div></div><div class="notice" id="sampleMatches">Похожие синтетические случаи появятся после подтверждения тарелки.</div>
+<div class="twocol"><div><label for="doseChosen">Моя тестовая доза, ЕД (шаг 0,5)</label><input id="doseChosen" type="number" min="0.5" max="10" step="0.5" placeholder="Например: 2,0"></div><div><label for="minutesChosen">Мой интервал таймера, мин</label><input id="minutesChosen" type="number" min="0" max="30" step="1" placeholder="Например: 8"></div></div>
+<div class="actions"><button id="fillDemoDose" class="secondary">Подставить учебный пример</button><button id="confirmInjection">Учебный укол сделан — подтвердить</button></div><p class="fine" id="injectionHint">Подтверждение создаёт две разные записи: самостоятельное решение и отдельный факт инъекции. Повторная запись того же учебного укола запрещена.</p></div></section>
+<section class="card" id="timerCard"><div class="cardhead"><h2>3. Таймер после укола</h2><span id="timerChip" class="labelchip">После подтверждения</span></div><div class="contents"><div class="timer"><small>Оставшееся условное время</small><strong id="timerText">--:--</strong><div id="timerNote" class="sub">Таймер включится после подтверждения учебной инъекции</div></div><div class="actions"><button class="secondary" id="advance1">+1 мин в демо</button><button class="secondary" id="advance5">+5 мин в демо</button></div><p class="fine">Ускорение изменяет только виртуальное время. Таймер не блокирует начало еды и не управляет медицинским лечением.</p></div></section>
+<section class="card" id="mealCard"><div class="cardhead"><h2>4. Начало и завершение еды</h2><span id="mealChip" class="labelchip">Ожидает укола</span></div><div class="contents"><p id="actualInfo" class="hint">Подтвердите учебный укол, затем отметьте фактическое начало еды.</p><div class="actions"><button id="startMeal">Начали есть</button></div><div id="afterStart" hidden><div class="divider"></div><div class="metric"><span>Что планировали</span><strong id="mealPlanned">28 г углеводов</strong></div><div class="actions"><button id="ateAll">Съел всё</button><button id="editActual" class="secondary">Изменить съеденное ↗</button></div><div id="editPanel" hidden><h3>Редактирование съеденного · GFNutrition (учебная тарелка)</h3>
+<p class="hint">Укажите фактически съеденные граммы. Продукты можно добавить, заменить и удалить. Подсказка не является подбором лечения после инъекции.</p>
+<div id="editFoodRows"></div>
+<div class="twocol"><div><label for="newFood">Добавить продукт</label><select id="newFood"><option value="buckwheat">Гречка варёная (условная)</option><option value="cutlet">Котлета (условная)</option><option value="sausage">Сосиски (условные)</option><option value="apple">Яблоко (условное)</option><option value="oats">Овсяная каша (условная)</option></select></div><div><label for="newGrams">Количество, г</label><input id="newGrams" type="number" min="1" max="1000" step="1" value="50"></div></div>
+<div class="actions"><button class="secondary" id="addActualFood">+ Добавить продукт</button><button class="secondary" id="manualBalance">Подобрать вручную</button><button id="autoBalance">Автоматическая балансировка</button></div>
+<div class="metric" id="balanceMetrics" aria-live="polite">Введите продукты и граммовки для сравнения.</div>
+<div id="balanceProposal" class="notice" hidden></div>
+<div class="notice" id="balanceWarning" role="status">Данные учебные; CGM и IOB в этом стенде не подтверждают безопасность.</div>
+<label for="editReason">Причина изменения</label><input id="editReason" placeholder="Например, съел половину каши, вместо котлеты — сосиски">
+<div class="actions"><button id="saveActual">Подтвердить фактически съеденное</button><button class="ghost" id="cancelActual">Отмена</button></div></div><div class="notice" id="actualConfirmed">Факт съеденного пока не указан.</div><div class="actions"><button id="finishMeal">Завершить приём пищи</button></div></div></div></section>
+<section class="card" id="endCard"><div class="cardhead"><h2>5. Результат и повторная проверка</h2><span id="endChip" class="labelchip">После завершения</span></div><div class="contents"><div class="twocol"><div class="metric"><span>Запланировано</span><strong id="finalPlanned">—</strong></div><div class="metric"><span>Фактически съедено</span><strong id="finalActual">—</strong></div><div class="metric"><span>Введено по журналу</span><strong id="finalInjected">—</strong></div><div class="metric"><span>Реальный интервал в демо</span><strong id="finalInterval">—</strong></div></div><div class="actions"><button class="secondary" id="showCorrection">Исправить еду после завершения</button><button id="newTest">Новый учебный приём</button></div><div class="actions"><button class="secondary" id="simulateOutcome">Проиграть +2 часа CGM · учебное обучение</button></div><p id="learningInfo" class="hint">После завершения можно проиграть вымышленный исход и добавить его в демонстрационную историю.</p><div class="notice">При исправлении факта еды план и уже записанный укол остаются неизменными. Для нового обучения нужны наблюдаемые исходы CGM — здесь они полностью вымышленные и не проверяют лечебную точность.</div></div></section>
+</div><aside>
+<section class="card"><h2>Что задано в тестовой модели</h2><div class="kv"><span>Препарат</span><strong>РинФаст (обычный)</strong></div><div class="kv"><span>УК утро / день / вечер</span><strong>12 / 14 / 16 г/ЕД</strong></div><div class="kv"><span>ФЧИ утро / день / вечер</span><strong>4,0 / 4,5 / 4,2</strong></div><div class="kv"><span>CGM</span><strong id="sideGlucose">7,0 → ммоль/л</strong></div><div class="kv"><span>Активный инсулин, IOB</span><strong>Не подтверждён</strong></div><div class="kv"><span>Синтетическая история</span><strong><span id="caseCount">11 случаев</span></strong></div><div class="kv"><span>База GFStorage</span><strong id="rev">Ревизия 0</strong></div><p class="fine">Все числа придуманы только для тестирования. ФЧИ показываем, но лечебные корректировки по нему не вычисляем; IOB без полного журнала не считаем равным нулю. Активность и ГИ в этом стенде — учебные параметры, пока без нового постоянного раздела GFStorage.</p></section>
+<section class="card"><h2>Единый журнал событий</h2><div class="sub">Все изменения тарелки и факт инъекции — реальные операции утверждённого GFStorage v0.2.0 внутри локальной симуляции.</div><div id="eventsFeed"><p class="sub">Пока пусто</p></div></section>
+<section class="card legend"><details open><summary>Легенда: как тестировать</summary><p><b>1.</b> Измени углеводы еды и нажми «Сохранить изменения»; после «Подтвердить тарелку» открывается учебный расчёт.</p><p><b>2.</b> Посмотри условные дозу и минуты. Кнопкой «Подставить учебный пример» заполни ручные поля (или введи свои тестовые числа).</p><p><b>3.</b> «Учебный укол сделан» записывает отдельные решение и инъекцию. Таймер стартует по виртуальным часам.</p><p><b>4.</b> Перематывай время кнопками +1 / +5 минут. Нажми «Начали есть» — фактическое время фиксируется независимо от таймера.</p><p><b>5.</b> Выбери «Съел всё» или «Изменить съеденное», затем заверши еду. Перейти назад и исправить факт можно даже после завершения.</p><p><b>6.</b> Попробуй сценарии 12,0 растёт, 5,2 падает и 3,6 гипо. Опасный вариант должен блокировать учебные подсказки.</p><p><b>7.</b> После завершения нажми «Проиграть +2 часа CGM» — вымышленный эпизод попадёт в историю сравнения для нового теста.</p><p><b>8.</b> Обнови страницу — при разрешённом браузером localStorage учебная база и история сохраняются. Кнопка «Сброс» удаляет только записи этой демоверсии.</p></details></section>
+<section class="card"><h2>Системный статус</h2><div class="sub" id="systemStatus">Загрузка хранилища…</div><div id="err" role="alert"></div><div class="actions"><button class="danger" id="resetDemo">Сбросить только демоверсию</button></div><p class="fine">Собран на основе неизменённых версий GFStorage 0.2.0, GFMealCalc 0.1.0, GFMealController 0.1.0 и исследовательского движка РинФаста 0.3.1. Новый слой графика, временного сценария и UI не утверждён.</p></section>
+</aside></div><footer>ГлюкоПапа • интерактивный UI-прототип v0.2.0 • полностью автономный HTML • нет связи с настоящим xDrip+, Android или медицинскими системами</footer>
+</main><script>/* ГлюкоПапа GFStorage v0.2.0 — shared research data repository, meal workflow.
+ * UMD: CommonJS require(...) or browser global GFStorage.
+ * No dosing calculations, no treatment advice, no automatic parameter application.
+ * This standalone JS capability separation is NOT an OS security boundary.
+ */
+(function(root, make){
+  'use strict';
+  const api = make();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  if (root) root.GFStorage = api;
+})(typeof globalThis !== 'undefined' ? globalThis : this, function(){
+  'use strict';
+  const VERSION = '0.2.0', SCHEMA_VERSION = 2;
+  const DRUGS = Object.freeze({
+    rinfast: Object.freeze({id:'rinfast',name:'РинФаст',substance:'инсулин аспарт',type:'rapid'}),
+    levemir: Object.freeze({id:'levemir',name:'Левемир',substance:'инсулин детемир',type:'basal'})
+  });
+  // Distinguish APPROVED HTML build version and internal model engine version.
+  const MODELS = Object.freeze({
+    rinfast:Object.freeze({drugId:'rinfast',approvedModuleVersion:'0.3.1',engineVersion:'0.3.0',
+      model:'openaps_exponential_rapid',clinicalValidation:false,
+      profile:Object.freeze({drugId:'rinfast',drugName:'РинФаст',substance:'инсулин аспарт',model:'openaps_exponential_rapid',modelVersion:'0.3.0',
+        diaMinutes:300,peakMinutes:75,clinicalValidation:false})}),
+    levemir:Object.freeze({drugId:'levemir',approvedModuleVersion:'0.1.2',engineVersion:'0.1.0',
+      model:'detemir_population_time_trapezoid',clinicalValidation:false,
+      profile:Object.freeze({drugId:'levemir',name:'Левемир',substance:'инсулин детемир',model:'detemir_population_time_trapezoid',
+        modelVersion:'0.1.0',clinicalValidation:false,doseResponseInChildrenValidated:false,minimumJournalHours:48})})
+  });
+  const READ={
+    settings:['profile','measurements','drugs','models','orders','coefficients','graphPreferences','history'],
+    journal:['profile','measurements','drugs','orders','events','coverage','mealSessions','workflowLog'],
+    food:['profile','mealSessions'],
+    mealFlow:['mealSessions','events','cgm'],
+    calculator:['profile','measurements','drugs','models','coefficients','events','coverage','cgm','results','proposals','mealSessions'],
+    cgm:['cgm'],
+    rinfast:['drugs','models','events','coverage','results'],
+    levemir:['drugs','models','measurements','events','coverage','results'],
+    graph:['models','coefficients','events','cgm','results','graphPreferences','mealSessions'],
+    research:['profile','measurements','drugs','models','orders','coefficients','events','coverage','cgm','results','proposals','mealSessions'],
+  };
+  const KINDS=new Set(['isf_mmol_per_u','carb_g_per_u','tdd_u','target_range_mmol']);
+  const forbidden = new Set(['__proto__','prototype','constructor']);
+  function fail(message){throw new Error(message);}
+  function object(x){return x!==null && typeof x==='object' && !Array.isArray(x) && (Object.getPrototypeOf(x)===Object.prototype||Object.getPrototypeOf(x)===null);}
+  function validData(x, depth=0){
+    if(depth>16) fail('Слишком большая вложенность объекта');
+    if(x===null||typeof x==='string'||typeof x==='boolean')return;
+    if(typeof x==='number'&&Number.isFinite(x))return;
+    if(Array.isArray(x)){if(x.length>10000)fail('Слишком большой массив'); x.forEach(v=>validData(v,depth+1));return;}
+    if(object(x)) { for(const [k,v] of Object.entries(x)){if(forbidden.has(k))fail('Недопустимый ключ');validData(v,depth+1);}return; }
+    fail('Недопустимый тип данных (функции/NaN/undefined запрещены)');
+  }
+  function clone(x){validData(x);const json=JSON.stringify(x);if(json.length>1500000)fail('Запись превышает допустимый размер');return JSON.parse(json);}
+  function frozen(x){const a=clone(x); const freeze=v=>{if(v&&typeof v==='object'){Object.values(v).forEach(freeze);Object.freeze(v);}return v;};return freeze(a);}
+  function requireFields(o,allowed,required=[]){
+    if(!object(o))fail('Ожидался объект');
+    for(const k of Object.keys(o))if(!allowed.includes(k))fail('Поле не разрешено: '+k);
+    for(const k of required)if(!(k in o))fail('Отсутствует поле: '+k);
+    clone(o);
+  }
+  const iso=(s)=>{if(typeof s!=='string'||!/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d{1,3})?(?:Z|[+-]\d\d:\d\d)$/.test(s)||!Number.isFinite(Date.parse(s)))fail('Нужно время ISO 8601 с часовым поясом');return s;};
+  const date=(s)=>{if(typeof s!=='string'||!/^\d{4}-\d\d-\d\d$/.test(s)||Number.isNaN(Date.parse(s+'T00:00:00Z'))||new Date(s+'T00:00:00Z').toISOString().slice(0,10)!==s)fail('Некорректная дата');return s;};
+  const id=(s)=>{if(typeof s!=='string'||!/^[-\w:.]{1,100}$/.test(s))fail('ID: 1–100 букв латиницы, цифр, _ - . :');return s;};
+  const text=(s,max=400)=>{if(typeof s!=='string'||s.length>max||!s.trim())fail('Пустой или слишком длинный текст');return s;};
+  const range=(n,low,high)=>{if(typeof n!=='number'||!Number.isFinite(n)||n<low||n>high)fail('Числовое значение вне допустимых границ');return n;};
+  const drug=(s)=>{if(!Object.hasOwn(DRUGS,s))fail('Неизвестный препарат: '+s);return s;};
+  const hhmm=(s)=>{if(typeof s!=='string'||!/^([01]\d|2[0-3]):[0-5]\d$/.test(s))fail('Неверное время HH:mm');return s;};
+  function ensureTimeOrder(a,b){if(b && Date.parse(iso(a))>=Date.parse(iso(b)))fail('Начало интервала должно предшествовать концу');}
+  function emptyState(){return {schemaVersion:SCHEMA_VERSION,revision:0,profile:{birthDate:null,timeZone:null,displayName:null,sex:null,allergies:[]},measurements:[],drugs:clone(DRUGS),models:clone(MODELS),orders:[],coefficients:[],events:[],mealSessions:[],workflowLog:[],coverage:null,cgm:[],results:[],proposals:[],graphPreferences:{layout:'guided',theme:'light',rangeHours:12,showRinfast:true,showTotal:false},history:[]};}
+  function validateStored(s){
+    if(!object(s)||s.schemaVersion!==SCHEMA_VERSION||!Number.isSafeInteger(s.revision)||s.revision<0)fail('Несовместимая версия базы');
+    const expected=Object.keys(emptyState());
+    requireFields(s,expected,expected);
+    for(const key of ['measurements','orders','coefficients','events','mealSessions','workflowLog','cgm','results','proposals','history'])if(!Array.isArray(s[key]))fail('Повреждена таблица '+key);
+    if(s.history.length!==s.revision)fail('Повреждён журнал ревизий');
+    if(!object(s.profile))fail('Повреждён профиль ребёнка');
+    if(s.profile.sex===undefined)s=Object.assign({},s,{profile:Object.assign({},s.profile,{sex:null})});
+    if(s.profile.sex!==null&&!['male','female'].includes(s.profile.sex))fail('Недопустимое значение поля');
+    // Approved model reference profiles are immutable; reject tampered persisted state.
+    if(JSON.stringify(s.models)!==JSON.stringify(MODELS)||JSON.stringify(s.drugs)!==JSON.stringify(DRUGS))fail('Реестр препаратов или моделей был изменён');
+    for(let i=0;i<s.history.length;i++)if(s.history[i].revision!==i+1)fail('Нарушен журнал ревизий');
+    // Meal state must match the latest audited snapshot. This catches inconsistent writes.
+    const latest=new Map(),seenOperations=new Set();
+    for(const op of s.workflowLog){
+      if(!object(op)||typeof op.id!=='string'||typeof op.sessionId!=='string'||!Number.isSafeInteger(op.revision)||op.revision<=0||op.revision>s.revision)fail('Повреждён журнал операций еды');
+      if(seenOperations.has(op.id))fail('Дублируется операция в журнале еды');seenOperations.add(op.id);
+      if(!s.history.some(h=>h.revision===op.revision&&h.domain==='mealSessions'&&h.actor===op.actor&&h.recordId===op.sessionId&&h.action===op.action))fail('Операция еды не связана с журналом ревизий');
+      if(!object(op.after)||op.after.id!==op.sessionId||!Number.isSafeInteger(op.after.version))fail('Повреждён снимок операции');
+      const prev=latest.get(op.sessionId)||null;
+      if(JSON.stringify(op.before)!==JSON.stringify(prev)||op.after.version!==(prev?prev.version+1:1))fail('Нарушена последовательность версий тарелки');
+      latest.set(op.sessionId,op.after);
+    }
+    if(s.mealSessions.length!==latest.size)fail('Несогласованность списка приёмов пищи');
+    for(const m of s.mealSessions){if(JSON.stringify(m)!==JSON.stringify(latest.get(m.id)))fail('История еды не соответствует текущему состоянию');}
+    return clone(s);
+  }
+  function migrateStored(saved){
+    if(saved && saved.schemaVersion===1){
+      const next=clone(saved);next.schemaVersion=SCHEMA_VERSION;next.mealSessions=[];next.workflowLog=[];
+      if(next.profile.sex===undefined)next.profile.sex=null;
+      return next;
+    }
+    return saved;
+  }
+  function createHost({driver=null,clock=()=>new Date().toISOString()}={}){
+    if(driver && (typeof driver.load!=='function'||typeof driver.save!=='function'))fail('Драйвер должен иметь load/save');
+    const loaded=driver?driver.load():null;
+    let state=loaded===null||loaded===undefined?emptyState():validateStored(migrateStored(loaded));
+    const listeners=new Set();
+    function commit(role,domain,action,mutate,expectedRevision){
+      if(!Number.isSafeInteger(expectedRevision)||expectedRevision<0)fail('Для записи нужен expectedRevision');
+      if(expectedRevision!==state.revision)fail('Конфликт ревизии: повторно прочтите настройки перед записью');
+      const draft=clone(state), now=iso(clock());
+      const target=mutate(draft,now);
+      if(target===null)return frozen({revision:state.revision,idempotent:true});
+      const rev=state.revision+1;
+      draft.revision=rev;
+      const audit={revision:rev,at:now,actor:role,domain,action,recordId:String(target)};
+      // Keep old and new values for replaceable records; append-only tables keep full records themselves.
+      if(['profile','coverage','graphPreferences'].includes(domain)){
+        const oldRecord=state[domain],newRecord=draft[domain],changeSet={};
+        const oldFields=oldRecord===null?{}:oldRecord,newFields=newRecord===null?{}:newRecord;
+        for(const key of new Set([...Object.keys(oldFields),...Object.keys(newFields)])){
+          if(JSON.stringify(oldFields[key])!==JSON.stringify(newFields[key])){
+            changeSet[key]={before:oldFields[key]===undefined?null:oldFields[key],after:newFields[key]===undefined?null:newFields[key]};
+          }
+        }
+        audit.changes=changeSet;
+      }
+      draft.history.push(audit);
+      validateStored(draft);
+      if(driver){driver.save(clone(draft));} // Failure leaves in-memory state unchanged.
+      state=draft;
+      const notification=frozen({revision:rev,domain,action});
+      for(const callback of listeners){try{callback(notification);}catch(e){/* listener errors cannot roll back committed writes */}}
+      return frozen({revision:rev,recordId:String(target)});
+    }
+    function projection(role){
+      const out={schemaVersion:state.schemaVersion,revision:state.revision};
+      for(const field of READ[role])out[field]=role==='food'&&field==='mealSessions'?state.mealSessions.map(foodView):state[field];
+      return frozen(out);
+    }
+    function foodView(s){return {id:s.id,version:s.version,status:s.status,plannedPlate:s.plannedPlate,actualPlate:s.actualPlate,startedAt:s.startedAt,completedAt:s.completedAt};}
+    function select(role,field){if(!READ[role].includes(field))fail('Нет доступа к разделу '+field);return frozen(role==='food'&&field==='mealSessions'?state.mealSessions.map(foodView):state[field]);}
+    function validatePlate(p){
+      requireFields(p,['schema','source','createdAt','items','totals','containsEstimatedValues'],['schema','source','createdAt','items','totals','containsEstimatedValues']);
+      if(p.schema!=='GFPlate.v1'||p.source!=='GFFoodOnly')fail('Ожидался GFPlate.v1 из GFFoodOnly');
+      iso(p.createdAt);if(typeof p.containsEstimatedValues!=='boolean')fail('Некорректная оценка достоверности тарелки');
+      if(!Array.isArray(p.items)||p.items.length>100)fail('Слишком много позиций');
+      const totals={carbs:0,protein:0,fat:0,kcal:0},allowedUnits=['г','мл',null];
+      for(const x of p.items){
+        requireFields(x,['kind','foodId','name','amount','unit','carbs','protein','fat','kcal','note','nutritionStatus'],['kind','foodId','name','amount','unit','carbs','protein','fat','kcal']);
+        if(!['catalog','restaurant','manual','user'].includes(x.kind))fail('Неверный вид продукта');
+        if(x.foodId!==null&&x.foodId!==undefined)text(x.foodId,160);text(x.name,250);
+        if(x.amount!==null&&x.amount!==undefined)range(x.amount,0,5000);
+        if(!allowedUnits.includes(x.unit??null))fail('Недопустимая единица массы/объёма');
+        if((x.amount===null||x.amount===undefined)!==(x.unit===null||x.unit===undefined))fail('Масса и единица должны быть заданы вместе');
+        for(const key of Object.keys(totals)){range(x[key],0,100000);totals[key]+=x[key];}
+        if(x.note!==undefined&&(typeof x.note!=='string'||x.note.length>500))fail('Неверное примечание');if(x.nutritionStatus!==undefined)text(x.nutritionStatus,100);
+      }
+      requireFields(p.totals,['protein','fat','carbs','kcal','amount','count'],['protein','fat','carbs','kcal','amount','count']);
+      if(!Number.isSafeInteger(p.totals.count)||p.totals.count!==p.items.length)fail('Количество позиций тарелки не совпадает');
+      for(const key of Object.keys(totals)){range(p.totals[key],0,1000000);if(Math.abs(p.totals[key]-totals[key])>0.08+0.01*p.items.length)fail('Итоги БЖУ не совпадают с позициями: '+key);}
+      range(p.totals.amount,0,100000);
+      // Legacy totals.amount can mix 'г' and 'мл'; never infer an overall food mass.
+      return clone(p);
+    }
+    function changeSession(role,action,sessionId,expectedVersion,opId,expectedRevision,mutator){
+      id(sessionId);id(opId);
+      if(!Number.isSafeInteger(expectedVersion)||expectedVersion<0)fail('Нужна версия приёма пищи');
+      return commit(role,'mealSessions',action,(d,now)=>{
+        if(d.workflowLog.some(x=>x.id===opId))fail('Повтор идентификатора операции');
+        const index=d.mealSessions.findIndex(x=>x.id===sessionId),old=index<0?null:d.mealSessions[index];
+        if((old?old.version:0)!==expectedVersion)fail('Конфликт версии приёма пищи');
+        const updated=mutator(old?clone(old):null,d,now);
+        if(!object(updated)||updated.id!==sessionId||updated.version!==expectedVersion+1)fail('Нарушена версия операции');
+        if(index<0)d.mealSessions.push(updated);else d.mealSessions[index]=updated;
+        d.workflowLog.push({id:opId,sessionId,action,actor:role,at:now,revision:state.revision+1,before:old?clone(old):null,after:clone(updated)});
+        return sessionId;
+      },expectedRevision);
+    }
+    function requireMeal(old,...allowed){if(!old)fail('Не найден приём пищи');if(!allowed.includes(old.status))fail('Недопустимый этап приёма пищи: '+old.status);}
+    function mark(old,now){const next=clone(old);next.version++;next.lastChangedAt=now;return next;}
+    function connect(role){
+      if(!Object.hasOwn(READ,role))fail('Неизвестный модуль');
+      const port={
+        getSnapshot:()=>projection(role),
+        read:(field)=>select(role,field),
+        getRevision:()=>state.revision,
+        subscribe:(cb)=>{if(typeof cb!=='function')fail('Требуется callback');listeners.add(cb);return ()=>listeners.delete(cb);},
+      };
+      if(role==='food'){
+        port.createDraft=(item,rev)=>{
+          requireFields(item,['id','plate'],['id','plate']);id(item.id);const plate=validatePlate(item.plate);
+          return changeSession(role,'create_draft',item.id,0,'new:'+item.id,rev,(old,d,now)=>{
+            if(old)fail('Приём пищи существует');
+            return {id:item.id,version:1,status:'draft',createdAt:now,lastChangedAt:now,plannedPlate:plate,actualPlate:null,doseIntent:null,injectionIds:[],startedAt:null,completedAt:null};
+          });
+        };
+        port.updatePlannedPlate=(item,rev)=>{
+          requireFields(item,['sessionId','expectedVersion','opId','plate'],['sessionId','expectedVersion','opId','plate']);const plate=validatePlate(item.plate);
+          return changeSession(role,'update_planned_plate',item.sessionId,item.expectedVersion,item.opId,rev,(old,d,now)=>{
+            requireMeal(old,'draft','planned');const next=mark(old,now);next.plannedPlate=plate;return next;
+          });
+        };
+      }
+      if(role==='mealFlow'){
+        port.markReady=(item,rev)=>{
+          requireFields(item,['sessionId','expectedVersion','opId'],['sessionId','expectedVersion','opId']);
+          return changeSession(role,'mark_ready',item.sessionId,item.expectedVersion,item.opId,rev,(old,d,now)=>{
+            requireMeal(old,'draft');const next=mark(old,now);next.status='planned';return next;
+          });
+        };
+        // User-entered intent is NOT a performed injection or calculated recommendation.
+        port.setUserDoseIntent=(item,rev)=>{
+          requireFields(item,['sessionId','expectedVersion','opId','insulinId','units'],['sessionId','expectedVersion','opId','insulinId','units']);
+          drug(item.insulinId);range(item.units,0,200);
+          return changeSession(role,'set_user_dose_intent',item.sessionId,item.expectedVersion,item.opId,rev,(old,d,now)=>{
+            requireMeal(old,'draft','planned');const next=mark(old,now);next.doseIntent={insulinId:item.insulinId,units:item.units,enteredAt:now,source:'parent_manual',notAdministered:true};return next;
+          });
+        };
+      }
+      if(role==='settings'){
+        port.updateProfile=(patch,rev)=>commit(role,'profile','update',d=>{
+          requireFields(patch,['birthDate','timeZone','displayName','sex','allergies']);
+          if(!Object.keys(patch).length)fail('Нет изменений');
+          if('birthDate'in patch&&patch.birthDate!==null)date(patch.birthDate);
+          if('sex'in patch&&patch.sex!==null&&!['male','female'].includes(patch.sex))fail('Допустимо male, female или null');
+          if('displayName'in patch&&patch.displayName!==null)text(patch.displayName,120);
+          if('timeZone'in patch&&patch.timeZone!==null){text(patch.timeZone,100);try{new Intl.DateTimeFormat('ru',{timeZone:patch.timeZone});}catch(e){fail('Неизвестный часовой пояс');}}
+          if('allergies'in patch){if(!Array.isArray(patch.allergies)||patch.allergies.length>30)fail('Некорректный перечень аллергий');patch.allergies.forEach(a=>text(a,120));}
+          d.profile=Object.assign({},d.profile,clone(patch));return 'profile';
+        },rev);
+        port.addMeasurement=(item,rev)=>commit(role,'measurements','append',d=>{
+          requireFields(item,['id','measuredAt','weightKg','heightCm'],['id','measuredAt']);id(item.id);iso(item.measuredAt);
+          if(!('weightKg'in item)&&!('heightCm'in item))fail('Нужен вес или рост');
+          if('weightKg'in item)range(item.weightKg,0.1,400);
+          if('heightCm'in item)range(item.heightCm,20,250);
+          if(d.measurements.some(x=>x.id===item.id))fail('Повтор ID');d.measurements.push(clone(item));return item.id;
+        },rev);
+        port.addOrder=(item,rev)=>commit(role,'orders','append',d=>{
+          requireFields(item,['id','drugId','units','scheduleLocal','effectiveFrom','effectiveUntil','source','sourceNote'],['id','drugId','units','effectiveFrom','source']);
+          id(item.id);drug(item.drugId);range(item.units,0,200);iso(item.effectiveFrom);
+          if(item.effectiveUntil){iso(item.effectiveUntil);ensureTimeOrder(item.effectiveFrom,item.effectiveUntil);}
+          if(item.scheduleLocal)hhmm(item.scheduleLocal);
+          if(!['manual','parent_transcribed_prescription'].includes(item.source))fail('Недопустимый источник назначения');
+          if(item.sourceNote!==undefined)text(item.sourceNote,300);
+          if(d.orders.some(x=>x.id===item.id))fail('Повтор ID');
+          d.orders.push({...clone(item),verificationStatus:'unverified'});return item.id;
+        },rev);
+        port.addCoefficient=(item,rev)=>commit(role,'coefficients','append',d=>{
+          requireFields(item,['id','kind','value','source','effectiveFrom','effectiveUntil','windowLocal','supersedesId','sourceNote'],['id','kind','value','source','effectiveFrom']);
+          id(item.id);if(!KINDS.has(item.kind))fail('Неизвестный показатель');
+          if(item.kind==='target_range_mmol'){
+            requireFields(item.value,['low','high'],['low','high']);range(item.value.low,1,30);range(item.value.high,1,30);if(item.value.low>=item.value.high)fail('Целевой диапазон: low < high');
+          } else range(item.value,0.0001,500);
+          if(!['manual','parent_transcribed_prescription'].includes(item.source))fail('Исследовательские коэффициенты — только в proposals');
+          iso(item.effectiveFrom);
+          if(item.effectiveUntil){iso(item.effectiveUntil);ensureTimeOrder(item.effectiveFrom,item.effectiveUntil);}
+          if(item.windowLocal){requireFields(item.windowLocal,['from','to'],['from','to']);hhmm(item.windowLocal.from);hhmm(item.windowLocal.to);if(item.windowLocal.from===item.windowLocal.to)fail('Пустое окно времени');}
+          if(item.sourceNote!==undefined)text(item.sourceNote,300);
+          if(d.coefficients.some(x=>x.id===item.id))fail('Повтор ID');
+          const same=(x)=>x.kind===item.kind&&x.source===item.source&&JSON.stringify(x.windowLocal||null)===JSON.stringify(item.windowLocal||null);
+          const lineage=d.coefficients.filter(same);
+          if(lineage.length){
+            if(!item.supersedesId)fail('Нужен supersedesId для новой версии коэффициента');
+            const prior=lineage.find(x=>x.id===item.supersedesId);
+            if(!prior||lineage.some(x=>x.supersedesId===prior.id))fail('Можно заменить только последнюю версию того же показателя');
+            if(Date.parse(item.effectiveFrom)<=Date.parse(prior.effectiveFrom))fail('Новая версия должна начинаться позднее прежней');
+            if(prior.effectiveUntil&&Date.parse(item.effectiveFrom)<Date.parse(prior.effectiveUntil))fail('Новая версия пересекается с конечной датой прежней');
+          } else if(item.supersedesId)fail('Неизвестная предыдущая версия');
+          d.coefficients.push({...clone(item),verificationStatus:'unverified'});return item.id;
+        },rev);
+      }
+      if(role==='journal'){
+        // Confirm factual administration + link to meal atomically; never infer from dose intent.
+        port.recordSessionInjection=(item,rev)=>{
+          requireFields(item,['sessionId','expectedVersion','opId','injectionId','insulinId','units','administeredAt'],['sessionId','expectedVersion','opId','injectionId','insulinId','units','administeredAt']);
+          id(item.injectionId);drug(item.insulinId);range(item.units,0.001,200);iso(item.administeredAt);
+          if(Date.parse(item.administeredAt)>Date.parse(clock())+60000)fail('Нельзя подтверждать будущую инъекцию');
+          return changeSession(role,'confirm_injection',item.sessionId,item.expectedVersion,item.opId,rev,(old,d,now)=>{
+            requireMeal(old,'planned','started','completed');
+            if(d.events.some(x=>x.id===item.injectionId))fail('Повтор идентификатора фактической инъекции');
+            const next=mark(old,now);next.injectionIds.push(item.injectionId);
+            d.events.push({type:'insulin_injection',status:'confirmed',id:item.injectionId,insulinId:item.insulinId,units:item.units,administeredAt:item.administeredAt,linkedMealSessionId:item.sessionId});
+            return next;
+          });
+        };
+        port.linkExistingInjection=(item,rev)=>{
+          requireFields(item,['sessionId','expectedVersion','opId','injectionId'],['sessionId','expectedVersion','opId','injectionId']);id(item.injectionId);
+          return changeSession(role,'link_existing_injection',item.sessionId,item.expectedVersion,item.opId,rev,(old,d,now)=>{
+            requireMeal(old,'planned','started','completed');
+            const hit=d.events.find(e=>e.type==='insulin_injection'&&e.status==='confirmed'&&e.id===item.injectionId);
+            if(!hit)fail('Нужна существующая подтверждённая фактическая инъекция');
+            if(d.mealSessions.some(s=>s.injectionIds.includes(item.injectionId)))fail('Инъекция уже связана с приёмом пищи');
+            const next=mark(old,now);next.injectionIds.push(item.injectionId);return next;
+          });
+        };
+        port.confirmMealStart=(item,rev)=>{
+          requireFields(item,['sessionId','expectedVersion','opId','startedAt'],['sessionId','expectedVersion','opId','startedAt']);iso(item.startedAt);
+          if(Date.parse(item.startedAt)>Date.parse(clock())+60000)fail('Начало еды находится в будущем');
+          return changeSession(role,'confirm_meal_start',item.sessionId,item.expectedVersion,item.opId,rev,(old,d,now)=>{
+            requireMeal(old,'planned');const next=mark(old,now);next.startedAt=item.startedAt;next.status='started';return next;
+          });
+        };
+        port.recordActualPlate=(item,rev)=>{
+          requireFields(item,['sessionId','expectedVersion','opId','plate','reason'],['sessionId','expectedVersion','opId','plate']);
+          const plate=validatePlate(item.plate);
+          return changeSession(role,'record_actual_plate',item.sessionId,item.expectedVersion,item.opId,rev,(old,d,now)=>{
+            requireMeal(old,'started','completed');
+            if(old.actualPlate&&!item.reason)fail('Причина исправления фактически съеденного обязательна');
+            if(item.reason!==undefined)text(item.reason,300);
+            const next=mark(old,now);next.actualPlate=plate;next.actualReason=item.reason||'first_confirmation';return next;
+          });
+        };
+        port.confirmMealFinished=(item,rev)=>{
+          requireFields(item,['sessionId','expectedVersion','opId','finishedAt'],['sessionId','expectedVersion','opId','finishedAt']);iso(item.finishedAt);
+          return changeSession(role,'confirm_meal_finished',item.sessionId,item.expectedVersion,item.opId,rev,(old,d,now)=>{
+            requireMeal(old,'started');if(!old.actualPlate)fail('Сначала подтвердите, что фактически съедено');
+            if(Date.parse(item.finishedAt)<Date.parse(old.startedAt)||Date.parse(item.finishedAt)>Date.parse(clock())+60000)fail('Неверное время завершения еды');
+            const next=mark(old,now);next.status='completed';next.completedAt=item.finishedAt;return next;
+          });
+        };
+        port.recordInjection=(item,rev)=>commit(role,'events','injection',d=>{
+          requireFields(item,['id','insulinId','units','administeredAt','doseErrorSuspected','note'],['id','insulinId','units','administeredAt']);
+          id(item.id);drug(item.insulinId);range(item.units,0.001,200);iso(item.administeredAt);
+          if(Date.parse(item.administeredAt)>Date.parse(clock())+60000)fail('Фактическая инъекция находится в будущем');
+          if(item.doseErrorSuspected!==undefined&&typeof item.doseErrorSuspected!=='boolean')fail('Некорректный флаг');
+          if(item.note!==undefined)text(item.note,300);
+          if(d.events.some(x=>x.id===item.id))fail('Повтор ID события');
+          d.events.push({type:'insulin_injection',status:'confirmed',...clone(item)});return item.id;
+        },rev);
+        port.recordMeal=(item,rev)=>commit(role,'events','meal',d=>{
+          requireFields(item,['id','startedAt','items'],['id','startedAt','items']);id(item.id);iso(item.startedAt);
+          if(!Array.isArray(item.items)||item.items.length===0||item.items.length>100)fail('Недопустимый состав еды');
+          item.items.forEach(x=>{requireFields(x,['foodId','grams'],['foodId','grams']);id(x.foodId);range(x.grams,0.01,5000);});
+          if(d.events.some(x=>x.id===item.id))fail('Повтор ID события');
+          d.events.push({type:'meal',status:'recorded',...clone(item)});return item.id;
+        },rev);
+        port.setCoverage=(info,rev)=>commit(role,'coverage','declaration',d=>{
+          requireFields(info,['startIso','endIso','confirmedComplete','declaredBy'],['startIso','endIso','confirmedComplete','declaredBy']);
+          iso(info.startIso);iso(info.endIso);ensureTimeOrder(info.startIso,info.endIso);
+          if(typeof info.confirmedComplete!=='boolean')fail('Подтверждение должно быть явным');
+          if(info.declaredBy!=='parent')fail('Только явное подтверждение родителя');
+          d.coverage=clone(info);return 'coverage';
+        },rev);
+      }
+      if(role==='cgm'){
+        port.ingest=(items,rev)=>commit(role,'cgm','ingest',d=>{
+          if(!Array.isArray(items)||items.length===0||items.length>10000)fail('Неверная пачка CGM');
+          const seen=new Map(d.cgm.map(x=>[x.ts,x])),incoming=new Map();
+          for(const r of items){
+            requireFields(r,['ts','mmol'],['ts','mmol']);
+            if(!Number.isSafeInteger(r.ts)||r.ts<946684800000||r.ts>4102444800000)fail('Неверный timestamp CGM в миллисекундах');
+            range(r.mmol,1.5,30);
+            if(incoming.has(r.ts)&&incoming.get(r.ts)!==r.mmol)fail('Противоречие в одном пакете CGM');
+            incoming.set(r.ts,r.mmol);
+            if(seen.has(r.ts)&&seen.get(r.ts).mmol!==r.mmol)fail('Противоречивые CGM: нельзя тихо перезаписать');
+          }
+          let added=0;
+          for(const [ts,mmol] of incoming){if(!seen.has(ts)){d.cgm.push({ts,mmol,source:'xdrip_follower',kind:'observed'});added++;}}
+          if(!added)return null;
+          d.cgm.sort((a,b)=>a.ts-b.ts);return 'batch:'+added;
+        },rev);
+      }
+      if(role==='rinfast'||role==='levemir'){
+        port.saveModelResult=(result,rev)=>commit(role,'results','model_estimate',d=>{
+          requireFields(result,['id','computedAt','basedOnRevision','output','inputEventIds'],['id','computedAt','basedOnRevision','output']);
+          id(result.id);iso(result.computedAt);
+          if(!Number.isSafeInteger(result.basedOnRevision)||result.basedOnRevision<0||result.basedOnRevision>state.revision)fail('Неверная исходная ревизия');
+          if(state.revision!==result.basedOnRevision)fail('Старый снимок настроек: пересчитайте модель');
+          if(result.inputEventIds!==undefined){if(!Array.isArray(result.inputEventIds))fail('Некорректные ID');result.inputEventIds.forEach(id);}
+          if(!object(result.output)||!['INCOMPLETE','MODEL_ESTIMATE'].includes(result.output.status)||result.output.clinicalValidation!==false)fail('Разрешены только исследовательские результаты');
+          if(result.output.engineVersion!==MODELS[role].engineVersion)fail('Версия движка не совпадает с принятым модулем');
+          if(Object.keys(result.output).some(k=>/recommend|suggest|bolus|prescri|doseadjust/i.test(k)))fail('Нельзя записывать назначения и рекомендации доз');
+          if(d.results.some(x=>x.id===result.id))fail('Повтор ID результата');
+          d.results.push({...clone(result),modelId:role,clinicalValidation:false});return result.id;
+        },rev);
+      }
+      if(role==='research'){
+        port.submitProposal=(proposal,rev)=>commit(role,'proposals','research_only',d=>{
+          requireFields(proposal,['id','kind','candidate','computedAt','evidence','sourceModule'],['id','kind','candidate','computedAt','sourceModule']);
+          id(proposal.id);if(!KINDS.has(proposal.kind))fail('Неизвестный показатель');iso(proposal.computedAt);
+          if(proposal.kind==='target_range_mmol')fail('ИИ не предлагает новый лечебный диапазон');
+          range(proposal.candidate,0.0001,500);text(proposal.sourceModule,80);
+          if(proposal.evidence!==undefined)text(proposal.evidence,1000);
+          if(d.proposals.some(x=>x.id===proposal.id))fail('Повтор ID гипотезы');
+          d.proposals.push({...clone(proposal),status:'research_only',applied:false,clinicalValidation:false});return proposal.id;
+        },rev);
+      }
+      if(role==='graph'){
+        port.setPreferences=(patch,rev)=>commit(role,'graphPreferences','display_only',d=>{
+          requireFields(patch,['rangeHours','showRinfast','showTotal']);
+          if('rangeHours'in patch&&!([6,12,24].includes(patch.rangeHours)))fail('Разрешённые интервалы 6,12,24 часов');
+          if('showRinfast'in patch&&typeof patch.showRinfast!=='boolean')fail('Неверный флаг');
+          if('showTotal'in patch&&typeof patch.showTotal!=='boolean')fail('Неверный флаг');
+          if(!Object.keys(patch).length)fail('Нет изменений');
+          Object.assign(d.graphPreferences,clone(patch));return 'graphPreferences';
+        },rev);
+      }
+      return Object.freeze(port);
+    }
+    return Object.freeze({
+      connect, getSchemaVersion:()=>SCHEMA_VERSION,
+      exportState:()=>frozen(state),
+      diagnostics:()=>frozen({version:VERSION,schemaVersion:SCHEMA_VERSION,revision:state.revision,persistent:!!driver,clinicalValidation:false}),
+      // Host-only import is intentionally absent: restore must be verified by a future native adapter.
+    });
+  }
+  return Object.freeze({VERSION,SCHEMA_VERSION,DRUGS,MODELS,createHost});
+});
+</script><script>/*
+ * ГлюкоПапа: независимый исследовательский модуль IOB для РинФаста (инсулин аспарт).
+ * v0.3.0. Расчётная кривая OpenAPS exponential (rapid acting), не индивидуальная
+ * фармакодинамическая оценка и НЕ алгоритм назначения инсулина/еды.
+ * Не требуется сеть, CGM, журнал еды или другие модули.
+ * License of THIS implementation: MIT. Reference method: OpenAPS/oref0.
+ */
+(function (root, factory) {
+  "use strict";
+  const api = factory();
+  if (typeof module === "object" && module.exports) module.exports = api;
+  if (root) root.RinfastEngine = api;
+})(typeof globalThis !== "undefined" ? globalThis : this, function () {
+  "use strict";
+  const ENGINE_VERSION = "0.3.0";
+  const DEFAULT_PROFILE = Object.freeze({
+    drugId: "rinfast", drugName: "РинФаст", substance: "инсулин аспарт",
+    model: "openaps_exponential_rapid", modelVersion: "0.3.0",
+    diaMinutes: 300, peakMinutes: 75,
+    dataSource: "https://help.geropharm.ru/rinfast-insulin-aspart",
+    modelSource: "https://github.com/openaps/oref0/blob/master/lib/iob/calculate.js",
+    clinicalValidation: false
+  });
+  // Диапазоны — из инструкции производителя, НЕ параметры кривой OpenAPS.
+  const LABEL_TIME_RANGES = Object.freeze({
+    onsetMinutes: Object.freeze([10, 20]),
+    maximumEffectMinutes: Object.freeze([60, 180]),
+    durationMinutes: Object.freeze([180, 300]),
+    source: "https://help.geropharm.ru/rinfast-insulin-aspart"
+  });
+  const WARNINGS = Object.freeze([
+    "Расчёт — модель доли оставшегося эффекта, не измерение инсулина в крови.",
+    "Профиль 300/75 минут — исследовательские параметры OpenAPS, не индивидуальная кривая РинФаста.",
+    "Число IOB нельзя использовать самостоятельно для расчёта доз, углеводов или лечения гипогликемии.",
+    "Отсутствие записей в журнале не доказывает отсутствия введённого инсулина.",
+    "Ноль через выбранную DIA означает только завершение выбранной математической кривой, не гарантирует отсутствия действия в организме.",
+    "Начало 10–20 мин, максимум 1–3 ч, длительность 3–5 ч — диапазоны по инструкции, не персональные пороги.",
+    "Рост математической активности до 10 минут НЕ означает подтверждённый клинический эффект до 10 минут.",
+    "Модельная продолжительность 360+ минут выходит за пределы типичного диапазона 3–5 часов из инструкции и служит только анализу чувствительности."
+  ]);
+  function finiteNumber(v) { return typeof v === "number" && Number.isFinite(v); }
+  function clamp01(x) { return Math.max(0, Math.min(1, x)); }
+  function validateProfile(profile) {
+    const p = profile == null ? DEFAULT_PROFILE : profile;
+    if (!p || p.drugId !== "rinfast" || p.model !== "openaps_exponential_rapid") {
+      throw new Error("Профиль должен быть для РинФаста с моделью openaps_exponential_rapid.");
+    }
+    if (!finiteNumber(p.diaMinutes) || p.diaMinutes < 300 || p.diaMinutes > 480) {
+      throw new Error("Некорректная длительность DIA: разрешён исследовательский диапазон 300–480 мин.");
+    }
+    if (!finiteNumber(p.peakMinutes) || p.peakMinutes < 50 || p.peakMinutes > 120 || p.peakMinutes >= p.diaMinutes / 2) {
+      throw new Error("Некорректное время пика: 50–120 мин и строго меньше половины DIA.");
+    }
+    return p;
+  }
+  function parameters(profile) {
+    const p = validateProfile(profile);
+    const D = p.diaMinutes, P = p.peakMinutes;
+    const tau = P * (1 - P / D) / (1 - 2 * P / D);
+    const a = 2 * tau / D;
+    const scale = 1 / (1 - a + (1 + a) * Math.exp(-D / tau));
+    if (![tau, a, scale].every(Number.isFinite) || tau <= 0 || scale <= 0) {
+      throw new Error("Не удалось рассчитать устойчивые параметры кривой.");
+    }
+    return { D, P, tau, a, scale };
+  }
+  /** Returns a fraction of insulin GLUCOSE-LOWERING EFFECT remaining, not plasma insulin. */
+  function getCurve(ageMinutes, profile = DEFAULT_PROFILE) {
+    if (!finiteNumber(ageMinutes) || ageMinutes < 0) throw new Error("Возраст инъекции должен быть неотрицательным числом минут.");
+    const { D, tau, a, scale } = parameters(profile);
+    if (ageMinutes >= D) return { remainingFraction: 0, usedFraction: 1, activityFractionPerMinute: 0 };
+    if (ageMinutes === 0) return { remainingFraction: 1, usedFraction: 0, activityFractionPerMinute: 0 };
+    const t = ageMinutes;
+    const exp = Math.exp(-t / tau);
+    // Algebraically equivalent to OpenAPS iobContrib, but avoids / (1-a)
+    // singularity when peak makes a exactly 1.
+    const remaining = 1 - scale * ((t * t / (tau * D) - (1 - a) * (t / tau + 1)) * exp + (1 - a));
+    const activity = (scale / (tau * tau)) * t * (1 - t / D) * exp;
+    const r = clamp01(remaining);
+    return { remainingFraction: r, usedFraction: 1 - r, activityFractionPerMinute: Math.max(0, activity) };
+  }
+  /** Instruction-based qualitative phase, deliberately independent of model action. */
+  function getPhase(ageMinutes, profile = DEFAULT_PROFILE) {
+    const p = validateProfile(profile);
+    if (!finiteNumber(ageMinutes) || ageMinutes < 0) throw new Error("Возраст инъекции должен быть неотрицательным числом минут.");
+    if (ageMinutes >= p.diaMinutes) return {code:"MODEL_HORIZON_PASSED",label:"За пределами выбранного модельного интервала",modelMinutesRemaining:0};
+    const modelMinutesRemaining = p.diaMinutes - ageMinutes;
+    if (ageMinutes < 10) return {code:"BEFORE_TYPICAL_ONSET",label:"До типичного начала действия по инструкции",modelMinutesRemaining};
+    if (ageMinutes < 20) return {code:"ONSET_WINDOW",label:"Диапазон начала действия по инструкции",modelMinutesRemaining};
+    if (ageMinutes < 60) return {code:"BEFORE_MAX_EFFECT_WINDOW",label:"После начала, до диапазона максимального эффекта",modelMinutesRemaining};
+    if (ageMinutes <= 180) return {code:"MAX_EFFECT_WINDOW",label:"Диапазон максимального эффекта по инструкции",modelMinutesRemaining};
+    if (ageMinutes < 300) return {code:"LATE_EFFECT_WINDOW",label:"Поздняя часть диапазона действия по инструкции",modelMinutesRemaining};
+    return {code:"EXTENDED_RESEARCH_MODEL",label:"Исследовательское продление за 5 часов — вне типичного диапазона инструкции",modelMinutesRemaining};
+  }
+  function timestampMs(value) {
+    if (typeof value !== "string" || !/T\d\d:\d\d/.test(value) || !/(?:Z|[+\-]\d\d:\d\d)$/i.test(value)) {
+      throw new Error("Время должно быть ISO 8601 с часовым поясом, например 2026-11-13T13:00:00+03:00.");
+    }
+    const ms = Date.parse(value);
+    if (!Number.isFinite(ms)) throw new Error("Невозможно прочитать время.");
+    return ms;
+  }
+  function validateHorizons(horizons) {
+    if (!Array.isArray(horizons) || horizons.length < 1 || horizons.length > 12 ||
+        !horizons.every(v => Number.isInteger(v) && v > 0 && v <= 480) ||
+        new Set(horizons).size !== horizons.length) {
+      throw new Error("Горизонты прогноза: уникальные положительные целые минуты (1–480), не более 12.");
+    }
+    return horizons;
+  }
+  /**
+   * Input: {nowIso, events, profile, horizonsMinutes?}
+   * Event: {id, type:'insulin_injection', insulinId:'rinfast', status:'confirmed',
+   *         administeredAt:'ISO8601 with offset', units: positive number}
+   * On any ambiguous relevant record -> INCOMPLETE and ALL computed values null.
+   */
+  function calculate(request) {
+    if (!request || typeof request !== "object") throw new Error("Передайте объект запроса.");
+    const profile = validateProfile(request.profile || DEFAULT_PROFILE);
+    const now = timestampMs(request.nowIso);
+    if (!Array.isArray(request.events) || request.events.length > 10000) {
+      throw new Error("События журнала должны быть массивом длиной до 10 000.");
+    }
+    const horizons = validateHorizons(request.horizonsMinutes || [15, 30, 60]);
+    const issues = [], ignored = [];
+    const accepted = [], ids = new Set();
+    for (const event of request.events) {
+      if (!event || typeof event !== "object") {
+        issues.push("В журнале обнаружена повреждённая запись."); continue;
+      }
+      if (event.type !== "insulin_injection") {
+        if (!event.type) issues.push("В журнале запись без типа события.");
+        continue;
+      }
+      if (typeof event.insulinId !== "string" || !event.insulinId.trim()) {
+        issues.push("Инъекция без идентификатора инсулина."); continue;
+      }
+      if (event.insulinId !== "rinfast") {
+        if (event.insulinId === "levemir") {
+          ignored.push({ id: String(event.id || "?"), reason: "Левемир учитывается отдельным модулем" });
+        } else {
+          issues.push(`Инъекция ${String(event.id || "?")}: препарат ${event.insulinId} неизвестен этому модулю или является другим коротким инсулином; требуется сверка журнала.`);
+        }
+        continue;
+      }
+      if (typeof event.id !== "string" || !event.id.trim() || ids.has(event.id)) {
+        issues.push("Отсутствует или повторяется идентификатор инъекции РинФаста."); continue;
+      }
+      ids.add(event.id);
+      if (event.status !== "confirmed") {
+        issues.push(`Инъекция ${event.id}: нет подтверждения фактического введения (status=confirmed).`);
+        continue;
+      }
+      if (!finiteNumber(event.units) || event.units <= 0 || event.units > 200) {
+        issues.push(`Инъекция ${event.id}: недостоверная доза.`); continue;
+      }
+      let administration;
+      try { administration = timestampMs(event.administeredAt); }
+      catch (_) { issues.push(`Инъекция ${event.id}: недостоверное время.`); continue; }
+      if (administration > now) {
+        issues.push(`Инъекция ${event.id}: время в будущем относительно момента расчёта.`); continue;
+      }
+      const ageMinutes = (now - administration) / 60000;
+      if (ageMinutes >= profile.diaMinutes) {
+        ignored.push({ id: event.id, reason: "За пределами расчётной длительности действия" });
+        continue;
+      }
+      accepted.push({ id: event.id, units: event.units, ageMinutes, administeredAt: event.administeredAt });
+    }
+    const base = {
+      engineVersion: ENGINE_VERSION, modelVersion: profile.modelVersion || ENGINE_VERSION,
+      drugId: "rinfast", drugName: "РинФаст", model: profile.model,
+      diaMinutes: profile.diaMinutes, peakMinutes: profile.peakMinutes,
+      nowIso: request.nowIso, issues, ignored,
+      warnings: Array.from(WARNINGS), timingSource: LABEL_TIME_RANGES.source, instructionTiming: LABEL_TIME_RANGES, acceptedCount: accepted.length,
+      clinicalValidation: false,
+      statusMeaning: "MODEL_ESTIMATE означает математический расчёт, не индивидуально проверенное действие",
+      assumesCompleteJournal: true,
+      durationBeyondLabel: profile.diaMinutes > 300,
+      labelOnsetIsNotHardCutoff: true
+    };
+    if (issues.length) {
+      return { ...base, status: "INCOMPLETE", modelRemainingUnits: null,
+        activityModelUnitsPerMinute: null, futureActionModelUnits: null, contributions: null };
+    }
+    let modelRemainingUnits = 0, activityModelUnitsPerMinute = 0;
+    const futureActionModelUnits = Object.fromEntries(horizons.map(h => [String(h), 0]));
+    const contributions = accepted.map(inj => {
+      const atNow = getCurve(inj.ageMinutes, profile);
+      const actionNext = {};
+      for (const h of horizons) {
+        const after = getCurve(inj.ageMinutes + h, profile);
+        const part = Math.max(0, inj.units * (atNow.remainingFraction - after.remainingFraction));
+        actionNext[String(h)] = part;
+        futureActionModelUnits[String(h)] += part;
+      }
+      const remainingUnits = inj.units * atNow.remainingFraction;
+      const usedUnits = inj.units * atNow.usedFraction;
+      const activityUnitsPerMinute = inj.units * atNow.activityFractionPerMinute;
+      modelRemainingUnits += remainingUnits;
+      activityModelUnitsPerMinute += activityUnitsPerMinute;
+      return {
+        id: inj.id, administeredAt: inj.administeredAt, ageMinutes: inj.ageMinutes,
+        phase: getPhase(inj.ageMinutes, profile),
+        doseUnits: inj.units, remainingFraction: atNow.remainingFraction,
+        usedFraction: atNow.usedFraction, remainingModelUnits: remainingUnits,
+        usedModelUnits: usedUnits, activityModelUnitsPerMinute: activityUnitsPerMinute,
+        futureActionModelUnits: actionNext
+      };
+    });
+    return {
+      ...base, status: "MODEL_ESTIMATE", modelRemainingUnits,
+      activityModelUnitsPerMinute, futureActionModelUnits, contributions
+    };
+  }
+  /**
+   * Исследовательская серия по времени вокруг nowIso.
+   * Перед инъекцией её действие = 0, после DIA = 0 только в рамках модели.
+   * Данные используются только для построения отдельных и суммарных графиков.
+   * Не оценивает фактический сахар и не назначает терапию.
+   */
+  function calculateTimeline(request, options = {}) {
+    if (!request || typeof request !== "object") throw new Error("Нужен объект запроса.");
+    const profile = validateProfile(request.profile || DEFAULT_PROFILE);
+    const now = timestampMs(request.nowIso);
+    const start = options.startOffsetMinutes == null ? -240 : options.startOffsetMinutes;
+    const end = options.endOffsetMinutes == null ? 360 : options.endOffsetMinutes;
+    const step = options.stepMinutes == null ? 5 : options.stepMinutes;
+    if (![start, end, step].every(finiteNumber) || !Number.isInteger(start) || !Number.isInteger(end) ||
+        !Number.isInteger(step) || start < -600 || end > 600 || end <= start || step < 1 || step > 60 ||
+        Math.ceil((end - start) / step) > 1200) {
+      throw new Error("Некорректный интервал графика: -600..+600 минут, шаг 1–60 минут.");
+    }
+    const audit = calculate({ nowIso: request.nowIso, events: request.events, profile });
+    if (audit.status !== "MODEL_ESTIMATE") return {
+      status: "INCOMPLETE", issues: audit.issues, rows: null, shotIds: null, clinicalValidation: false
+    };
+    const shots = request.events.filter(e => e.type === "insulin_injection" && e.insulinId === "rinfast")
+      .map(e => ({ id: e.id, units: e.units, administeredAt: e.administeredAt,
+        ageAtNowMinutes: (now - timestampMs(e.administeredAt)) / 60000 }));
+    const rows = [];
+    for (let offset = start; offset <= end; offset += step) {
+      const perShot = []; let totalActivityUnitsPerMinute = 0, totalRemainingModelUnits = 0;
+      for (const shot of shots) {
+        const age = shot.ageAtNowMinutes + offset;
+        const curve = age < 0 ? null : getCurve(age, profile);
+        const activityUnitsPerMinute = curve ? shot.units * curve.activityFractionPerMinute : 0;
+        const remainingModelUnits = curve ? shot.units * curve.remainingFraction : 0;
+        perShot.push({ id: shot.id, activityUnitsPerMinute, remainingModelUnits });
+        totalActivityUnitsPerMinute += activityUnitsPerMinute;
+        totalRemainingModelUnits += remainingModelUnits;
+      }
+      rows.push({ offsetMinutes: offset, totalActivityUnitsPerMinute, totalRemainingModelUnits, perShot });
+    }
+    if (rows.at(-1).offsetMinutes !== end) {
+      const tail = calculateTimeline(request, { startOffsetMinutes: end-1, endOffsetMinutes: end, stepMinutes: 1 });
+      // Include endpoint without duplicating previous data.
+      rows.push(tail.rows.at(-1));
+    }
+    return { status: "MODEL_ESTIMATE", modelVersion: ENGINE_VERSION,
+      profile: {diaMinutes: profile.diaMinutes, peakMinutes: profile.peakMinutes},
+      shotIds: shots.map(x => x.id), rows,
+      labelTiming: LABEL_TIME_RANGES, clinicalValidation: false };
+  }
+  /** Sensitivity analysis; NEVER chooses a patient-specific DIA. */
+  function compareDurations(request, durationMinutes = [300, 360]) {
+    if (!Array.isArray(durationMinutes) || durationMinutes.length < 2 || durationMinutes.length > 6 ||
+        new Set(durationMinutes).size !== durationMinutes.length) {
+      throw new Error("Нужны 2–6 уникальных вариантов исследовательского времени DIA.");
+    }
+    const baseline = validateProfile(request.profile || DEFAULT_PROFILE);
+    const alternatives = durationMinutes.map(diaMinutes => {
+      const profile = {...baseline, diaMinutes};
+      validateProfile(profile);
+      const r = calculate({...request, profile});
+      return {diaMinutes, peakMinutes: profile.peakMinutes, status: r.status,
+        modelRemainingUnits: r.modelRemainingUnits,
+        futureActionModelUnits: r.futureActionModelUnits, issues: r.issues};
+    });
+    return {status: alternatives.every(a => a.status === "MODEL_ESTIMATE") ? "MODEL_ESTIMATE" : "INCOMPLETE",
+      scenarios: alternatives, clinicalValidation: false,
+      note: "Диапазон сценариев НЕ является доверительным интервалом и НЕ предсказывает клиническую погрешность."};
+  }
+  return Object.freeze({ ENGINE_VERSION, DEFAULT_PROFILE, LABEL_TIME_RANGES, WARNINGS, getPhase,
+    validateProfile, getCurve, calculate, calculateTimeline, compareDurations });
+});
+</script><script>/* ГлюкоПапа GFMealCalc v0.1.0. READ-ONLY review + strictly labelled fictional demonstration.
+ * GFStorage v0.2.0 is the source of truth; never write to calculator port.
+ * This module is not a medical device and cannot determine a treatment dose.
+ */
+(function(root,factory){ 'use strict'; const api=factory(); if(typeof module==='object'&&module.exports)module.exports=api;if(root)root.GFMealCalc=api; })(typeof globalThis!=='undefined'?globalThis:this,function(){
+'use strict';
+const VERSION='0.1.0';
+const deepFreeze=x=>{if(x&&typeof x==='object'&&!Object.isFrozen(x)){Object.values(x).forEach(deepFreeze);Object.freeze(x);}return x;};
+const copy=x=>JSON.parse(JSON.stringify(x));
+const finite=(x)=>typeof x==='number'&&Number.isFinite(x);
+const timeMs=x=>{if(typeof x!=='string'||!/T\d\d:\d\d/.test(x)||!/(Z|[+-]\d\d:\d\d)$/.test(x)||!Number.isFinite(Date.parse(x)))throw Error('Нужна дата ISO с часовым поясом');return Date.parse(x);};
+function periodAt(iso,zone){
+ const t=timeMs(iso);let formatter;
+ try{formatter=new Intl.DateTimeFormat('en-GB',{timeZone:zone,hour:'2-digit',minute:'2-digit',hourCycle:'h23'});}catch(e){return {code:null,label:'Неизвестен часовой пояс'};}
+ const x=formatter.formatToParts(t),hh=Number(x.find(p=>p.type==='hour').value), mm=Number(x.find(p=>p.type==='minute').value),minute=hh*60+mm;
+ return minute>=6*60&&minute<11*60?{code:'morning',label:'Завтрак'}:minute>=11*60&&minute<17*60?{code:'day',label:'Обед'}:{code:'evening',label:'Ужин / ночь'};
+}
+function windowHas(time,from,to){const parse=x=>Number(x.slice(0,2))*60+Number(x.slice(3,5));const s=parse(from),e=parse(to);if(s===e)return false;return s<e?(time>=s&&time<e):(time>=s||time<e);}
+function activeCoefficient(snapshot,nowIso){
+ const now=timeMs(nowIso),tz=snapshot.profile?.timeZone;
+ if(!tz)return null;
+ const fmt=new Intl.DateTimeFormat('en-GB',{timeZone:tz,hour:'2-digit',minute:'2-digit',hourCycle:'h23'}),parts=fmt.formatToParts(now),tod=Number(parts.find(x=>x.type==='hour').value)*60+Number(parts.find(x=>x.type==='minute').value);
+ const hits=(snapshot.coefficients||[]).filter(x=>x.kind==='carb_g_per_u'&&x.source==='manual'&&finite(x.value)&&x.value>0&&timeMs(x.effectiveFrom)<=now&&(!x.effectiveUntil||now<timeMs(x.effectiveUntil))&&(!x.windowLocal||windowHas(tod,x.windowLocal.from,x.windowLocal.to)));
+ if(hits.length!==1)return null; // ambiguity is blocked, not silently resolved
+ return {value:hits[0].value,unit:'г/ЕД',origin:'Введено пользователем',verified:false,id:hits[0].id,mode:'manual'};
+}
+function observedCgm(readings,atMs,staleMins=15){
+ if(!Array.isArray(readings))return null;
+ const xs=readings.filter(x=>Number.isSafeInteger(x.ts)&&x.ts<=atMs&&finite(x.mmol)&&x.mmol>=1.5&&x.mmol<=30&&x.kind==='observed').sort((a,b)=>b.ts-a.ts);
+ const hit=xs[0];return hit&&atMs-hit.ts<=staleMins*60000?{mmol:hit.mmol,atIso:new Date(hit.ts).toISOString(),ageMinutes:Math.round((atMs-hit.ts)/60000),source:'xdrip_follower',kind:'observed'}:null;
+}
+function iobFor(snapshot,nowIso,engine){
+ const unavailable=(reason)=>({status:'UNAVAILABLE',reason,units:null,source:'rinfast_v0.3.1'});
+ if(!engine||typeof engine.calculate!=='function'||!engine.DEFAULT_PROFILE)return unavailable('Не подключён утверждённый исследовательский движок РинФаста');
+ const dia=engine.DEFAULT_PROFILE.diaMinutes,now=timeMs(nowIso),coverage=snapshot.coverage;
+ if(!coverage||coverage.confirmedComplete!==true||timeMs(coverage.startIso)>now-dia*60000||timeMs(coverage.endIso)<now)return unavailable('Нет подтверждения полного журнала РинФаста на период действия');
+ const shots=(snapshot.events||[]).filter(x=>x.type==='insulin_injection'&&x.insulinId==='rinfast'&&timeMs(x.administeredAt)<=now&&timeMs(x.administeredAt)>=now-dia*60000);
+ let res;try{res=engine.calculate({nowIso,events:shots,profile:engine.DEFAULT_PROFILE});}catch(e){return unavailable('Ошибка/неполные данные модели: '+String(e.message||e));}
+ if(res.status!=='MODEL_ESTIMATE')return unavailable('Исследовательская модель отклонила записи: '+res.issues.join('; '));
+ return {status:'MODEL_ESTIMATE',units:res.modelRemainingUnits,source:'RinfastEngine v0.3.1 / OpenAPS profile 300/75',validation:false,assumesCompleteJournal:true};
+}
+function createCalculator(host,{rinfastEngine=null,clock=()=>new Date().toISOString()}={}){
+ if(!host||typeof host.connect!=='function'||host.getSchemaVersion()!==2)throw Error('Нужен утверждённый GFStorage v0.2.x, схема 2');
+ const port=host.connect('calculator');
+ function inspect(sessionId,{atIso=clock()}={}){
+  const atMs=timeMs(atIso),s=port.getSnapshot();
+  const meal=s.mealSessions.find(x=>x.id===sessionId);
+  if(!meal)throw Error('Тарелка не найдена в GFStorage');
+  const plate=meal.actualPlate||meal.plannedPlate;
+  if(!plate||plate.schema!=='GFPlate.v1')throw Error('Нет снимка GFPlate.v1');
+  const period=periodAt(atIso,s.profile?.timeZone||'');
+  const cgm=observedCgm(s.cgm,atMs),coefficient=activeCoefficient(s,atIso),iob=iobFor(s,atIso,rinfastEngine);
+  const knownShots=s.events.filter(x=>meal.injectionIds.includes(x.id));
+  const warnings=[];
+  if(plate.containsEstimatedValues)warnings.push('Состав еды основан на оценках; действительные БЖУ могут отличаться.');
+  if(!cgm)warnings.push('Нет свежего подтверждённого показания CGM за последние 15 минут.');
+  if(!coefficient)warnings.push('Нет однозначного пользовательского углеводного коэффициента для этого времени.');
+  else warnings.push('УК введён пользователем, но это не подтверждение его пригодности для дозирования.');
+  if(iob.status!=='MODEL_ESTIMATE')warnings.push('IOB недоступен: '+iob.reason);
+  if(meal.status==='draft')warnings.push('Тарелка пока в черновике.');
+  if(meal.actualPlate===null)warnings.push('Фактически съеденное пока не подтверждено.');
+  const autoCandidates=(s.proposals||[]).filter(x=>x.kind==='carb_g_per_u'&&x.status==='research_only'&&x.applied===false&&finite(x.candidate)).map(x=>({value:x.candidate,id:x.id,origin:'Исследовательское предложение · не применяется'}));
+  const doseIntent=meal.doseIntent?{units:meal.doseIntent.units,source:'parent_manual',notAdministered:true}:null;
+  // Fictional fixture ONLY: illustrate carbohydrate arithmetic using live storage plate/ratio.
+  // No corrections, IOB, rounding, timing, clinical validation or use as parent intent.
+  const isFictional=s.profile?.displayName==='ВЫМЫШЛЕННЫЙ РЕБЁНОК'&&sessionId.startsWith('demo-meal-');
+  const researchArithmetic=isFictional&&coefficient&&plate.containsEstimatedValues
+   ? {status:'SYNTHETIC_ARITHMETIC_ONLY',carbsG:plate.totals.carbs,ratioGPerUnit:coefficient.value,unroundedEquivalentUnits:plate.totals.carbs/coefficient.value,fromActualFood:meal.actualPlate!==null,roundedToPenStep:false,therapeuticRecommendation:false,note:'Только арифметика вымышленного примера: углеводы / заданное г/ЕД. Не назначение, без поправок и без округления.'}
+   : {status:'NOT_AVAILABLE_FOR_REAL_DATA',unroundedEquivalentUnits:null,therapeuticRecommendation:false};
+  return deepFreeze(copy({version:VERSION,sessionId,sessionVersion:meal.version,storageRevision:s.revision,asOf:atIso,mealStatus:meal.status,plateSource:meal.actualPlate?'actual':'planned',plate,period,cgm,coefficient,autoCandidates,iob,doseIntent,confirmedInjections:knownShots,mealStartedAt:meal.startedAt,mealCompletedAt:meal.completedAt,researchArithmetic,warnings,clinicalValidation:false,therapyRecommendation:null}));
+ }
+ // Educational arithmetic ONLY for an immutable, fictional, fixed data set. This never accesses a child's profile.
+ function fictionalExample(){
+   const fictionalCarbs=24,fictionalRatio=12;
+   return deepFreeze({status:'FICTIONAL_EXAMPLE_ONLY',carbsG:fictionalCarbs,ratioGPerUnit:fictionalRatio,arithmeticResultUnits:fictionalCarbs/fictionalRatio,roundedToPenStep:false,fromRealContext:false,clinicallyValidated:false,label:'ВЫМЫШЛЕННЫЕ 24 г ÷ 12 г/ЕД = 2 ЕД. Не назначение, не связано с текущей тарелкой.'});
+ }
+ return Object.freeze({inspect,fictionalExample,subscribe:(cb)=>port.subscribe(cb)});
+}
+return Object.freeze({VERSION,createCalculator,periodAt,observedCgm,activeCoefficient});
+});
+</script><script>/* GlucoPapa GFMealCalc workflow controller: calls approved GFStorage ports, not medical decisions.
+ * No direct writing to calculator, no ability to overwrite old injection events.
+ */
+(function(root,factory){'use strict';const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;if(root)root.GFMealController=api;})(typeof globalThis!=='undefined'?globalThis:this,function(){
+'use strict';
+const iso=s=>typeof s==='string'&&/T\d\d:\d\d/.test(s)&&/(Z|[+-]\d\d:\d\d)$/.test(s)&&Number.isFinite(Date.parse(s));
+const units=n=>typeof n==='number'&&Number.isFinite(n)&&n>=0&&n<=50&&Math.abs(n*2-Math.round(n*2))<1e-9;
+function createController(host,{makeId=prefix=>prefix+'-'+(typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random().toString(36).slice(2))}={}){
+ if(!host||host.getSchemaVersion()!==2)throw Error('Нужен GFStorage v0.2.x');
+ const ports={food:host.connect('food'),mealFlow:host.connect('mealFlow'),journal:host.connect('journal'),calculator:host.connect('calculator')};
+ const lookup=id=>{const s=ports.calculator.getSnapshot(),m=s.mealSessions.find(x=>x.id===id);if(!m)throw Error('Нет такого приёма пищи');return m;};
+ const v=id=>{const m=lookup(id);return {sessionId:id,expectedVersion:m.version,opId:makeId('op')};};
+ function createFromFood(plate,sessionId=makeId('meal')){
+  ports.food.createDraft({id:sessionId,plate},ports.food.getRevision());return sessionId;
+ }
+ function updatePlan(id,plate){return ports.food.updatePlannedPlate({...v(id),plate},ports.food.getRevision());}
+ function ready(id){return ports.mealFlow.markReady(v(id),ports.mealFlow.getRevision());}
+ function setParentIntent(id,amount,{explicitParentConfirmation=false}={}){
+  if(!explicitParentConfirmation)throw Error('Нужно явное подтверждение выбранного родителем решения');
+  if(!units(amount))throw Error('В учебном интерфейсе требуется число кратное шагу ручки 0,5 ЕД');
+  return ports.mealFlow.setUserDoseIntent({...v(id),insulinId:'rinfast',units:amount},ports.mealFlow.getRevision());
+ }
+ function recordActualInjection(id,amount,atIso,{explicitlyInjected=false}={}){
+  if(!explicitlyInjected)throw Error('Подтвердите, что инъекция действительно выполнена');
+  if(!units(amount)||amount===0)throw Error('Фактически введённая доза должна быть >0 и кратна 0,5 ЕД');
+  if(!iso(atIso))throw Error('Требуется явное время с часовым поясом');
+  return ports.journal.recordSessionInjection({...v(id),injectionId:makeId('inj'),insulinId:'rinfast',units:amount,administeredAt:atIso},ports.journal.getRevision());
+ }
+ function startMeal(id,atIso,{actuallyStarted=false}={}){
+  if(!actuallyStarted)throw Error('Нужно подтвердить фактическое начало еды');
+  if(!iso(atIso))throw Error('Нужна дата с часовым поясом');
+  return ports.journal.confirmMealStart({...v(id),startedAt:atIso},ports.journal.getRevision());
+ }
+ function actualFood(id,plate,{parentConfirmed=false,reason=null}={}){
+  if(!parentConfirmed)throw Error('Нужно явное подтверждение фактически съеденного');
+  const previous=lookup(id).actualPlate;
+  if(previous&&(!reason||!String(reason).trim()))throw Error('Для исправления факта еды укажите причину');
+  return ports.journal.recordActualPlate({...v(id),plate,...(previous?{reason:String(reason)}:{})},ports.journal.getRevision());
+ }
+ function finishMeal(id,atIso,{confirmed=false}={}){
+  if(!confirmed)throw Error('Нужно подтвердить фактическое завершение еды');
+  if(!iso(atIso))throw Error('Требуется время ISO с поясом');
+  return ports.journal.confirmMealFinished({...v(id),finishedAt:atIso},ports.journal.getRevision());
+ }
+ return Object.freeze({createFromFood,updatePlan,ready,setParentIntent,recordActualInjection,startMeal,actualFood,finishMeal,lookup});
+}
+return Object.freeze({createController});
+});
+</script><script>/* GFMealCalc UI v0.2.0: SYNTHETIC DISPLAY ENGINE ONLY.
+ * Never use this synthetic coefficient/case-matching algorithm for a person.
+ * Approved GFMealCalc v0.1.0 and GFStorage v0.2.0 are unchanged in vendor/.
+ */
+(function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;if(root)root.GFMealDemoModel=api;})(typeof globalThis!=='undefined'?globalThis:this,function(){
+'use strict';
+const CASES=Object.freeze([
+ {g:7.0,trend:'flat',carbs:28,activity:'rest',gi:'mixed',minutes:8,quality:.95,day:'08.11'},
+ {g:7.2,trend:'flat',carbs:30,activity:'rest',gi:'mixed',minutes:9,quality:.92,day:'09.11'},
+ {g:6.8,trend:'flat',carbs:27,activity:'rest',gi:'mixed',minutes:7,quality:.93,day:'10.11'},
+ {g:7.1,trend:'up',carbs:26,activity:'rest',gi:'mixed',minutes:8,quality:.8,day:'11.11'},
+ {g:12.0,trend:'up',carbs:30,activity:'rest',gi:'mixed',minutes:10,quality:.9,day:'05.11'},
+ {g:11.6,trend:'up',carbs:25,activity:'rest',gi:'mixed',minutes:9,quality:.85,day:'06.11'},
+ {g:12.3,trend:'up',carbs:29,activity:'rest',gi:'mixed',minutes:9,quality:.88,day:'07.11'},
+ {g:7.0,trend:'flat',carbs:29,activity:'walk',gi:'mixed',minutes:6,quality:.84,day:'09.11'},
+ {g:7.5,trend:'flat',carbs:25,activity:'walk',gi:'mixed',minutes:5,quality:.8,day:'10.11'},
+ {g:7.1,trend:'flat',carbs:28,activity:'rest',gi:'fast',minutes:5,quality:.78,day:'11.11'},
+ {g:7.0,trend:'flat',carbs:28,activity:'rest',gi:'slow',minutes:9,quality:.78,day:'12.11'}
+]);
+const valid=x=>typeof x==='number'&&Number.isFinite(x);
+function model({glucose,trend,carbs,ratio,activity='rest',gi='mixed',cases=CASES}={}){
+ if(!valid(glucose)||!valid(carbs)||!valid(ratio)||carbs<0||ratio<=0)return {status:'INVALID',dose:null,minutes:null,reason:'Неполные учебные данные'};
+ const dose={carbs,ratio,units:carbs/ratio,stepCompatible:Math.abs((carbs/ratio)*2-Math.round((carbs/ratio)*2))<1e-8,medical:false};
+ if(glucose<4.0)return {status:'LOW',dose:null,minutes:null,reason:'Учебный сценарий гипогликемии: обычный расчёт заблокирован; сначала нужны действия по индивидуальному плану лечения.',matches:[]};
+ if(glucose<5.5&&trend==='down')return {status:'FALLING',dose:null,minutes:null,reason:'Сахар снижается: учебная автоматическая подсказка заблокирована.',matches:[]};
+ if(activity==='sport')return {status:'ACTIVITY',dose:null,minutes:null,reason:'Спорт: в демо недостаточно данных для оценки времени и дозировки.',matches:[]};
+ if(glucose>15)return {status:'HIGH',dose:null,minutes:null,reason:'Значительно повышенный сахар: универсального правила для ожидания нет.',matches:[]};
+ const scored=cases.map(c=>{
+  const d=Math.abs(c.g-glucose)*.48+Math.abs(c.carbs-carbs)*.035+(c.trend===trend?0:1.3)+(c.activity===activity?0:1.7)+(c.gi===gi?0:.5);
+  return {...c,weight:c.quality/(.6+d),distance:d};
+ }).sort((a,b)=>b.weight-a.weight).slice(0,3);
+ if(scored.length<2||scored[0].distance>2.5)return {status:'NO_MATCH',dose,minutes:null,reason:'Нет достаточно похожих вымышленных случаев для таймера.',matches:scored};
+ const w=scored.reduce((a,c)=>a+c.weight,0),minutes=Math.max(1,Math.min(25,Math.round(scored.reduce((a,c)=>a+c.minutes*c.weight,0)/w)));
+ return {status:'EXAMPLE',dose,minutes,confidence:scored[0].distance<.4?'Иллюстративно: высокая схожесть':'Иллюстративно: средняя схожесть',matches:scored,reason:'Минуты взяты из вымышленных похожих эпизодов; это не медицинская рекомендация и не проверенный алгоритм.',clinicallyValidated:false};
+}
+return Object.freeze({CASES,model});
+});
+</script><script>(function(){'use strict';
+const $=id=>document.getElementById(id);
+const DBKEY='glucopapa_demo_mealcalc_v020_data_ONLY_FAKE';
+const METAKEY='glucopapa_demo_mealcalc_v020_meta_ONLY_FAKE';
+const FIXED=Date.parse('2026-11-13T12:00:00+03:00');
+const SCENARIOS={normal:{g:7.0,trend:'flat',arrow:'→'},high:{g:12.0,trend:'up',arrow:'↗'},falling:{g:5.2,trend:'down',arrow:'↘'},low:{g:3.6,trend:'down',arrow:'↓'}};
+const DEFAULT_META={scenario:'normal',activity:'rest',gi:'mixed',selectedId:null,simBaseMs:FIXED,wallAtMs:Date.now(),skipMs:0,timerMinutes:null,injectionAtMs:null,decisionPreview:null,contextAtShot:null,learnedCases:[],reviewedSessions:[],lastOutcomeNote:''};
+const num=n=>Number(n).toLocaleString('ru-RU',{minimumFractionDigits:0,maximumFractionDigits:2});
+const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function loadMeta(){try{const r=JSON.parse(localStorage.getItem(METAKEY));return r&&Number.isFinite(r.simBaseMs)&&SCENARIOS[r.scenario]?{...DEFAULT_META,...r,wallAtMs:Date.now(),skipMs:0}: {...DEFAULT_META};}catch{return {...DEFAULT_META};}}
+// The persisted virtual clock remains stopped across reloads to prevent unannounced elapsed time.
+let meta=loadMeta(), editing=false,dirty=false,host,controller,calc;
+const currentMs=()=>Math.trunc(meta.simBaseMs+(Date.now()-meta.wallAtMs)+meta.skipMs);
+const currentIso=()=>new Date(currentMs()).toISOString();
+function persist(){meta.simBaseMs=currentMs();meta.wallAtMs=Date.now();meta.skipMs=0;try{localStorage.setItem(METAKEY,JSON.stringify(meta));}catch{/* optional */}}
+let fallback=null;
+const driver={load(){try{const raw=localStorage.getItem(DBKEY);return raw?JSON.parse(raw):null;}catch{return fallback;}},save(s){fallback=s;try{localStorage.setItem(DBKEY,JSON.stringify(s));}catch{/* unencrypted demo only */}}};
+function openHost(){host=GFStorage.createHost({driver,clock:currentIso});controller=GFMealController.createController(host);calc=GFMealCalc.createCalculator(host,{rinfastEngine:RinfastEngine,clock:currentIso});}
+function getMeal(){return meta.selectedId?host.connect('calculator').read('mealSessions').find(x=>x.id===meta.selectedId)||null:null;}
+function getShots(m){if(!m)return[];return host.connect('calculator').read('events').filter(x=>m.injectionIds.includes(x.id));}
+function freshId(prefix){return prefix+'-'+Math.random().toString(36).slice(2,11)+Date.now().toString(36);}
+function makePlate(a=18,b=10,{actual=false,plannedPlate=null}={}){
+ const inputs=[a,b],names=['Вымышленная овсяная каша','Вымышленное яблоко'],gis=['средний','низкий'],ratios=[{protein:4,fat:2,kcal:110},{protein:.4,fat:.2,kcal:45}];
+ const items=inputs.map((carbs,i)=>{
+  const original=plannedPlate?.items[i]?.carbs,fromPlan=plannedPlate?.items[i]?.amount;
+  const frac=actual?(original>0?carbs/original:carbs===0?0:1):1;
+  const mass=actual?Math.min(5000,Number(((fromPlan||100)*frac).toFixed(2))):100;
+  const factor=actual?frac:1;
+  return {kind:'catalog',foodId:'demo:food:'+i,name:names[i],amount:mass,unit:'г',carbs:Math.round(carbs*100)/100,protein:Math.round(ratios[i].protein*factor*100)/100,fat:Math.round(ratios[i].fat*factor*100)/100,kcal:Math.round(ratios[i].kcal*factor*100)/100,note:'Вымышленный продукт · ГИ '+gis[i],nutritionStatus:'user_estimate'};
+ });
+ const totals={carbs:0,protein:0,fat:0,kcal:0,amount:0,count:items.length};items.forEach(x=>{for(const k of ['carbs','protein','fat','kcal','amount'])totals[k]+=x[k]});for(const k of ['carbs','protein','fat','kcal','amount'])totals[k]=Math.round(totals[k]*100)/100;
+ return {schema:'GFPlate.v1',source:'GFFoodOnly',createdAt:currentIso(),items,totals,containsEstimatedValues:true};
+}
+function seedProfile(){const s=host.connect('settings'),p=s.getSnapshot().profile;if(p.displayName)return;
+ s.updateProfile({displayName:'ВЫМЫШЛЕННЫЙ РЕБЁНОК',timeZone:'Europe/Minsk',birthDate:'2020-01-14',allergies:[]},s.getRevision());
+ const start='2026-11-01T00:00:00.000Z';
+ for(const [period,from,to,ratio,isf] of [['m','06:00','11:00',12,4.0],['d','11:00','17:00',14,4.5],['e','17:00','06:00',16,4.2]]){
+  for(const [kind,val] of [['carb_g_per_u',ratio],['isf_mmol_per_u',isf]])s.addCoefficient({id:'fiction:'+kind+':'+period,kind,value:val,source:'manual',effectiveFrom:start,windowLocal:{from,to},sourceNote:'Только вымышленный демонстрационный коэффициент'},s.getRevision());
+ }
+ s.addCoefficient({id:'fiction:range',kind:'target_range_mmol',value:{low:4,high:10},source:'manual',effectiveFrom:start,sourceNote:'Вымышленная зона для визуализации'},s.getRevision());
+}
+function syntheticG(t,end){
+ const span=(end-t)/60000,s=SCENARIOS[meta.scenario];
+ let g=s.g+(span===0?0:Math.sin(span/19)*.18+Math.sin(span/7)*.075-(meta.scenario==='high'?span/180*.8:meta.scenario==='falling'?-span/180*.8:0));
+ const m=getMeal(),shot=getShots(m)[0],mealAt=m?.startedAt?Date.parse(m.startedAt):null;
+ if(shot){const afterShot=(t-Date.parse(shot.administeredAt))/60000;if(afterShot>0)g-=Math.min(afterShot/90,1)*.5;}
+ if(mealAt!==null&&t>=mealAt){const afterMeal=(t-mealAt)/60000,carbs=(m.actualPlate||m.plannedPlate).totals.carbs;
+  // Entirely invented shape: illustrates a meal peak and subsequent decline, not insulin dynamics.
+  g+=Math.min(afterMeal/35,1)*2.1*(carbs/28)-Math.max(0,afterMeal-50)/70*1.6;
+ }
+ return Math.max(1.5,Math.min(30,g));
+}
+function seedCgm(){const port=host.connect('cgm'),now=currentMs(),s=port.read('cgm');if(s.length)return;
+ const readings=[];for(let i=36;i>=0;i--){const t=now-i*300000;readings.push({ts:t,mmol:Math.round(syntheticG(t,now)*100)/100});}
+ port.ingest(readings,port.getRevision());
+}
+function ingestCurrentCgm(){const port=host.connect('cgm'),readings=port.read('cgm'),prev=readings.at(-1)?.ts??(currentMs()-300000);const end=currentMs(),add=[];
+ // Keep this synthetic feed light; up to one point every 5 minutes and the exact final point.
+ for(let t=prev+300000;t<=end;t+=300000)add.push({ts:t,mmol:Math.round(syntheticG(t,end)*100)/100});
+ if(add.length>2000)throw Error('Слишком большой скачок виртуального времени');
+ if(add.length)port.ingest(add,port.getRevision());
+}
+function newMeal(){const old=getMeal();if(old&&old.status==='completed'){
+  const next=Date.parse(old.completedAt)+3*3600000;
+  if(currentMs()<next)meta.skipMs+=next-currentMs();
+ }
+ meta.selectedId=controller.createFromFood(makePlate(),freshId('demo-meal'));
+ ingestCurrentCgm();
+ meta.timerMinutes=null;meta.injectionAtMs=null;meta.decisionPreview=null;meta.contextAtShot=null;editing=false;dirty=false;persist();
+}
+function init(){openHost();seedProfile();seedCgm();if(!getMeal())newMeal();$('scenario').value=meta.scenario;$('activity').value=meta.activity;$('giMode').value=meta.gi;loadPlateInputs();render();}
+function loadPlateInputs(){const m=getMeal();if(!m)return;$('carb1').value=m.plannedPlate.items[0].carbs;$('carb2').value=m.plannedPlate.items[1].carbs;dirty=false;}
+function positiveInput(id){const text=$(id).value.trim();const value=Number(text);if(text===''||!Number.isFinite(value)||value<0||value>250)throw Error('Углеводы должны быть числом от 0 до 250 г');return value;}
+function run(fn){try{$('err').textContent='';fn();persist();render();}catch(e){console.error('GFMeal UI workflow:',e);$('err').textContent=String(e.message||e);render();}}
+function getAssessment(m){if(!m)return null;const r=calc.inspect(m.id,{atIso:currentIso()}),c=SCENARIOS[meta.scenario];const blood=r.cgm?.mmol??c.g;
+ const ratio=r.coefficient?.value;
+ return {data:r,example:GFMealDemoModel.model({glucose:blood,trend:c.trend,carbs:m.plannedPlate.totals.carbs,ratio,activity:meta.activity,gi:meta.gi,cases:[...GFMealDemoModel.CASES,...(meta.learnedCases||[])]})};
+}
+function byStatus(m){const inj=getShots(m);return {planned:m?.status==='planned',started:m?.status==='started',completed:m?.status==='completed',shot:inj[0]||null,shots:inj};}
+function enable(id,v){$(id).disabled=!v;}
+function card(id,locked){$(id).classList.toggle('locked',locked);}
+function render(){const m=getMeal(),s=byStatus(m),ass=getAssessment(m),v=s.shot&&meta.decisionPreview?meta.decisionPreview:ass?.example;
+ $('rev').textContent='Ревизия '+host.diagnostics().revision;
+ $('caseCount').textContent=(GFMealDemoModel.CASES.length+(meta.learnedCases||[]).length)+' случаев';
+ $('systemStatus').textContent='GFStorage v'+host.diagnostics().version+' · schema '+host.getSchemaVersion()+' · '+host.connect('calculator').read('mealSessions').length+' учебных приёмов';
+ $('scenario').value=meta.scenario;$('activity').value=meta.activity;$('giMode').value=meta.gi;
+ $('glucoseFace').textContent=num(ass?.data?.cgm?.mmol??SCENARIOS[meta.scenario].g)+' '+SCENARIOS[meta.scenario].arrow;
+ $('sideGlucose').textContent=num(ass?.data?.cgm?.mmol??SCENARIOS[meta.scenario].g)+' '+SCENARIOS[meta.scenario].arrow+' ммоль/л';
+ $('clockFace').textContent=new Date(currentMs()).toLocaleTimeString('ru-RU',{timeZone:'Europe/Minsk',hour:'2-digit',minute:'2-digit',second:'2-digit'});
+ $('cgmSafety').textContent=meta.scenario==='low'?'Учебный сахар ниже 4,0 ммоль/л: обычный расчёт заблокирован.':'Синтетическая кривая, а не данные конкретного ребёнка.';
+ $('cgmSafety').className=meta.scenario==='low'?'inlinealert':'hint';
+ const canEdit=!!m&&(m.status==='draft'||m.status==='planned')&&!s.shot;
+ enable('scenario',m?.status==='draft');enable('activity',!s.shot);enable('giMode',!s.shot);enable('carb1',canEdit);enable('carb2',canEdit);
+ $('plateTotal').textContent=num(m?.plannedPlate.totals.carbs||0)+' г углеводов';
+ $('plateChip').textContent={draft:'Черновик',planned:'План подтверждён',started:'Еда начата',completed:'Еда завершена'}[m?.status]||'Нет записи';
+ enable('savePlan',canEdit);enable('confirmPlate',m?.status==='draft'&&!dirty);
+ $('plateNote').textContent=dirty?'Есть несохранённые изменения: нажмите «Сохранить изменения», затем подтвердите тарелку.':'Изменения сохраняются с версией GFPlate.v1 в GFStorage. Балансировки и лечебного округления здесь нет.';
+ const hasPlan=!!m&&m.status!=='draft';const canShot=hasPlan&&!s.shot&&v?.status==='EXAMPLE';
+ $('doseSuggested').textContent=hasPlan&&v?.dose?num(v.dose.units)+' усл. ЕД':'—';
+ $('minutesSuggested').textContent=hasPlan&&Number.isFinite(v?.minutes)?v.minutes+' мин':'—';
+ $('doseExplain').textContent=hasPlan&&v?.dose?(v.dose.stepCompatible?'Шаг 0,5 совпал (случайно)':'Не кратно шагу 0,5: НЕ округлено'):'Только после проверки тарелки';
+ $('minutesExplain').textContent=hasPlan?(v?.confidence||'Нет доступной оценки'): 'Только после подтверждения';
+ $('sampleMatches').textContent=hasPlan&&v?(v.status==='EXAMPLE'?'Вымышленные похожие случаи: '+v.matches.map(x=>x.day+' · '+num(x.g)+' ммоль/л · '+x.minutes+' мин').join('; ')+'. Алгоритм НЕ валидирован.':v.reason):'Подтвердите тарелку, чтобы получить учебное сравнение.';
+ $('sampleMatches').className='notice'+(v&&v.status!=='EXAMPLE'?' alarm':'');
+ $('calcChip').textContent=s.shot?'Укол записан':hasPlan?'Можно тестировать':'После тарелки';
+ enable('fillDemoDose',canShot&&!!v?.dose?.stepCompatible);enable('doseChosen',!s.shot&&hasPlan);enable('minutesChosen',!s.shot&&hasPlan);enable('confirmInjection',canShot);
+ $('injectionHint').textContent=s.shot?'В GFStorage записана отдельная учебная инъекция: '+num(s.shot.units)+' ЕД · '+new Date(s.shot.administeredAt).toLocaleTimeString('ru-RU',{timeZone:'Europe/Minsk',hour:'2-digit',minute:'2-digit'}):'После подтверждения учебного укола будет создана запись факта. Без ручного подтверждения дозы запись невозможна.';
+ const remaining=s.shot&&meta.timerMinutes!==null?Math.ceil((Date.parse(s.shot.administeredAt)+meta.timerMinutes*60000-currentMs())/1000):null;
+ $('timerText').textContent=remaining===null?'--:--':remaining>0?String(Math.floor(remaining/60)).padStart(2,'0')+':'+String(remaining%60).padStart(2,'0'):'00:00';
+ $('timerNote').textContent=!s.shot?'Ожидаем подтверждения учебного укола':s.started||s.completed?'Еда уже началась · отсчёт сохранён':remaining>0?'До учебной отметки начала еды':'Время истекло · начало еды не записывается автоматически';
+ enable('advance1',!!s.shot);enable('advance5',!!s.shot);
+ $('mealChip').textContent=s.completed?'Завершено':s.started?'Еда началась':s.shot?'Можно начинать':'Ожидает укола';
+ enable('startMeal',!!s.shot&&s.planned);
+ $('actualInfo').textContent=s.started||s.completed?'Начало еды: '+new Date(m.startedAt).toLocaleTimeString('ru-RU',{timeZone:'Europe/Minsk',hour:'2-digit',minute:'2-digit'})+' · '+(m.actualPlate?'Факт продуктов подтверждён':'Факт съеденного ещё не подтверждён'):'Сначала подтвердите учебный укол; начало еды можно отметить без ожидания окончания таймера.';
+ $('afterStart').hidden=!(s.started||s.completed);
+ $('mealPlanned').textContent=num(m?.plannedPlate?.totals?.carbs??0)+' г углеводов';
+ enable('ateAll',s.started||s.completed);enable('editActual',s.started||s.completed);enable('finishMeal',s.started&&!!m.actualPlate);
+ $('editPanel').hidden=!editing;
+ $('actualConfirmed').textContent=m?.actualPlate?'Фактически: '+m.actualPlate.items.map(x=>x.name+' — '+num(x.amount??0)+' г').join('; ')+'. Углеводы: '+num(m.actualPlate.totals.carbs)+' г; план: '+num(m.plannedPlate.totals.carbs)+' г. Укол не меняется.':'Фактически съеденное пока не записано.';
+ $('endChip').textContent=s.completed?'Итог сохранён':'Пока не завершено';
+ enable('newTest',s.completed);enable('showCorrection',s.completed);
+ enable('simulateOutcome',s.completed&&!(meta.reviewedSessions||[]).includes(m?.id));
+ $('learningInfo').textContent=(meta.reviewedSessions||[]).includes(m?.id)?('Учебный исход добавлен: '+(meta.lastOutcomeNote||'учебная история обновлена')+'. В следующем приёме используется новое сравнение.'):'Заверши приём, затем можешь проиграть 2 часа вымышленного CGM и сравнить итог.';
+ $('finalPlanned').textContent=s.completed?num(m.plannedPlate.totals.carbs)+' г':'—';
+ $('finalActual').textContent=s.completed&&m.actualPlate?num(m.actualPlate.totals.carbs)+' г':'—';
+ $('finalInjected').textContent=s.shot?num(s.shot.units)+' ЕД':'—';
+ $('finalInterval').textContent=m?.startedAt&&s.shot?num((Date.parse(m.startedAt)-Date.parse(s.shot.administeredAt))/60000)+' мин':'—';
+ const bar=$('stepbar').children;const index=s.completed?4:(s.started?3:s.shot?2:hasPlan?1:0);Array.from(bar).forEach((el,i)=>el.classList.toggle('on',i===index));
+ card('calcCard',!hasPlan);card('timerCard',!s.shot);card('mealCard',!s.shot);card('endCard',!s.completed);
+ const timeline=host.exportState().workflowLog.filter(x=>x.sessionId===m?.id).slice().reverse();
+ const titles={create_draft:'Создан черновик тарелки',update_planned_plate:'Изменён план питания',mark_ready:'Тарелка подтверждена',set_user_dose_intent:'Решение родителя записано отдельно',confirm_injection:'Подтверждён факт учебного укола',confirm_meal_start:'Подтверждено начало еды',record_actual_plate:'Записано / исправлено съеденное',confirm_meal_finished:'Приём пищи завершён'};
+ $('eventsFeed').innerHTML=timeline.length?timeline.map(x=>'<div class="event"><strong>'+esc(titles[x.action]||x.action)+'</strong><small>'+esc(new Date(x.at).toLocaleTimeString('ru-RU',{timeZone:'Europe/Minsk',hour:'2-digit',minute:'2-digit',second:'2-digit'}))+' · версия '+x.after.version+' · ревизия '+x.revision+'</small></div>').join(''):'<p class="sub">Пока нет записей</p>';
+ renderGraph(m,s);
+}
+function renderGraph(m,s){const svg=$('chartSvg'),last=currentMs(),from=last-3*3600000,all=host.connect('calculator').read('cgm'),points=all.filter(x=>x.ts>=from&&x.ts<=last),max=16,min=2;
+ const box={left:39,right:606,top:14,bottom:194},xx=t=>box.left+(t-from)/(last-from)*(box.right-box.left),yy=g=>box.bottom-(g-min)/(max-min)*(box.bottom-box.top);
+ const path=points.length?points.map((p,i)=>(i?'L':'M')+xx(p.ts).toFixed(1)+','+yy(p.mmol).toFixed(1)).join(' '):'';
+ const ticks=[4,7,10,13,16];let out='<rect x="39" y="'+yy(10)+'" width="567" height="'+(yy(4)-yy(10))+'" fill="#e9f7ef" rx="6"/>';
+ ticks.forEach(n=>out+='<path d="M 39 '+yy(n)+' H 606" stroke="#d8e5e9" stroke-dasharray="3 5"/><text x="6" y="'+(yy(n)+4)+'">'+n+'</text>');
+ for(let i=0;i<=3;i++){const x=39+i/3*567;out+='<text x="'+(x-12)+'" y="218">'+new Date(from+i/3*3*3600000).toLocaleTimeString('ru-RU',{timeZone:'Europe/Minsk',hour:'2-digit',minute:'2-digit'})+'</text>';}
+ if(path)out+='<path d="'+path+'" fill="none" stroke="#168e9e" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>';
+ if(points.length){const l=points.at(-1);out+='<circle cx="'+xx(l.ts)+'" cy="'+yy(l.mmol)+'" r="5" fill="#168e9e" stroke="white" stroke-width="2"/>';}
+ if(s.shot){const t=Date.parse(s.shot.administeredAt);if(t>=from&&t<=last)out+='<path d="M'+xx(t)+' 14 V194" stroke="#bd853a" stroke-dasharray="6 4"/><text x="'+Math.max(42,xx(t)-30)+'" y="9">Укол</text>';}
+ if(m?.startedAt){const t=Date.parse(m.startedAt);if(t>=from&&t<=last)out+='<path d="M'+xx(t)+' 14 V194" stroke="#ae3d53" stroke-dasharray="3 3"/><text x="'+Math.max(42,xx(t)-24)+'" y="29">Еда</text>';}
+ svg.innerHTML=out;
+}
+$('carb1').oninput=$('carb2').oninput=()=>{dirty=true;const a=Number($('carb1').value),b=Number($('carb2').value);$('plateTotal').textContent=Number.isFinite(a+b)?num(a+b)+' г (не сохранено)':'—';enable('confirmPlate',false);};
+$('savePlan').onclick=()=>run(()=>{const m=getMeal();controller.updatePlan(m.id,makePlate(positiveInput('carb1'),positiveInput('carb2')));dirty=false;});
+$('confirmPlate').onclick=()=>run(()=>{if(dirty)throw Error('Сначала сохраните изменение углеводов');controller.ready(getMeal().id);});
+$('scenario').onchange=()=>run(()=>{
+ if(getMeal()?.status!=='draft')throw Error('Менять сценарий можно только в черновике нового приёма пищи');
+ meta.scenario=$('scenario').value;
+ // Advance by more than 3 hours so we never overwrite a historical CGM timestamp.
+ // Old approved GFStorage records and learned synthetic cases are preserved.
+ meta.skipMs+=185*60000;
+ ingestCurrentCgm();
+});
+$('activity').onchange=()=>run(()=>{if(getShots(getMeal()).length)throw Error('После записи инъекции состояние фиксировано для теста');meta.activity=$('activity').value;});
+$('giMode').onchange=()=>run(()=>{if(getShots(getMeal()).length)throw Error('После укола параметры теста уже зафиксированы');meta.gi=$('giMode').value;});
+$('fillDemoDose').onclick=()=>run(()=>{const a=getAssessment(getMeal()).example;if(a.status!=='EXAMPLE'||!a.dose.stepCompatible)throw Error('Учебное значение не кратно 0,5 ЕД: не округляйте его автоматически.');$('doseChosen').value=String(a.dose.units);$('minutesChosen').value=String(a.minutes);});
+$('confirmInjection').onclick=()=>run(()=>{const m=getMeal();if(getShots(m).length)throw Error('Инъекция уже записана');const ass=getAssessment(m),e=ass.example;
+ if(e.status!=='EXAMPLE')throw Error('В этом сценарии автоматический учебный расчёт заблокирован');
+ const str=$('doseChosen').value.trim(),minuteText=$('minutesChosen').value.trim(),u=Number(str),min=Number(minuteText);
+ if(!str||!Number.isFinite(u)||u<.5||u>10||Math.abs(u*2-Math.round(u*2))>1e-9)throw Error('Введите собственную учебную дозу от 0,5 до 10 ЕД с шагом 0,5');
+ if(!minuteText||!Number.isInteger(min)||min<0||min>30)throw Error('Укажите целое количество минут от 0 до 30 только для тестового таймера');
+ const current=getMeal();if(!current.doseIntent)controller.setParentIntent(current.id,u,{explicitParentConfirmation:true});
+ else if(current.doseIntent.units!==u)throw Error('Сохранённое намерение отличается от поля; не перезаписываем историю');
+ const when=currentIso();controller.recordActualInjection(current.id,u,when,{explicitlyInjected:true});meta.injectionAtMs=Date.parse(when);meta.timerMinutes=min;meta.decisionPreview=e;meta.contextAtShot={glucose:ass.data.cgm?.mmol??SCENARIOS[meta.scenario].g,trend:SCENARIOS[meta.scenario].trend,activity:meta.activity,gi:meta.gi,carbs:m.plannedPlate.totals.carbs};});
+function fastForward(mins){run(()=>{if(!getShots(getMeal()).length)throw Error('Сначала отметьте учебный укол');meta.skipMs+=mins*60000;ingestCurrentCgm();});}
+$('advance1').onclick=()=>fastForward(1);$('advance5').onclick=()=>fastForward(5);
+$('startMeal').onclick=()=>run(()=>{if(!getShots(getMeal()).length)throw Error('Нет подтверждённого учебного укола');controller.startMeal(getMeal().id,currentIso(),{actuallyStarted:true});ingestCurrentCgm();});
+$('ateAll').onclick=()=>run(()=>{const m=getMeal();controller.actualFood(m.id,m.plannedPlate,{parentConfirmed:true,...(m.actualPlate?{reason:'Уточнение: всё съедено (учебное)'}:{})});editing=false;});
+ const DEMO_FOODS={
+  oats:{name:'Вымышленная овсяная каша',carbs:18,protein:4,fat:2,kcal:110},
+  apple:{name:'Вымышленное яблоко',carbs:10,protein:.4,fat:.2,kcal:45},
+  buckwheat:{name:'Вымышленная гречка варёная',carbs:20,protein:3.6,fat:1,kcal:110},
+  cutlet:{name:'Вымышленная котлета',carbs:8,protein:14,fat:12,kcal:196},
+  sausage:{name:'Вымышленные сосиски',carbs:3,protein:11,fat:22,kcal:254}
+ };
+ let editRows=[];
+ const fixed2=n=>Math.round(n*100)/100;
+ function inferFood(x){const name=(x.name||'').toLowerCase();return name.includes('овся')?'oats':name.includes('яблок')?'apple':name.includes('греч')?'buckwheat':name.includes('котлет')?'cutlet':name.includes('сосис')?'sausage':'oats';}
+ function foodsFromPlate(p){return p.items.map(x=>({type:inferFood(x),grams:Number(x.amount)||0,customName:x.name}));}
+ function actualPlateFromRows(){
+  const items=editRows.filter(x=>x.grams>0).map((r,i)=>{const f=DEMO_FOODS[r.type];const k=r.grams/100;return {kind:'catalog',foodId:'demo:actual:'+r.type+':'+i,name:f.name,amount:fixed2(r.grams),unit:'г',carbs:fixed2(f.carbs*k),protein:fixed2(f.protein*k),fat:fixed2(f.fat*k),kcal:fixed2(f.kcal*k),note:'Вымышленные БЖУ на 100 г; масса оценена родителем',nutritionStatus:'estimated'};});
+  const totals={carbs:0,protein:0,fat:0,kcal:0,amount:0,count:items.length};for(const x of items)for(const k of ['carbs','protein','fat','kcal','amount'])totals[k]+=x[k];for(const k of ['carbs','protein','fat','kcal','amount'])totals[k]=fixed2(totals[k]);return {schema:'GFPlate.v1',source:'GFFoodOnly',createdAt:currentIso(),items,totals,containsEstimatedValues:true};
+ }
+ function balanceRisk(){const m=getMeal(),shot=getShots(m)[0],scenario=SCENARIOS[meta.scenario];
+  if(!shot)return 'Нет подтверждённой инъекции';
+  if(meta.scenario==='low'||meta.scenario==='falling')return 'ВНИМАНИЕ: сахар низкий или снижается. Нельзя полагаться на балансировку обычной еды. При гипогликемии следуйте индивидуальному плану её лечения; при тяжёлых симптомах нужна экстренная помощь.';
+  return 'Предупреждение: количество углеводов не равно безопасному покрытию инсулина. Скорость всасывания пищи, время укола, CGM и IOB могут менять риск. IOB в демо не подтверждён.';
+ }
+ function paintEditRows(){const holder=$('editFoodRows');holder.innerHTML=editRows.map((r,i)=>'<div class="foodrow"><div><label for="fType'+i+'">Продукт</label><select id="fType'+i+'" data-edit-kind="type" data-index="'+i+'">'+Object.keys(DEMO_FOODS).map(k=>'<option value="'+k+'"'+(k===r.type?' selected':'')+'>'+esc(DEMO_FOODS[k].name)+'</option>').join('')+'</select></div><div><label for="fGram'+i+'">Съел, г</label><input id="fGram'+i+'" type="number" min="0" max="1000" step="1" data-edit-kind="grams" data-index="'+i+'" value="'+r.grams+'"><button class="ghost" type="button" data-remove="'+i+'">Удалить</button></div></div>').join('')||'<p class="hint">Продуктов пока нет — добавьте их ниже.</p>';refreshBalance();}
+ function refreshBalance(){if(!editing)return;const m=getMeal(),shot=getShots(m)[0],p=actualPlateFromRows(),diff=fixed2(p.totals.carbs-m.plannedPlate.totals.carbs);$('balanceMetrics').innerHTML='<span>Введено по журналу</span><strong>'+esc(num(shot?.units??0))+' ЕД (НЕ меняется)</strong><br><span>План углеводов</span><strong>'+num(m.plannedPlate.totals.carbs)+' г</strong><br><span>Выбрано сейчас</span><strong>'+num(p.totals.carbs)+' г</strong><br><span>Разница от плана</span><strong>'+(diff>0?'+':'')+num(diff)+' г</strong><br><small>Эквивалент единиц по одной только еде не гарантирует безопасность введённой дозы.</small>';
+ $('balanceWarning').textContent=balanceRisk();$('balanceWarning').className='notice'+(['low','falling'].includes(meta.scenario)?' alarm':'');}
+ function openEditor(){const m=getMeal();if(!m||!['started','completed'].includes(m.status))throw Error('Сначала подтвердите начало еды');const p=m.actualPlate||m.plannedPlate;editRows=foodsFromPlate(p);$('editReason').value=m.actualPlate?'Уточнение факта после записи':'Изменение фактически съеденной еды';editing=true;render();paintEditRows();$('editPanel').scrollIntoView({behavior:'smooth',block:'nearest'});}
+ $('editFoodRows').addEventListener('input',e=>{const i=Number(e.target.dataset.index);if(!Number.isInteger(i)||!editRows[i])return;const kind=e.target.dataset.editKind;if(kind==='grams'){const v=Number(e.target.value);if(!Number.isFinite(v)||v<0||v>1000)return;editRows[i].grams=v;refreshBalance();}else if(kind==='type'){editRows[i].type=e.target.value;refreshBalance();}});
+ $('editFoodRows').addEventListener('change',e=>{if(e.target.dataset.editKind==='type'){const i=Number(e.target.dataset.index);editRows[i].type=e.target.value;refreshBalance();}});
+ $('editFoodRows').addEventListener('click',e=>{const b=e.target.closest('[data-remove]');if(!b)return;editRows.splice(Number(b.dataset.remove),1);paintEditRows();});
+ $('addActualFood').onclick=()=>run(()=>{if(!editing)throw Error('Откройте редактирование');const grams=Number($('newGrams').value);if(!Number.isFinite(grams)||grams<=0||grams>1000)throw Error('Введите количество от 1 до 1000 г');editRows.push({type:$('newFood').value,grams});paintEditRows();});
+ $('manualBalance').onclick=()=>{if(!editing)return;$('balanceProposal').hidden=false;$('balanceProposal').textContent='Ручной режим: изменяйте граммы выше. Сравнение углеводов обновляется сразу; фактически введённая доза не пересчитывается.';};
+ $('autoBalance').onclick=()=>{if(!editing)return;const out=$('balanceProposal');out.hidden=false;
+  if(['low','falling'].includes(meta.scenario)){out.textContent='Автоматическая балансировка недоступна при учебном сценарии низкого или снижающегося сахара. Требуется отдельный сценарий безопасности.';return;}
+  const m=getMeal(),target=m.plannedPlate.totals.carbs,now=actualPlateFromRows().totals.carbs,gap=fixed2(target-now);
+  if(Math.abs(gap)<.25){out.textContent='Углеводы приблизительно совпадают с исходным планом. Это НЕ подтверждает безопасность уже введённого инсулина.';return;}
+  if(gap<0){out.textContent='В текущей тарелке больше углеводов, чем планировалось (на '+num(-gap)+' г). Автоматически сокращать уже съеденное нельзя; уточните факт вручную.';return;}
+  const preferred=editRows.find(x=>x.grams>0&&DEMO_FOODS[x.type].carbs>0);
+  if(!preferred){out.textContent='Нет выбранного продукта для расчёта. Добавьте доступный продукт самостоятельно.';return;}
+  const density=DEMO_FOODS[preferred.type].carbs;const extra=Math.round(gap/density*100);if(extra<=0||preferred.grams+extra>1000){out.textContent='Вариант по текущим продуктам не найден. Уточните состав тарелки вручную.';return;}
+  out.innerHTML='Учебное сравнение: для приближения к первоначальным '+num(target)+' г углеводов можно увеличить <b>'+esc(DEMO_FOODS[preferred.type].name)+'</b> примерно на <b>'+extra+' г</b>. Это арифметика, НЕ инструкция давать еду и НЕ гарантированное покрытие инсулина. <button type="button" id="acceptAuto">Применить к черновику</button>';
+  $('acceptAuto').onclick=()=>{preferred.grams+=extra;paintEditRows();out.hidden=false;out.textContent='Изменения применены только к черновику; родитель должен подтвердить фактически съеденное. Не отмечайте предложенную порцию как съеденную заранее.';};
+ };
+ $('editActual').onclick=()=>run(openEditor);$('showCorrection').onclick=()=>run(openEditor);
+ $('cancelActual').onclick=()=>{editing=false;editRows=[];render();};
+ $('saveActual').onclick=()=>run(()=>{const m=getMeal(),reason=$('editReason').value.trim();if(m.actualPlate&&!reason)throw Error('При исправлении укажите причину');const plate=actualPlateFromRows();controller.actualFood(m.id,plate,{parentConfirmed:true,...(m.actualPlate?{reason}:{})});editing=false;editRows=[];});
+$('finishMeal').onclick=()=>run(()=>{const m=getMeal();if(!m.actualPlate)throw Error('Сначала подтвердите фактически съеденную еду');controller.finishMeal(m.id,currentIso(),{confirmed:true});});
+$('newTest').onclick=()=>run(()=>{if(getMeal()?.status!=='completed')throw Error('Завершите текущий приём');newMeal();loadPlateInputs();$('doseChosen').value='';$('minutesChosen').value='';});
+$('simulateOutcome').onclick=()=>run(()=>{const m=getMeal();if(m.status!=='completed')throw Error('Сначала завершите учебный приём');
+ if((meta.reviewedSessions||[]).includes(m.id))throw Error('Этот вымышленный исход уже добавлен в историю');
+ const target=Date.parse(m.startedAt)+120*60000;
+ if(currentMs()<target)meta.skipMs+=target-currentMs();
+ ingestCurrentCgm();
+ const shot=getShots(m)[0],readings=host.connect('calculator').read('cgm');
+ const points=readings.filter(p=>p.ts>=Date.parse(m.startedAt)&&p.ts<=currentMs());
+ const lo=Math.min(...points.map(x=>x.mmol)),hi=Math.max(...points.map(x=>x.mmol));
+ const interval=Math.max(0,(Date.parse(m.startedAt)-Date.parse(shot.administeredAt))/60000);
+ const context=meta.contextAtShot||{glucose:7,trend:'flat',activity:'rest',carbs:m.plannedPlate.totals.carbs};
+ const score=points.length>=6&&lo>=4&&hi<=12?.8:.4;
+ meta.learnedCases.push({g:context.glucose,trend:context.trend,carbs:m.plannedPlate.totals.carbs,activity:context.activity,gi:context.gi||'mixed',minutes:Math.round(interval),quality:score,day:'Сим. '+(meta.learnedCases.length+1)});
+ meta.reviewedSessions.push(m.id);
+ meta.lastOutcomeNote='вымышленная кривая '+num(lo)+'–'+num(hi)+' ммоль/л; добавлен 1 пример, не медицинская оценка';
+});
+
+$('resetDemo').onclick=()=>{if(!window.confirm('Удалить только вымышленные записи этой демоверсии?'))return;try{localStorage.removeItem(DBKEY);localStorage.removeItem(METAKEY);}catch{}fallback=null;meta={...DEFAULT_META,wallAtMs:Date.now()};editing=false;dirty=false;openHost();seedProfile();seedCgm();newMeal();loadPlateInputs();$('doseChosen').value='';$('minutesChosen').value='';$('err').textContent='';render();};
+window.GFMealCalcV020Demo={state:()=>host.exportState(),current:()=>getMeal(),inspect:()=>getMeal()?calc.inspect(getMeal().id,{atIso:currentIso()}):null,virtualNow:()=>currentIso(),model:()=>getMeal()?getAssessment(getMeal()).example:null};
+init();setInterval(()=>{if(document.visibilityState!=='hidden')render();},1000);
+window.addEventListener('pagehide',persist);
+})();
+</script></body></html>

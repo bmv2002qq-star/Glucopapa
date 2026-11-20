@@ -103,14 +103,13 @@ for step in provider-write provider-restored history-write history-restored web-
 done
 "$adb" -s "$serial" shell am instrument -w -r -e fixture SYNTHETIC -e phase back \
     com.glucopapa.shell.test/com.glucopapa.shell.qa.StorageInstrumentation | tee "$evidence/production-back.log"
-grep -F 'QA_PASS back' "$evidence/production-back.log"
+back_failure=0
+grep -F 'QA_PASS back' "$evidence/production-back.log" || back_failure=1
 
 # The tested fixture has its own package and app-private directory.
 export GLUCOPAPA_QA_PACKAGE=com.glucopapa.shell.fixture
 smoke_options=(--automated --fixture-test-apk android-mvp3/app/build/outputs/apk/androidTest/fixture/app-fixture-androidTest.apk)
-if [[ $api == 31 || ${ANDROID_QA_EXTENDED:-false} == true ]]; then
-    smoke_options+=(--stock-webview)
-fi
+smoke_options+=(--stock-webview)
 python3 qa/mvp3-android/sqlite_smoke.py "${smoke_options[@]}" --adb "$adb" --serial "$serial" \
   --avd "$avd" --apk android-mvp3/app/build/outputs/apk/fixture/app-fixture.apk --output "$evidence/checks" \
   2>&1 | tee "$evidence/smoke.log"
@@ -157,3 +156,13 @@ if [[ ${ANDROID_QA_EXTENDED:-false} == true ]]; then
         done
     fi
 fi
+# A fresh fixture journal isolates the synthetic matching cases from other suites.
+"$adb" -s "$serial" shell pm clear "$GLUCOPAPA_QA_PACKAGE"
+for step in write restored; do
+    "$adb" -s "$serial" shell am force-stop "$GLUCOPAPA_QA_PACKAGE"
+    "$adb" -s "$serial" shell am instrument -w -r -e fixture SYNTHETIC -e phase meal-timing -e step "$step" "$runner" \
+      | tee "$evidence/meal-timing-$step.log"
+    grep -F 'QA_PASS meal-timing' "$evidence/meal-timing-$step.log"
+done
+
+exit "$back_failure"

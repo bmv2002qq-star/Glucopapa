@@ -61,6 +61,8 @@ integration/GFConsensusAutoSelection_v0.1.2.js
 integration/GFConsensusEvidence_v0.1.0.js
 integration/GFInjectionFact_v0.1.0.js
 integration/GFJournalPresentation_v0.1.0.js
+integration/GFMealTimingService_v0.1.0.js
+integration/GFMealWorkflowView_v0.1.0.js
 app.js
 integration/GFModuleUI_v0.2.1.js
 integration/GFModuleDirectory_v0.1.0.js

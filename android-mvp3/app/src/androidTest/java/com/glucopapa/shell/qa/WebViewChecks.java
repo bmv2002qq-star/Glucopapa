@@ -28,15 +28,21 @@ final class WebViewChecks {
     }
 
     JSONObject exercise(String asset, String action) throws Exception {
+        return exercise(new String[]{asset}, action);
+    }
+
+    JSONObject exercise(String[] assets, String action) throws Exception {
         WebView web = startWebView();
-        String script;
-        try (InputStream input = instrumentation.getContext().getAssets().open(asset)) {
-            ByteArrayOutputStream content = new ByteArrayOutputStream();
-            byte[] buffer = new byte[4096];
-            for (int length; (length = input.read(buffer)) != -1;) {
-                content.write(buffer, 0, length);
+        StringBuilder script = new StringBuilder();
+        for (String asset : assets) {
+            try (InputStream input = instrumentation.getContext().getAssets().open(asset)) {
+                ByteArrayOutputStream content = new ByteArrayOutputStream();
+                byte[] buffer = new byte[4096];
+                for (int length; (length = input.read(buffer)) != -1;) {
+                    content.write(buffer, 0, length);
+                }
+                script.append(content.toString(StandardCharsets.UTF_8.name())).append('\n');
             }
-            script = new String(content.toByteArray(), StandardCharsets.UTF_8);
         }
         String marker = JSONObject.quote(java.util.UUID.randomUUID().toString());
         String guarded = "(() => { if(window.__glucopapaQAScriptStarted!==" + marker +

@@ -23,8 +23,10 @@
     const cgm = [];
     const glucose = (ts, mmol) => cgm.push({ts,mmol,sourceDeviceId:sensor,receivedAt:iso(ts)});
     const previous = [4,5,6,7,8,9];
+    const today = Math.floor(at/day)*day;
+    const nearSlotStart = (Math.floor(new Date(at).getUTCHours()/6)*6+1)*60*minute;
     for (const [i, days] of previous.entries()) {
-      const shotTime = at - days*day - 15*minute, lag = 10 + i;
+      const shotTime = today - days*day + nearSlotStart, lag = 10 + i;
       const sessionId = 'qa-meal-'+i, injectionId = 'qa-injection-'+i;
       const startedAt = iso(shotTime+lag*minute);
 

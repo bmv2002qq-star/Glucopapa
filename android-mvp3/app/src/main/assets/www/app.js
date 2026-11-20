@@ -4,7 +4,7 @@
  */
 (() => {
 'use strict';
-const VER='0.3.17-qa', MODE_KEY='GFV2SHELL_MODE_v1', DATA_PREFIX='GFV2SHELL_DATA_v1_';
+const VER='0.3.18-qa', MODE_KEY='GFV2SHELL_MODE_v1', DATA_PREFIX='GFV2SHELL_DATA_v1_';
 const XDRIP_KEY='GFV2SHELL_XDRIP_LOCAL_v1', XDRIP_SOURCE_KEY='GFV2SHELL_XDRIP_SOURCE_v1';
 const $=id=>document.getElementById(id), escape=s=>String(s===null||s===undefined?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=(n,d=1)=>Number.isFinite(n)?n.toLocaleString('ru-RU',{maximumFractionDigits:d}):'—';
@@ -15,7 +15,8 @@ const testJournal=globalThis.GFTestJournal;
 let mode='local',host=null,unsub=null,controller=null,bridge=null,settingsService=null,activeMeal=null,lastSafety=null,noticeTimer=null,sportMenuOpen=false;
 let fileOperation=null,xdripStatus='',xdripRequest=null,xdripHistoryRequest=null,nextXDripWindow=0;
 const routes=[],foodRoutes=[];
-let returningInsideFood=false, mealDoseContext=false, captureForInjection=false;
+let returningInsideFood=false, captureForInjection=false;
+let mealWorkflowDoc=null, mealWorkflowView=null;
 let approvedQuickFoodSource;
 const MODULES=[
  ['GFStorage v'+(globalThis.GFStorage?.VERSION||'—'),'Android SQLite CAS, спорт и журнал','on'],['GFActionWriter','Единая запись фактических действий','on'],
@@ -156,15 +157,17 @@ function port(role){return host.connect(role);}
 function state(){return host.exportState();}
 function screen(id,back=false){
  if(id==='journal')id='approved-journal';
- if(id!=='injections'&&mealDoseContext)setMealDoseContext(false);
  if(!$('screen-'+id))return;
  const from=document.body.dataset.activeScreen||'home';
  if(!back&&id!==from){
    if(routes.at(-1)?.id===id)routes.pop();
    else routes.push({id:from,scroll:window.scrollY});
- }document.querySelectorAll('.screen').forEach(e=>e.classList.toggle('active',e.id==='screen-'+id));const group={cgm:'home',injections:'journal',settings:'system','insulin-models':'analytics','injection-sites':'analytics',reports:'system',sync:'system',highlow:'home','approved-journal':'journal','approved-nutrition':'meals','approved-settings':'system','approved-low':'home','approved-high':'home','module-detail':'modules',research:'system'}[id]||id;document.querySelectorAll('#nav button').forEach(e=>e.classList.toggle('selected',e.dataset.screen===(group==='analytics'?'coefficients':group==='system'?'approved-settings':group)));const names={home:'Главная',cgm:'Глюкоза',injections:'Инъекции',meals:'Продукты',journal:'Дневник',analytics:'Техническая диагностика',coefficients:'Коэффициенты',settings:'Настройки',system:'Ещё','insulin-models':'Инсулиновые модели','injection-sites':'Места инъекций',reports:'Отчёты',sync:'Синхронизация',highlow:'Высокий / низкий сахар','approved-nutrition':'Моя тарелка','approved-journal':'Дневник','approved-settings':'Настройки','approved-low':'Низкий сахар','approved-high':'Высокий сахар',modules:'Модули','module-detail':'Модуль',research:'Исследовательские модули'};$('pageTitle').textContent=names[id]||'Главная';document.body.dataset.activeScreen=id;window.scrollTo(0,0);render();if(id==='coefficients')renderCoefficients();globalThis.GPModuleUI?.refresh?.();setTimeout(broadcastApproved,0);}
+ }document.querySelectorAll('.screen').forEach(e=>e.classList.toggle('active',e.id==='screen-'+id));const group={cgm:'home',injections:'journal',settings:'system','insulin-models':'analytics','injection-sites':'analytics',reports:'system',sync:'system',highlow:'home','approved-journal':'journal','approved-nutrition':'meals','approved-meal':'meals','approved-settings':'system','approved-low':'home','approved-high':'home','module-detail':'modules',research:'system'}[id]||id;document.querySelectorAll('#nav button').forEach(e=>e.classList.toggle('selected',e.dataset.screen===(group==='analytics'?'coefficients':group==='system'?'approved-settings':group)));const names={home:'Главная',cgm:'Глюкоза',injections:'Инъекции',meals:'Продукты',journal:'Дневник',analytics:'Техническая диагностика',coefficients:'Коэффициенты',settings:'Настройки',system:'Ещё','insulin-models':'Инсулиновые модели','injection-sites':'Места инъекций',reports:'Отчёты',sync:'Синхронизация',highlow:'Высокий / низкий сахар','approved-nutrition':'Моя тарелка','approved-meal':'Инсулин и приём пищи','approved-journal':'Дневник','approved-settings':'Настройки','approved-low':'Низкий сахар','approved-high':'Высокий сахар',modules:'Модули','module-detail':'Модуль',research:'Исследовательские модули'};$('pageTitle').textContent=names[id]||'Главная';document.body.dataset.activeScreen=id;window.scrollTo(0,0);render();if(id==='coefficients')renderCoefficients();globalThis.GPModuleUI?.refresh?.();setTimeout(broadcastApproved,0);}
 function back(){
  const active=document.body.dataset.activeScreen||'home';
+ if(active==='approved-meal'&&mealWorkflowDoc?.getElementById('editPanel')?.hidden===false){
+   mealWorkflowDoc.getElementById('cancelActual').click();return true;
+ }
  if(active==='approved-nutrition'){
    const peer=approvedPeer('nutrition')?.peer, frame=peer?.document;
    if(frame?.getElementById('foodModal')?.classList.contains('on')){
@@ -333,6 +336,7 @@ function refreshClockDisplays(){
 }
 function render(){if(!host)return;try{
  const renderNow=Date.now();
+ renderMealWorkflow();
  const s=state(),all=GFCgmEvidencePolicy.journalView(host,GFJournal,GFJournalStorageAdapter,{nowMs:renderNow}),cgm=s.cgm||[],active=s.cgmMetadata,inj=s.events.filter(e=>e.type==='insulin_injection'&&e.status==='confirmed');
  $('revBadge').textContent='База #'+s.revision;
  renderCgm(cgm,active,renderNow,all);
@@ -796,23 +800,18 @@ function setupLocalFilesAndSource(){
  }));
 }
 function wrap(fn){return e=>{try{fn(e);}catch(ex){console.error(ex);notify(String(ex.message||ex),true);}};}
-function setMealDoseContext(open){
- mealDoseContext=open;
- $('mealDoseContext').hidden=!open;
- $('actualDoseLabel').textContent=open?'Моя доза · фактически введено, ЕД':'Фактически введено, ЕД';
- $('saveActualInjection').textContent=open?'Сделал укол':'Сохранить фактический укол';
- $('injectionDrug').disabled=open;
-}
-function openMealInjection(){
- const evidence=GFCalculationEvidence.inspect({host,route:'meal',activeMeal,nowMs:Date.now()});
- $('injectionForm').reset();
- $('injectionDrug').value='rinfast';
- $('injectionTime').value=localInputTime();
- $('mealModelDose').value='Недоступно';
- $('mealDoseReason').textContent=evidence.blockers?.[0]?.message||'Нет согласованного расчёта по текущим данным.';
- setMealDoseContext(true);
- screen('injections');
- $('injectionMeal').value=activeMeal;
+function renderMealWorkflow(){
+ if(document.body.dataset.activeScreen!=='approved-meal'||!host)return;
+ const frame=$('iframeApprovedMeal'),doc=frame.contentDocument;
+ if(!doc||doc.URL!==new URL(frame.getAttribute('src'),location.href).href||!doc.getElementById('plateCard'))return;
+ if(mealWorkflowDoc!==doc){
+   mealWorkflowDoc=doc;
+   mealWorkflowView=GFMealWorkflowView.mount(doc,{
+     getHost:()=>host,getController:()=>controller,getMode:()=>mode,getActive:()=>activeMeal,
+     setActive:id=>{activeMeal=id;},openFood:()=>screen('approved-nutrition'),makeId:uid,
+   });
+ }
+ mealWorkflowView.render();
 }
 function submitInjection(event){
  event.preventDefault();
@@ -820,12 +819,12 @@ function submitInjection(event){
  if(units<=0||Math.abs(units*2-Math.round(units*2))>1e-8)throw Error('Доза должна быть положительной и кратной 0,5 ЕД');
  if(!Number.isFinite(time.getTime()))throw Error('Неверное время');
  if(time.getTime()>Date.now()+60000)throw Error('Факт инъекции не может быть в будущем');
- const item={id:uid('inj'),insulinId:mealDoseContext?'rinfast':$('injectionDrug').value,units,administeredAt:time.toISOString()};
+ const item={id:uid('inj'),insulinId:$('injectionDrug').value,units,administeredAt:time.toISOString()};
  const region=$('injectionRegion').value,side=$('injectionSide').value;
  if(region)item.injectionSite={region,...(side?{side}:{})};
- const mealId=mealDoseContext?activeMeal:item.insulinId==='rinfast'?$('injectionMeal').value:null;
+ const mealId=item.insulinId==='rinfast'?$('injectionMeal').value:null;
  GFInjectionFact.record({host,item,mealId,confirmed:true,revision:port('actionWriter').getRevision()});
- $('injectionForm').reset();$('injectionTime').value=localInputTime();$('basalEntryContext').hidden=true;setMealDoseContext(false);
+ $('injectionForm').reset();$('injectionTime').value=localInputTime();$('basalEntryContext').hidden=true;
  notify('Фактическая инъекция записана один раз');
  render();
 }
@@ -1116,7 +1115,7 @@ function broadcastApproved(role=null){
 function registerApprovedPlate(payload){const converted=GFFoodMealEntry.normalizePlate(payload);const p=converted.plate;if(!p.items.length)throw Error('Тарелка пуста');
  const mealType=foodDocument?.getElementById('mealType')?.value||null;
  const current=activeMeal?controller.lookup(activeMeal):null;
- if(current&&current.status==='draft'&&JSON.stringify(current.plannedPlate?.items)===JSON.stringify(p.items)){
+ if(current&&['draft','planned'].includes(current.status)&&!current.injectionIds.length&&JSON.stringify(current.plannedPlate?.items)===JSON.stringify(p.items)){
    if((current.mealType??null)!==mealType){
      controller.updatePlan(current.id,p,mealType);
      $('approvedPlateStatus').textContent='Тип приёма сохранён в существующем плане.';
@@ -1132,7 +1131,7 @@ window.addEventListener('message',wrap(e=>{const d=e.data||{};if(!d.type?.starts
    const showInjection=captureForInjection&&document.body.dataset.activeScreen==='approved-nutrition';
    captureForInjection=false;
    registerApprovedPlate(d.plate);
-   if(showInjection)openMealInjection();
+   if(showInjection)screen('approved-meal');
    return;
  }
  if(d.type==='gp:error'){if(role==='nutrition')captureForInjection=false;notify(String(d.error||'Ошибка исходного модуля'),true);return;}
@@ -1155,6 +1154,9 @@ window.addEventListener('message',wrap(e=>{const d=e.data||{};if(!d.type?.starts
  }}));
 for(const [role,route] of Object.entries(approvedFrames))$(route.id).addEventListener('load',()=>broadcastApproved(role));
 $('iframeApprovedNutrition').addEventListener('load',watchPlateDialog);
+$('iframeApprovedMeal').addEventListener('load',wrap(renderMealWorkflow));
+setInterval(()=>{if(document.body.dataset.activeScreen==='approved-meal'&&!document.hidden)mealWorkflowView?.paintTimer();},1000);
+document.addEventListener('visibilitychange',wrap(renderMealWorkflow));
 $('approvedSavePlate').addEventListener('click',wrap(()=>{if(!sendApproved('nutrition',{type:'gp:capture:plate'}))throw Error('Модуль питания ещё не загружен');}));
 
 try{

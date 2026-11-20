@@ -77,6 +77,11 @@ public final class StorageInstrumentation extends Instrumentation {
                         output.putString("webview", new WebViewChecks(this)
                             .exercise("pilot-replay-qa.js", arguments.getString("step", "")).toString());
                         break;
+                    case "meal-timing":
+                        output.putString("webview", new WebViewChecks(this).exercise(
+                            new String[]{"meal-timing-case.js", "meal-workflow-qa.js"},
+                            arguments.getString("step", "")).toString());
+                        break;
                     case "touch":
                         output.putString("webview", new WebViewChecks(this).checkTouch().toString());
                         break;

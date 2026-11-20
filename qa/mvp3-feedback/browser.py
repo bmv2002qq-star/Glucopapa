@@ -99,14 +99,17 @@ def check_food_diary_coefficients(page, output, state):
     food.locator('#mealType').select_option('lunch')
     food.locator('#plateCalculate').click()
     try:
-        expect(page.locator('#screen-injections.active')).to_be_visible(timeout=4000)
+        expect(page.locator('#screen-approved-meal.active')).to_be_visible(timeout=4000)
     except AssertionError as error:
         raise AssertionError(page.locator('#notice').text_content()) from error
-    expect(page.locator('#mealModelDose')).to_have_value('Недоступно')
+    workflow=page.frame_locator('#iframeApprovedMeal')
+    expect(workflow.locator('#doseSuggested')).to_have_text('—')
     assert not state()['events']
-    assert page.locator('#injectionConfirm').count() == 0
-    page.locator('#injectionUnits').fill('0.5')
-    page.locator('#saveActualInjection').click()
+    workflow.locator('#confirmPlate').click()
+    workflow.locator('#doseChosen').fill('0.5')
+    workflow.locator('#shotSite').select_option('abdomen')
+    page.once('dialog', lambda dialog: dialog.accept())
+    workflow.locator('#confirmInjection').click()
     page.wait_for_function('()=>GPApp.getStorage().exportState().events.length===1')
     saved=state()
     event,=saved['events']
