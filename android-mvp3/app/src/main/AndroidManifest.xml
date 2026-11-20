@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Used by the optional native xDrip+ loopback history request. -->
+    <!-- Used for the native xDrip+ loopback queries. -->
     <uses-permission android:name="android.permission.INTERNET" />
     <queries>
         <provider android:authorities="com.eveningoutpost.dexdrip.contentprovider" />
@@ -11,7 +11,7 @@
         android:networkSecurityConfig="@xml/gf_loopback_network"
         android:allowBackup="false" android:fullBackupContent="false"
         android:supportsRtl="true">
-        <activity android:name=".MainActivity" android:exported="true">
+        <activity android:name=".MainActivity" android:exported="true" android:enableOnBackInvokedCallback="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>

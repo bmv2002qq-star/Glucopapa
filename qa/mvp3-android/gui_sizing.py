@@ -126,7 +126,7 @@ def main():
                     f'System bars cover navigation buttons at width {width}')
             capture(emulator, output, f'home-{width}.png')
             ui.tap(captions=('Дневник',))
-            ui.wait(captions=('Дневник · кандидат',), scroll=True)
+            ui.wait(resource_id='date', captions=('Выберите день',), scroll=True)
             capture(emulator, output, f'diary-{width}.png')
             results.append({'width': width, 'height': height, 'density': 160, 'navigation_safe': True})
             emulator.stop()
@@ -142,7 +142,7 @@ def main():
     for _ in range(3):
         time.sleep(20)
         ui.tap(captions=('Дневник',))
-        ui.wait(captions=('Дневник · кандидат',), scroll=True)
+        ui.wait(resource_id='date', captions=('Выберите день',), scroll=True)
         ui.tap(captions=('Главная',))
         ui.home()
         require(emulator.pid() == pid, 'App process restarted during soak')

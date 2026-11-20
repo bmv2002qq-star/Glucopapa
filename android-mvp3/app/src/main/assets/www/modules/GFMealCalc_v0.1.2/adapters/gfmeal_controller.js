@@ -14,7 +14,9 @@ function createController(host,{makeId=prefix=>prefix+'-'+(typeof crypto!=='unde
   if(!sessionId||typeof sessionId!=='string')throw Error('Нужен устойчивый sessionId: создаётся один раз при начале действия');
   ports.food.createDraft({id:sessionId,plate,...(mealType===null?{}:{mealType})},ports.food.getRevision());return sessionId;
  }
- function updatePlan(id,plate){return ports.food.updatePlannedPlate({...v(id),plate},ports.food.getRevision());}
+ function updatePlan(id,plate,mealType){
+  return ports.food.updatePlannedPlate({...v(id),plate,...(mealType===undefined?{}:{mealType})},ports.food.getRevision());
+ }
  function ready(id){return ports.mealFlow.markReady(v(id),ports.mealFlow.getRevision());}
  function setParentIntent(id,amount,{explicitParentConfirmation=false}={}){
   if(!explicitParentConfirmation)throw Error('Нужно явное подтверждение выбранного родителем решения');

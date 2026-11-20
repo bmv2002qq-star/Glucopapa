@@ -4,6 +4,7 @@
     const byId = id => document.getElementById(id);
     const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
     window.__glucopapaQA = null;
+    window.__glucopapaQAStage = 'entrypoint';
     (async () => {
         assert(location.pathname.endsWith('/index.html') && !window.GFTestJournal, 'Fixture entrypoint installed');
         assert(GPApp.mode() === 'local', 'Fresh install is not a local journal');
@@ -13,6 +14,7 @@
         }
         assert(!GFShellPreferences.write('GFV2SHELL_MODE_v1', 'demo'), 'Native mode switch is active');
         const read = key => JSON.parse(GFNativeStorage.readSnapshot(key));
+        window.__glucopapaQAStage = 'native journal read';
         const localKey = 'GFV2SHELL_DATA_v1_local';
         assert(read('GFV2SHELL_DATA_v1_demo').ok === false, 'Test journal is accessible');
         const action=window.__glucopapaQAAction;
@@ -129,6 +131,7 @@
             return {status:'PASS',fixture:'SYNTHETIC_PROVIDER_PAYLOAD',checked:'CAS_AND_DEDUPLICATION',revision:1};
         }
         const host = GPApp.getStorage();
+        window.__glucopapaQAStage = 'synthetic source rejection';
         const before = host.exportState();
         const cgm = host.connect('cgmAdapter');
         let rejected = false;
@@ -144,6 +147,7 @@
         assert(JSON.parse(GFNativeStorage.writeIfRevision(localKey, JSON.stringify({...JSON.parse(synthetic),revision:1}), 0)).ok === false,
             'Native save accepted synthetic CGM');
         GFNativeXDrip.pollLatest();
+        window.__glucopapaQAStage = 'provider unavailable';
         const cutoff = Date.now() + 6000;
         let source;
         do {

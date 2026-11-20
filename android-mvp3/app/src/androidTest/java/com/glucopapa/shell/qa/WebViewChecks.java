@@ -72,7 +72,7 @@ final class WebViewChecks {
         tap(web, "#openLow", "screen-approved-low");
         tap(web, "#nav [data-screen=journal]", "screen-approved-journal");
         AccessibilityNodeInfo root = instrumentation.getUiAutomation().getRootInActiveWindow();
-        boolean nativeTree = containsJournalHeading(root);
+        boolean nativeTree = containsJournalDate(root);
         if (root != null) root.recycle();
         return new JSONObject().put("status", "PASS").put("input", "ANDROID_POINTER_DOWN_UP")
             .put("routes", "HIGH, LOW, journal")
@@ -96,13 +96,14 @@ final class WebViewChecks {
             .put("input", "ANDROID_KEYCODE_BACK");
     }
 
-    private boolean containsJournalHeading(AccessibilityNodeInfo node) {
+    private boolean containsJournalDate(AccessibilityNodeInfo node) {
         if (node == null) return false;
         CharSequence text = node.getText();
-        if (text != null && text.toString().contains("Дневник · кандидат")) return true;
+        if ("date".equals(node.getViewIdResourceName()) || (text != null && text.toString().contains("Выберите день")))
+            return true;
         for (int i = 0; i < node.getChildCount(); i++) {
             AccessibilityNodeInfo child = node.getChild(i);
-            boolean found = containsJournalHeading(child);
+            boolean found = containsJournalDate(child);
             if (child != null) child.recycle();
             if (found) return true;
         }

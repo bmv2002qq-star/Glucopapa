@@ -7,8 +7,8 @@ android {
         minSdk 26
         targetSdk 35
         testInstrumentationRunner 'com.glucopapa.shell.qa.StorageInstrumentation'
-        versionCode 11
-        versionName '0.3.16-qa'
+        versionCode 12
+        versionName '0.3.17-qa'
     }
     buildFeatures { buildConfig true }
     buildTypes {

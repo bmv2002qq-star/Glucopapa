@@ -610,9 +610,14 @@
           });
         };
         port.updatePlannedPlate=(item,rev)=>{
-          requireFields(item,['sessionId','expectedVersion','opId','plate'],['sessionId','expectedVersion','opId','plate']);const plate=validatePlate(item.plate);
+          requireFields(item,['sessionId','expectedVersion','opId','plate','mealType'],['sessionId','expectedVersion','opId','plate']);
+          const plate=validatePlate(item.plate);
+          if(Object.hasOwn(item,'mealType')&&item.mealType!==null&&!MEAL_TYPES.has(item.mealType))fail('Некорректный тип приёма пищи');
           return changeSession(role,'update_planned_plate',item.sessionId,item.expectedVersion,item.opId,rev,(old,d,now)=>{
-            requireMeal(old,'draft','planned');const next=mark(old,now);next.plannedPlate=plate;return next;
+            requireMeal(old,'draft','planned');const next=mark(old,now);next.plannedPlate=plate;
+            if(item.mealType===null)delete next.mealType;
+            else if(item.mealType!==undefined)next.mealType=item.mealType;
+            return next;
           });
         };
       }

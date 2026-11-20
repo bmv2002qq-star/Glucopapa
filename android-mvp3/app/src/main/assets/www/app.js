@@ -4,7 +4,7 @@
  */
 (() => {
 'use strict';
-const VER='0.3.16-qa', MODE_KEY='GFV2SHELL_MODE_v1', DATA_PREFIX='GFV2SHELL_DATA_v1_';
+const VER='0.3.17-qa', MODE_KEY='GFV2SHELL_MODE_v1', DATA_PREFIX='GFV2SHELL_DATA_v1_';
 const XDRIP_KEY='GFV2SHELL_XDRIP_LOCAL_v1', XDRIP_SOURCE_KEY='GFV2SHELL_XDRIP_SOURCE_v1';
 const $=id=>document.getElementById(id), escape=s=>String(s===null||s===undefined?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=(n,d=1)=>Number.isFinite(n)?n.toLocaleString('ru-RU',{maximumFractionDigits:d}):'—';
@@ -1074,7 +1074,12 @@ function broadcastApproved(role=null){
 function registerApprovedPlate(payload){const converted=GFFoodMealEntry.normalizePlate(payload);const p=converted.plate;if(!p.items.length)throw Error('Тарелка пуста');
  const mealType=foodDocument?.getElementById('mealType')?.value||null;
  const current=activeMeal?controller.lookup(activeMeal):null;
- if(current&&current.status==='draft'&&(current.mealType??null)===mealType&&JSON.stringify(current.plannedPlate?.items)===JSON.stringify(p.items)){
+ if(current&&current.status==='draft'&&JSON.stringify(current.plannedPlate?.items)===JSON.stringify(p.items)){
+   if((current.mealType??null)!==mealType){
+     controller.updatePlan(current.id,p,mealType);
+     $('approvedPlateStatus').textContent='Тип приёма сохранён в существующем плане.';
+     return;
+   }
    $('approvedPlateStatus').textContent='Такая тарелка уже сохранена · ID '+activeMeal;notify('Повторная запись еды не создана');return;
  }
  const id=uid('meal');controller.createFromFood(p,id,mealType);activeMeal=id;if(document.body.dataset.activeScreen==='approved-nutrition')renderCalculationEvidence('meal',Date.now());$('approvedPlateStatus').textContent='План зарегистрирован: '+id+' · '+p.items.length+' позиций. Для отметки фактически съеденного откройте «План / факт еды». Подтверждённый план не считается съеденным.';notify('Моя тарелка v0.4.6 передана в GFStorage: '+id);}

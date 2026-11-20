@@ -1,5 +1,6 @@
 """Exercise the approved screens through the existing shell, with synthetic inputs."""
 import argparse
+from datetime import datetime
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 import json
@@ -91,6 +92,10 @@ def check_food_diary_coefficients(page, output, state):
     expect(food.locator('#tab-plate')).to_be_visible()
     expect(food.locator('#plateItems')).to_contain_text('Драник деревенский с мясом')
     assert not state()['events']
+    food.locator('#mealType').select_option('breakfast')
+    page.locator('#approvedSavePlate').click()
+    page.wait_for_function("()=>GPApp.getStorage().exportState().mealSessions.some(row=>row.mealType==='breakfast')")
+    draft=next(row for row in state()['mealSessions'] if row.get('mealType')=='breakfast')
     food.locator('#mealType').select_option('lunch')
     food.locator('#plateCalculate').click()
     try:
@@ -108,7 +113,7 @@ def check_food_diary_coefficients(page, output, state):
     assert event['linkedMealSessionId'] and event['status']=='confirmed'
     assert event['units']==.5 and event['insulinId']=='rinfast'
     meal=next(row for row in saved['mealSessions'] if row['id']==event['linkedMealSessionId'])
-    assert not meal['actualPlate'] and meal['mealType']=='lunch'
+    assert not meal['actualPlate'] and meal['mealType']=='lunch' and meal['id']==draft['id']
 
     page.evaluate("GPApp.open('approved-journal')")
     journal=page.frame_locator('#iframeApprovedJournal')
@@ -126,6 +131,19 @@ def check_food_diary_coefficients(page, output, state):
     expect(journal.locator('#dailyStats')).to_contain_text('0,5 ЕД')
     assert state()==saved
     page.screenshot(path=output/'feedback-journal.png')
+    page.evaluate('''() => {
+      const port=GPApp.getStorage().connect('actionWriter');
+      for(const [id,at] of [['synthetic-oct','2026-10-31T09:00:00+03:00'],['synthetic-nov','2026-11-01T09:00:00+03:00']])
+        port.recordInjection({id,insulinId:'rinfast',units:.5,administeredAt:at},port.getRevision());
+    }''')
+    journal.locator('#journalStart').fill('2026-10-31')
+    journal.locator('#journalEnd').fill('2026-11-01')
+    expect(journal.locator('tbody tr')).to_have_count(2)
+    expect(journal.locator('#dailyStats')).to_contain_text('1 ЕД')
+    expect(journal.locator('#monthLabel')).to_have_text('2026-11-01 — 2026-11-01')
+    journal.locator('#journalEnd').fill('2026-10-31')
+    expect(journal.locator('#monthLabel')).to_have_text('2026-10-01 — 2026-10-31')
+    expect(journal.locator('#dailyStats')).to_contain_text('0,5 ЕД')
 
     page.evaluate("GPApp.open('coefficients')")
     expect(page.locator('#coefficientWindow option')).to_have_count(4)
@@ -140,7 +158,61 @@ def check_food_diary_coefficients(page, output, state):
     page.reload()
     page.evaluate("GPApp.open('coefficients')")
     expect(page.locator('#coefficientMode')).to_have_value('auto')
-    assert len(state()['events'])==1
+    assert len(state()['events'])==3
+
+
+def check_cgm_controls(browser, origin, output):
+    page=browser.new_page(viewport={'width':390,'height':850})
+    page.add_init_script('''(() => {
+      const at=Date.now()-5*60*1000;
+      const point=()=>({status:'MEASUREMENT',measuredAtMs:at,receivedAtMs:Date.now(),
+        direction:'Flat',stale:false});
+      window.qaWebUp=true;
+      window.GFNativeXDrip={
+        pollLatest(){},peekLatest(){return JSON.stringify({...point(),mgdl:150.7});}
+      };
+      window.GFNativeXDripHistory={
+        requestLatest(){return JSON.stringify({status:'HISTORY_FETCHING'});},
+        takeLatest(){return JSON.stringify(qaWebUp?{...point(),mgdl:150,deltaMgdl:-1.002,
+          device:'Follower',transport:'xdrip_loopback_live'}:{status:'HISTORY_UNAVAILABLE'});}
+      };
+    })();''')
+    page.goto(origin+'/index.html')
+    page.evaluate("GPApp.open('cgm')")
+    expect(page.locator('#xdripStatus')).to_have_text('Чтение выключено')
+    page.locator('#xdripEnabled').check()
+    expect(page.locator('#xdripStatus')).to_contain_text('Локальный Web Service')
+    expect(page.locator('#xdripStatus')).to_contain_text('8,3 ммоль/л')
+    expect(page.locator('#xdripStatus')).to_contain_text('получено')
+    assert page.evaluate("GPApp.getStorage().exportState().cgm[0].transport")=='xdrip_loopback_live'
+    page.evaluate('window.qaWebUp=false')
+    page.locator('#refreshXdrip').click()
+    expect(page.locator('#xdripStatus')).to_contain_text('ContentProvider')
+    expect(page.locator('#xdripStatus')).to_contain_text('8,4 ммоль/л')
+    cgm=page.evaluate('GPApp.getStorage().exportState().cgm')
+    assert len(cgm)==1 and cgm[0]['mgdl']==150.7
+    page.locator('#xdripSourceMode').select_option('web')
+    expect(page.locator('#xdripStatus')).to_have_text('Web Service выключен или недоступен')
+    assert page.evaluate('GPApp.getStorage().exportState().cgm')==cgm
+    page.locator('#xdripEnabled').uncheck()
+    expect(page.locator('#xdripStatus')).to_have_text('Чтение выключено')
+    page.screenshot(path=output/'feedback-cgm.png')
+    page.close()
+
+
+
+def check_meal_time_defaults(browser, origin):
+    for hour, minute, expected in [(7,59,''),(8,0,'breakfast'),(10,59,'breakfast'),
+                                    (11,0,'lunch'),(16,59,'lunch'),(17,0,'dinner')]:
+        page=browser.new_page(timezone_id='Europe/Minsk')
+        page.clock.set_fixed_time(datetime.fromisoformat(f'2026-11-20T{hour:02d}:{minute:02d}:00+03:00'))
+        page.goto(origin+'/index.html')
+        page.evaluate("GPApp.open('approved-nutrition')")
+        food=page.frame_locator('#iframeApprovedNutrition')
+        expect(food.locator('.brand h1')).to_have_text('ГлюкоПапа Еда')
+        expect(food.locator('#mealType')).to_have_value(expected)
+        page.close()
+
 
 
 def main():
@@ -157,6 +229,11 @@ def main():
         with sync_playwright() as playwright:
             browser=playwright.chromium.launch(executable_path='/usr/bin/chromium',chromium_sandbox=True)
             result=check_ui(browser,f'http://127.0.0.1:{server.server_port}',args.output,args.baseline)
+            if not args.baseline:
+                check_cgm_controls(browser,f'http://127.0.0.1:{server.server_port}',args.output)
+                result['syntheticLiveSwitchAndDeduplication']=True
+                check_meal_time_defaults(browser,f'http://127.0.0.1:{server.server_port}')
+                result['localMealTimeBoundaries']=['07:59','08:00','10:59','11:00','16:59','17:00']
             browser.close()
     finally:
         server.shutdown()
