@@ -174,7 +174,7 @@
   }
 
   function validateForecastVisibility(value){
-    requireFields(value,['GFForecast','GFxDrip','GFAPSEnhancer']);
+    requireFields(value,['GFForecast','GFxDrip','GFAPSEnhancer','GFConsensus']);
     if(Object.values(value).some(flag=>typeof flag!=='boolean'))fail('Неверная видимость прогноза');
   }
 
