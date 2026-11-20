@@ -234,6 +234,9 @@ final class AiJsonlExport {
                    .put("qualityFlag", known(row, "qualityFlag", "ok","invalid"))
                    .put("staleAtReceipt",bool(row,"staleAtReceipt"))
                    .put("provenance", known(row, "source", "xdrip_local","synthetic","device_recorded"));
+                if ("xdrip_loopback_history".equals(row.optString("transport"))) {
+                    out.put("transport", "xdrip_loopback_history");
+                }
                 break;
             case "forecast":
                 JSONObject f = row.getJSONObject("payload");

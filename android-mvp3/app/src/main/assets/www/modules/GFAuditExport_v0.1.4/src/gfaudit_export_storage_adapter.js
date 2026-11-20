@@ -13,7 +13,7 @@ function collect(host){
  const normalized=Normalizer.reconcile(x);
  const payload={schema:'glucopapa.audit.unified/1',status:'research_only',schemaVersion:x.schemaVersion,revision:x.revision,
   profile:{timeZone:x.profile.timeZone},events:x.events,mealSessions:x.mealSessions,conditionPeriods:x.conditionPeriods,
-  cgm:z.cgm,cgmMetadata:y.cgmMetadata,forecasts:x.forecasts,forecastAssessments:x.forecastAssessments,
+  cgm:y.cgm,cgmMetadata:y.cgmMetadata,forecasts:x.forecasts,forecastAssessments:x.forecastAssessments,
   coefficientObservations:z.proposals,mealReconciliation:{ambiguousLegacy:normalized.ambiguousLegacy,linkedLegacy:normalized.legacyLinked,legacyStandaloneCount:normalized.legacyStandalone.length}};
  return JSON.parse(JSON.stringify(payload));
 }

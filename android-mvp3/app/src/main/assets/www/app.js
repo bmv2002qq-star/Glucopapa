@@ -4,7 +4,7 @@
  */
 (() => {
 'use strict';
-const VER='0.3.14-prototype', MODE_KEY='GFV2SHELL_MODE_v1', DATA_PREFIX='GFV2SHELL_DATA_v1_';
+const VER='0.3.15-pilot', MODE_KEY='GFV2SHELL_MODE_v1', DATA_PREFIX='GFV2SHELL_DATA_v1_';
 const XDRIP_KEY='GFV2SHELL_XDRIP_LOCAL_v1';
 const $=id=>document.getElementById(id), escape=s=>String(s===null||s===undefined?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=(n,d=1)=>Number.isFinite(n)?n.toLocaleString('ru-RU',{maximumFractionDigits:d}):'—';
@@ -13,7 +13,7 @@ const nowISO=()=>new Date().toISOString();
 const localInputTime=(d=new Date())=>new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,16);
 const testJournal=globalThis.GFTestJournal;
 let mode='local',host=null,unsub=null,controller=null,bridge=null,settingsService=null,activeMeal=null,lastSafety=null,noticeTimer=null,sportMenuOpen=false;
-let fileOperation=null,xdripStatus='',xdripTimer;
+let fileOperation=null,xdripStatus='',xdripTimer,xdripHistoryRequest=null;
 const MODULES=[
  ['GFStorage v'+(globalThis.GFStorage?.VERSION||'—'),'Android SQLite CAS, спорт и журнал','on'],['GFActionWriter','Единая запись фактических действий','on'],
  ['GFMealController / GFMealCalc','Факты еды и поиск; численный расчёт дозы не подключён','limited'],['GFCoefficients v0.1.2','Исторический анализ','on'],['GFCoefficientReview v0.1.1','Единые 4×6 ч интервалы и проверка старых записей','on'],
@@ -135,6 +135,7 @@ function boot(selectedMode=mode){
    setTimeout(broadcastApproved,0);
  });
  $('xdripControls').hidden=mode!=='local'||!globalThis.GFNativeXDrip;
+ $('xdripHistoryControls').hidden=!globalThis.GFNativeXDripHistory;
  $('xdripEnabled').checked=xdripEnabled();
  $('backupControls').hidden=!globalThis.AndroidExporter?.saveBackup;
  $('aiExportControls').hidden=!globalThis.AndroidExporter?.saveAiExport;
@@ -243,7 +244,9 @@ function renderCgm(cgm,active,nowMs,journal){
  $('homeCgmInfo').textContent=statusCgm.text;
  const name=active?.sourceType==='xdrip_local'?'xDrip+':active?.sourceType==='synthetic'?'Тестовый сенсор':active?.sourceDeviceId;
  $('cgmSource').textContent=name||'Нет источника';
- $('cgmMeta').textContent=active?name+' · '+cgm.length+' измерений · '+statusCgm.text:statusCgm.text;
+ const restored=cgm.filter(GFStorage.isXDripHistory).length;
+ $('cgmMeta').textContent=active?name+' · '+cgm.length+' измерений · '+statusCgm.text+
+   (restored?' · Web Service: '+restored+' точек истории':''):statusCgm.text;
  renderXdripStatus();
  if(screenId==='home'||screenId==='cgm'){
    const result=selectForecasts(evidence,nowMs);
@@ -252,7 +255,8 @@ function renderCgm(cgm,active,nowMs,journal){
    $('forecastGraphLegend').textContent=legend;
    if(screenId==='home'){
      const all=journal??GFCgmEvidencePolicy.journalView(host,GFJournal,GFJournalStorageAdapter,{nowMs});
-     GFMainScreenUI.draw({evidence,now:nowMs,timezone:all.zone,forecastLines:result.lines,actions:all.rows.slice(-30)});
+     GFMainScreenUI.draw({evidence:{...evidence,readings:evidence.timelineReadings},
+       now:nowMs,timezone:all.zone,forecastLines:result.lines,actions:all.rows.slice(-30)});
    }else renderChart($('cgmDetailChart'),cgm,nowMs,24,result.lines);
  }
  if(screenId==='approved-nutrition')renderCalculationEvidence('meal',nowMs);
@@ -431,6 +435,7 @@ function doMeal(method){
 function xdripEnabled(){return mode==='local'&&readPreference(XDRIP_KEY)==='on';}
 function renderXdripStatus(){
  $('refreshXdrip').disabled=!xdripEnabled();
+ $('restoreXdripHistory').disabled=!xdripEnabled()||!!xdripHistoryRequest;
  $('xdripStatus').textContent=xdripEnabled()?xdripStatus||'Поиск локального источника':'Чтение выключено';
 }
 const XDRIP_STATUS=Object.freeze({
@@ -458,6 +463,62 @@ function requestXDrip(){
  acceptXDrip(source.pollLatest());
  clearTimeout(xdripTimer);
  xdripTimer=setTimeout(()=>acceptXDrip(source.peekLatest()),1100);
+}
+const HISTORY_STATUS=Object.freeze({
+ HISTORY_NEEDS_PROVIDER:'Сначала получите показание через ContentProvider xDrip+.',
+ HISTORY_BUSY:'Предыдущий запрос истории ещё выполняется.',
+ HISTORY_DISABLED:'Включите чтение показаний xDrip+.',
+ HISTORY_EMPTY:'Web Service не вернул показаний.',
+ HISTORY_UNAVAILABLE:'Локальный Web Service xDrip+ недоступен. Проверьте его настройку в xDrip+.',
+ HISTORY_HTTP_ERROR:'Web Service отклонил запрос истории.',
+ HISTORY_TIMEOUT:'Web Service не ответил вовремя.',
+ HISTORY_INVALID:'Показания Web Service имеют неподдерживаемый формат.',
+ HISTORY_TOO_LARGE:'Ответ Web Service превышает допустимый размер.',
+ HISTORY_ANCHOR_MISMATCH:'Показание ContentProvider не совпало с Web Service. Обновите источник и повторите.',
+ HISTORY_CONFLICT:'В истории Web Service есть противоречащие точки.',
+ CGM_XDRIP_HISTORY_ANCHOR:'Контрольное показание изменилось. Обновите источник и повторите.',
+ CGM_XDRIP_HISTORY_CONFLICT:'История расходится с сохранёнными показаниями.',
+});
+function finishXDripHistory(text) {
+ xdripHistoryRequest=null;
+ $('xdripHistoryStatus').textContent=text;
+ renderXdripStatus();
+}
+function restoreXDripHistory(){
+ const source=globalThis.GFNativeXDripHistory;
+ if(!source||!host||!xdripEnabled()||document.hidden||xdripHistoryRequest)return;
+ acceptXDrip(globalThis.GFNativeXDrip.peekLatest());
+ const reply=JSON.parse(source.request());
+ if(reply.status!=='HISTORY_FETCHING'){
+   finishXDripHistory(HISTORY_STATUS[reply.status]||'История CGM недоступна.');
+   return;
+ }
+ const request={host,deadline:performance.now()+7000};
+ xdripHistoryRequest=request;
+ $('xdripHistoryStatus').textContent='Получаем историю CGM…';
+ renderXdripStatus();
+ function check(){
+   if(xdripHistoryRequest!==request)return;
+   if(request.host!==host||!xdripEnabled()||document.hidden){
+     finishXDripHistory('Импорт истории прерван.');
+     return;
+   }
+   try{
+     const raw=source.take();
+     if(!raw){
+       if(performance.now()<request.deadline){setTimeout(check,250);return;}
+       finishXDripHistory(HISTORY_STATUS.HISTORY_TIMEOUT);
+       return;
+     }
+     const outcome=GFProviderCgm.ingestHistory(host,mode,JSON.parse(raw));
+     finishXDripHistory(outcome.status==='HISTORY_IMPORTED'?
+       (outcome.added?'Добавлено точек истории: '+outcome.added+'.':'В журнале уже есть все полученные точки.') :
+       HISTORY_STATUS[outcome.status]||'История CGM недоступна.');
+   }catch(error){
+     finishXDripHistory(HISTORY_STATUS[error.message]||'История не сохранена. Проверьте доступность журнала.');
+   }
+ }
+ setTimeout(check,250);
 }
 function setFileOperation(next){
  fileOperation=next;
@@ -540,15 +601,20 @@ function setupLocalFilesAndSource(){
  $('xdripEnabled').addEventListener('change',wrap(e=>{
    if(mode!=='local')return;
    savePreference(XDRIP_KEY,e.target.checked?'on':'off');
+   if(!e.target.checked&&xdripHistoryRequest)finishXDripHistory('Импорт истории прерван.');
    xdripStatus='';
    renderXdripStatus();
    requestXDrip();
  }));
  $('refreshXdrip').addEventListener('click',wrap(requestXDrip));
+ $('restoreXdripHistory').addEventListener('click',wrap(restoreXDripHistory));
  $('saveBackup').addEventListener('click',saveBackup);
  $('saveAiExport').addEventListener('click',saveAiExport);
  $('openBackup').addEventListener('click',wrap(openBackup));
- document.addEventListener('visibilitychange',wrap(requestXDrip));
+ document.addEventListener('visibilitychange',wrap(()=>{
+   if(document.hidden&&xdripHistoryRequest)finishXDripHistory('Импорт истории прерван.');
+   requestXDrip();
+ }));
 }
 function wrap(fn){return e=>{try{fn(e);}catch(ex){console.error(ex);notify(String(ex.message||ex),true);}};}
 function submitInjection(event){

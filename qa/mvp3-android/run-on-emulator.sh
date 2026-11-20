@@ -47,19 +47,25 @@ printf 'AVD %s on %s booted with hardware acceleration\n' "$avd" "$serial" > "$e
 "$adb" -s "$serial" shell wm dismiss-keyguard
 
 # Check the exact ordinary APK before installing the separately named fixture.
-"$adb" -s "$serial" install android-mvp3/app/build/outputs/apk/debug/app-debug.apk
+ordinary_apk=android-mvp3/app/build/outputs/apk/debug/app-debug.apk
+"$adb" -s "$serial" install "$ordinary_apk"
+installed_apk=$("$adb" -s "$serial" shell pm path com.glucopapa.shell | tr -d '\r')
+[[ "$installed_apk" == package:/data/app/*/base.apk && "$installed_apk" != *$'\n'* ]]
+installed_apk=${installed_apk#package:}
+"$adb" -s "$serial" shell run-as com.glucopapa.shell sha256sum "$installed_apk" | tr -d '\r' > "$evidence/installed-apk.sha256"
+sha256sum "$ordinary_apk" > "$evidence/production-apk.sha256"
+test "$(cut -d ' ' -f 1 "$evidence/installed-apk.sha256")" = "$(cut -d ' ' -f 1 "$evidence/production-apk.sha256")"
 "$adb" -s "$serial" install -t android-mvp3/app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
 "$adb" -s "$serial" shell am instrument -w -r -e fixture SYNTHETIC -e phase production \
     com.glucopapa.shell.test/com.glucopapa.shell.qa.StorageInstrumentation | tee "$evidence/production-isolation.log"
 grep -F 'QA_PASS production' "$evidence/production-isolation.log"
 "$adb" -s "$serial" shell am force-stop com.glucopapa.shell
-for step in provider-write provider-restored; do
+for step in provider-write provider-restored history-write history-restored; do
     "$adb" -s "$serial" shell am instrument -w -r -e fixture SYNTHETIC -e phase production -e step "$step" \
         com.glucopapa.shell.test/com.glucopapa.shell.qa.StorageInstrumentation | tee "$evidence/$step.log"
     grep -F 'QA_PASS production' "$evidence/$step.log"
     "$adb" -s "$serial" shell am force-stop com.glucopapa.shell
 done
-sha256sum android-mvp3/app/build/outputs/apk/debug/app-debug.apk > "$evidence/production-apk.sha256"
 
 # The tested fixture has its own package and app-private directory.
 export GLUCOPAPA_QA_PACKAGE=com.glucopapa.shell.fixture
@@ -103,4 +109,13 @@ if [[ ${ANDROID_QA_EXTENDED:-false} == true ]]; then
             "$adb" -s "$serial" shell am force-stop "$GLUCOPAPA_QA_PACKAGE"
         fi
     done
+    if [[ $api == 35 ]]; then
+        "$adb" -s "$serial" shell pm clear "$GLUCOPAPA_QA_PACKAGE"
+        for step in write restored; do
+            "$adb" -s "$serial" shell am force-stop "$GLUCOPAPA_QA_PACKAGE"
+            "$adb" -s "$serial" shell am instrument -w -r -e fixture SYNTHETIC -e phase pilot-replay -e step "$step" "$runner" \
+              | tee "$evidence/pilot-replay-$step.log"
+            grep -F 'QA_PASS pilot-replay' "$evidence/pilot-replay-$step.log"
+        done
+    fi
 fi

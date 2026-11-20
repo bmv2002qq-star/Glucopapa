@@ -57,6 +57,10 @@
       <label class="check"><input id="xdripEnabled" type="checkbox"> Читать показания из xDrip+ на этом устройстве</label>
       <div id="xdripStatus" class="soft" role="status">Чтение выключено</div>
       <button id="refreshXdrip" class="btn secondary" type="button">Обновить источник</button>
+      <div id="xdripHistoryControls" hidden>
+        <button id="restoreXdripHistory" class="btn secondary" type="button">Восстановить историю CGM</button>
+        <div id="xdripHistoryStatus" class="soft" role="status">До 288 показаний за последние 24 часа. Требуется локальный xDrip Web Service.</div>
+      </div>
     </div>
     <button class="btn secondary full" type="button" data-screen="home">← Вернуться к графику</button>
    </article>
@@ -157,7 +161,7 @@
   </section>
   <section id="screen-sync" class="screen"><div class="section-header"><h2>Связь с xDrip+ и синхронизация</h2><p>GFSync v0.2.2 загружен; мобильная сеть, сервер, авторизация и обмен между телефонами ещё не подключены.</p></div>
    <article class="panel"><h3>Статус подключения</h3><div id="syncDiagnostics" class="soft">Ожидает проверки</div><button class="btn secondary" id="refreshSync">Обновить статус</button></article>
-   <article class="panel"><h3>xDrip+ Follower</h3><div class="soft">Прямое чтение приложения xDrip+ пока не реализовано. Только реальный Android-адаптер с проверенным источником позволит подключить данные без подмены вымышленным датчиком.</div></article>
+   <article class="panel"><h3>xDrip+ Follower</h3><div class="soft">Android получает показания через локальный ContentProvider xDrip+. Чтение и восстановление истории доступны в разделе «Датчик и CGM».</div></article>
   </section>
   <section id="screen-highlow" class="screen"><div class="section-header"><h2>Высокий / низкий сахар</h2><p>GFHighLow только анализирует CGM. Фактическая инъекция и принятые углеводы регистрируются в своих разделах один раз.</p></div>
    <article class="panel"><h3>Анализ эпизода</h3><div id="highLowSummary" class="soft">Данные ещё не проанализированы</div><button class="btn secondary" id="refreshHighLow">Обновить</button></article>

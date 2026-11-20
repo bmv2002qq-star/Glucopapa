@@ -6,7 +6,7 @@
 'use strict';
 const MINUTE=60000;
 const FROZEN_UNKNOWN=Object.freeze({value:null,direction:null,trendLabel:'Нет достоверных данных',source:null,ageMin:null});
-function fail(code,status='BLOCKED',extra={}){return Object.freeze({status,code,currentMmol:null,latestAt:null,sourceStatus:'UNKNOWN',sourceDeviceId:null,revision:null,readings:[],rawReadings:[],freshnessMinutes:null,...extra});}
+function fail(code,status='BLOCKED',extra={}){return Object.freeze({status,code,currentMmol:null,latestAt:null,sourceStatus:'UNKNOWN',sourceDeviceId:null,revision:null,readings:[],timelineReadings:[],rawReadings:[],freshnessMinutes:null,...extra});}
 function inspect(host,{nowMs=Date.now()}={}){
  if(!Number.isSafeInteger(nowMs))return fail('INVALID_CLOCK');
  if(!host||host.getSchemaVersion?.()!==5||typeof host.connect!=='function')return fail('GFSTORAGE_UNAVAILABLE');
@@ -25,14 +25,16 @@ function inspect(host,{nowMs=Date.now()}={}){
  const sourceStatus=provider?'XDRIP_LOCAL':meta.sourceType==='synthetic'?'SYNTHETIC':'DEVICE_DECLARED';
  const common={revision:rev,sourceStatus,sourceDeviceId:meta.sourceDeviceId,sourceType:meta.sourceType};
  if(!provider&&(!Number.isFinite(meta.qualityScore)||meta.qualityScore<0.8))return fail('CGM_SOURCE_QUALITY_LOW','BLOCKED',common);
- const raw=(a.cgm||[]).filter(p=>p&&p.sourceDeviceId===meta.sourceDeviceId&&Number.isSafeInteger(p.ts)).sort((x,y)=>x.ts-y.ts);
+ const all=(a.cgm||[]).filter(p=>p&&p.sourceDeviceId===meta.sourceDeviceId&&Number.isSafeInteger(p.ts)).sort((x,y)=>x.ts-y.ts);
+ const raw=provider?all.filter(row=>row.transport!=='xdrip_loopback_history'):all;
  if(!raw.length)return fail('CGM_NOT_ENOUGH','BLOCKED',{...common,rawReadings:raw});
  const receivedInFuture=p=>p.receivedAt!=null&&Date.parse(p.receivedAt)>nowMs;
  const futureCode=raw.at(-1).ts>nowMs?'CGM_FUTURE_TIMESTAMP':raw.some(receivedInFuture)?'CGM_FUTURE_RECEIPT':null;
  const received=raw.filter(p=>p.ts<=nowMs&&!receivedInFuture(p));
  const latestRecorded=received.at(-1)||null;
  const qualityBlocked=!!(latestRecorded&&(latestRecorded.valid===false||latestRecorded.qualityFlag==='invalid'));
- const clean=received.filter(p=>Number.isFinite(p.mmol)&&p.mmol>=1.5&&p.mmol<=30&&p.valid!==false&&p.qualityFlag!=='invalid');
+ const isUsable=p=>Number.isFinite(p.mmol)&&p.mmol>=1.5&&p.mmol<=30&&p.valid!==false&&p.qualityFlag!=='invalid';
+ const clean=received.filter(isUsable);
  if(!clean.length)return fail(futureCode||'CGM_NOT_ENOUGH',futureCode?'FUTURE_BLOCKED':'BLOCKED',{...common,rawReadings:raw});
  const latest=clean.at(-1),ageMinutes=(nowMs-latest.ts)/MINUTE;
  // For the provider, 15 minutes is a display boundary, not a declared sampling interval.
@@ -43,7 +45,8 @@ function inspect(host,{nowMs=Date.now()}={}){
    provider?(latest.staleAtReceipt===false?'XDRIP_MODEL_QUALITY_UNKNOWN':'XDRIP_FRESHNESS_UNKNOWN'):'FRESH_HISTORY');
  return Object.freeze({status,code,currentMmol:status==='OK'?latest.mmol:null,
    reportedMmol:status==='OBSERVED_ONLY'&&latest.staleAtReceipt===false?latest.mmol:null,
-   latestAt:new Date(latest.ts).toISOString(),sourceStatus,sourceDeviceId:meta.sourceDeviceId,sourceType:meta.sourceType,revision:rev,readings:clean,rawReadings:raw,freshnessMinutes,ageMinutes});
+   latestAt:new Date(latest.ts).toISOString(),sourceStatus,sourceDeviceId:meta.sourceDeviceId,sourceType:meta.sourceType,revision:rev,readings:clean,rawReadings:raw,freshnessMinutes,ageMinutes,
+   timelineReadings:provider?all.filter(p=>p.ts<=nowMs&&!receivedInFuture(p)&&isUsable(p)):clean});
 }
 function forEvent(view,ts,{journal=null}={}){
  if(!view||!Number.isSafeInteger(ts)||view.status==='BLOCKED'||!view.sourceDeviceId)return FROZEN_UNKNOWN;

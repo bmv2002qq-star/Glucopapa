@@ -61,12 +61,22 @@ def main():
         assert directive in entry.csp
 
     manifest = ET.parse(root / 'app/src/main/AndroidManifest.xml').getroot()
-    assert not [child.tag for child in manifest if child.tag.startswith('uses-permission')]
     android = '{http://schemas.android.com/apk/res/android}'
+    assert [child.get(android + 'name') for child in manifest if child.tag.startswith('uses-permission')] == [
+        'android.permission.INTERNET']
     assert [p.get(android + 'authorities') for p in manifest.findall('queries/provider')] == [
         'com.eveningoutpost.dexdrip.contentprovider']
     app = manifest.find('application')
     assert app.get(android + 'allowBackup') == 'false'
+    assert app.get(android + 'usesCleartextTraffic') == 'false'
+    assert app.get(android + 'networkSecurityConfig') == '@xml/gf_loopback_network'
+    network = ET.parse(root / 'app/src/main/res/xml/gf_loopback_network.xml').getroot()
+    assert network.tag == 'network-security-config' and [child.tag for child in network] == ['base-config', 'domain-config']
+    base, loopback = network
+    assert base.attrib == {'cleartextTrafficPermitted': 'false'} and len(base) == 0
+    assert loopback.attrib == {'cleartextTrafficPermitted': 'true'} and len(loopback) == 1
+    assert loopback[0].tag == 'domain' and loopback[0].attrib == {'includeSubdomains': 'false'}
+    assert loopback[0].text == '127.0.0.1' and len(loopback[0]) == 0
     native = root / 'app/src/main/java'
     databases = re.findall(r'extends\s+SQLiteOpenHelper', '\n'.join(
         name.read_text(encoding='utf-8') for name in native.rglob('*.java')))
@@ -101,6 +111,8 @@ def main():
             'integration/GFCalculationEvidence_v0.1.0.js', 'integration/GFResearchForecastRun_v0.1.0.js',
             'integration/GFHighTargetView_v0.1.0.js', 'integration/GFLOWView_v0.4.1.js',
             'integration/GFInjectionTimingStorage_v0.1.0.js', 'integration/GFMealAbsorption_v0.1.0.js',
+            'integration/GFProviderCgm_v0.1.0.js', core[0],
+            'modules/GFAuditExport_v0.1.4/src/gfaudit_export_storage_adapter.js',
         }, changes
         unchanged = len(archived) - len(changes)
     extra = [line.strip() for line in (web / 'runtime/APK_FILES.txt').read_text().splitlines()

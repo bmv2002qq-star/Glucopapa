@@ -16,6 +16,33 @@
         const localKey = 'GFV2SHELL_DATA_v1_local';
         assert(read('GFV2SHELL_DATA_v1_demo').ok === false, 'Test journal is accessible');
         const action=window.__glucopapaQAAction;
+        assert(byId('restoreXDripHistory').disabled, 'History is enabled on a clean install');
+        assert(JSON.parse(GFNativeXDripHistory.request()).status==='HISTORY_DISABLED', 'Native history bypassed opt-in');
+        if(action.startsWith('history-')){
+            const host=GPApp.getStorage();
+            if(action.startsWith('history-write:')){
+                const packet=JSON.parse(action.slice('history-write:'.length));
+                const now=Date.now();
+                const imported=GFProviderCgm.ingestHistory(host,'local',packet,now);
+                assert(imported.added===2&&imported.revision===2,'History was not saved as one transaction');
+                assert(GFProviderCgm.ingestHistory(host,'local',packet,now).added===0,'History duplicate saved');
+            }
+            const state=host.exportState();
+            assert(state.revision===2&&state.cgm.length===3,'Unexpected history revision or count');
+            const [oldest,older,anchor]=state.cgm;
+            assert(oldest.mgdl===101&&oldest.direction===null&&older.mgdl===104&&older.direction==='Flat'&&
+                oldest.transport==='xdrip_loopback_history'&&older.transport===oldest.transport&&
+                older.staleAtReceipt===null&&anchor.mgdl===108.09354&&!anchor.transport,
+                'Imported history or ContentProvider point changed');
+            const evidence=GFCgmEvidencePolicy.inspect(host,{nowMs:Date.now()});
+            assert(evidence.timelineReadings.length===3&&evidence.readings.length===1&&
+                host.connect('calculator').read('cgm').length===1&&host.connect('research').read('cgm').length===1,
+                'Imported history entered a calculation port');
+            const stored=read(localKey);
+            assert(stored.code==='FOUND'&&stored.data===JSON.stringify(state),'History WebView and SQLite differ');
+            return {status:'PASS',fixture:'SYNTHETIC_LOOPBACK',checked:action==='history-restored'?
+                'FORCE_STOP_RELAUNCH':'HTTP_AND_ATOMIC_IMPORT',revision:2,points:3};
+        }
         if(action==='provider-restored'){
             const state=GPApp.getStorage().exportState();
             const item=state.cgm[0];

@@ -23,5 +23,21 @@
       revision: result.revision, measuredAtMs, idempotent: result.idempotent === true};
   }
 
-  return Object.freeze({ingest});
+  function ingestHistory(host, mode, payload, now = Date.now()) {
+    if (mode !== 'local') return {status: 'LOCAL_ONLY'};
+    if (!payload || typeof payload.status !== 'string') throw Error('CGM_PROVIDER_RESPONSE');
+    if (payload.status !== 'HISTORY_READY') return {status: payload.status};
+    const {anchorTs,anchorSgv,receivedAtMs,items} = payload;
+    if (!Number.isSafeInteger(receivedAtMs) || receivedAtMs > now || !Array.isArray(items) || items.length > 287)
+      throw Error('CGM_XDRIP_HISTORY_FORMAT');
+    const port = host.connect('cgmAdapter');
+    const result = port.ingestXDripHistory({
+      anchorTs,anchorSgv,receivedAt:new Date(receivedAtMs).toISOString(),
+      items:items.map(({measuredAtMs,mgdl,direction})=>({ts:measuredAtMs,mgdl,direction}))
+    },port.getRevision());
+    return {status:'HISTORY_IMPORTED',revision:result.revision,
+      added:result.idempotent?0:Number(result.recordId.split(':')[1])};
+  }
+
+  return Object.freeze({ingest,ingestHistory});
 });

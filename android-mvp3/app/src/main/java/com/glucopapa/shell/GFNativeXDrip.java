@@ -101,12 +101,14 @@ public final class GFNativeXDrip implements AutoCloseable {
         int trend = cursor.getColumnIndex("delta_name");
         String direction = trend >= 0 && cursor.getType(trend) == Cursor.FIELD_TYPE_STRING
             ? cursor.getString(trend) : null;
-        data.put("direction", direction != null && DIRECTIONS.contains(direction) ? direction : JSONObject.NULL);
+        data.put("direction", knownDirection(direction) ? direction : JSONObject.NULL);
         int stale = cursor.getColumnIndex("isstale");
         int freshness = stale >= 0 && cursor.getType(stale) == Cursor.FIELD_TYPE_INTEGER ? cursor.getInt(stale) : -1;
         data.put("stale", freshness == 0 ? Boolean.FALSE : freshness == 1 ? Boolean.TRUE : JSONObject.NULL);
         return data.toString();
     }
+
+    static boolean knownDirection(String direction) { return DIRECTIONS.contains(direction); }
 
     private static String response(String status) {
         return "{\"status\":\"" + status + "\"}";

@@ -23,7 +23,7 @@ function render({host,renderer,engine,nowMs=Date.now(),historyH=12,showInsulin=t
  if(!cgm)return plain('BLOCKED','CGM_SOURCE_UNKNOWN','Источник CGM не зарегистрирован в GFStorage');
  if(!['synthetic','device_recorded','xdrip_local'].includes(cgm.sourceType))return plain('BLOCKED','SOURCE_INVALID','Неизвестный тип CGM');
  const sourceStatus=evidence.sourceStatus;
- const clean=evidence.readings;
+ const clean=evidence.timelineReadings??evidence.readings;
  if(clean.length<2)return plain('BLOCKED',evidence.status==='FUTURE_BLOCKED'?evidence.code:'CGM_NOT_ENOUGH','Недостаточно достоверных точек CGM данного источника',{count:clean.length,sourceStatus});
  const latest=clean.at(-1),fresh=evidence.status==='OK';
  const futureBlocked=evidence.status==='FUTURE_BLOCKED',qualityBlocked=evidence.status==='QUALITY_BLOCKED';

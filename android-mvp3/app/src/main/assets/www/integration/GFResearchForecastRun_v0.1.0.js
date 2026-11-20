@@ -125,7 +125,10 @@
 
   async function run(options) {
     const capture = root.GFForecastReadout.prepare(options);
-    const unavailable = {modelId:'GFxDrip',status:'UNAVAILABLE',code:'LICENSE_BLOCKED'};
+    const unavailable = {
+      modelId:'GFxDrip',status:'UNAVAILABLE',code:'LICENSE_BLOCKED',
+      details:['KERNEL_NOT_PACKAGED','ABSORPTION_CONTRACT_MISSING','REAL_SOURCE_NOT_VALIDATED']
+    };
     if (capture.status !== 'READY') return {...capture,engines:[unavailable]};
     const frame = frameFrom(capture);
     const writer = options.host.connect('forecastWriter');

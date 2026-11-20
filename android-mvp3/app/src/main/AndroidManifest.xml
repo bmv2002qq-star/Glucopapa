@@ -1,12 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- No INTERNET permission: local module shell only. -->
+    <!-- Used by the optional native xDrip+ loopback history request. -->
+    <uses-permission android:name="android.permission.INTERNET" />
     <queries>
         <provider android:authorities="com.eveningoutpost.dexdrip.contentprovider" />
     </queries>
     <application android:label="ГлюкоПапа V2"
         android:theme="@android:style/Theme.Material.Light.NoActionBar"
         android:usesCleartextTraffic="false"
+        android:networkSecurityConfig="@xml/gf_loopback_network"
         android:allowBackup="false" android:fullBackupContent="false"
         android:supportsRtl="true">
         <activity android:name=".MainActivity" android:exported="true">

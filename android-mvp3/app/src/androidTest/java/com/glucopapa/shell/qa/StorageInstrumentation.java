@@ -12,6 +12,7 @@ import android.os.SystemClock;
 import android.util.Log;
 import com.glucopapa.shell.ExportAndTraceChecks;
 import com.glucopapa.shell.GFNativeStorage;
+import com.glucopapa.shell.HistoryContractChecks;
 import com.glucopapa.shell.ProviderContractChecks;
 import java.io.File;
 import java.nio.file.Files;
@@ -43,7 +44,15 @@ public final class StorageInstrumentation extends Instrumentation {
             try (GFNativeStorage store = new GFNativeStorage(testContext)) {
                 switch (phase) {
                     case "production":
-                        output.putString("webview", new WebViewChecks(this).exercise("production-qa.js", arguments.getString("step", "")).toString());
+                        String productionStep = arguments.getString("step", "");
+                        if ("history-write".equals(productionStep)) {
+                            try (GFNativeStorage nativeStore = new GFNativeStorage(getTargetContext())) {
+                                String data = checkCode(nativeStore.readSnapshot(LOCAL), "FOUND").getString("data");
+                                JSONObject anchor = new JSONObject(data).getJSONArray("cgm").getJSONObject(0);
+                                productionStep += ":" + HistoryContractChecks.run(anchor);
+                            }
+                        }
+                        output.putString("webview", new WebViewChecks(this).exercise("production-qa.js", productionStep).toString());
                         break;
                     case "exercise":
                         exercise(store, directory, getTargetContext());
@@ -60,6 +69,10 @@ public final class StorageInstrumentation extends Instrumentation {
                         break;
                     case "timing-history":
                         output.putString("webview", new WebViewChecks(this).exercise("timing-history-qa.js", "").toString());
+                        break;
+                    case "pilot-replay":
+                        output.putString("webview", new WebViewChecks(this)
+                            .exercise("pilot-replay-qa.js", arguments.getString("step", "")).toString());
                         break;
                     case "touch":
                         output.putString("webview", new WebViewChecks(this).checkTouch().toString());

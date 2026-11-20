@@ -45,6 +45,8 @@ public class MainActivity extends Activity {
     private static final int CREATE_BACKUP = 3102;
     private static final int OPEN_BACKUP = 3103;
     private static final int CREATE_AI_EXPORT = 3104;
+    private static final String SETTINGS_NAME = "gf_shell_settings";
+    private static final String XDRIP_KEY = "GFV2SHELL_XDRIP_LOCAL_v1";
     private static final int BACKUP_BYTES = 32_000_000;
     private final ExecutorService fileWorker = Executors.newSingleThreadExecutor();
     private final AtomicReference<String> fileResult = new AtomicReference<>();
@@ -53,6 +55,8 @@ public class MainActivity extends Activity {
     private String pendingFile;
     private GFNativeStorage nativeStorage;
     private GFNativeXDrip nativeXDrip;
+    private GFNativeXDripHistory nativeXDripHistory;
+    private volatile boolean foreground;
     private DiagnosticRing diagnostics;
     private DiagnosticWriter diagnosticWriter;
 
@@ -113,6 +117,9 @@ public class MainActivity extends Activity {
         view.addJavascriptInterface(nativeStorage, "GFNativeStorage");
         nativeXDrip = new GFNativeXDrip(getApplicationContext());
         view.addJavascriptInterface(nativeXDrip, "GFNativeXDrip");
+        nativeXDripHistory = new GFNativeXDripHistory(nativeXDrip, () -> foreground &&
+            "on".equals(getSharedPreferences(SETTINGS_NAME, MODE_PRIVATE).getString(XDRIP_KEY, "off")));
+        view.addJavascriptInterface(nativeXDripHistory, "GFNativeXDripHistory");
         diagnostics = new DiagnosticRing(getFilesDir().toPath().resolve("diagnostics"));
         diagnosticWriter = new DiagnosticWriter(diagnostics);
         view.addJavascriptInterface(diagnosticWriter, "AndroidDiagnostics");
@@ -151,7 +158,7 @@ public class MainActivity extends Activity {
     /** UI preferences only. All event data remains in GFStorage and SQLite. */
     public final class ShellPreferences {
         private final android.content.SharedPreferences preferences =
-            getSharedPreferences("gf_shell_settings", MODE_PRIVATE);
+            getSharedPreferences(SETTINGS_NAME, MODE_PRIVATE);
 
         @JavascriptInterface public String read(String key) {
             return supported(key) ? preferences.getString(key, null) : null;
@@ -160,7 +167,7 @@ public class MainActivity extends Activity {
         @JavascriptInterface public boolean write(String key, String value) {
             if (BuildConfig.FIXTURE_JOURNAL && "GFV2SHELL_MODE_v1".equals(key) &&
                     ("demo".equals(value) || "local".equals(value)) ||
-                "GFV2SHELL_XDRIP_LOCAL_v1".equals(key) && ("on".equals(value) || "off".equals(value))) {
+                XDRIP_KEY.equals(key) && ("on".equals(value) || "off".equals(value))) {
                 return preferences.edit().putString(key, value).commit();
             }
             return false;
@@ -168,7 +175,7 @@ public class MainActivity extends Activity {
 
         private boolean supported(String key) {
             return (BuildConfig.FIXTURE_JOURNAL && "GFV2SHELL_MODE_v1".equals(key)) ||
-                "GFV2SHELL_XDRIP_LOCAL_v1".equals(key);
+                XDRIP_KEY.equals(key);
         }
     }
 
@@ -284,7 +291,7 @@ public class MainActivity extends Activity {
             if (raw == null) throw new IllegalStateException("EXPORT_FILE_UNAVAILABLE");
             try (OutputStream buffered = new java.io.BufferedOutputStream(raw)) {
                 new AiJsonlExport().write(buffered, snapshot, traces, traceStatus,
-                    now, period, mode, "0.3.14-prototype");
+                    now, period, mode, BuildConfig.VERSION_NAME);
             }
         }
     }
@@ -320,6 +327,17 @@ public class MainActivity extends Activity {
         super.onBackPressed();
     }
 
+    @Override protected void onResume() {
+        super.onResume();
+        foreground = true;
+    }
+
+    @Override protected void onPause() {
+        foreground = false;
+        if (nativeXDripHistory != null) nativeXDripHistory.suspend();
+        super.onPause();
+    }
+
     @Override protected void onDestroy() {
         if (view != null) {
             view.loadUrl("about:blank");
@@ -328,11 +346,13 @@ public class MainActivity extends Activity {
             view.removeJavascriptInterface("GFShellPreferences");
             view.removeJavascriptInterface("GFNativeStorage");
             view.removeJavascriptInterface("GFNativeXDrip");
+            view.removeJavascriptInterface("GFNativeXDripHistory");
             view.destroy();
             view = null;
             fileResult.set(null);
         }
         if (nativeStorage != null) {nativeStorage.close();nativeStorage = null;}
+        if (nativeXDripHistory != null) nativeXDripHistory.close();
         if (nativeXDrip != null) {nativeXDrip.close();nativeXDrip = null;}
         fileWorker.shutdownNow();
         if (diagnosticWriter != null) diagnosticWriter.close();

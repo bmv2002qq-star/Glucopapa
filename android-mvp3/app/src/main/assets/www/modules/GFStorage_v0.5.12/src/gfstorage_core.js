@@ -15,6 +15,8 @@
   const VERSION = '0.5.12-unified-CANDIDATE', SCHEMA_VERSION = 5;
   if(!TimeGrid)throw Error('GFTimeGrid dependency required');
   const XDRIP_ID='xdrip-local-provider', XDRIP_TYPE='xdrip_local';
+  const XDRIP_HISTORY='xdrip_loopback_history', XDRIP_HISTORY_WINDOW=24*60*60*1000;
+  const isXDripHistory=row=>row.transport===XDRIP_HISTORY;
   // xDrip+ Constants.MMOLL_TO_MGDL. Store both the upstream value and the converted observation.
   const XDRIP_MGDL_PER_MMOL=18.01559;
   const DIRECTIONS=['DoubleUp','SingleUp','FortyFiveUp','Flat','FortyFiveDown','SingleDown','DoubleDown','NOT_COMPUTABLE'];
@@ -296,6 +298,10 @@
     return {ts:x.ts,mmol,source:XDRIP_TYPE,kind:'observed',sourceDeviceId:XDRIP_ID,
       mgdl:x.mgdl,receivedAt:x.receivedAt,direction:x.direction,staleAtReceipt:x.staleAtReceipt};
   }
+  function xdripHistoricalObservation({ts,mgdl,receivedAt,direction}){
+    if(!Number.isInteger(mgdl))fail('CGM_XDRIP_HISTORY_FORMAT');
+    return {...xdripObservation({ts,mgdl,receivedAt,direction,staleAtReceipt:null}),transport:XDRIP_HISTORY};
+  }
   function emptyState(){return {schemaVersion:SCHEMA_VERSION,revision:0,profile:{birthDate:null,timeZone:null,displayName:null,sex:null,allergies:[],dailyNutritionReference:null,exerciseGuidance:null,exerciseGuidanceEnabled:true,hypoActivityMultipliers:null,hypoActivityEnabled:true,activityBaseLevel:'low',coefficientModes:{carb_g_per_u:'manual',isf_mmol_per_u:'manual'},illnessFactor:null},measurements:[],drugs:clone(DRUGS),models:clone(MODELS),orders:[],coefficients:[],events:[],mealSessions:[],workflowLog:[],coverage:null,cgm:[],cgmMetadata:null,conditionPeriods:[],forecasts:[],forecastAssessments:[],syncInbox:[],results:[],proposals:[],graphPreferences:{layout:'guided',theme:'light',rangeHours:12,showRinfast:true,showTotal:false},history:[]};}
   function validateStored(s){
     if(!object(s)||s.schemaVersion!==SCHEMA_VERSION||!Number.isSafeInteger(s.revision)||s.revision<0)fail('Несовместимая версия базы');
@@ -328,19 +334,25 @@
     if(s.profile.illnessFactor!==null)validateIllnessFactor(s.profile.illnessFactor);
     if(s.cgmMetadata!==null){validateCgmMetadata(s.cgmMetadata);
       if(s.cgm.some(x=>x.sourceDeviceId!==undefined&&x.sourceDeviceId!==s.cgmMetadata.sourceDeviceId))fail('CGM содержит записи другого источника');
-      if(s.cgm.some(x=>x.sourceDeviceId===undefined&&!(x.source==='xdrip_follower'&&x.kind==='observed')))fail('Неизвестное происхождение старых CGM');
+      if(s.cgm.some(x=>x.sourceDeviceId===undefined&&!(x.source==='xdrip_follower'&&x.kind==='observed'&&!isXDripHistory(x))))fail('Неизвестное происхождение старых CGM');
       if(s.cgmMetadata.sourceType===XDRIP_TYPE){
         const times=new Set();
+        let latestProvider=-Infinity, latestHistory=-Infinity;
         for(const x of s.cgm.filter(r=>r.sourceDeviceId!==undefined)){
           const {ts,mgdl,receivedAt,direction,staleAtReceipt}=x;
-          const reading=xdripObservation({ts,mgdl,receivedAt,direction,staleAtReceipt});
+          const historical=isXDripHistory(x);
+          const reading=historical?xdripHistoricalObservation({ts,mgdl,receivedAt,direction}):
+            xdripObservation({ts,mgdl,receivedAt,direction,staleAtReceipt});
+          if(historical)latestHistory=Math.max(latestHistory,ts);
+          else latestProvider=Math.max(latestProvider,ts);
           if(times.has(ts)||Object.keys(x).length!==Object.keys(reading).length||
              Object.keys(reading).some(key=>reading[key]!==x[key]))fail('CGM_XDRIP_CORRUPT');
           times.add(ts);
         }
+        if(latestHistory!==-Infinity&&latestHistory>=latestProvider)fail('CGM_XDRIP_HISTORY_WITHOUT_PROVIDER');
       }
     }
-    if(s.cgmMetadata?.sourceType!==XDRIP_TYPE&&s.cgm.some(x=>x.source===XDRIP_TYPE||x.sourceDeviceId===XDRIP_ID))
+    if(s.cgmMetadata?.sourceType!==XDRIP_TYPE&&s.cgm.some(x=>x.source===XDRIP_TYPE||x.sourceDeviceId===XDRIP_ID||isXDripHistory(x)))
       fail('CGM_XDRIP_PROVENANCE');
     for(const p of s.conditionPeriods)validatePeriod(p);
     if(new Set(s.conditionPeriods.map(x=>x.id)).size!==s.conditionPeriods.length)fail('Повтор ID периода');
@@ -480,13 +492,22 @@
       const out={schemaVersion:state.schemaVersion,revision:state.revision};
       for(const field of READ[role]){
         if(role==='injectionAnalytics'&&field==='events')out[field]=state.events.map(projectedEventForAnalytics);
-        else if(role==='injectionAnalytics'&&field==='cgm')out[field]=state.cgmMetadata?state.cgm.filter(x=>x.sourceDeviceId===state.cgmMetadata.sourceDeviceId):state.cgm;
+        else if(field==='cgm')out[field]=readCgm(role);
         else out[field]=role==='food'&&field==='mealSessions'?state.mealSessions.map(foodView):state[field];
       }
       return frozen(out);
     }
     function foodView(s){return {id:s.id,version:s.version,status:s.status,plannedPlate:s.plannedPlate,actualPlate:s.actualPlate,startedAt:s.startedAt,completedAt:s.completedAt};}
-    function select(role,field){if(!READ[role].includes(field))fail('Нет доступа к разделу '+field);return frozen(role==='food'&&field==='mealSessions'?state.mealSessions.map(foodView):role==='injectionAnalytics'&&field==='cgm'&&state.cgmMetadata?state.cgm.filter(x=>x.sourceDeviceId===state.cgmMetadata.sourceDeviceId):state[field]);}
+    function readCgm(role){
+      if(role==='graph'||role==='cgmAdapter')return state.cgm;
+      return state.cgm.filter(row=>!isXDripHistory(row)&&
+        (role!=='injectionAnalytics'||!state.cgmMetadata||row.sourceDeviceId===state.cgmMetadata.sourceDeviceId));
+    }
+    function select(role,field){
+      if(!READ[role].includes(field))fail('Нет доступа к разделу '+field);
+      if(field==='cgm')return frozen(readCgm(role));
+      return frozen(role==='food'&&field==='mealSessions'?state.mealSessions.map(foodView):state[field]);
+    }
     function validatePlate(p){
       requireFields(p,['schema','source','createdAt','items','totals','containsEstimatedValues'],['schema','source','createdAt','items','totals','containsEstimatedValues']);
       if(p.schema!=='GFPlate.v1'||p.source!=='GFFoodOnly')fail('Ожидался GFPlate.v1 из GFFoodOnly');
@@ -744,14 +765,51 @@
           if(Date.parse(row.receivedAt)>Date.parse(now))fail('CGM_XDRIP_FUTURE_RECEIPT');
           if(d.cgmMetadata&&d.cgmMetadata.sourceType!==XDRIP_TYPE)fail('CGM_SOURCE_CONFLICT');
           d.cgmMetadata={sourceDeviceId:XDRIP_ID,sourceType:XDRIP_TYPE,samplingMinutes:null,qualityScore:null};
-          const old=d.cgm.find(x=>x.sourceDeviceId===XDRIP_ID&&x.ts===row.ts);
-          if(old){
+          const index=d.cgm.findIndex(x=>x.sourceDeviceId===XDRIP_ID&&x.ts===row.ts);
+          if(index!==-1){
+            const old=d.cgm[index];
+            if(isXDripHistory(old)){
+              d.cgm[index]=row; // Direct observations take precedence over retrospective data.
+              return XDRIP_ID+':'+row.ts;
+            }
             if(old.mgdl!==row.mgdl)fail('CGM_XDRIP_CONFLICT');
-            return null; // Preserve the first receipt and provenance when the provider returns the same reading.
+            return null; // Preserve the first direct receipt.
           }
           d.cgm.push(row);
           d.cgm.sort((a,b)=>a.ts-b.ts);
           return XDRIP_ID+':'+row.ts;
+        },rev);
+        port.ingestXDripHistory=(batch,rev)=>commit(role,'cgm','import_xdrip_history',(d,now)=>{
+          const fields=['anchorTs','anchorSgv','receivedAt','items'];
+          requireFields(batch,fields,fields);
+          const {anchorTs,anchorSgv,receivedAt,items}=batch;
+          if(!Number.isSafeInteger(anchorTs)||!Number.isInteger(anchorSgv)||!Array.isArray(items)||items.length>287)
+            fail('CGM_XDRIP_HISTORY_FORMAT');
+          const receipt=Date.parse(validReceipt(receivedAt,anchorTs));
+          if(receipt>Date.parse(now)||anchorTs<receipt-XDRIP_HISTORY_WINDOW)fail('CGM_XDRIP_HISTORY_TIME');
+          if(d.cgmMetadata?.sourceType!==XDRIP_TYPE)fail('CGM_XDRIP_HISTORY_ANCHOR');
+          const known=new Map(d.cgm.filter(row=>row.sourceDeviceId===XDRIP_ID).map(row=>[row.ts,row]));
+          const legacy=new Set(d.cgm.filter(row=>row.sourceDeviceId===undefined).map(row=>row.ts));
+          const anchor=known.get(anchorTs);
+          if(!anchor||isXDripHistory(anchor)||Math.trunc(anchor.mgdl)!==anchorSgv||
+              Date.parse(anchor.receivedAt)>receipt)fail('CGM_XDRIP_HISTORY_ANCHOR');
+          const incoming=new Map();
+          for(const item of items){
+            requireFields(item,['ts','mgdl','direction'],['ts','mgdl','direction']);
+            const row=xdripHistoricalObservation({...item,receivedAt});
+            if(row.ts>=anchorTs||row.ts<receipt-XDRIP_HISTORY_WINDOW)fail('CGM_XDRIP_HISTORY_TIME');
+            const prior=incoming.get(row.ts);
+            if(prior&&(prior.mgdl!==row.mgdl||prior.direction!==row.direction))fail('CGM_XDRIP_HISTORY_CONFLICT');
+            const existing=known.get(row.ts);
+            if(existing&&(Math.trunc(existing.mgdl)!==row.mgdl||
+                (isXDripHistory(existing)&&existing.direction&&row.direction&&existing.direction!==row.direction)))
+              fail('CGM_XDRIP_HISTORY_CONFLICT');
+            if(!existing&&!legacy.has(row.ts))incoming.set(row.ts,row);
+          }
+          if(!incoming.size)return null;
+          d.cgm.push(...incoming.values());
+          d.cgm.sort((a,b)=>a.ts-b.ts);
+          return 'history:'+incoming.size;
         },rev);
         port.setSourceMetadata=(meta,rev)=>commit(role,'cgmMetadata','set_provenance',d=>{
           const m=validateCgmMetadata(meta);
@@ -1020,5 +1078,5 @@
       // Host-only import is intentionally absent: restore must be verified by a future native adapter.
     });
   }
-  return Object.freeze({VERSION,SCHEMA_VERSION,DRUGS,MODELS,MEAL_MODELS,HIGH_ACTIVITY_DEFAULTS,createHost});
+  return Object.freeze({VERSION,SCHEMA_VERSION,DRUGS,MODELS,MEAL_MODELS,HIGH_ACTIVITY_DEFAULTS,isXDripHistory,createHost});
 });
