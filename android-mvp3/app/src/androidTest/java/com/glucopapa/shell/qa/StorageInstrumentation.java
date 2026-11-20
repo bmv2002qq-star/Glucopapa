@@ -55,6 +55,9 @@ public final class StorageInstrumentation extends Instrumentation {
                     case "web":
                         output.putString("webview", new WebViewChecks(this).exercise("webview-qa.js", "").toString());
                         break;
+                    case "timing-history":
+                        output.putString("webview", new WebViewChecks(this).exercise("timing-history-qa.js", "").toString());
+                        break;
                     case "touch":
                         output.putString("webview", new WebViewChecks(this).checkTouch().toString());
                         break;

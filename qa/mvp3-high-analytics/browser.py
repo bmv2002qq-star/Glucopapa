@@ -170,6 +170,30 @@ def timing_panel(browser,origin,output):
     return {'statuses':['NO_DATA'],'draft_excluded':True,'read_only':True,'legacy_sites_available':True}
 
 
+def positive_history(browser, origin, output):
+    page = browser.new_page(viewport={'width': 390, 'height': 900})
+    page.goto(origin + '/index.html')
+    page.wait_for_function('window.GPApp?.getStorage()')
+    source = Path(__file__).resolve().parents[2] / 'android-mvp3/app/src/androidTest/assets/timing-history-qa.js'
+    page.evaluate(source.read_text(encoding='utf-8'))
+    page.wait_for_function('window.__glucopapaQA')
+    result = page.evaluate('window.__glucopapaQA')
+    assert result == {'status': 'PASS', 'fixture': 'SYNTHETIC_ISOLATED', 'result': 'HISTORICAL_ESTIMATE',
+                      'matchedCases': 4, 'snapshot_unchanged': True, 'sqlite': False}, result
+
+    before = persisted(page)
+    select = page.locator('#timingHistorySession')
+    select.select_option('')
+    select.select_option('SYNTHETIC-CL047-0')
+    page.locator('#timingHistoryRun').click()
+    selected = json.loads(page.locator('#timingHistoryResult').text_content())
+    assert selected['status'] == result['result'] and selected['matchedCases'] == result['matchedCases']
+    assert persisted(page) == before
+    page.screenshot(path=output / 'timing-history-positive.png', full_page=True)
+    page.close()
+    return result
+
+
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output',type=Path,required=True)
@@ -185,7 +209,8 @@ def main():
                     origin=f'http://127.0.0.1:{server.server_port}'
                     report={'status':'PASS','high':layout_and_fact(browser,origin,args.output),
                             'synthetic_preview':synthetic_preview(browser,origin,args.output),
-                            'timing':timing_panel(browser,origin,args.output)}
+                            'timing':timing_panel(browser,origin,args.output),
+                            'timing_positive':positive_history(browser,origin,args.output)}
                 finally:
                     browser.close()
         finally:

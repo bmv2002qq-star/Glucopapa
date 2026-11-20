@@ -2,10 +2,11 @@
 d883e4afc8125dc3f4356efdd0ac09239bfd8259878aa332f06a50ac5b3cb37e  android-mvp3/.gitignore
 fed9aa982d1aa1a49a65497b1d02d08173beda824c0421e58e36dfadc06666dc  android-mvp3/app/build.gradle
 8e54f6f6bf6d8fbf97fdb74d5fb69ab8469759e8fdd656543d49618a54203e6f  android-mvp3/app/src/androidTest/assets/stock-ui.js
+905c045dcd9ca3932118b083ad69e2d078a97f80c6c2935f6ef6b93a0176e78c  android-mvp3/app/src/androidTest/assets/timing-history-qa.js
 ca2662b670fbc6a80e49b636adc66b3f38b0be1c9a08d904e5e491c86b071a4c  android-mvp3/app/src/androidTest/assets/webview-qa.js
 ed7dc4d9c0474c08d2c83d2b61abbaac255dc3ae02ef2004ec93a21830d0ada5  android-mvp3/app/src/androidTest/java/com/glucopapa/shell/ExportAndTraceChecks.java
 5b7d75572a425a31e4dd8622edef1cf074f3c38af107d5b852150b191180a1af  android-mvp3/app/src/androidTest/java/com/glucopapa/shell/ProviderContractChecks.java
-b911e1dd02ab789de93febf1dde20c14d94fca021d3d04c0a2fbb0fa50276a5b  android-mvp3/app/src/androidTest/java/com/glucopapa/shell/qa/StorageInstrumentation.java
+dff231b7ab9bf399a09af58db28bf63013a87796172773aa43749c272db1ba9b  android-mvp3/app/src/androidTest/java/com/glucopapa/shell/qa/StorageInstrumentation.java
 d3e422b9e072269b4be35879df7bfa71057c4642812f508088083f0985f96bad  android-mvp3/app/src/androidTest/java/com/glucopapa/shell/qa/WebViewChecks.java
 b035e34c7c0546cad430b4c79d1c14ae5fe62cac14a33ec79d083af38fa76e79  android-mvp3/app/src/main/AndroidManifest.xml
 6b32b0ee64955ee996398fe6924041504a2e3658c40902dcbdb194679b739b90  android-mvp3/app/src/main/assets/www/app.js
@@ -52,7 +53,7 @@ c8dc959bc5f40582f7d028ee54470485cf832257daaa1b287e0a340685d3c430  android-mvp3/a
 721a9f918d49ffb8806aba4aa84e9e381b9218d89a52d46efa1911eba008e7b1  android-mvp3/app/src/main/assets/www/integration/GFMealActualPanel_v0.1.0.js
 98e98ce214c3c72d1cbf235842d4e20b4e273206963d6cb14cc76a088536daf8  android-mvp3/app/src/main/assets/www/integration/GFMealCoverageStudy_v0.1.0.js
 6d1830e62a83924b960c13a2a4d9a7f885e93cf5ee66cf2eed4da4a8e72a670d  android-mvp3/app/src/main/assets/www/integration/GFMealCoverageStudy_v0.1.1.js
-7e7ccb5ea8d9365872f437735c4ab583fec2887d1c8b9c9539a8d4c243191150  android-mvp3/app/src/main/assets/www/integration/GFModuleDirectory_v0.1.0.js
+657bf6059ba8b70821a0b8b523cde44dd5afa3b8f47c02e8ca903816ee51d4b6  android-mvp3/app/src/main/assets/www/integration/GFModuleDirectory_v0.1.0.js
 05cd1152fc3d33fff56e4406f5e5b7d2dd52a41e17d5f60653e7b1562386db55  android-mvp3/app/src/main/assets/www/integration/GFModuleHub_v0.2.0.js
 b14d3b12f9d65330ec2b973f247d2ddf34ff6fd66e5bfa4217eebc6c1aa77a4f  android-mvp3/app/src/main/assets/www/integration/GFModuleUI_v0.2.0.js
 05505fd382e40c4ab17992bf122121c35119ee9b847a523990ea80e4d17f2e67  android-mvp3/app/src/main/assets/www/integration/GFModuleUI_v0.2.1.js

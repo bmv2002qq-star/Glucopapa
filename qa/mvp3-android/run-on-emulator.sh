@@ -35,6 +35,7 @@ for ((attempt=0; attempt<72; attempt++)); do
     fi
     sleep 5
 done
+
 if (( ! booted )); then
     echo 'Android emulator did not complete boot' | tee "$evidence/boot.log"
     exit 1
@@ -72,3 +73,9 @@ for step in meal-model-save meal-model-restored high-settings-save high-settings
         "$adb" -s "$serial" shell am force-stop com.glucopapa.shell
     fi
 done
+
+if [[ ${ANDROID_QA_EXTENDED:-false} == true ]]; then
+    "$adb" -s "$serial" shell am instrument -w -r -e fixture SYNTHETIC -e phase timing-history "$runner" \
+      | tee "$evidence/injection-timing-history.log"
+    grep -F 'QA_PASS timing-history' "$evidence/injection-timing-history.log"
+fi

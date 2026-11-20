@@ -31,6 +31,9 @@ def run(browser, origin, output, legacy=False):
     assert initial['schemaVersion'] == 5
     metadata = page.evaluate('GPModuleDirectory.list()')
     assert len(metadata) == len({module['id'] for module in metadata}) == 29
+    versions = {module['id']: module['version'] for module in metadata}
+    assert 'HIGH v0.1.4' in versions['high']
+    assert 'v0.1.1' in versions['injection-analytics'] and 'v0.2.1' in versions['injection-analytics']
     results = []
     for module in metadata:
         module_id = module['id']
@@ -70,7 +73,13 @@ def run(browser, origin, output, legacy=False):
     assert not any(url.startswith(('http:', 'https:')) and not url.startswith(origin + '/') for url in urls)
     assert not errors, errors
     exact_frames = sorted(page.locator('iframe').evaluate_all('(frames) => frames.map(frame => frame.getAttribute("src"))'))
-    assert len(exact_frames) == 3 and all(frame.startswith('approved/') for frame in exact_frames)
+    assert exact_frames == [
+        'approved/GFJournal_v0.1.2_3COL_CANDIDATE.html',
+        'approved/GFNutrition_v0.4.6_LIVE.html',
+        'approved/GFSettings_v0.1.4_LIVE.html',
+        'integration/approved_routes/GFHighTarget_v0.1.3_VIEW.html',
+    ]
+    assert page.locator('#iframeHighTarget').get_attribute('sandbox') == 'allow-same-origin'
     for width in (320, 390, 428, 1280):
         page.set_viewport_size({'width': width, 'height': 900})
         page.locator('#nav [data-screen="home"]').click()
