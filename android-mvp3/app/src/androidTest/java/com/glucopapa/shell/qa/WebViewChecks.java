@@ -103,6 +103,19 @@ final class WebViewChecks {
         if (!focus.get()) throw new IllegalStateException("Android Back requires focus in the app window");
         if (!"\"approved-nutrition\"".equals(evaluate(web, "document.body.dataset.activeScreen")))
             throw new IllegalStateException("Expected the nutrition screen");
+        exerciseBack(web, false);
+        if (gesture) {
+            evaluate(web, "GPApp.open('approved-low'); GPApp.open('approved-nutrition'); true");
+            // Let the system complete its previous Back transition before the first edge swipe.
+            SystemClock.sleep(500);
+            exerciseBack(web, true);
+        }
+        return new JSONObject().put("status", "PASS").put("routes", "nutrition → LOW → home")
+            .put("input", "ANDROID_KEYCODE_BACK")
+            .put("systemGesture", gesture ? "PASS" : "NOT_RUN");
+    }
+
+    private void exerciseBack(WebView web, boolean gesture) throws Exception {
         for (String expected : new String[]{"approved-low", "home"}) {
             if (gesture) {
                 int center = web.getResources().getDisplayMetrics().heightPixels / 2;
@@ -116,12 +129,11 @@ final class WebViewChecks {
             while (!"true".equals(evaluate(web, active))) {
                 if (SystemClock.elapsedRealtime() >= until)
                     throw new IllegalStateException("Android Back did not return to " + expected
-                        + ", saw " + evaluate(web, "document.body.dataset.activeScreen") + ", mode=" + mode);
+                        + ", saw " + evaluate(web, "document.body.dataset.activeScreen") + ", gesture=" + gesture);
                 SystemClock.sleep(100);
             }
+            if (gesture) SystemClock.sleep(500);
         }
-        return new JSONObject().put("status", "PASS").put("routes", "nutrition → LOW → home")
-            .put("input", gesture ? "ANDROID_SYSTEM_GESTURE" : "ANDROID_KEYCODE_BACK");
     }
 
     private String shell(String command) throws Exception {

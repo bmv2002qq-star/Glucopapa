@@ -20,6 +20,8 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
+import android.window.OnBackInvokedCallback;
+import android.window.OnBackInvokedDispatcher;
 import androidx.webkit.WebViewAssetLoader;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -60,6 +62,7 @@ public class MainActivity extends Activity {
     private GFNativeXDripHistory nativeXDripHistory;
     private volatile boolean foreground;
     private boolean backInFlight;
+    private Runnable unregisterSystemBack;
     private DiagnosticRing diagnostics;
     private DiagnosticWriter diagnosticWriter;
 
@@ -127,6 +130,9 @@ public class MainActivity extends Activity {
         diagnosticWriter = new DiagnosticWriter(diagnostics);
         view.addJavascriptInterface(diagnosticWriter, "AndroidDiagnostics");
         view.loadUrl(BASE + (BuildConfig.FIXTURE_JOURNAL ? "fixture-index.html" : "index.html"));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            unregisterSystemBack = SystemBack.register(this);
+        }
     }
 
     private void attachWebView() {
@@ -340,6 +346,15 @@ public class MainActivity extends Activity {
         navigateBack();
     }
 
+    private static final class SystemBack {
+        static Runnable register(MainActivity activity) {
+            OnBackInvokedDispatcher dispatcher = activity.getOnBackInvokedDispatcher();
+            OnBackInvokedCallback callback = activity::navigateBack;
+            dispatcher.registerOnBackInvokedCallback(OnBackInvokedDispatcher.PRIORITY_DEFAULT, callback);
+            return () -> dispatcher.unregisterOnBackInvokedCallback(callback);
+        }
+    }
+
     private void navigateBack() {
         if (view == null) {
             super.onBackPressed();
@@ -365,6 +380,7 @@ public class MainActivity extends Activity {
     }
 
     @Override protected void onDestroy() {
+        if (unregisterSystemBack != null) unregisterSystemBack.run();
         if (view != null) {
             view.loadUrl("about:blank");
             view.removeJavascriptInterface("AndroidExporter");

@@ -25,21 +25,16 @@
     };
 
     const originalConfirm = window.confirm;
-    const expectedPrompts = [
-        'Подтвердить, что еда действительно началась?',
-        'Подтвердить завершение приёма пищи?',
-    ];
     const prompts = [];
     window.__glucopapaQA = null;
     (async () => {
         await until(() => window.GPApp?.getStorage(), 'GFStorage unavailable');
         assert(GPApp.mode() === 'demo', 'Disposable synthetic journal required');
-        // Test-APK-only acceptance of the two prompts in this named synthetic meal.
-        // The actual-quantity checkbox and all GFStorage validation remain active.
+        // Decline the all-eaten action to exercise the confirmation boundary.
         window.confirm = message => {
-            assert(message === expectedPrompts[prompts.length], 'Unexpected confirmation prompt');
+            assert(message === 'Подтвердить, что вся порция съедена?', 'Unexpected confirmation prompt');
             prompts.push(message);
-            return true;
+            return false;
         };
         const baseline = snapshot();
         assert(baseline.events.length === 1 && baseline.mealSessions.length === 0, 'Expected injection smoke snapshot');
@@ -52,17 +47,17 @@
             assert(!by('screen-' + name).querySelector('#calcDose, #calcFood'),
                 'Treatment calculator is exposed');
         }
-        for (const [route, suffix] of [['approved-nutrition', 'Meal']]) {
-            await stage(route);
-            const panel = by('calcEvidence' + suffix);
-            assert(panel.querySelector('summary').textContent === 'Расчёт', 'Calculation disclosure missing ' + route);
-            assert(!panel.querySelector('details').open, 'Calculation disclosure opened automatically');
-            assert(panel.querySelector('[data-calc-summary]').textContent === 'Расчёт недоступен',
-                'Missing inputs rendered as a number');
-            assert(panel.querySelector('[data-code="FOOD_COVERAGE_MISSING"]'), 'Missing food history absent');
-            assert(panel.querySelector('[data-calc-trace]').textContent.includes('ревизия ' + baseline.revision),
-                'Calculation diagnostics did not bind to snapshot revision');
-        }
+        await stage('approved-meal');
+        const panel = await until(() => {
+            const doc = by('iframeApprovedMeal').contentDocument;
+            return doc?.querySelector('#mealCalculationDetails [data-calc-summary]') ? doc : null;
+        }, 'Calculation disclosure unavailable in GFMealCalc');
+        assert(panel.querySelector('summary').textContent === 'Расчёт и исходные данные', 'Calculation disclosure missing');
+        assert(!panel.querySelector('details').open, 'Calculation disclosure opened automatically');
+        assert(panel.getElementById('doseSuggested').textContent === '—', 'Missing inputs rendered as a number');
+        assert(panel.querySelector('[data-code="FOOD_COVERAGE_MISSING"]'), 'Missing food history absent');
+        assert(panel.querySelector('[data-calc-trace]').textContent.includes('ревизия ' + baseline.revision),
+            'Calculation diagnostics did not bind to snapshot revision');
         await stage('approved-low');
         const low = await until(() => {
             const doc = by('iframeLowTarget').contentDocument;
@@ -93,6 +88,7 @@
             'Historical candidate did not safely start without verified history');
         assert(snapshot().revision === baseline.revision, 'Navigation wrote to GFStorage');
 
+        await stage('approved-nutrition');
         const plate = await until(() => by('iframeApprovedNutrition').contentDocument?.getElementById('catalogSearch'),
             'Plate catalog failed to load');
         const plateDocument = plate.ownerDocument;
@@ -108,24 +104,24 @@
         assert(planned.status === 'draft' && planned.plannedPlate.items[0].amount === 100 && planned.actualPlate === null,
             'Plan became factual food');
 
-        await stage('meals');
-        click('mealReady');
-        window.__glucopapaQAStage = 'start confirmation';
-        click('mealStart');
+        await stage('approved-meal');
+        const mealField = id => panel.getElementById(id);
+        await until(() => mealField('chooseMeal').value === planned.id, 'Saved plan was not selected');
+        mealField('confirmPlate').click();
+        mealField('startMeal').click();
         await until(() => snapshot().mealSessions[0].status === 'started', 'Confirmed meal did not start');
-        const actualAmount = await until(() => document.querySelector('#gfMealActualRows [data-actual-index="0"]'),
-            'Actual quantity field unavailable');
-        select(actualAmount, '75');
         const before = snapshot().revision;
-        click('gfMealActualSave');
+        mealField('ateAll').click();
+        assert(mealField('finishMeal').disabled, 'A plan alone could finish the meal');
         assert(snapshot().revision === before, 'Unconfirmed food modified GFStorage');
-        click('gfMealActualConfirm');
-        click('gfMealActualSave');
+        mealField('editActual').click();
+        select(panel.querySelector('#editFoodRows input'), '75');
+        mealField('saveActual').click();
         const unfinished = GFAutoCOBProfile.inspect({host: GPApp.getStorage()});
         assert(unfinished.code === 'MEAL_NOT_COMPLETED' && unfinished.rows.length === 0,
             'The research COB window accepted an unfinished meal');
         window.__glucopapaQAStage = 'finish confirmation';
-        click('mealFinish');
+        mealField('finishMeal').click();
         await until(() => snapshot().mealSessions[0].status === 'completed', 'Meal did not finish');
 
         const checkMeal = async (amount, carbs) => {
@@ -146,22 +142,28 @@
             assert(cob.sourceRevision === state.revision && Math.abs(cob.rows[0].recordedCarbsG - carbs) < 1e-8,
                 'COB read an inconsistent snapshot');
             await stage('approved-journal');
-            const diary = by('iframeApprovedJournal').contentDocument;
+            const diary = await until(() => {
+                const doc = by('iframeApprovedJournal').contentDocument;
+                return doc?.querySelector('#tbody') ? doc : null;
+            }, 'Journal frame failed to load');
             assert(diary.querySelectorAll('thead th').length === 3, 'Diary column count');
             await until(() => diary.querySelector('#tbody')?.innerText.includes(amount + ' г'), 'Diary quantity differs');
             return {amount, carbs, revision: state.revision};
         };
         const actual = await checkMeal(75, 14.925);
-        await stage('meals');
-        select(document.querySelector('#gfMealActualRows [data-actual-index="0"]'), '50');
-        select(by('gfMealActualCorrectionReason'), 'SYNTHETIC correction');
-        click('gfMealActualConfirm');
-        click('gfMealActualSave');
+        await stage('approved-meal');
+        mealField('showCorrection').click();
+        select(panel.querySelector('#editFoodRows input'), '50');
+        const revision = snapshot().revision;
+        mealField('saveActual').click();
+        assert(snapshot().revision === revision, 'A correction without a reason modified GFStorage');
+        select(mealField('editReason'), 'SYNTHETIC correction');
+        mealField('saveActual').click();
         const corrected = await checkMeal(50, 9.95);
         assert(snapshot().workflowLog.filter(row => row.action === 'record_actual_plate').length === 2,
             'Meal correction did not retain the audit trail');
-        assert(prompts.length === 2, 'Expected both meal lifecycle confirmation prompts');
-        return {status: 'PASS', fixture: 'SYNTHETIC', actual, corrected, synthetic_confirmations: prompts.length};
+        assert(prompts.length === 1, 'Expected the all-eaten confirmation prompt');
+        return {status: 'PASS', fixture: 'SYNTHETIC', actual, corrected, cancelledConfirmations: prompts.length};
     })().then(result => { window.__glucopapaQA = result; }, error => {
         window.__glucopapaQA = {status: 'FAIL', error: String(error), stack: String(error.stack)};
     }).finally(() => { window.confirm = originalConfirm; });
