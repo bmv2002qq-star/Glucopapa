@@ -215,6 +215,58 @@ def check_meal_time_defaults(browser, origin):
 
 
 
+def check_journal_periods(browser, origin, output):
+    page = browser.new_page(viewport={'width': 390, 'height': 850}, timezone_id='Europe/Minsk')
+
+    def moment(time):
+        return '2026-11-20T' + time + ':00+03:00'
+
+    page.clock.set_fixed_time(datetime.fromisoformat(moment('09:00')))
+    page.goto(origin + '/index.html')
+    page.wait_for_function('()=>window.GPApp?.getStorage()')
+    for time, role, method, data in [
+        ('09:00', 'sport', 'startSport', {'id': 'synthetic-qa-sport', 'start': moment('09:00')}),
+        ('09:30', 'sport', 'finishSport', {'id': 'synthetic-qa-sport', 'end': moment('09:30')}),
+        ('10:00', 'context', 'openPeriod', {'id': 'synthetic-qa-illness', 'kind': 'illness', 'start': moment('10:00')}),
+        ('12:00', 'context', 'closePeriod', {'id': 'synthetic-qa-illness', 'end': moment('12:00')}),
+    ]:
+        page.clock.set_fixed_time(datetime.fromisoformat(moment(time)))
+        page.evaluate('''([role, method, data]) => {
+            const p = GPApp.getStorage().connect(role);
+            p[method](data, p.getRevision());
+        }''', [role, method, data])
+
+    page.reload()
+    page.evaluate("GPApp.open('approved-journal')")
+    journal = page.frame_locator('#iframeApprovedJournal')
+    sport = journal.locator('tr.sport-period')
+    illness = journal.locator('tr.ill').filter(has_text='Начало периода болезни')
+    illness_end = journal.get_by_role('row').filter(has_text='Завершение периода болезни')
+    expect(sport).to_contain_text('09:00–09:30')
+    expect(sport).to_contain_text('Длительность: 30 мин')
+    expect(illness).to_contain_text('10:00')
+    expect(illness_end).to_contain_text('12:00')
+    expect(journal.locator('.legend')).to_contain_text('Период спорта')
+    expect(journal.locator('.legend')).to_contain_text('Период болезни')
+    sport_color = sport.locator('td').first.evaluate('(td)=>getComputedStyle(td).backgroundColor')
+    illness_color = illness.locator('td').first.evaluate('(td)=>getComputedStyle(td).backgroundColor')
+    assert sport_color != illness_color
+    periods = page.evaluate('GPApp.getStorage().exportState().conditionPeriods')
+    durations = {
+        p['kind']: (datetime.fromisoformat(p['end']) - datetime.fromisoformat(p['start'])).total_seconds() / 60
+        for p in periods
+    }
+    assert durations == {'sport': 30, 'illness': 120}
+    page.screenshot(path=output / 'feedback-periods.png')
+    page.close()
+    return {
+        'status': 'PASS_SCOPED', 'mode': 'SYNTHETIC_ONLY', 'environment': 'BROWSER_MULTI_FILE',
+        'sport': {'start': '09:00', 'end': '09:30', 'minutesDisplayed': 30, 'background': sport_color},
+        'illness': {'start': '10:00', 'end': '12:00', 'background': illness_color},
+        'persistedDurationsMinutes': durations, 'bothIntervalsAfterReload': True, 'androidRendering': 'NOT_TESTED',
+    }
+
+
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output',type=Path,required=True)
@@ -234,6 +286,9 @@ def main():
                 result['syntheticLiveSwitchAndDeduplication']=True
                 check_meal_time_defaults(browser,f'http://127.0.0.1:{server.server_port}')
                 result['localMealTimeBoundaries']=['07:59','08:00','10:59','11:00','16:59','17:00']
+                periods = check_journal_periods(browser, f'http://127.0.0.1:{server.server_port}', args.output)
+                (args.output/'periods.json').write_text(json.dumps(periods, ensure_ascii=False, indent=2)+'\n')
+                result['journalPeriods'] = periods['status']
             browser.close()
     finally:
         server.shutdown()
