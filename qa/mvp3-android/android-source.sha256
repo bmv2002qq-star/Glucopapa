@@ -34,7 +34,7 @@ d4944efb1a4093e5b1a3e5885bf7b3642371650b4ed10bf2db663e5a31bbc8aa  android-mvp3/a
 fbde2baf61372dee40cb8615482032d657d95a0c518eac07f797ac27d59ba742  android-mvp3/app/src/main/assets/www/approved/GFNutrition_v0.4.6_APPROVED_SOURCE.html
 6b9da4dfe3655f4d18fc8e361f050a75127e17eae7399fb3605c222d4c957cfb  android-mvp3/app/src/main/assets/www/approved/GFNutrition_v0.4.6_LIVE.html
 b583f8e3cd16590a4ebdfe76daa50328cac65117c3866d5e16b62cb65f228901  android-mvp3/app/src/main/assets/www/approved/GFSettings_v0.1.4_LIVE.html
-0f12e334226ca6cf4224219ae3da8c18c56e2938421434ac41e205713280432b  android-mvp3/app/src/main/assets/www/index.html
+007fee9fefda749ed555679e65be6d4839612a007cc7cd727764337fc3d3a6d6  android-mvp3/app/src/main/assets/www/index.html
 9caf15586559ddbb369ffebbe5f7d28d8ffd9ee15ca5e0676e8491504f08e9bb  android-mvp3/app/src/main/assets/www/integration/GFAutoCOBProfile_v0.1.0.js
 246c0ff4a7402fe9698312212d3eaab538aa8b6fa997974fbb39277ed685ed60  android-mvp3/app/src/main/assets/www/integration/GFCOBAutoPanel_v0.2.0.js
 b312c5a58bdd60ab9dd8c280045bfd473e30460ac073c4b255c2a6a6ba210033  android-mvp3/app/src/main/assets/www/integration/GFCOBResearch_v0.1.0.js
@@ -71,7 +71,7 @@ bef25b24e03a1de3bafb727efcf603e928f35b713ab9a8f3750ce614f12ee1d8  android-mvp3/a
 6d1830e62a83924b960c13a2a4d9a7f885e93cf5ee66cf2eed4da4a8e72a670d  android-mvp3/app/src/main/assets/www/integration/GFMealCoverageStudy_v0.1.1.js
 f33b5e1c21927fe7fa67c837aeceffe9b74e505fb00bd9dc3a9c651282d1920f  android-mvp3/app/src/main/assets/www/integration/GFMealTimingService_v0.1.0.js
 b9b7ac59f0844240bb7687eefeee26b902556b347e177cf749535659843ecd76  android-mvp3/app/src/main/assets/www/integration/GFMealWorkflowView_v0.1.0.js
-87c68e3f8fc6122f2886cabf60d8bc706a2fb9cb55d7b42bef4ad8020ef65cc5  android-mvp3/app/src/main/assets/www/integration/GFModuleDirectory_v0.1.0.js
+1478d48bc786b12ec62acd8bedc57274a59ecc79217c70ee8f84bf655e30cb2a  android-mvp3/app/src/main/assets/www/integration/GFModuleDirectory_v0.1.0.js
 05cd1152fc3d33fff56e4406f5e5b7d2dd52a41e17d5f60653e7b1562386db55  android-mvp3/app/src/main/assets/www/integration/GFModuleHub_v0.2.0.js
 b14d3b12f9d65330ec2b973f247d2ddf34ff6fd66e5bfa4217eebc6c1aa77a4f  android-mvp3/app/src/main/assets/www/integration/GFModuleUI_v0.2.0.js
 2ef931436d573a64c95ebefc1fd136db6f91257958c97d5747edf00daa8917e9  android-mvp3/app/src/main/assets/www/integration/GFModuleUI_v0.2.1.js

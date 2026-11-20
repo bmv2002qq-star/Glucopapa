@@ -198,12 +198,12 @@
   </section>
   <section id="screen-highlow" class="screen"><div class="section-header"><h2>Высокий / низкий сахар</h2><p>GFHighLow только анализирует CGM. Фактическая инъекция и принятые углеводы регистрируются в своих разделах один раз.</p></div>
    <article class="panel"><h3>Анализ эпизода</h3><div id="highLowSummary" class="soft">Данные ещё не проанализированы</div><button class="btn secondary" id="refreshHighLow">Обновить</button></article>
-   <article class="panel"><h3>Запись фактических действий</h3><div class="actions"><button class="btn secondary" data-screen="injections">Фактически выполненный укол</button><button class="btn secondary" data-screen="meals">Фактически съеденные углеводы</button></div><p class="hint">Здесь нет отдельной формы записи. Программа не рекомендует дозы или граммовки при гипогликемии.</p></article>
+   <article class="panel"><h3>Запись фактических действий</h3><div class="actions"><button class="btn secondary" data-screen="injections">Фактически выполненный укол</button><button class="btn secondary" data-screen="approved-meal">Фактически съеденные углеводы</button></div><p class="hint">Здесь нет отдельной формы записи. Программа не рекомендует дозы или граммовки при гипогликемии.</p></article>
   </section>
 
 <section id="screen-approved-nutrition" class="screen">
  <div class="plate-frame-slot"><iframe id="iframeApprovedNutrition" class="approved-frame" title="Моя тарелка" src="approved/GFNutrition_v0.4.6_LIVE.html"></iframe></div>
- <article class="panel"><div class="approved-actions"><button class="btn" id="approvedSavePlate">Сохранить план питания</button><button class="btn secondary" data-screen="meal-workflow">План / факт еды</button></div><p class="hint" id="approvedPlateStatus">Выберите продукты и сохраните план.</p></article>
+ <article class="panel"><div class="approved-actions"><button class="btn" id="approvedSavePlate">Сохранить план питания</button><button class="btn secondary" data-screen="approved-meal">План / факт еды</button></div><p class="hint" id="approvedPlateStatus">Выберите продукты и сохраните план.</p></article>
 </section>
 <section id="screen-approved-journal" class="screen"><iframe id="iframeApprovedJournal" class="approved-frame" title="Дневник событий" src="approved/GFJournal_v0.1.2_3COL_CANDIDATE.html"></iframe></section>
 <section id="screen-approved-settings" class="screen">

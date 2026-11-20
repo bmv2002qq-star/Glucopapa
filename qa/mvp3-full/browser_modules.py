@@ -36,6 +36,12 @@ def run(browser, origin, output, legacy=False):
     assert 'LOW v0.4.0' in versions['low']
     assert 'HIGH v0.1.4' in versions['high']
     assert 'v0.1.1' in versions['injection-analytics'] and 'v0.2.1' in versions['injection-analytics']
+    assert versions['shell'] == page.evaluate('GPApp.version')
+    assert versions['storage'] == page.evaluate('`v${GFStorage.VERSION} / schema ${GFStorage.SCHEMA_VERSION}`')
+    assert next(module['route'] for module in metadata if module['id'] == 'mealcalc') == 'approved-meal'
+    page.locator('#nav [data-screen="meals"]').click()
+    page.locator('#screen-approved-nutrition').get_by_role('button', name='План / факт еды').click()
+    assert page.locator('#screen-approved-meal.active').is_visible()
     results = []
     for module in metadata:
         module_id = module['id']

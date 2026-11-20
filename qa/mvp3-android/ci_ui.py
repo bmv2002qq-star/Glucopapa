@@ -110,8 +110,8 @@ class CandidateUI:
         return node
 
     def home(self):
-        # The static badge exists before the saved mode has loaded. Wait for the mode, not the node ID.
-        self.wait(captions=('Тестовые данные',))
+        # The fixture banner is shown only after the saved synthetic mode has loaded.
+        self.wait(resource_id='banner', captions=('Вымышленные данные сохраняются отдельно',))
 
     def injection(self, confirmed):
         self.home()

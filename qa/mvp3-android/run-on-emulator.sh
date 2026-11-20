@@ -122,11 +122,16 @@ python3 qa/mvp3-android/sqlite_smoke.py "${smoke_options[@]}" --adb "$adb" --ser
 
 test "$("$adb" -s "$serial" shell getprop ro.build.version.sdk | tr -d '\r')" = "$api"
 bash qa/mvp3-android/run-native-stress.sh "$adb" "$serial" "$evidence"
+extended_failure=0
 if [[ ${ANDROID_QA_EXTENDED:-false} == true && $api == 35 ]]; then
-    python3 qa/mvp3-android/ai_export_saf.py "$adb" "$serial" "$evidence" 2>&1 | tee "$evidence/ai-saf.log"
+    if ! python3 qa/mvp3-android/ai_export_saf.py "$adb" "$serial" "$evidence" 2>&1 | tee "$evidence/ai-saf.log"; then
+        extended_failure=1
+    fi
 fi
 if [[ ${ANDROID_QA_EXTENDED:-false} == true && $api != 31 ]]; then
-    python3 qa/mvp3-android/gui_sizing.py "$adb" "$serial" "$evidence" 2>&1 | tee "$evidence/android-gui.log"
+    if ! python3 qa/mvp3-android/gui_sizing.py "$adb" "$serial" "$evidence" 2>&1 | tee "$evidence/android-gui.log"; then
+        extended_failure=1
+    fi
 fi
 
 # Exercise the real settings panel against production GFStorage and its native SQLite driver.
@@ -171,4 +176,4 @@ for step in write restored; do
     grep -F 'QA_PASS meal-timing' "$evidence/meal-timing-$step.log"
 done
 
-exit "$back_failure"
+exit "$((back_failure || extended_failure))"
