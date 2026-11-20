@@ -105,8 +105,13 @@ class Emulator:
         require(not result.stderr and result.returncode in (0, 1), 'Could not check application process')
         return result.stdout.decode().strip()
 
-    def stop(self):
+    def stop(self, *, instrumentation=False):
         previous = self.pid()
+        if instrumentation and not previous:
+            # Android can stop the instrumented process after a successful test.
+            # Launch the existing installation before the explicit force-stop.
+            self.start()
+            previous = self.pid()
         require(previous, 'App process ended unexpectedly before the stop')
         self.execute('shell', 'am', 'force-stop', PACKAGE)
         for _ in range(20):
@@ -122,7 +127,7 @@ class Emulator:
         shot = self.execute('exec-out', 'screencap', '-p').stdout
         require(shot.startswith(b'\x89PNG\r\n\x1a\n'), 'Emulator screenshot is not PNG')
         (directory / 'screen.png').write_bytes(shot)
-        stopped_pid = self.stop()
+        stopped_pid = self.stop(instrumentation=start_if_stopped)
         return self.read_persisted(directory), stopped_pid
 
     def read_persisted(self, directory):

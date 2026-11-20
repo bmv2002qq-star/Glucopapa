@@ -106,9 +106,10 @@ def main():
         assert set(archived).issubset(files)
         changes = sorted(name for name in archived if files[name] != archived[name])
         assert set(changes) <= {
-            'app.js', 'index.html', 'styles.css', 'runtime/LOAD_ORDER.txt', 'integration/GFCgmEvidencePolicy_v0.1.0.js',
+            'app.js', 'index.html', 'styles.css', 'runtime/LOAD_ORDER.txt', 'runtime/APK_FILES.txt', 'integration/GFCgmEvidencePolicy_v0.1.0.js',
             'integration/GFCOBAutoPanel_v0.2.0.js', 'integration/GFGraphEvidenceBridge_v0.1.0.js',
             'integration/GFModuleDirectory_v0.1.0.js', 'integration/GFModuleHub_v0.2.0.js',
+            'integration/GFSettingsPanel_v0.1.0.js',
             'integration/GFModuleUI_v0.2.1.js', 'integration/GPMvp3ResearchUI_v0.1.0.js',
             'modules/GFSettings_v0.1.8/src/gfsettings.js',
             'integration/GFCalculationEvidence_v0.1.0.js', 'integration/GFResearchForecastRun_v0.1.0.js',

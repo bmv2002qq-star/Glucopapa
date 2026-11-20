@@ -185,9 +185,16 @@
    <article class="panel"><div id="reportSummary" class="soft">Нет отчёта</div><div class="actions"><button id="downloadReportTxt" class="btn secondary">Сохранить TXT</button><button id="openPrintReport" class="btn primary">Печать / PDF</button></div><p class="hint">Полная история CGM экспортируется штатной кнопкой JSON в разделе «Ещё». PDF формируется через системную печать браузера, не через отдельную медицинскую базу.</p></article>
    <article class="panel"><h3>Последние записи</h3><div id="reportEvents" class="empty">—</div></article>
   </section>
-  <section id="screen-sync" class="screen"><div class="section-header"><h2>Связь с xDrip+ и синхронизация</h2><p>GFSync v0.2.2 загружен; мобильная сеть, сервер, авторизация и обмен между телефонами ещё не подключены.</p></div>
-   <article class="panel"><h3>Статус подключения</h3><div id="syncDiagnostics" class="soft">Ожидает проверки</div><button class="btn secondary" id="refreshSync">Обновить статус</button></article>
-   <article class="panel"><h3>xDrip+ Follower</h3><div class="soft">Android получает показания через локальный ContentProvider xDrip+. Чтение и восстановление истории доступны в разделе «Датчик и CGM».</div></article>
+  <section id="screen-about" class="screen"><div class="section-header"><h2>О программе</h2></div><article class="panel"><h3>ГлюкоПапа V2</h3><p>Версия <span id="aboutVersion"></span></p><p>Клиническая пригодность моделей дозирования и прогноза не подтверждена.</p></article></section>
+  <section id="screen-sync" class="screen">
+   <div class="section-header"><h2>Синхронизация телефонов</h2></div>
+   <article class="panel"><h3>Устройства семьи</h3>
+    <ul><li>Телефон ребёнка · не привязан</li><li>Первый родитель · не привязан</li><li>Второй родитель · не привязан</li></ul>
+    <p>Для привязки нужна конфигурация действующего сервера и авторизация.</p>
+    <div id="syncDiagnostics" class="soft" role="status"></div>
+    <button class="btn secondary" id="refreshSync">Состояние журнала</button>
+   </article>
+   <button type="button" class="btn secondary" data-screen="cgm">Датчик и CGM</button>
   </section>
   <section id="screen-highlow" class="screen"><div class="section-header"><h2>Высокий / низкий сахар</h2><p>GFHighLow только анализирует CGM. Фактическая инъекция и принятые углеводы регистрируются в своих разделах один раз.</p></div>
    <article class="panel"><h3>Анализ эпизода</h3><div id="highLowSummary" class="soft">Данные ещё не проанализированы</div><button class="btn secondary" id="refreshHighLow">Обновить</button></article>
@@ -203,20 +210,14 @@
  </article>
 </section>
 <section id="screen-approved-journal" class="screen"><iframe id="iframeApprovedJournal" class="approved-frame" title="Дневник событий" src="approved/GFJournal_v0.1.2_3COL_CANDIDATE.html"></iframe></section>
-<section id="screen-approved-settings" class="screen"><div class="section-header"><h2>Настройки</h2></div>
- <div class="actions"><button class="btn secondary" data-screen="cgm">Источник CGM</button>
-  <button class="btn secondary" data-screen="coefficients">Коэффициенты</button>
-  <button class="btn secondary" data-screen="system">Техническая диагностика и файлы</button></div><iframe id="iframeApprovedSettings" class="approved-frame" title="Утверждённые настройки" src="approved/GFSettings_v0.1.4_LIVE.html"></iframe><article class="panel gf-context-panel" id="gfContextPanel" aria-label="Дополнительные настройки на согласование">
-<h3>Коэффициенты, усвоение и болезнь</h3>
-<p class="hint">Отдельная надстройка вне утверждённого экрана GFSettings v0.1.4. Новые значения сохраняются в единой GFStorage, но не используются при выборе дозы.</p>
-<div class="gf-context-grid"><label>УК · режим<select id="gfCarbMode"><option value="manual">Вручную</option><option value="auto">Авто (исследование; без применения)</option></select></label>
-<label>ФЧИ · режим<select id="gfIsfMode"><option value="manual">Вручную</option><option value="auto">Авто (исследование; без применения)</option></select></label></div>
-<button id="gfModeSave" class="btn secondary" type="button">Сохранить режимы</button>
+<section id="screen-approved-settings" class="screen">
+ <iframe id="iframeApprovedSettings" class="approved-frame" title="Настройки" src="approved/GFSettings_v0.1.4_LIVE.html"></iframe><article class="panel gf-context-panel" id="gfContextPanel" aria-label="Дополнительные настройки на согласование">
+<h3>Усвоение еды и болезнь</h3>
 <label>Модель усвоения еды<select id="gfMealAbsorptionModel"><option value="GFForecast">GFForecast · плавная</option><option value="GFCOB">GFCOB · линейная</option></select></label>
 <button id="gfMealAbsorptionSave" class="btn secondary" type="button">Сохранить модель усвоения</button>
 <div class="gf-context-grid gf-illness-context"><label>Коэффициент болезни, введённый пользователем<input id="gfIllnessFactor" type="number" min="0.1" max="10" step="0.01" placeholder="Не задан"/></label><div><p class="hint" id="gfIllnessState">Состояние болезни не прочитано</p><p class="hint">При выключении эффективное значение 1,00. Введённый коэффициент и период сохраняются в истории.</p></div></div>
-<div class="actions"><button id="gfIllnessFactorSave" class="btn secondary" type="button">Сохранить коэффициент</button><button id="gfIllnessStart" class="btn secondary" type="button">Начало болезни</button><button id="gfIllnessFinish" class="btn secondary" type="button">Болезнь закончилась</button><button id="gfContextRefresh" class="btn secondary" type="button">Обновить</button></div>
-<p class="hint" id="gfResearchRev"></p><p id="gfContextMessage" class="gf-context-message" aria-live="polite"></p>
+<div class="actions"><button id="gfIllnessFactorSave" class="btn secondary" type="button">Сохранить коэффициент</button><button id="gfIllnessStart" class="btn secondary" type="button">Начало болезни</button><button id="gfIllnessFinish" class="btn secondary" type="button">Болезнь закончилась</button></div>
+<p id="gfContextMessage" class="gf-context-message" aria-live="polite"></p>
 </article></section>
 <section id="screen-approved-meal" class="screen">
 <iframe id="iframeApprovedMeal" class="approved-frame meal-workflow-frame" title="Инсулин и приём пищи" sandbox="allow-same-origin" src="integration/approved_routes/GFMealCalc_v0.3.0_VIEW.html"></iframe>
@@ -237,6 +238,7 @@
     <div class="section-header"><h2>Модули</h2><p>Все 29 подсистем «ГлюкоПапы». Нажмите «Открыть модуль» для перехода в рабочий раздел. Значок ⚙ открывает сведения о настройках.</p></div>
     <article class="panel directory-toolbar"><div class="fields"><label>Найти модуль<input id="modulesSearch" type="search" placeholder="Например: РинФаст, дневник, прогноз"></label><label>Категория<select id="modulesFilter" aria-label="Категория модулей"></select></label></div><p id="modulesCount" class="directory-count"></p><p class="directory-subtle">Утверждённая версия не означает, что модуль полностью подключён или пригоден для медицинских решений.</p></article>
     <div id="modulesList" class="directory-grid" aria-live="polite"></div>
+    <article class="panel"><h3>Инструменты</h3><div class="actions"><button class="btn secondary" data-screen="cgm">Датчик и CGM</button><button class="btn secondary" data-screen="sync">Синхронизация телефонов</button><button class="btn secondary" data-screen="system">Резервная копия и диагностика</button><button class="btn secondary" data-screen="about">О программе</button></div></article>
   </section>
   <section id="screen-module-detail" class="screen">
     <div class="section-header"><button type="button" class="inline-link" id="directoryBack">← Все модули</button><h2 id="directoryTitle">Модуль</h2><p id="directoryVersion">—</p></div>
@@ -244,7 +246,7 @@
     <div id="directoryPreviewPanel"><div id="directoryNoPreview" class="soft"></div><button id="directoryLaunch" type="button" class="btn secondary full">Открыть раздел программы</button></div>
     <div id="directorySettingsPanel" hidden><article class="panel"><h3>Настройки модуля</h3><div class="soft" id="directorySettingsInfo">—</div><button type="button" id="directorySettingsLink" class="btn primary full">Открыть доступные настройки</button><p class="directory-subtle">Не создаём отдельные коэффициенты и настройки в обход GFStorage.</p></article></div>
   </section>
-  <footer>ГлюкоПапа V2 · GFShell v0.3.13-MVP2 · дизайн первой версии 0.26 · Техническая интеграция, не медицинское устройство</footer>
+
  </main>
 <nav id="nav" class="nav" aria-label="Основные разделы">
  <button data-screen="home" class="selected" type="button"><span class="ico">⌂</span><span>Главная</span></button>

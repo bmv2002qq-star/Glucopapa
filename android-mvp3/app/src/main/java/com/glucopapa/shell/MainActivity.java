@@ -10,6 +10,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.view.WindowInsets;
 import android.view.WindowInsetsController;
+import android.view.KeyEvent;
 import android.webkit.JavascriptInterface;
 import android.webkit.JsResult;
 import android.webkit.WebChromeClient;
@@ -323,6 +324,16 @@ public class MainActivity extends Activity {
         } catch (JSONException invalid) {
             fileResult.set(null);
         }
+    }
+
+    @Override public boolean dispatchKeyEvent(KeyEvent event) {
+        // On API 36 the focused WebView may consume a hardware BACK key.
+        // Route it at the window boundary along the same path as a system back request.
+        if (Build.VERSION.SDK_INT >= 36 && event.getKeyCode() == KeyEvent.KEYCODE_BACK) {
+            if (event.getAction() == KeyEvent.ACTION_UP && !event.isCanceled()) navigateBack();
+            return true;
+        }
+        return super.dispatchKeyEvent(event);
     }
 
     @Override public void onBackPressed() {

@@ -162,7 +162,7 @@ function screen(id,back=false){
  if(!back&&id!==from){
    if(routes.at(-1)?.id===id)routes.pop();
    else routes.push({id:from,scroll:window.scrollY});
- }document.querySelectorAll('.screen').forEach(e=>e.classList.toggle('active',e.id==='screen-'+id));const group={cgm:'home',injections:'journal',settings:'system','insulin-models':'analytics','injection-sites':'analytics',reports:'system',sync:'system',highlow:'home','approved-journal':'journal','approved-nutrition':'meals','approved-meal':'meals','approved-settings':'system','approved-low':'home','approved-high':'home','module-detail':'modules',research:'system'}[id]||id;document.querySelectorAll('#nav button').forEach(e=>e.classList.toggle('selected',e.dataset.screen===(group==='analytics'?'coefficients':group==='system'?'approved-settings':group)));const names={home:'Главная',cgm:'Глюкоза',injections:'Инъекции',meals:'Продукты',journal:'Дневник',analytics:'Техническая диагностика',coefficients:'Коэффициенты',settings:'Настройки',system:'Ещё','insulin-models':'Инсулиновые модели','injection-sites':'Места инъекций',reports:'Отчёты',sync:'Синхронизация',highlow:'Высокий / низкий сахар','approved-nutrition':'Моя тарелка','approved-meal':'Инсулин и приём пищи','approved-journal':'Дневник','approved-settings':'Настройки','approved-low':'Низкий сахар','approved-high':'Высокий сахар',modules:'Модули','module-detail':'Модуль',research:'Исследовательские модули'};$('pageTitle').textContent=names[id]||'Главная';document.body.dataset.activeScreen=id;window.scrollTo(0,0);render();if(id==='coefficients')renderCoefficients();globalThis.GPModuleUI?.refresh?.();setTimeout(broadcastApproved,0);}
+ }document.querySelectorAll('.screen').forEach(e=>e.classList.toggle('active',e.id==='screen-'+id));const group={cgm:'home',injections:'journal',settings:'system','insulin-models':'analytics','injection-sites':'analytics',reports:'system',sync:'modules',highlow:'home','approved-journal':'journal','approved-nutrition':'meals','approved-meal':'meals','approved-settings':'system','approved-low':'home','approved-high':'home','module-detail':'modules',about:'modules',research:'modules'}[id]||id;document.querySelectorAll('#nav button').forEach(e=>e.classList.toggle('selected',e.dataset.screen===(group==='analytics'?'coefficients':group==='system'?'approved-settings':group)));const names={home:'Главная',cgm:'Глюкоза',injections:'Инъекции',meals:'Продукты',journal:'Дневник',analytics:'Техническая диагностика',coefficients:'Коэффициенты',settings:'Настройки',system:'Ещё','insulin-models':'Инсулиновые модели','injection-sites':'Места инъекций',reports:'Отчёты',sync:'Синхронизация телефонов',about:'О программе',highlow:'Высокий / низкий сахар','approved-nutrition':'Моя тарелка','approved-meal':'Инсулин и приём пищи','approved-journal':'Дневник','approved-settings':'Настройки','approved-low':'Низкий сахар','approved-high':'Высокий сахар',modules:'Модули','module-detail':'Модуль',research:'Исследовательские модули'};$('pageTitle').textContent=names[id]||'Главная';document.body.dataset.activeScreen=id;window.scrollTo(0,0);render();if(id==='coefficients')renderCoefficients();globalThis.GPModuleUI?.refresh?.();setTimeout(broadcastApproved,0);}
 function back(){
  const active=document.body.dataset.activeScreen||'home';
  if(active==='approved-meal'&&mealWorkflowDoc?.getElementById('editPanel')?.hidden===false){
@@ -339,6 +339,7 @@ function render(){if(!host)return;try{
  renderMealWorkflow();
  const s=state(),all=GFCgmEvidencePolicy.journalView(host,GFJournal,GFJournalStorageAdapter,{nowMs:renderNow}),cgm=s.cgm||[],active=s.cgmMetadata,inj=s.events.filter(e=>e.type==='insulin_injection'&&e.status==='confirmed');
  $('revBadge').textContent='База #'+s.revision;
+ $('aboutVersion').textContent=VER;
  renderCgm(cgm,active,renderNow,all);
  renderSport(s,all);
  GFMainScreenUI.renderSummary(GFMainScreenCore.summarize({
@@ -940,23 +941,28 @@ function sendApproved(role,message){
 
 let plateDialogObserver, foodDocument;
 function paintFoodReference(doc){
- if(!settingsService)return;
- let report=doc.getElementById('gpFoodReference');
- if(!report){
-   report=doc.createElement('p');report.id='gpFoodReference';report.className='sub';
-   doc.querySelector('.meals-panel')?.append(report);
+ if(!host||document.body.dataset.activeScreen!=='approved-nutrition')return;
+ let panel=doc.getElementById('gpFoodReference');
+ if(!panel){
+   panel=doc.createElement('div');panel.id='gpFoodReference';
+   doc.querySelector('.meals-panel')?.append(panel);
  }
- const view=settingsService.getView(),ref=view.nutritionReference;
- report.textContent=ref?
-   'Суточный справочник · '+ref.groupLabel+': У '+ref.carbsG.join('–')+' г · Б '+ref.proteinG.join('–')+
-    ' г · Ж '+ref.fatG.join('–')+' г · '+ref.kcal.join('–')+' ккал. Распределение по приёмам не задано.':
-   !view.profile.birthDate?'Для справочного диапазона укажите дату рождения в настройках.':
-   'Для профиля нет подходящего диапазона. Проверьте возраст и пол.';
+ const nowMs=Date.now(),profile=port('settings').read('profile');
+ const journal=GFCgmEvidencePolicy.journalView(host,GFJournal,GFJournalStorageAdapter,{nowMs});
+ const {nutrition}=GFMainScreenCore.summarize({journal,profile,journalApi:GFJournal,nutritionRef:GFNutritionReference,nowMs});
+ const title=doc.createElement('h4');title.textContent='Сегодня';
+ panel.replaceChildren(title,...nutrition.rows.map(row=>{
+   const entry=doc.createElement('p');entry.className='sub';
+   const range=row.range?row.range.map(n=>fmt(n)).join('–')+' '+row.unit:'—';
+   const amount=value=>Number.isFinite(value)?fmt(value,2)+' '+row.unit:'—';
+   entry.textContent=row.name+' · съедено '+amount(row.eaten)+' · норма '+range+' · осталось до нижней границы '+amount(row.remaining);
+   return entry;
+ }));
 }
 function mountFoodPresentation(doc,peer){
  const title=doc.querySelector('.brand h1');
- if(title)title.textContent='ГлюкоПапа Еда';
- for(const selector of ['.brand p','.demo-controls','#tab-restaurants .titlebar .sub',
+ if(title)title.textContent='Продукты';
+ for(const selector of ['.brand p','.demo-controls','.meals-panel>.muted','#tab-restaurants .titlebar .sub',
        '#tab-restaurants .venue-section .sub','#venueDescription']){
    for(const node of doc.querySelectorAll(selector))node.hidden=true;
  }
@@ -974,7 +980,33 @@ function mountFoodPresentation(doc,peer){
  }
  refreshMealType();
  choose.addEventListener('change',()=>{choose.dataset.manual='yes';});
- peer.GFStorageNutritionPort.readNutrition=()=>null; // The reference is a range with no approved per-meal split.
+ peer.GFStorageNutritionPort.readNutrition=()=>null; // The profile publishes a daily range, no per-meal split.
+ const table=doc.getElementById('mealCompare'), target=doc.getElementById('mealTargetStatus');
+ if(table)table.hidden=true;
+ if(target){
+   const translate=()=>{
+     const value='Для отдельного приёма пищи доля нормы не задана.';
+     if(target.textContent!==value)target.textContent=value;
+   };
+   new MutationObserver(translate).observe(target,{childList:true,subtree:true});
+   translate();
+ }
+ const panorama=doc.querySelector('#tab-plate .panel>.info');
+ if(panorama){
+   const details=doc.createElement('details'), heading=doc.createElement('summary');
+   heading.textContent='Ориентир разнообразной тарелки';
+   const label=panorama.querySelector('b');if(label)label.remove();
+   details.append(heading,panorama);
+   doc.querySelector('#tab-plate .plate-actions')?.after(details);
+ }
+ for(const id of ['balanceFood','balanceInsulin']){
+   doc.getElementById(id)?.addEventListener('click',()=>{
+     if(peer.GFStorageNutritionPort.readNutrition())return;
+     doc.getElementById('suggestionResults').textContent=id==='balanceFood'?
+       'Для расчёта нужна норма этого приёма пищи. В профиле есть только суточный диапазон.':
+       'Для расчёта под шаг инсулина нужны норма приёма пищи и проверенный расчёт дозы.';
+   });
+ }
  const plateCalc=doc.getElementById('plateCalculate');
  plateCalc.textContent='Рассчитать / ввести инсулин';
  doc.addEventListener('click',e=>{
@@ -1027,17 +1059,85 @@ function appendSettingsRows(doc,id,rows,empty){
  const target=doc.getElementById(id);
  if(!target)return;
  target.replaceChildren(...(rows.length?rows:[empty]).map(text=>{
+   if(target.tagName==='TBODY'){
+     const row=doc.createElement('tr'),cell=doc.createElement('td');
+     cell.colSpan=target.closest('table')?.tHead?.rows[0].cells.length||1;
+     cell.textContent=text;
+     row.append(cell);
+     return row;
+   }
    const row=doc.createElement('p');
    row.textContent=text;
    return row;
  }));
 }
+function mountSettingsPresentation(doc){
+ if(doc.body.dataset.gpUserSettings)return;
+ doc.body.dataset.gpUserSettings='1';
+ const style=doc.createElement('style');
+ style.textContent='#gpApprovedSettingsNotice:empty{display:none}.app{display:block;min-height:0}.side,.warning,.foot,.top .small{display:none!important}.main{padding:12px}';
+ doc.head.append(style);
+ for(const pane of doc.querySelectorAll('section[data-pane]'))pane.classList.remove('hidden');
+ for(const node of doc.querySelectorAll('#storageWarning,#status,#tab-history .panel>.small'))node.hidden=true;
+ const notice=doc.getElementById('gpApprovedSettingsNotice');
+ notice.textContent='';
+ notice.setAttribute('role','status');
+ const frame=$('iframeApprovedSettings');
+ const size=()=>{
+   const height=Math.ceil(doc.querySelector('.app').getBoundingClientRect().height+notice.getBoundingClientRect().height);
+   if(height>0&&frame.style.height!==height+'px')frame.style.height=height+'px';
+ };
+ const observer=new ResizeObserver(size);
+ observer.observe(doc.querySelector('.app'));observer.observe(notice);
+ size();
+}
+function paintGrowth(doc,growth,measurements){
+ const status=doc.getElementById('growthStatus');
+ const labels={missing_profile:'Укажите дату рождения и пол.',needs_paired_measurement:'Сохраните рост и вес в одном измерении.',
+   invalid_date:'Проверьте дату рождения и дату измерения.',unsupported_age:'Справочник доступен с 61 до 228 месяцев.'};
+ status.textContent=growth.statusLabel||labels[growth.status]||'Справочная оценка пока недоступна.';
+ const values=growth.bmiReference?[
+   'ИМТ '+fmt(growth.bmi)+' кг/м² · справочный диапазон '+growth.bmiReference.map(n=>fmt(n)).join('–'),
+   'Вес '+fmt(growth.weightDisplayKg,2)+' кг · справочный интервал при этом росте '+growth.weightReferenceKg.map(n=>fmt(n,2)).join('–')+' кг',
+   growth.referenceMethod,
+ ]:[];
+ appendSettingsRows(doc,'growthValues',values,'—');
+ doc.getElementById('growthDate').textContent=growth.measuredAt?new Date(growth.measuredAt).toLocaleString('ru-RU'):'';
+ const box=doc.getElementById('growthPanel');
+ let charts=doc.getElementById('measurementCurves');
+ if(!charts){charts=doc.createElement('div');charts.id='measurementCurves';box.append(charts);}
+ const series=[['heightCm','Рост, см'],['weightKg','Вес, кг']];
+ charts.replaceChildren(...series.map(([key,title])=>{
+   const section=doc.createElement('section'), heading=doc.createElement('h3');
+   heading.textContent=title;section.append(heading);
+   const points=measurements.filter(row=>Number.isFinite(row[key])).slice(0,30).reverse();
+   if(points.length<2){
+     const message=doc.createElement('p');message.textContent='Для графика нужны два измерения.';section.append(message);
+     return section;
+   }
+   const values=points.map(row=>row[key]), low=Math.min(...values), high=Math.max(...values);
+   const start=Date.parse(points[0].measuredAt), end=Date.parse(points.at(-1).measuredAt);
+   const svg=doc.createElementNS('http://www.w3.org/2000/svg','svg');
+   svg.setAttribute('viewBox','0 0 300 85');svg.setAttribute('role','img');svg.setAttribute('aria-label',title);
+   const line=doc.createElementNS(svg.namespaceURI,'polyline');
+   line.setAttribute('points',points.map(row=>
+     (12+276*(Date.parse(row.measuredAt)-start)/Math.max(1,end-start))+','+
+     (67-49*(row[key]-low)/(high-low||1))).join(' '));
+   line.setAttribute('fill','none');line.setAttribute('stroke','#207caa');line.setAttribute('stroke-width','2');
+   svg.append(line);section.append(svg);
+   const range=doc.createElement('p');
+   range.textContent=new Date(start).toLocaleDateString('ru-RU')+' — '+new Date(end).toLocaleDateString('ru-RU')+
+     ' · '+fmt(low)+'–'+fmt(high);
+   section.append(range);
+   return section;
+ }));
+}
 function renderApprovedSettings(doc,view){
+ mountSettingsPresentation(doc);
+ paintGrowth(doc,view.growthReference,view.measurements);
  const set=(id,text)=>{const field=doc.getElementById(id);if(field)field.textContent=text;};
  for(const id of ['seed','reset','refresh','revisionBadge','storageWarning'])doc.getElementById(id)?.setAttribute('hidden','');
  doc.querySelector('.foot')?.setAttribute('hidden','');
- const heading=doc.querySelector('.brand small');
- if(heading)heading.textContent='Настройки';
  const age=view.ageYears===null?'—':String(view.ageYears);
  set('ageValue',age);
  set('summaryAge',age);
@@ -1121,9 +1221,13 @@ function registerApprovedPlate(payload){const converted=GFFoodMealEntry.normaliz
      $('approvedPlateStatus').textContent='Тип приёма сохранён в существующем плане.';
      return;
    }
-   $('approvedPlateStatus').textContent='Такая тарелка уже сохранена · ID '+activeMeal;notify('Повторная запись еды не создана');return;
+   $('approvedPlateStatus').textContent='Тарелка уже сохранена.';return;
  }
- const id=uid('meal');controller.createFromFood(p,id,mealType);activeMeal=id;if(document.body.dataset.activeScreen==='approved-nutrition')renderCalculationEvidence('meal',Date.now());$('approvedPlateStatus').textContent='План зарегистрирован: '+id+' · '+p.items.length+' позиций. Для отметки фактически съеденного откройте «План / факт еды». Подтверждённый план не считается съеденным.';notify('Моя тарелка v0.4.6 передана в GFStorage: '+id);}
+ const id=uid('meal');
+ controller.createFromFood(p,id,mealType);
+ activeMeal=id;
+ $('approvedPlateStatus').textContent='План питания сохранён.';
+}
 window.addEventListener('message',wrap(e=>{const d=e.data||{};if(!d.type?.startsWith?.('gp:'))return;
  const role=d.role;if(typeof role!=='string'||!isApprovedMessage(role,e))return;
  if(d.type==='gp:ready'){broadcastApproved(role);return;}

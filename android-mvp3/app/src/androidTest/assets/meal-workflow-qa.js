@@ -32,8 +32,15 @@
             get('shotTime').value=localInput(now);
             get('shotSite').value='abdomen';
             get('shotSite').dispatchEvent(new Event('input',{bubbles:true}));
-            ensure(get('minutesChosen').readOnly&&Number(get('minutesChosen').value)>=10&&
-                get('minutesExplain').textContent.includes('6 случаев'),'Native WebView got no actual GFIA result');
+            const proposed=store.connect('mealTiming').readPreview(id);
+            if(!get('minutesChosen').readOnly||Number(get('minutesChosen').value)<10||
+                !get('minutesExplain').textContent.includes('6 случаев')){
+                const reference=GFMealTimingService.refresh(store,{sessionId:id,units:2,site:'abdomen',
+                    atIso:new Date(now).toISOString(),mode:'local'});
+                throw Error('Meal timing preview: '+JSON.stringify({computed:reference.code||reference.estimate?.matchedCases,
+                    shown:get('minutesChosen').value,reason:proposed?.code,explanation:get('minutesExplain').textContent,
+                    time:get('shotTime').value,validDose:get('doseChosen').checkValidity(),selected:get('chooseMeal').value}));
+            }
             ensure(get('timerText').textContent==='--:--'&&store.exportState().events.length===6,
                 'Proposal modified the journal');
             window.__glucopapaQAStage='atomic-save';
@@ -48,7 +55,7 @@
         const state=store.exportState(), shot=state.events.at(-1), timing=shot.mealTiming;
         ensure(state.events.length===7&&shot.linkedMealSessionId===id&&timing?.injectionId===shot.id&&
             timing.estimate.version==='0.2.1-history-only'&&timing.referenceAt===shot.administeredAt,
-            'Fact or timing evidence missing');
+            'Fact or timing evidence missing: '+get('mealOperationStatus').textContent);
         ensure(get('confirmInjection').disabled&&get('timerText').textContent!=='--:--','Restored timer unavailable');
         const raw=JSON.parse(GFNativeStorage.readSnapshot('GFV2SHELL_DATA_v1_local'));
         ensure(raw.code==='FOUND'&&raw.data===JSON.stringify(state),'SQLite missed the same revision');

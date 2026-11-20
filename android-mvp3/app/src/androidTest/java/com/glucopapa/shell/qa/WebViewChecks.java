@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.app.Instrumentation;
 import android.content.Intent;
 import android.os.SystemClock;
+import android.os.Build;
+import android.os.ParcelFileDescriptor;
 import android.graphics.Rect;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -87,19 +89,49 @@ final class WebViewChecks {
 
     JSONObject checkBack() throws Exception {
         WebView web = startWebView();
+        String mode = Build.VERSION.SDK_INT >= 36 ? shell("settings get secure navigation_mode").trim() : "";
+        boolean gesture = "2".equals(mode);
         evaluate(web, "GPApp.open('home'); GPApp.open('approved-low'); GPApp.open('approved-nutrition'); true");
+        instrumentation.waitForIdleSync();
+        long focusUntil = SystemClock.elapsedRealtime() + 4000;
+        AtomicReference<Boolean> focus = new AtomicReference<>(false);
+        while (SystemClock.elapsedRealtime() < focusUntil) {
+            instrumentation.runOnMainSync(() -> focus.set(web.hasWindowFocus()));
+            if (focus.get()) break;
+            SystemClock.sleep(100);
+        }
+        if (!focus.get()) throw new IllegalStateException("Android Back requires focus in the app window");
+        if (!"\"approved-nutrition\"".equals(evaluate(web, "document.body.dataset.activeScreen")))
+            throw new IllegalStateException("Expected the nutrition screen");
         for (String expected : new String[]{"approved-low", "home"}) {
-            instrumentation.sendKeyDownUpSync(KeyEvent.KEYCODE_BACK);
+            if (gesture) {
+                int center = web.getResources().getDisplayMetrics().heightPixels / 2;
+                int distance = web.getResources().getDisplayMetrics().widthPixels / 3;
+                shell("input swipe 1 " + center + " " + distance + " " + center + " 280");
+            } else {
+                instrumentation.sendKeyDownUpSync(KeyEvent.KEYCODE_BACK);
+            }
             long until = SystemClock.elapsedRealtime() + 5000;
             String active = "document.body.dataset.activeScreen===" + JSONObject.quote(expected);
             while (!"true".equals(evaluate(web, active))) {
                 if (SystemClock.elapsedRealtime() >= until)
-                    throw new IllegalStateException("Android Back did not return to " + expected);
+                    throw new IllegalStateException("Android Back did not return to " + expected
+                        + ", saw " + evaluate(web, "document.body.dataset.activeScreen") + ", mode=" + mode);
                 SystemClock.sleep(100);
             }
         }
         return new JSONObject().put("status", "PASS").put("routes", "nutrition → LOW → home")
-            .put("input", "ANDROID_KEYCODE_BACK");
+            .put("input", gesture ? "ANDROID_SYSTEM_GESTURE" : "ANDROID_KEYCODE_BACK");
+    }
+
+    private String shell(String command) throws Exception {
+        ParcelFileDescriptor output = instrumentation.getUiAutomation().executeShellCommand(command);
+        try (InputStream stream = new ParcelFileDescriptor.AutoCloseInputStream(output)) {
+            ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+            byte[] buffer = new byte[1024];
+            for (int length; (length = stream.read(buffer)) != -1;) bytes.write(buffer, 0, length);
+            return bytes.toString(StandardCharsets.UTF_8.name());
+        }
     }
 
     private boolean containsJournalDate(AccessibilityNodeInfo node) {

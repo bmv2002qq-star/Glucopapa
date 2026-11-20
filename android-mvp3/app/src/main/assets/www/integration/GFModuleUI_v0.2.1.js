@@ -36,7 +36,11 @@
  function renderReports(){const r=GPModuleHub.report(h());const ins=(r.events||[]).filter(x=>x.type==='insulin_injection'&&x.status==='confirmed');const done=(r.mealSessions||[]).filter(x=>x.status==='completed');$('reportSummary').textContent='Одна база GFStorage · ревизия '+r.revision+' · CGM '+(r.cgm||[]).length+' точек · инъекции '+ins.length+' · завершено приёмов еды '+done.length+'. JSON содержит всю историю.';
  $('reportEvents').innerHTML='<div class="events">'+ins.slice(-20).reverse().map(x=>'<div class="event"><div class="event-text"><b>'+esc(x.insulinId)+'</b><small>'+fmt(x.units)+' ЕД · '+esc(x.injectionSite?.region||'зона не указана')+'</small></div><time>'+esc(dateText(x.administeredAt))+'</time></div>').join('')+'</div>';
  if(!ins.length)$('reportEvents').textContent='Нет инъекций в журнале.';}
- function renderSync(){const s=h().exportState();$('syncDiagnostics').textContent='GFSync загружен: '+(globalThis.GFSync?'да':'ядро отсутствует')+'. Сетевое соединение: НЕ НАСТРОЕНО. CGM источник: '+(s.cgmMetadata?.sourceDeviceId||'не подключён')+'. Полученных показаний: '+(s.cgm||[]).length+'. Версия схемы: '+s.schemaVersion+'. Нет передачи данных на сервер.';}
+ function renderSync(){
+   const rows=h().connect('syncWriter').read('syncInbox');
+   $('syncDiagnostics').textContent=rows.length?'Подтверждённых пакетов в журнале: '+rows.length+'.':
+     'Сетевые пакеты в журнале отсутствуют.';
+ }
  function renderHighLow(){const a=GFHighLowReadOnly.connect(h()).analyze();$('highLowSummary').textContent='Проверка CGM: '+a.status+'. Найдено эпизодов: '+(a.episodes?.length||0)+'. Раздел только читает события и не регистрирует повторных инъекций/приёмов пищи.';}
  function renderSettings(){const s=h().exportState();const prof=s.profile||{};const m=s.measurements||[];$('childName').value=prof.displayName||'';$('childBirth').value=prof.birthDate||'';$('childAllergies').value=(prof.allergies||[]).join(', ');$('childMeasurementInfo').textContent=m.length?'Последнее измерение: '+dateText(m.at(-1).measuredAt)+' · вес '+(m.at(-1).weightKg??'—')+' кг · рост '+(m.at(-1).heightCm??'—')+' см':'Вес и рост пока не записаны';}
  function download(text,name,mime='text/plain;charset=utf-8'){if(typeof Blob!=='function')throw Error('Этот браузер не поддерживает загрузку файлов');const url=URL.createObjectURL(new Blob([text],{type:mime}));const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1200);}

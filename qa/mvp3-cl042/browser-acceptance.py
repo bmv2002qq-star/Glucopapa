@@ -39,7 +39,7 @@ def run(browser, origin, output):
     plate.locator('#addToPlate').click()
     assert page.evaluate('GPApp.getStorage().exportState().mealSessions.length') == 0
     page.locator('#approvedSavePlate').click()
-    page.locator('#approvedPlateStatus').get_by_text('План зарегистрирован:',exact=False).wait_for()
+    page.locator('#approvedPlateStatus').get_by_text('План питания сохранён.',exact=False).wait_for()
     saved = page.evaluate('GPApp.getStorage().exportState().mealSessions[0]')
     live = saved['plannedPlate']
     assert len(live['items']) == 1 and live['items'][0]['amount'] == 75

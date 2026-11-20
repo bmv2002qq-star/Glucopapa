@@ -49,7 +49,10 @@ def check_ui(browser, origin, output, baseline):
     settings.locator('#pZone').fill('Europe/Minsk')
     settings.locator('#profileForm button[type=submit]').click()
     page.wait_for_function("()=>GPApp.getStorage().exportState().profile.displayName==='SYNTHETIC_PROFILE'")
-    settings.locator('[data-tab=measurements]').click()
+    if baseline:
+        settings.locator('[data-tab=measurements]').click()
+    else:
+        expect(settings.locator('#measurementForm')).to_be_visible()
     settings.locator('#mWeight').fill('20')
     settings.locator('#mHeight').fill('120')
     settings.locator('#mDate').fill('')
@@ -58,13 +61,21 @@ def check_ui(browser, origin, output, baseline):
     visible = '120 см' in settings.locator('#measurementsList').inner_text()
     if not baseline:
         assert visible
+        expect(settings.locator('#growthValues')).to_contain_text('ИМТ 13,9')
+        expect(settings.locator('nav')).to_be_hidden()
+        expect(settings.locator('.warning')).to_be_hidden()
+        expect(page.locator('.app-header .brand-title')).to_have_text('ГлюкоПапа')
+        expect(page.locator('#screen-approved-settings [data-screen=cgm]')).to_have_count(0)
+        expect(page.locator('#screen-approved-settings #gfCarbMode')).to_have_count(0)
+        expect(page.locator('#nav button')).to_have_count(6)
+        assert page.locator('#nav').evaluate("(n)=>getComputedStyle(n).position")=='fixed'
         settings.locator('#mHeight').fill('12')
         assert not settings.locator('#mHeight').evaluate('(node)=>node.checkValidity()')
-        settings.locator('[data-tab=history]').click()
+        expect(settings.locator('#tab-history')).to_be_visible()
         expect(settings.locator('#historyList')).to_contain_text('Измерение')
         page.reload()
         page.evaluate("GPApp.open('approved-settings')")
-        settings.locator('[data-tab=measurements]').click()
+        expect(settings.locator('#measurementForm')).to_be_visible()
         expect(settings.locator('#measurementsList')).to_contain_text('20 кг')
         expect(settings.locator('#measurementsList')).to_contain_text('120 см')
         assert state()['profile']['dailyNutritionReference']['groupId'] == '7-10'
@@ -78,7 +89,7 @@ def check_ui(browser, origin, output, baseline):
 def check_food_diary_coefficients(page, output, state):
     page.evaluate("GPApp.open('approved-nutrition')")
     food=page.frame_locator('#iframeApprovedNutrition')
-    expect(food.locator('.brand h1')).to_have_text('ГлюкоПапа Еда')
+    expect(food.locator('.brand h1')).to_have_text('Продукты')
     food.locator('[data-tab=restaurants]').click()
     food.locator('[data-venue=batski]').click()
     food.locator('[data-venuecat="Драники"]').click()
@@ -90,6 +101,13 @@ def check_food_diary_coefficients(page, output, state):
     food.locator('#portionAmount').fill('75')
     food.locator('#addToPlate').click()
     expect(food.locator('#tab-plate')).to_be_visible()
+    expect(food.locator('#gpFoodReference')).to_contain_text('норма')
+    food.locator('#openPantry').click()
+    expect(food.locator('#pantryModal')).to_be_visible()
+    expect(page.locator('#nav')).to_be_visible()
+    food.locator('#donePantry').click()
+    food.locator('#balanceFood').click()
+    expect(food.locator('#suggestionResults')).to_contain_text('норма этого приёма пищи')
     expect(food.locator('#plateItems')).to_contain_text('Драник деревенский с мясом')
     assert not state()['events']
     food.locator('#mealType').select_option('breakfast')
@@ -204,6 +222,37 @@ def check_cgm_controls(browser, origin, output):
 
 
 
+def check_cgm_window(browser, origin):
+    page=browser.new_page(viewport={'width':390,'height':850})
+    page.add_init_script("""(() => {
+      const now=Date.now(), at=now-300000;
+      const newest={status:'MEASUREMENT',measuredAtMs:at,receivedAtMs:now,mgdl:150,
+        direction:'Flat',stale:false,device:'Follower',transport:'xdrip_loopback_live',deltaMgdl:-1.002};
+      window.qaRequested=0;
+      window.GFNativeXDrip={pollLatest(){},peekLatest(){return JSON.stringify({status:'NO_PROVIDER'})}};
+      window.GFNativeXDripHistory={
+        requestWindow(){window.qaRequested++;return JSON.stringify({status:'HISTORY_FETCHING'})},
+        take(){return JSON.stringify({status:'WEB_WINDOW_READY',latest:newest,futureCount:1,
+          futureMeasuredAtMs:now+120000,items:[{measuredAtMs:at-300000,mgdl:145,direction:'Flat'}]})},
+        requestLatest(){return JSON.stringify({status:'HISTORY_FETCHING'})},
+        takeLatest(){return JSON.stringify({status:'WEB_FUTURE_MEASUREMENT',measuredAtMs:now+120000,receivedAtMs:now})}
+      };
+    })();""")
+    page.goto(origin+'/index.html')
+    page.evaluate("GPApp.open('cgm')")
+    page.locator('#xdripEnabled').check()
+    expect(page.locator('#xdripStatus')).to_contain_text('пропущено будущих: 1')
+    expect(page.locator('#xdripStatus')).to_contain_text('опережение 120 с')
+    assert page.evaluate("qaRequested") == 1
+    rows=page.evaluate("GPApp.getStorage().exportState().cgm")
+    assert [row['mgdl'] for row in rows]==[145,150]
+    assert rows[0]['transport']=='xdrip_loopback_history'
+    page.locator('#restoreXdripHistory').click()
+    expect(page.locator('#xdripHistoryStatus')).to_contain_text('добавлено: 0')
+    assert page.evaluate("GPApp.getStorage().exportState().cgm")==rows
+    page.close()
+
+
 def check_meal_time_defaults(browser, origin):
     for hour, minute, expected in [(7,59,''),(8,0,'breakfast'),(10,59,'breakfast'),
                                     (11,0,'lunch'),(16,59,'lunch'),(17,0,'dinner')]:
@@ -212,7 +261,7 @@ def check_meal_time_defaults(browser, origin):
         page.goto(origin+'/index.html')
         page.evaluate("GPApp.open('approved-nutrition')")
         food=page.frame_locator('#iframeApprovedNutrition')
-        expect(food.locator('.brand h1')).to_have_text('ГлюкоПапа Еда')
+        expect(food.locator('.brand h1')).to_have_text('Продукты')
         expect(food.locator('#mealType')).to_have_value(expected)
         page.close()
 
@@ -287,6 +336,10 @@ def main():
             if not args.baseline:
                 check_cgm_controls(browser,f'http://127.0.0.1:{server.server_port}',args.output)
                 result['syntheticLiveSwitchAndDeduplication']=True
+                check_cgm_window(browser, f'http://127.0.0.1:{server.server_port}')
+                result['syntheticWebWindowAndClockDiagnostics']=True
+                result['settingsWhoAndSingleLayout']=True
+                result['pantryAndNorms']=True
                 check_meal_time_defaults(browser,f'http://127.0.0.1:{server.server_port}')
                 result['localMealTimeBoundaries']=['07:59','08:00','10:59','11:00','16:59','17:00']
                 periods = check_journal_periods(browser, f'http://127.0.0.1:{server.server_port}', args.output)

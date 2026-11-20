@@ -1,6 +1,7 @@
 'use strict';
 const assert = require('node:assert/strict');
 const path = require('node:path');
+const fs = require('node:fs');
 
 const older = path.resolve(process.argv[2] || '');
 const current = path.resolve(__dirname, '../../android-mvp3/app/src/main/assets/www');
@@ -8,6 +9,8 @@ const load = (root, asset) => require(path.join(root, asset));
 const storageAsset = 'modules/GFStorage_v0.5.12/src/gfstorage_core.js';
 const backupAsset = 'integration/GFJournalBackup_v0.1.0.js';
 const sourceAsset = 'integration/GFProviderCgm_v0.1.0.js';
+const version = root => fs.readFileSync(path.join(root, 'app.js'), 'utf8').match(/\bVER='([^']+)'/)?.[1];
+assert.ok(version(older) && version(current));
 const oldStorage = load(older, storageAsset);
 const newStorage = load(current, storageAsset);
 const oldBackup = load(older, backupAsset);
@@ -39,7 +42,7 @@ async function run() {
     await assert.rejects(newBackup.verify(original.replace('SYNTHETIC_PROFILE', 'TAMPERED_PROFILE'), 'local', newStorage),
         /BACKUP_CHECKSUM_MISMATCH/);
     process.stdout.write(JSON.stringify({
-        status:'PASS',fixture:'SYNTHETIC_ONLY',from:'0.3.15-pilot',to:'0.3.17-qa',
+        status:'PASS',fixture:'SYNTHETIC_ONLY',from:version(older),to:version(current),
         identicalJournal:true,revision:snapshot.revision,measurements:snapshot.measurements.length,
         confirmedFacts:snapshot.events.length,cgm:snapshot.cgm.length,damagedBackupRejected:true,
         actualAndroidUpdate:false

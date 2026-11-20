@@ -80,10 +80,12 @@ def run(browser, origin, output, legacy=False):
         'approved/GFNutrition_v0.4.6_LIVE.html',
         'approved/GFSettings_v0.1.4_LIVE.html',
         'integration/approved_routes/GFHighTarget_v0.1.3_VIEW.html',
+        'integration/approved_routes/GFMealCalc_v0.3.0_VIEW.html',
         'integration/approved_routes/LOW_v0.2_VIEW.html',
     ]
     assert page.locator('#iframeHighTarget').get_attribute('sandbox') == 'allow-same-origin'
     assert page.locator('#iframeLowTarget').get_attribute('sandbox') == 'allow-same-origin'
+    assert page.locator('#iframeApprovedMeal').get_attribute('sandbox') == 'allow-same-origin'
     for width in (320, 390, 428, 1280):
         page.set_viewport_size({'width': width, 'height': 900})
         page.locator('#nav [data-screen="home"]').click()

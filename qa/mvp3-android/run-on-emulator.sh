@@ -101,6 +101,12 @@ for step in provider-write provider-restored history-write history-restored web-
     grep -F 'QA_PASS production' "$evidence/$step.log"
     "$adb" -s "$serial" shell am force-stop com.glucopapa.shell
 done
+if [[ $api == 36 ]]; then
+    # Exercise the actual system-edge Back gesture on the isolated Android 16 AVD.
+    "$adb" -s "$serial" shell cmd overlay enable-exclusive --category com.android.internal.systemui.navbar.gestural \
+        > "$evidence/android-back-mode.log" 2>&1 || true
+    "$adb" -s "$serial" shell settings get secure navigation_mode >> "$evidence/android-back-mode.log"
+fi
 "$adb" -s "$serial" shell am instrument -w -r -e fixture SYNTHETIC -e phase back \
     com.glucopapa.shell.test/com.glucopapa.shell.qa.StorageInstrumentation | tee "$evidence/production-back.log"
 back_failure=0
