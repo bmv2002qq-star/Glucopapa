@@ -16,7 +16,7 @@
         const localKey = 'GFV2SHELL_DATA_v1_local';
         assert(read('GFV2SHELL_DATA_v1_demo').ok === false, 'Test journal is accessible');
         const action=window.__glucopapaQAAction;
-        assert(byId('restoreXDripHistory').disabled, 'History is enabled on a clean install');
+        assert(byId('restoreXdripHistory').disabled, 'History is enabled on a clean install');
         assert(JSON.parse(GFNativeXDripHistory.request()).status==='HISTORY_DISABLED', 'Native history bypassed opt-in');
         if(action.startsWith('history-')){
             const host=GPApp.getStorage();

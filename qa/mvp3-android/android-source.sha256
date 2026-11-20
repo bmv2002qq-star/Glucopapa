@@ -2,7 +2,7 @@
 d883e4afc8125dc3f4356efdd0ac09239bfd8259878aa332f06a50ac5b3cb37e  android-mvp3/.gitignore
 33b448357b182413314ad7c03719e2cf9dd58ab6f812f446a82dcfb6bb1a1398  android-mvp3/app/build.gradle
 c7e9fc8e0c802a63aba446c56661e579b6449f3d6e52f80c568487eebd40e25b  android-mvp3/app/src/androidTest/assets/pilot-replay-qa.js
-4a8a99fa89175549dec6daa1f87c7513d00f939b2bc382fbf5cce6b87e4ff951  android-mvp3/app/src/androidTest/assets/production-qa.js
+f3fe6c20dfbea452de0e9418ffe4fae21d7dc8a16d20b1ad33b48ddf05586745  android-mvp3/app/src/androidTest/assets/production-qa.js
 2bc65fbb88b9fc6324a72de8f0ee61fb8a5af73fefb572d1046d0a97b482212e  android-mvp3/app/src/androidTest/assets/stock-ui.js
 b34c50a82cbb612ebe8c04f4f0707efb6dcfba3495d699de42708e7f1a8b999f  android-mvp3/app/src/androidTest/assets/timing-history-qa.js
 e446ebf255dc2d3ebd5507ab15f84fffa633231811cac3ba07ec7a77b314dcbd  android-mvp3/app/src/androidTest/assets/webview-qa.js
