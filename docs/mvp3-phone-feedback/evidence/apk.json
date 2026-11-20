@@ -1,11 +1,19 @@
 {
   "codeCommit": "a1e8faef9603cc1a054e915062adb0c39d9552b7",
+  "baseCommit": "8e8ffb7faa02b3a94e02836094a5ceb317053ddc",
   "appId": "com.glucopapa.shell",
   "versionName": "0.3.17-qa",
   "versionCode": 12,
   "artifactId": 14650371638,
+  "artifactName": "Glucopapa-V2-0.3.17-qa-debug",
   "runId": 44775091796,
   "apkSha256": "6aeca1140e20563f372eb9ec45addbfaa3c9a21a9bdcfa137e01a7d2f8e5eb9b",
   "installedEmulatorSha256": "6aeca1140e20563f372eb9ec45addbfaa3c9a21a9bdcfa137e01a7d2f8e5eb9b",
-  "sourceZipSha256": "039a44693e485e6f81e5edd423559594b028af52384452105de6bd09fea4078f"
+  "signingCertSha256": "9360b03b13cf9686a884fc5b818f52fb77b4830922dab46580493e5d21f7fe85",
+  "pilotSigningCertSha256": "19d23d674fd72f8bca063a0f6b22dc819f2b8a752865aeccb58cb81ad6f0b07d",
+  "artifactZipSha256": "f181cd96165f163485d9476a64d00d921ad6293411ae24e94ceb2220a422cc37",
+  "sourceZipSha256": "039a44693e485e6f81e5edd423559594b028af52384452105de6bd09fea4078f",
+  "protectedAssets": 26,
+  "webviewAssets": 102,
+  "artifactExpiresAt": "2027-02-18T16:36:37Z"
 }

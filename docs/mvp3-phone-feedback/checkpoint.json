@@ -1,0 +1,57 @@
+{
+  "stage": "MVP3_PHONE_FEEDBACK",
+  "branch": "qa/mvp3-phone-feedback-20261120",
+  "codeCommit": "a1e8faef9603cc1a054e915062adb0c39d9552b7",
+  "qaCommit": "2be809534cc5ba6bed1d94b39b09a361980ecea0",
+  "mainShaVerified": "2151fbbf2b40ac6eca4f5b02c2ba355c4e9a75f8",
+  "versionName": "0.3.17-qa",
+  "versionCode": 12,
+  "package": "com.glucopapa.shell",
+  "runId": 44775091796,
+  "artifactId": 14650371638,
+  "extendedRunId": 44776452939,
+  "api36DiagnosisRunId": 44776078440,
+  "code": "PASS",
+  "browserSingleFile": "NOT_TESTED",
+  "browserMultiFile": "PASS",
+  "storage": {
+    "nativeCASStress": 1000,
+    "sqliteApi35": "PASS",
+    "fixtureVirtualDays": 90,
+    "fixtureCGMSamples": 25920
+  },
+  "androidEmulator": {
+    "31": "PASS_EXTENDED_SCOPED. Касания PASS, дерево доступности ENV_BLOCKED",
+    "34": "PASS_EXTENDED",
+    "35": "PASS_EXTENDED. SHA обычного опубликованного APK подтверждён",
+    "36": "FAIL_BACK. Текущий CGM, история и профиль подтверждены на синтетике"
+  },
+  "androidBrief": "Android 14 и 15 прошли расширенный прогон. Android 12 прошёл касания, Back, SQLite и восстановление. Дерево доступности API 31 — ENV_BLOCKED. Android 16 — FAIL системного Back. CGM и профиль до этого шага прошли. На Android 14/15 проверены четыре размера, обработка остановки во время экспорта и реальный soak 87,9/86,2 секунды.",
+  "replayBrief": "На Android 15 отдельный fixture восстановил все 25 920 строк и ревизию 7 после принудительной остановки. Результат повторён в расширенном прогоне.",
+  "criterionSummary": "В новой матрице 40 критериев. 6 PASS, 26 PASS_SCOPED, 7 BLOCKED, 1 FAIL.",
+  "phoneIssues": [
+    "Real local Follower source, disconnect and recovery",
+    "Source timestamps, trend and background",
+    "Physical device installation and backup transfer"
+  ],
+  "openIssues": [
+    "ANDROID-BACK-036",
+    "ANDROID-AX-031",
+    "XDRIP-PHONE-005",
+    "FORECAST-FOOD-008",
+    "GFXDRIP_GPL",
+    "NUTRITION-NORM-01",
+    "COEFFICIENT-AUTO-01",
+    "SQLITE-LIMIT-011"
+  ],
+  "acceptance": {
+    "BLOCKED": 7,
+    "PASS_SCOPED": 26,
+    "PASS": 6,
+    "FAIL": 1
+  },
+  "apkSHA256": "6aeca1140e20563f372eb9ec45addbfaa3c9a21a9bdcfa137e01a7d2f8e5eb9b",
+  "androidDevice": "NOT_TESTED",
+  "realXDrip": "NOT_TESTED",
+  "clinical": "NOT_VALIDATED"
+}

@@ -1,0 +1,17 @@
+{
+  "source": {
+    "file": "source-phone-feedback.zip",
+    "sha256": "039a44693e485e6f81e5edd423559594b028af52384452105de6bd09fea4078f",
+    "codeCommit": "a1e8faef9603cc1a054e915062adb0c39d9552b7"
+  },
+  "verifiedTestPatch": {
+    "file": "tests/qa-reproduction.patch",
+    "sha256": "e7ae11bee0794bc93a9e6989c306e30a18de2b1f710cfbd11c91cad1c82576cc",
+    "qaCommit": "2be809534cc5ba6bed1d94b39b09a361980ecea0"
+  },
+  "apk": {
+    "file": "Glucopapa-V2-0.3.17-qa-debug.apk",
+    "sha256": "6aeca1140e20563f372eb9ec45addbfaa3c9a21a9bdcfa137e01a7d2f8e5eb9b",
+    "artifactId": 14650371638
+  }
+}

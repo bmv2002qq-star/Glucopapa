@@ -1,0 +1,366 @@
+{
+  "runtimeCommit": "a1e8faef9603cc1a054e915062adb0c39d9552b7",
+  "verificationCommit": "ab4c697269c46d0df34d249301a25e621ced5a08",
+  "productionCheck": {
+    "run": 44775091796,
+    "job": 136422645745,
+    "api": 35,
+    "status": "PASS",
+    "contentProvider": {
+      "checked": "FORCE_STOP_RELAUNCH",
+      "fixture": "SYNTHETIC_PROVIDER_PAYLOAD",
+      "revision": 1,
+      "status": "PASS"
+    },
+    "history": {
+      "checked": "FORCE_STOP_RELAUNCH",
+      "fixture": "SYNTHETIC_LOOPBACK",
+      "points": 3,
+      "revision": 2,
+      "status": "PASS"
+    },
+    "live": {
+      "checked": "FORCE_STOP_RELAUNCH",
+      "fixture": "SYNTHETIC_LOCAL_WEB_SERVICE",
+      "points": 4,
+      "revision": 3,
+      "status": "PASS"
+    },
+    "profile": {
+      "fixture": "SYNTHETIC_PROFILE",
+      "height": 120,
+      "status": "PASS",
+      "step": "profile-restored",
+      "weight": 20
+    },
+    "back": {
+      "status": "PASS",
+      "routes": "nutrition → LOW → home",
+      "input": "ANDROID_KEYCODE_BACK"
+    },
+    "exactArtifactShaMatchesInstalled": true
+  },
+  "followup": {
+    "run": 44776452939,
+    "jobs": {
+      "31": {
+        "job": 136427443226,
+        "artifact": 14650387607,
+        "result": "success",
+        "actualTouch": {
+          "status": "PASS",
+          "input": "ANDROID_POINTER_DOWN_UP",
+          "routes": "HIGH, LOW, journal",
+          "webview_accessibility": "ENV_BLOCKED"
+        },
+        "back": {
+          "status": "PASS",
+          "routes": "nutrition → LOW → home",
+          "input": "ANDROID_KEYCODE_BACK"
+        },
+        "lowRestored": {
+          "amount": 25,
+          "carbs": 4.975,
+          "fixture": "SYNTHETIC",
+          "gi": 49,
+          "id": "low-3e7f08d019ff9c7d32498f1fd8ba2515",
+          "revision": 16,
+          "sqlite": true,
+          "status": "PASS",
+          "step": "low-fact-restored"
+        }
+      },
+      "34": {
+        "job": 136427443234,
+        "artifact": 14650234321,
+        "result": "success",
+        "back": {
+          "status": "PASS",
+          "routes": "nutrition → LOW → home",
+          "input": "ANDROID_KEYCODE_BACK"
+        },
+        "gui": {
+          "sizes": [
+            {
+              "width": 320,
+              "height": 760,
+              "density": 160,
+              "navigation_safe": true
+            },
+            {
+              "width": 390,
+              "height": 850,
+              "density": 160,
+              "navigation_safe": true
+            },
+            {
+              "width": 428,
+              "height": 900,
+              "density": 160,
+              "navigation_safe": true
+            },
+            {
+              "width": 1280,
+              "height": 850,
+              "density": 160,
+              "navigation_safe": true
+            }
+          ],
+          "soakSeconds": 87.9,
+          "pssKb": [
+            90594,
+            89196,
+            90132,
+            89821
+          ],
+          "trimMemorySignal": {
+            "command_accepted": true,
+            "resumed": true,
+            "diagnostic": ""
+          },
+          "diaryInterruptRecovered": true,
+          "safInterruptRecovered": true
+        },
+        "lowRestored": {
+          "amount": 25,
+          "carbs": 4.975,
+          "fixture": "SYNTHETIC",
+          "gi": 49,
+          "id": "low-e8247d4752eedaf3762affb7056327eb",
+          "revision": 16,
+          "sqlite": true,
+          "status": "PASS",
+          "step": "low-fact-restored"
+        }
+      },
+      "35": {
+        "job": 136427443466,
+        "artifact": 14651670255,
+        "result": "success",
+        "back": {
+          "status": "PASS",
+          "routes": "nutrition → LOW → home",
+          "input": "ANDROID_KEYCODE_BACK"
+        },
+        "gui": {
+          "sizes": [
+            {
+              "width": 320,
+              "height": 760,
+              "density": 160,
+              "navigation_safe": true
+            },
+            {
+              "width": 390,
+              "height": 850,
+              "density": 160,
+              "navigation_safe": true
+            },
+            {
+              "width": 428,
+              "height": 900,
+              "density": 160,
+              "navigation_safe": true
+            },
+            {
+              "width": 1280,
+              "height": 850,
+              "density": 160,
+              "navigation_safe": true
+            }
+          ],
+          "soakSeconds": 86.2,
+          "pssKb": [
+            93858,
+            94768,
+            92628,
+            91524
+          ],
+          "trimMemorySignal": {
+            "command_accepted": true,
+            "resumed": true,
+            "diagnostic": ""
+          },
+          "diaryInterruptRecovered": true,
+          "safInterruptRecovered": true
+        },
+        "lowRestored": {
+          "amount": 25,
+          "carbs": 4.975,
+          "fixture": "SYNTHETIC",
+          "gi": 49,
+          "id": "low-d6315febac1f26689cac3ac94b3eac73",
+          "revision": 16,
+          "sqlite": true,
+          "status": "PASS",
+          "step": "low-fact-restored"
+        },
+        "repeatReplay": {
+          "elapsedMs": 1914,
+          "fixture": "SYNTHETIC_ONLY",
+          "jsonChars": 3937188,
+          "revision": 7,
+          "samples": 25920,
+          "status": "PASS",
+          "step": "restored",
+          "virtualDays": 90
+        },
+        "saf": {
+          "status": "PASS",
+          "fixture": "SYNTHETIC",
+          "sqliteUnchanged": true,
+          "picker": "ANDROID_DOCUMENTS_UI",
+          "cases": {
+            "cancel": "PASS",
+            "1d": {
+              "file": "Glucopapa_AI_Export.jsonl",
+              "revision": 7,
+              "rows": 9,
+              "sha256": "44ec21c4e3c5f10d2005ee8f295eb17af0eace989b73f23626cc2cbc66a4971b",
+              "bytes": 3871,
+              "from": "2026-11-19T16:52:09.188725Z",
+              "through": "2026-11-20T16:52:09.188725Z"
+            },
+            "2d": {
+              "file": "Glucopapa_AI_Export.jsonl (1)",
+              "revision": 7,
+              "rows": 9,
+              "sha256": "080efcd0bff4b46e0667ed005ffed627bdfda7784df93fba75a698c1202589b3",
+              "bytes": 3871,
+              "from": "2026-11-18T16:52:22.486595Z",
+              "through": "2026-11-20T16:52:22.486595Z"
+            },
+            "5d": {
+              "file": "Glucopapa_AI_Export.jsonl (2)",
+              "revision": 7,
+              "rows": 9,
+              "sha256": "ceb7abb1fe2dac1812fc95c896f767f436e645b3b43ec1620b891ddf895a311f",
+              "bytes": 3871,
+              "from": "2026-11-15T16:52:35.347068Z",
+              "through": "2026-11-20T16:52:35.347068Z"
+            },
+            "1m": {
+              "file": "Glucopapa_AI_Export.jsonl (3)",
+              "revision": 7,
+              "rows": 9,
+              "sha256": "dfcee25400ccf9cb7c75158cc30248f5a7f9d422ef1a584b067b219da5f6693a",
+              "bytes": 3871,
+              "from": "2026-10-20T16:52:47.701381Z",
+              "through": "2026-11-20T16:52:47.701381Z"
+            },
+            "3m": {
+              "file": "Glucopapa_AI_Export.jsonl (4)",
+              "revision": 7,
+              "rows": 9,
+              "sha256": "7b9fbcba660c90a3e191ac076404eb29e1dafac1ffcd631ba08309f7a8494bde",
+              "bytes": 3871,
+              "from": "2026-08-20T16:52:59.736224Z",
+              "through": "2026-11-20T16:52:59.736224Z"
+            },
+            "6m": {
+              "file": "Glucopapa_AI_Export.jsonl (5)",
+              "revision": 7,
+              "rows": 9,
+              "sha256": "b934ada5cc4a24904ccbb808c59359dce15fbe6f581b8ad3444c12c134ade136",
+              "bytes": 3871,
+              "from": "2026-05-20T16:53:13.402679Z",
+              "through": "2026-11-20T16:53:13.402679Z"
+            }
+          }
+        }
+      }
+    }
+  },
+  "api34GuiFirstAttempt": {
+    "run": 44775091796,
+    "sizes": [
+      {
+        "width": 320,
+        "height": 760,
+        "density": 160,
+        "navigation_safe": true
+      },
+      {
+        "width": 390,
+        "height": 850,
+        "density": 160,
+        "navigation_safe": true
+      },
+      {
+        "width": 428,
+        "height": 900,
+        "density": 160,
+        "navigation_safe": true
+      },
+      {
+        "width": 1280,
+        "height": 850,
+        "density": 160,
+        "navigation_safe": true
+      }
+    ],
+    "soakSeconds": 85.6,
+    "pssKb": [
+      90048,
+      91576,
+      89858,
+      90256
+    ],
+    "trimMemorySignal": {
+      "command_accepted": true,
+      "resumed": true,
+      "diagnostic": ""
+    },
+    "diaryInterruptRecovered": true,
+    "safInterruptRecovered": true,
+    "note": "GUI and soak passed. The job stopped later at the obsolete LOW option selector."
+  },
+  "api36Back": {
+    "run": 44776078440,
+    "job": 136426126993,
+    "artifact": 14649813195,
+    "result": "FAIL",
+    "coreBeforeBack": [
+      "provider",
+      "web",
+      "history",
+      "profile"
+    ],
+    "expected": "approved-low",
+    "observed": "approved-nutrition",
+    "inputs": [
+      "instrumentation KEYCODE_BACK",
+      "adb shell input keyevent KEYCODE_BACK"
+    ]
+  },
+  "replay90d": {
+    "run": 44776452939,
+    "job": 136427442693,
+    "artifact": 14649588543,
+    "api": 35,
+    "fixtureOnly": true,
+    "write": {
+      "elapsedMs": 8694,
+      "fixture": "SYNTHETIC_ONLY",
+      "jsonChars": 3937188,
+      "revision": 7,
+      "samples": 25920,
+      "status": "PASS",
+      "step": "write",
+      "virtualDays": 90
+    },
+    "restored": {
+      "elapsedMs": 1386,
+      "fixture": "SYNTHETIC_ONLY",
+      "jsonChars": 3937188,
+      "revision": 7,
+      "samples": 25920,
+      "status": "PASS",
+      "step": "restored",
+      "virtualDays": 90
+    }
+  },
+  "androidDevice": "NOT_TESTED",
+  "realXDrip": "NOT_TESTED",
+  "clinical": "NOT_VALIDATED"
+}

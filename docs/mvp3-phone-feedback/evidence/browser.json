@@ -14,5 +14,6 @@
     "11:00",
     "16:59",
     "17:00"
-  ]
+  ],
+  "journalPeriods": "PASS_SCOPED"
 }
