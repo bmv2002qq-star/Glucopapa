@@ -71,4 +71,4 @@ body[data-active-screen="approved-nutrition"].plate-modal-open #iframeApprovedNu
 .gf-calc-trace{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit}
 .gf-calc-error{color:#9b1c24}
 
-.high-target-frame{min-height:0;border:0;background:transparent}
+.high-target-frame,.low-target-frame{min-height:0;border:0;background:transparent}

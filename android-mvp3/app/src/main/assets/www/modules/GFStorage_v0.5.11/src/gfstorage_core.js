@@ -48,6 +48,7 @@
     food:['profile','mealSessions'],
     mealFlow:['mealSessions','events','cgm'],
     calculator:['profile','measurements','drugs','models','coefficients','events','coverage','cgm','results','proposals','mealSessions'],
+    lowReview:['profile','measurements','models','coefficients','events','coverage','cgm','cgmMetadata','mealSessions','conditionPeriods'],
     cgm:['cgm'],
     rinfast:['drugs','models','events','coverage','results'],
     levemir:['drugs','models','measurements','events','coverage','results'],
@@ -469,11 +470,15 @@
       if(i.distinctActionAcknowledged!==true||typeof i.distinctActionReason!=='string'||i.distinctActionReason.trim().length<8)
         fail('POSSIBLE_DUPLICATE_INJECTION: проверьте факт и подтвердите отдельное действие');
     }
-    function changeSession(role,action,sessionId,expectedVersion,opId,expectedRevision,mutator){
+    function changeSession(role,action,sessionId,expectedVersion,opId,expectedRevision,mutator,isSameOperation=null){
       id(sessionId);id(opId);
       if(!Number.isSafeInteger(expectedVersion)||expectedVersion<0)fail('Нужна версия приёма пищи');
       return commit(role,'mealSessions',action,(d,now)=>{
-        if(d.workflowLog.some(x=>x.id===opId))fail('Повтор идентификатора операции');
+        const prior=d.workflowLog.find(x=>x.id===opId);
+        if(prior){
+          if(isSameOperation?.(prior))return null;
+          fail('Повтор идентификатора операции');
+        }
         const index=d.mealSessions.findIndex(x=>x.id===sessionId),old=index<0?null:d.mealSessions[index];
         if((old?old.version:0)!==expectedVersion)fail('Конфликт версии приёма пищи');
         const updated=mutator(old?clone(old):null,d,now);
@@ -773,6 +778,22 @@
         },rev);
       }
       if(role==='actionWriter'){
+        port.confirmCompletedMeal=(item,rev)=>{
+          requireFields(item,['sessionId','opId','eatenAt','actualPlate','parentConfirmed'],
+            ['sessionId','opId','eatenAt','actualPlate','parentConfirmed']);
+          if(item.parentConfirmed!==true)fail('Сначала подтвердите, что еда уже съедена');
+          const eatenAt=iso(item.eatenAt),plate=validatePlate(item.actualPlate);
+          if(plate.items.length!==1||!(plate.items[0].amount>0)||plate.totals.amount!==plate.items[0].amount)
+            fail('Для быстрой записи требуется один продукт с фактическим количеством');
+          const matches=op=>op.actor===role&&op.action==='confirm_completed_meal'&&op.sessionId===item.sessionId&&
+            op.after.startedAt===eatenAt&&JSON.stringify(op.after.actualPlate)===JSON.stringify(plate);
+          return changeSession(role,'confirm_completed_meal',item.sessionId,0,item.opId,rev,(old,d,now)=>{
+            if(Date.parse(eatenAt)>Date.parse(now))fail('Фактически съеденная порция находится в будущем');
+            return {id:item.sessionId,version:1,status:'completed',createdAt:now,lastChangedAt:now,
+              startedAt:eatenAt,completedAt:eatenAt,plannedPlate:plate,actualPlate:plate,actualReason:'first_confirmation',
+              doseIntent:null,injectionIds:[]};
+          },matches);
+        };
         // Confirm factual administration + link to meal atomically; never infer from dose intent.
         port.recordSessionInjection=(item,rev)=>{
           requireFields(item,['sessionId','expectedVersion','opId','injectionId','insulinId','units','administeredAt','injectionSite','injectionContext','distinctActionAcknowledged','distinctActionReason'],['sessionId','expectedVersion','opId','injectionId','insulinId','units','administeredAt']);

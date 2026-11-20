@@ -72,13 +72,17 @@ function populate(node,state){node.replaceChildren();node.append(el('strong','И
   ack={source:'user_declared',scope:'all_meals',confirmedComplete:true,sourceRevision:rev,startIso:new Date(now-12.25*3600000).toISOString(),endIso:new Date(now+15*60000).toISOString(),declaredAtIso:new Date(now).toISOString()};
   render();
   root.GFHighTargetView?.render();
+  root.GFLOWView?.render();
  });
  node.append(btn);
- const reset=el('button','Сбросить подтверждение полноты');reset.type='button';reset.addEventListener('click',()=>{ack=null;render();root.GFHighTargetView?.render();});node.append(reset);
+ const reset=el('button','Сбросить подтверждение полноты');reset.type='button';reset.addEventListener('click',()=>{ack=null;render();root.GFHighTargetView?.render();root.GFLOWView?.render();});node.append(reset);
  if(result.status==='RESEARCH_INTERVAL')node.append(el('p','Исследовательский интервал COB: '+result.lowerG.toFixed(1)+'–'+result.upperG.toFixed(1)+' г.'));
  if(result.status==='MODEL_ZERO')node.append(el('p','В окне модели отсутствует вклад подтверждённой еды.'));
 }
-function render(){if(!root.document)return;const state=data();for(const id of IDS){const node=root.document.getElementById(id);if(node)populate(node,state)}}
+function render(){if(!root.document)return;const state=data();for(const id of IDS){
+ const node=root.document.getElementById(id)??root.document.getElementById('iframeLowTarget')?.contentDocument?.getElementById(id);
+ if(node)populate(node,state);
+}}
 function clear(){revision=null;ack=null;render()}
 function init(){if(initialised)return;initialised=true;render();root.document?.addEventListener?.('visibilitychange',()=>{if(!root.document.hidden)render()})}
 return Object.freeze({VERSION:'0.2.0-research-candidate',init,render,clear,optionsForRevision});

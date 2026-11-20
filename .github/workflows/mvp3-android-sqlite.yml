@@ -10,6 +10,7 @@ on:
       - qa/mvp3-cl041-20261119
       - qa/mvp3-cl042-formula-recovery-20261119
       - qa/mvp3-high-analytics-20261120
+      - qa/mvp3-low-20261120
 
 permissions:
   contents: read
@@ -48,6 +49,10 @@ jobs:
           if [[ -d qa/mvp3-high-analytics ]]; then
             python3 qa/mvp3-high-analytics/derive_high_interface.py --check
             node --test --test-reporter=tap qa/mvp3-high-analytics/*.test.cjs > qa-evidence/high-analytics.tap
+          fi
+          if [[ -d qa/mvp3-low ]]; then
+            python3 qa/mvp3-low/derive.py --check
+            node --test --test-reporter=tap qa/mvp3-low/*.test.cjs > qa-evidence/low.tap
           fi
           node qa/mvp3-calculators/stress.cjs qa-evidence > qa-evidence/stress.log
           node qa/mvp3-calculators/physio-stress.cjs qa-evidence > qa-evidence/physio.log

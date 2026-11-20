@@ -228,10 +228,7 @@ function renderCgm(cgm,active,nowMs){
  if(screenId==='cgm')renderChart($('cgmDetailChart'),cgm,nowMs,24);
  if(screenId==='home')renderChart($('cgmChart'),cgm,nowMs,12);
  if(screenId==='approved-nutrition')renderCalculationEvidence('meal',nowMs);
- if(screenId==='approved-low'){
-   $('observedLow').textContent=statusCgm.value+' · '+statusCgm.text;
-   renderCalculationEvidence('low',nowMs);
- }
+ if(screenId==='approved-low')globalThis.GFLOWView?.render();
  if(screenId==='approved-high')globalThis.GFHighTargetView?.render();
 }
 function refreshClockDisplays(){

@@ -181,19 +181,9 @@
 <p class="hint" id="gfResearchRev"></p><p id="gfContextMessage" class="gf-context-message" aria-live="polite"></p>
 </article></section>
 <section id="screen-approved-low" class="screen">
- <div class="section-header"><button type="button" class="inline-link" data-screen="home">← На главную</button><h2>Низкий сахар</h2></div>
- <article class="panel" id="localActionsLow">
-  <p>Здесь можно проверить показания и записать выполненное действие.</p>
-  <button type="button" class="btn primary" data-screen="meal-workflow">Записать фактически съеденное</button>
-  <button type="button" class="btn secondary" data-screen="approved-nutrition">Моя тарелка</button>
-  <button type="button" class="btn secondary" data-screen="home">Активность</button>
- </article>
- <article class="panel"><h3>Показания CGM</h3><p id="observedLow"></p></article>
- <details class="panel"><summary>Исследовательский профиль COB</summary><div id="w06cStudyLow">Подготовка исследовательских параметров</div></details>
- <article class="panel gf-calc-evidence" id="calcEvidenceLow">
-  <details><summary>Расчёт</summary><pre class="gf-calc-trace" data-calc-trace>Снимок данных недоступен.</pre></details>
-  <p class="gf-calc-error" data-calc-summary>Расчёт недоступен</p><ul class="gf-calc-error" data-calc-blockers></ul>
- </article>
+ <div class="section-header"><button type="button" class="inline-link" data-screen="home">← На главную</button></div>
+ <iframe class="approved-frame low-target-frame" id="iframeLowTarget" title="Низкий сахар"
+  sandbox="allow-same-origin" src="integration/approved_routes/LOW_v0.2_VIEW.html"></iframe>
 </section>
 <section id="screen-approved-high" class="screen">
  <div class="section-header"><button type="button" class="inline-link" data-screen="home">← На главную</button></div>
@@ -266,6 +256,11 @@
 <script src="integration/GFMealAbsorption_v0.1.0.js"></script>
 <script src="modules/GFHighTarget_v0.1.4/gfhigh_target_core.js"></script>
 <script src="integration/GFHighTargetStorage_v0.1.1.js"></script>
+<script src="modules/GFLOW_v0.4.0/GFForecastHypo_v0.3.0.js"></script>
+<script src="modules/GFLOW_v0.4.0/GFHypoScenario_v0.3.2.js"></script>
+<script src="modules/GFLOW_v0.4.0/GFXDripLowAlert_v0.1.0.js"></script>
+<script src="modules/GFLOW_v0.4.0/GFLOWCore_v0.4.0.js"></script>
+<script src="integration/GFLOWStorage_v0.4.1.js"></script>
 <script src="integration/GFHighLowInputGate_v0.1.0.js"></script>
 <script src="integration/GFModuleHub_v0.2.0.js"></script>
 <script src="integration/GFProviderCgm_v0.1.0.js"></script>
@@ -280,6 +275,7 @@
 <script src="integration/GFModuleUI_v0.2.1.js"></script><script src="integration/GFModuleDirectory_v0.1.0.js"></script><script src="integration/GFSettingsPanel_v0.1.0.js"></script><script src="integration/GFMealActualPanel_v0.1.0.js"></script>
   <script src="integration/GFCOBAutoPanel_v0.2.0.js"></script>
 <script src="integration/GFHighTargetView_v0.1.0.js"></script>
+<script src="integration/GFLOWView_v0.4.1.js"></script>
 <script src="integration/GFInjectionTimingPanel_v0.1.0.js"></script>
 <script src="integration/GFResearchBoot_v0.1.0.js"></script>
 <script src="modules/GFAAPSResearch_v0.1.0/core/utils.js"></script>

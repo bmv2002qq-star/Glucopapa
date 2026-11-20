@@ -78,4 +78,12 @@ if [[ ${ANDROID_QA_EXTENDED:-false} == true ]]; then
     "$adb" -s "$serial" shell am instrument -w -r -e fixture SYNTHETIC -e phase timing-history "$runner" \
       | tee "$evidence/injection-timing-history.log"
     grep -F 'QA_PASS timing-history' "$evidence/injection-timing-history.log"
+    for step in low-fact-write low-fact-restored; do
+        "$adb" -s "$serial" shell am instrument -w -r -e fixture SYNTHETIC -e phase stock -e step "$step" "$runner" \
+          | tee "$evidence/$step.log"
+        grep -F 'QA_PASS stock' "$evidence/$step.log"
+        if [[ $step == low-fact-write ]]; then
+            "$adb" -s "$serial" shell am force-stop com.glucopapa.shell
+        fi
+    done
 fi

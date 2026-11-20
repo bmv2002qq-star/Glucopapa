@@ -159,6 +159,66 @@
             assert(disk.code==='FOUND'&&disk.revision===current.revision&&
                 JSON.parse(disk.data).profile.highActivity.coefficients.high===1.07,'HIGH preferences missing from SQLite');
             return {status:'PASS',fixture:'SYNTHETIC',step:action,revision:current.revision,sqlite:true};
+        } else if (action === 'low-fact-write' || action === 'low-fact-restored') {
+            GPApp.open('approved-low');
+            const frame = by('iframeLowTarget');
+            const deadline = Date.now() + 10_000;
+            while (!frame.contentDocument?.getElementById('lowTrace')?.textContent && Date.now() < deadline) {
+                await new Promise(resolve => setTimeout(resolve, 50));
+            }
+            const doc = frame.contentDocument;
+            const previous = snapshot();
+            if (action === 'low-fact-write') {
+                assert(previous.mealSessions.length === 1 && previous.mealSessions[0].status === 'completed',
+                    'Expected the earlier synthetic catalog meal');
+                const product = doc.getElementById('calcProduct');
+                assert(product.options.length === 2, 'LOW did not read the confirmed catalog item');
+                product.selectedIndex = 1;
+                product.dispatchEvent(new Event('change', {bubbles: true}));
+                const amount = doc.getElementById('juiceNumber');
+                amount.value = '25';
+                amount.dispatchEvent(new Event('input', {bubbles: true}));
+                doc.getElementById('calculate').click();
+                assert(snapshot().revision === previous.revision && doc.getElementById('applyResult').disabled,
+                    'Calculation created a fact or offered a quantity');
+                const record = doc.getElementById('journal');
+                const confirm = window.confirm;
+                let accept = false;
+                try {
+                    window.confirm = message => {
+                        assert(message.includes('уже съедена') && message.includes('25 г'), 'Wrong LOW prompt');
+                        return accept;
+                    };
+                    record.click();
+                    assert(snapshot().revision === previous.revision, 'Cancelled LOW operation modified GFStorage');
+                    accept = true;
+                    record.click();
+                    record.click();
+                } finally { window.confirm = confirm; }
+                assert(snapshot().revision === previous.revision + 1, 'LOW did not store one new revision');
+            }
+            const current = snapshot();
+            const facts = current.mealSessions.filter(meal => meal.id.startsWith('low-'));
+            assert(facts.length === 1 && facts[0].status === 'completed', 'LOW created missing or duplicate portions');
+            const fact = facts[0];
+            assert(fact.actualPlate.items[0].amount === 25 && fact.actualPlate.items[0].glycemicIndex === 49 &&
+                Math.abs(fact.actualPlate.totals.carbs - 4.975) < 1e-8, 'LOW changed the factual portion');
+            const saved = JSON.parse(GFNativeStorage.readSnapshot('GFV2SHELL_DATA_v1_demo'));
+            assert(saved.code === 'FOUND' && saved.revision === current.revision &&
+                JSON.stringify(JSON.parse(saved.data).mealSessions.find(row => row.id === fact.id)) === JSON.stringify(fact),
+                'LOW fact missing from native SQLite');
+            const exported = JSON.parse(GFAuditExportStorageAdapter.exportJson(GPApp.getStorage()));
+            assert(JSON.stringify(exported.mealSessions.find(row => row.id === fact.id)) === JSON.stringify(fact),
+                'LOW fact differs from export');
+            GPApp.open('approved-journal');
+            const diary = by('iframeApprovedJournal');
+            const ready = Date.now() + 10_000;
+            while (!diary.contentDocument?.querySelector('#tbody')?.textContent.includes('25 г') && Date.now() < ready) {
+                await new Promise(resolve => setTimeout(resolve, 50));
+            }
+            assert(diary.contentDocument.querySelector('#tbody').textContent.includes('25 г'), 'LOW fact missing from journal');
+            return {status: 'PASS', fixture: 'SYNTHETIC', step: action, id: fact.id,
+                revision: current.revision, amount: 25, carbs: 4.975, gi: 49, sqlite: true};
         } else if (action === 'export') {
             GPApp.open('system');
             assert(by('screen-system').classList.contains('active'), 'System route did not open');

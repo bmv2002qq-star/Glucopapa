@@ -92,12 +92,14 @@ def verify(page, origin, out):
     page.screenshot(path=out / 'meal-model-setting-390.png')
 
     page.evaluate("GPApp.open('approved-low')")
-    page.locator('#screen-approved-low summary').filter(has_text='Исследовательский профиль COB').click()
-    panel = page.locator('#w06cStudyLow')
+    frame = page.frame_locator('#iframeLowTarget')
+    frame.locator('#lowTracePanel summary').click()
+    panel = frame.locator('#w06cStudyLow')
     panel.get_by_role('button',name='Подтверждаю, что еды за последние 12 часов не было').click()
     assert 'PARENT_ATTESTED_EMPTY_WINDOW' in panel.inner_text()
     low = panel.inner_text()
     assert 'GFCOB 0.1.1' in low and '0.0–0.0' in low
+    assert 'GFCOB 0.1.1' in frame.locator('#lowTrace').inner_text()
     assert not errors, errors
     assert page.evaluate('JSON.stringify(GPApp.getStorage().exportState().forecasts)') == frozen
     page.screenshot(path=out / 'declared-empty-window-390.png')

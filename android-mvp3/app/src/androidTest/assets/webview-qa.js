@@ -52,7 +52,7 @@
             assert(!by('screen-' + name).querySelector('#calcDose, #calcFood'),
                 'Treatment calculator is exposed');
         }
-        for (const [route, suffix] of [['approved-low', 'Low'], ['approved-nutrition', 'Meal']]) {
+        for (const [route, suffix] of [['approved-nutrition', 'Meal']]) {
             await stage(route);
             const panel = by('calcEvidence' + suffix);
             assert(panel.querySelector('summary').textContent === 'Расчёт', 'Calculation disclosure missing ' + route);
@@ -63,6 +63,17 @@
             assert(panel.querySelector('[data-calc-trace]').textContent.includes('ревизия ' + baseline.revision),
                 'Calculation diagnostics did not bind to snapshot revision');
         }
+        await stage('approved-low');
+        const low = await until(() => {
+            const doc = by('iframeLowTarget').contentDocument;
+            return doc?.getElementById('lowTrace')?.textContent ? doc : null;
+        }, 'LOW frame failed to load');
+        assert(low.querySelectorAll('main > section').length === 3, 'LOW card count');
+        assert(low.getElementById('heroGlucose').textContent === '—' &&
+            low.getElementById('journal').disabled && low.getElementById('applyResult').disabled,
+            'LOW substituted missing data');
+        assert(low.getElementById('lowTrace').textContent.includes('ревизия ' + baseline.revision),
+            'LOW diagnostics did not bind to current revision');
         await stage('approved-high');
         const high=await until(()=>{
             const node=by('iframeHighTarget').contentDocument?.getElementById('status');

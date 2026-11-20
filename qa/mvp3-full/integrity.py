@@ -46,13 +46,14 @@ def main():
     entry.feed((web / 'index.html').read_text(encoding='utf-8'))
     order = [line.strip() for line in (web / 'runtime/LOAD_ORDER.txt').read_text().splitlines()
              if line.strip() and not line.startswith('#')]
-    assert order == entry.scripts and len(set(order)) == len(order) == 77
+    assert order == entry.scripts and len(set(order)) == len(order) == 83
     assert order[0] == 'runtime/webview-compat.js'
     core = [name for name in order if re.search(r'GFStorage.*gfstorage_core\.js$', name)]
     assert core == ['modules/GFStorage_v0.5.11/src/gfstorage_core.js']
     assert not any(token in name for name in order for token in ('ReplayLab', 'GFxDrip', 'GFNutrition_FALLBACK'))
-    assert len(entry.frames) == 4 and all(name.startswith('approved/') for name in entry.frames[:3])
-    assert entry.frames[3] == 'integration/approved_routes/GFHighTarget_v0.1.3_VIEW.html'
+    assert len(entry.frames) == 5 and all(name.startswith('approved/') for name in entry.frames[:3])
+    assert entry.frames[3:] == ['integration/approved_routes/LOW_v0.2_VIEW.html',
+                                'integration/approved_routes/GFHighTarget_v0.1.3_VIEW.html']
     for resource in entry.scripts + entry.frames:
         url = urlsplit(resource)
         assert not url.scheme and not url.netloc and (web / resource).is_file(), resource
@@ -72,7 +73,8 @@ def main():
     assert len(databases) == 1
 
     files = {p.relative_to(web).as_posix(): p.read_bytes() for p in web.rglob('*') if p.is_file()}
-    assert len(files) == 126
+    assert len(files) == 133
+    assert not any('GFLOWPreviewFixture' in name for name in files)
     unchanged = None
     changes = []
     if args.archive_web:

@@ -32,6 +32,7 @@ def run(browser, origin, output, legacy=False):
     metadata = page.evaluate('GPModuleDirectory.list()')
     assert len(metadata) == len({module['id'] for module in metadata}) == 29
     versions = {module['id']: module['version'] for module in metadata}
+    assert 'LOW v0.4.0' in versions['low']
     assert 'HIGH v0.1.4' in versions['high']
     assert 'v0.1.1' in versions['injection-analytics'] and 'v0.2.1' in versions['injection-analytics']
     results = []
@@ -78,8 +79,10 @@ def run(browser, origin, output, legacy=False):
         'approved/GFNutrition_v0.4.6_LIVE.html',
         'approved/GFSettings_v0.1.4_LIVE.html',
         'integration/approved_routes/GFHighTarget_v0.1.3_VIEW.html',
+        'integration/approved_routes/LOW_v0.2_VIEW.html',
     ]
     assert page.locator('#iframeHighTarget').get_attribute('sandbox') == 'allow-same-origin'
+    assert page.locator('#iframeLowTarget').get_attribute('sandbox') == 'allow-same-origin'
     for width in (320, 390, 428, 1280):
         page.set_viewport_size({'width': width, 'height': 900})
         page.locator('#nav [data-screen="home"]').click()

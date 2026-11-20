@@ -39,6 +39,11 @@ integration/GFMealCoverageStudy_v0.1.1.js
 integration/GFMealAbsorption_v0.1.0.js
 modules/GFHighTarget_v0.1.4/gfhigh_target_core.js
 integration/GFHighTargetStorage_v0.1.1.js
+modules/GFLOW_v0.4.0/GFForecastHypo_v0.3.0.js
+modules/GFLOW_v0.4.0/GFHypoScenario_v0.3.2.js
+modules/GFLOW_v0.4.0/GFXDripLowAlert_v0.1.0.js
+modules/GFLOW_v0.4.0/GFLOWCore_v0.4.0.js
+integration/GFLOWStorage_v0.4.1.js
 integration/GFHighLowInputGate_v0.1.0.js
 integration/GFModuleHub_v0.2.0.js
 integration/GFProviderCgm_v0.1.0.js
@@ -56,6 +61,7 @@ integration/GFSettingsPanel_v0.1.0.js
 integration/GFMealActualPanel_v0.1.0.js
 integration/GFCOBAutoPanel_v0.2.0.js
 integration/GFHighTargetView_v0.1.0.js
+integration/GFLOWView_v0.4.1.js
 integration/GFInjectionTimingPanel_v0.1.0.js
 integration/GFResearchBoot_v0.1.0.js
 modules/GFAAPSResearch_v0.1.0/core/utils.js
