@@ -1,0 +1,18 @@
+{
+  "status": "PASS",
+  "baseline": false,
+  "lowOptions": 7,
+  "measurementsPersist": true,
+  "writtenMeasurementVisible": true,
+  "backMethod": "function",
+  "foodDiaryCoefficients": true,
+  "syntheticLiveSwitchAndDeduplication": true,
+  "localMealTimeBoundaries": [
+    "07:59",
+    "08:00",
+    "10:59",
+    "11:00",
+    "16:59",
+    "17:00"
+  ]
+}

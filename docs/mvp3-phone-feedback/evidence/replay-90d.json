@@ -1,0 +1,16 @@
+{
+  "status": "PASS",
+  "fixture": "SYNTHETIC_ONLY",
+  "virtualDays": 90,
+  "cgm": 25920,
+  "confirmedInjections": 6,
+  "sportSessions": 6,
+  "reopenedAt": [
+    30,
+    60,
+    90
+  ],
+  "revision": 25,
+  "sha256": "80380daf2a58cbce0dfec19fdb78c96d2089a3fc17e552ba39d0a37bafdf9344",
+  "elapsedMs": 5902
+}

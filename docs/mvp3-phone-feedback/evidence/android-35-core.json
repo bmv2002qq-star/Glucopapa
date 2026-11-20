@@ -1,0 +1,67 @@
+{
+  "production-isolation": {
+    "provider": "NO_PROVIDER",
+    "sqlite": "ABSENT",
+    "status": "PASS",
+    "variant": "debug"
+  },
+  "provider-write": {
+    "checked": "CAS_AND_DEDUPLICATION",
+    "fixture": "SYNTHETIC_PROVIDER_PAYLOAD",
+    "revision": 1,
+    "status": "PASS"
+  },
+  "provider-restored": {
+    "checked": "FORCE_STOP_RELAUNCH",
+    "fixture": "SYNTHETIC_PROVIDER_PAYLOAD",
+    "revision": 1,
+    "status": "PASS"
+  },
+  "history-write": {
+    "checked": "HTTP_AND_ATOMIC_IMPORT",
+    "fixture": "SYNTHETIC_LOOPBACK",
+    "points": 3,
+    "revision": 2,
+    "status": "PASS"
+  },
+  "history-restored": {
+    "checked": "FORCE_STOP_RELAUNCH",
+    "fixture": "SYNTHETIC_LOOPBACK",
+    "points": 3,
+    "revision": 2,
+    "status": "PASS"
+  },
+  "web-write": {
+    "checked": "HTTP_UNITS_DEDUPLICATION",
+    "fixture": "SYNTHETIC_LOCAL_WEB_SERVICE",
+    "points": 4,
+    "revision": 3,
+    "status": "PASS"
+  },
+  "web-restored": {
+    "checked": "FORCE_STOP_RELAUNCH",
+    "fixture": "SYNTHETIC_LOCAL_WEB_SERVICE",
+    "points": 4,
+    "revision": 3,
+    "status": "PASS"
+  },
+  "profile-write": {
+    "fixture": "SYNTHETIC_PROFILE",
+    "height": 120,
+    "status": "PASS",
+    "step": "profile-write",
+    "weight": 20
+  },
+  "profile-restored": {
+    "fixture": "SYNTHETIC_PROFILE",
+    "height": 120,
+    "status": "PASS",
+    "step": "profile-restored",
+    "weight": 20
+  },
+  "production-back": {
+    "status": "PASS",
+    "routes": "nutrition → LOW → home",
+    "input": "ANDROID_KEYCODE_BACK"
+  }
+}
