@@ -15,6 +15,9 @@ on:
       publish-pilot-apk:
         type: boolean
         default: false
+      replay-only:
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -26,6 +29,7 @@ jobs:
     env:
       ANDROID_QA_API: ${{ inputs.api }}
       ANDROID_QA_EXTENDED: ${{ inputs.extended }}
+      ANDROID_QA_REPLAY_ONLY: ${{ inputs.replay-only }}
     steps:
       - name: Prepare evidence directory
         shell: bash

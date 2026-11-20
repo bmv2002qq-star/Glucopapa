@@ -57,6 +57,19 @@ if [[ $api == 31 ]]; then
 fi
 # Let the initial boot broadcasts and WebView provider settle.
 sleep 10
+if [[ ${ANDROID_QA_REPLAY_ONLY:-false} == true ]]; then
+    fixture=com.glucopapa.shell.fixture
+    runner="$fixture.test/com.glucopapa.shell.qa.StorageInstrumentation"
+    "$adb" -s "$serial" install android-mvp3/app/build/outputs/apk/fixture/app-fixture.apk
+    "$adb" -s "$serial" install -t android-mvp3/app/build/outputs/apk/androidTest/fixture/app-fixture-androidTest.apk
+    for step in write restored; do
+        "$adb" -s "$serial" shell am force-stop "$fixture"
+        "$adb" -s "$serial" shell am instrument -w -r -e fixture SYNTHETIC -e phase pilot-replay -e step "$step" "$runner" \
+            | tee "$evidence/pilot-replay-$step.log"
+        grep -F 'QA_PASS pilot-replay' "$evidence/pilot-replay-$step.log"
+    done
+    exit 0
+fi
 
 # Check the exact ordinary APK before installing the separately named fixture.
 ordinary_apk=android-mvp3/app/build/outputs/apk/debug/app-debug.apk
@@ -95,7 +108,7 @@ grep -F 'QA_PASS back' "$evidence/production-back.log"
 # The tested fixture has its own package and app-private directory.
 export GLUCOPAPA_QA_PACKAGE=com.glucopapa.shell.fixture
 smoke_options=(--automated --fixture-test-apk android-mvp3/app/build/outputs/apk/androidTest/fixture/app-fixture-androidTest.apk)
-if [[ $api == 31 ]]; then
+if [[ $api == 31 || ${ANDROID_QA_EXTENDED:-false} == true ]]; then
     smoke_options+=(--stock-webview)
 fi
 python3 qa/mvp3-android/sqlite_smoke.py "${smoke_options[@]}" --adb "$adb" --serial "$serial" \

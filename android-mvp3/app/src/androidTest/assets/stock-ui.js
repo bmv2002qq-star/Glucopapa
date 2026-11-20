@@ -194,8 +194,12 @@
                 assert(previous.mealSessions.length === 1 && previous.mealSessions[0].status === 'completed',
                     'Expected the earlier synthetic catalog meal');
                 const product = doc.getElementById('calcProduct');
-                assert(product.options.length === 2, 'LOW did not read the confirmed catalog item');
-                product.selectedIndex = 1;
+                const options = [...product.options];
+                const confirmed = previous.mealSessions[0].actualPlate.items[0].name;
+                const localOption = options.find(option=>option.textContent.startsWith(confirmed+' · '));
+                assert(localOption && options.some(option=>option.textContent==='Яблоко · г'),
+                    'LOW did not include the shared confirmed item and the approved quick catalog');
+                product.value = localOption.value;
                 product.dispatchEvent(new Event('change', {bubbles: true}));
                 const amount = doc.getElementById('juiceNumber');
                 amount.value = '25';

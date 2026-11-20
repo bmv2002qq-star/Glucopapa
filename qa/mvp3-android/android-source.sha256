@@ -3,7 +3,7 @@ d883e4afc8125dc3f4356efdd0ac09239bfd8259878aa332f06a50ac5b3cb37e  android-mvp3/.
 48339984e1d48ac1330e956d5a879e5c356d4498b53717d949ba8dc336881ea4  android-mvp3/app/build.gradle
 c7e9fc8e0c802a63aba446c56661e579b6449f3d6e52f80c568487eebd40e25b  android-mvp3/app/src/androidTest/assets/pilot-replay-qa.js
 11a620c7dedf1c28849ba6f4894edca5d2f6e2f71cafd4cb1642f5dfeb34d253  android-mvp3/app/src/androidTest/assets/production-qa.js
-2bc65fbb88b9fc6324a72de8f0ee61fb8a5af73fefb572d1046d0a97b482212e  android-mvp3/app/src/androidTest/assets/stock-ui.js
+f2686f381e5777fe1584334c77772b1d0bd3b36f125bf7051fd9c5a244e26ba7  android-mvp3/app/src/androidTest/assets/stock-ui.js
 b34c50a82cbb612ebe8c04f4f0707efb6dcfba3495d699de42708e7f1a8b999f  android-mvp3/app/src/androidTest/assets/timing-history-qa.js
 e446ebf255dc2d3ebd5507ab15f84fffa633231811cac3ba07ec7a77b314dcbd  android-mvp3/app/src/androidTest/assets/webview-qa.js
 ed7dc4d9c0474c08d2c83d2b61abbaac255dc3ae02ef2004ec93a21830d0ada5  android-mvp3/app/src/androidTest/java/com/glucopapa/shell/ExportAndTraceChecks.java

@@ -1,0 +1,23 @@
+name: GlucoPapa 0.3.17 Additional Android Verification
+on:
+  push:
+    branches: [qa/mvp3-phone-verification-20261120]
+permissions:
+  contents: read
+jobs:
+  replay-android-15:
+    uses: ./.github/workflows/mvp3-android-device.yml
+    with:
+      api: 35
+      replay-only: true
+      artifact-suffix: '-90d'
+  extended:
+    strategy:
+      fail-fast: false
+      matrix:
+        api: [31, 34, 35]
+    uses: ./.github/workflows/mvp3-android-device.yml
+    with:
+      api: ${{ matrix.api }}
+      extended: true
+      artifact-suffix: '-followup'
