@@ -52,6 +52,8 @@
     actionWriter:['events','mealSessions','coverage','workflowLog'],
     food:['profile','mealSessions'],
     mealFlow:['mealSessions','events','cgm'],
+    mealTiming:['mealSessions','events'],
+    mealTimingPublisher:[],
     calculator:['profile','measurements','drugs','models','coefficients','events','coverage','cgm','results','proposals','mealSessions'],
     lowReview:['profile','measurements','models','coefficients','events','coverage','cgm','cgmMetadata','mealSessions','conditionPeriods'],
     cgm:['cgm'],
@@ -213,6 +215,33 @@
       fail('Некорректное происхождение исторического IOB');
     range(evidence.modelUnits,0,100);
     return clone(evidence);
+  }
+
+  function validateTimingEstimate(estimate){
+    const fields=['version','estimator','minutes','rangeMinutes','matchedCases','distinctDays','clinicalUse'];
+    requireFields(estimate,fields,fields);
+    const {minutes,rangeMinutes,matchedCases,distinctDays}=estimate;
+    if(estimate.version!=='0.2.1-history-only'||estimate.estimator!=='weighted_historical_median_v1'||
+       estimate.clinicalUse!==false||!Number.isInteger(minutes)||minutes<0||minutes>60||
+       !Array.isArray(rangeMinutes)||rangeMinutes.length!==2||
+       rangeMinutes.some(value=>!Number.isInteger(value)||value<0||value>60)||
+       rangeMinutes[0]>rangeMinutes[1]||!Number.isInteger(matchedCases)||matchedCases<4||matchedCases>20||
+       !Number.isInteger(distinctDays)||distinctDays<3||distinctDays>matchedCases)
+      fail('Некорректный результат GFInjectionAnalytics');
+  }
+  function validateStoredTiming(timing,shot,session,operations){
+    const fields=['injectionId','sessionId','mealVersion','sourceRevision','referenceAt','chosenAt','estimate'];
+    requireFields(timing,fields,fields);
+    validateTimingEstimate(timing.estimate);
+    const operation=operations.get(timing.sourceRevision+1);
+    if(timing.injectionId!==shot.id||timing.sessionId!==session.id||shot.insulinId!=='rinfast'||
+       shot.linkedMealSessionId!==session.id||iso(timing.referenceAt)!==shot.administeredAt||
+       Date.parse(iso(timing.chosenAt))<Date.parse(shot.administeredAt)||
+       !Number.isSafeInteger(timing.sourceRevision)||timing.sourceRevision<0||
+       operation?.action!=='confirm_injection'||operation.actor!=='actionWriter'||operation.sessionId!==session.id||
+       operation.before?.version!==timing.mealVersion||operation.before?.injectionIds?.length!==0||
+       !operation.after.injectionIds.includes(shot.id)||operation.at!==timing.chosenAt)
+      fail('Некорректная связь интервала с фактом инъекции');
   }
 
   function validateForecastVisibility(value){
@@ -430,6 +459,7 @@
     // The meal links are references, NOT additional injections. Each actual injection
     // belongs to at most one meal session; a broken link blocks the projection.
     const linkedInjectionIds=new Set();
+    const timingOperations=new Map(s.workflowLog.map(op=>[op?.revision,op]));
     for(const session of s.mealSessions){
       if(!object(session)||!Array.isArray(session.injectionIds))fail('Повреждена связь еды с инъекциями');
       if(Object.hasOwn(session,'mealType')&&!MEAL_TYPES.has(session.mealType))fail('Некорректный тип приёма пищи');
@@ -438,12 +468,13 @@
         if(linkedInjectionIds.has(injectionId))fail('DUPLICATE_INJECTION_LINK: одна инъекция привязана к нескольким приёмам еды');
         linkedInjectionIds.add(injectionId);
         const injection=confirmedInjectionIds.get(injectionId);
+        if(injection.mealTiming!==undefined)validateStoredTiming(injection.mealTiming,injection,session,timingOperations);
         if(injection.linkedMealSessionId&&injection.linkedMealSessionId!==session.id)
           fail('INJECTION_LINK_CONFLICT: несогласованная принадлежность инъекции');
       }
     }
     for(const injection of confirmedInjectionIds.values()){
-      if(injection.linkedMealSessionId&&!linkedInjectionIds.has(injection.id))
+      if((injection.linkedMealSessionId||injection.mealTiming!==undefined)&&!linkedInjectionIds.has(injection.id))
         fail('ORPHAN_LINKED_INJECTION: инъекция указывает на еду без обратной связи');
     }
     // Reject synthetic or foreign forecast records masquerading as confirmed actuals.
@@ -486,6 +517,9 @@
   }
   function createHost({driver=null,clock=()=>new Date().toISOString()}={}){
     let approvedQuickFoods=[];
+    // This host owns the transient proposal. Only the accepted evidence is persisted
+    // with a confirmed injection, under the same GFStorage revision.
+    let currentTiming=null;
     function bindApprovedQuickFoods(raw){
       if(!Array.isArray(raw))fail('Нет утверждённого каталога продуктов');
       approvedQuickFoods=QUICK_FOOD_IDS.map(foodId=>{
@@ -546,7 +580,13 @@
       return frozen({revision:rev,recordId:String(target)});
     }
     function projectedEventForAnalytics(e){
-      const o=clone(e);if(o.type!=='insulin_injection'||!o.injectionContext)return o;
+      const o=clone(e);
+      if(o.type!=='insulin_injection')return o;
+      if(!o.injectionContext&&o.linkedMealSessionId&&o.iobEvidence){
+        const {modelUnits,activity,settingKey}=o.iobEvidence;
+        o.injectionContext={iobU:modelUnits,activity,settingRevision:settingKey,mealGroup:'with_meal'};
+      }
+      if(!o.injectionContext)return o;
       const c=o.injectionContext;
       for(const [key,out] of [['illnessPeriodId','illnessPeriod'],['activityPeriodId','activityPeriod']]){
         if(c[key]){
@@ -643,6 +683,29 @@
         getRevision:()=>state.revision,
         subscribe:(cb)=>{if(typeof cb!=='function')fail('Требуется callback');listeners.add(cb);return ()=>listeners.delete(cb);},
       };
+      if(role==='mealTiming'){
+        port.readPreview=sessionId=>currentTiming?.sessionId===sessionId&&
+          currentTiming.sourceRevision===state.revision?currentTiming:null;
+      }
+      if(role==='mealTimingPublisher'){
+        port.publish=(input,rev)=>{
+          const fields=['sessionId','units','site','referenceAt','estimate','code'];
+          requireFields(input,fields,fields);
+          if(rev!==state.revision)fail('REVISION_CHANGED');
+          const meal=state.mealSessions.find(row=>row.id===input.sessionId);
+          requireMeal(meal,'draft','planned');
+          if(input.estimate!==null){
+            if(meal.injectionIds.length||!Number.isInteger(input.units*2)||typeof input.units!=='number')
+              fail('Интервал не относится к ожидаемому уколу');
+            range(input.units,0.5,50);
+            if(input.site!==null)validateSite({region:input.site});
+            validateTimingEstimate(input.estimate);
+          }else text(input.code,100);
+          if(Date.parse(iso(input.referenceAt))>Date.parse(iso(clock())))fail('Будущее время анализа');
+          currentTiming=frozen({...input,mealVersion:meal.version,sourceRevision:rev});
+          return currentTiming;
+        };
+      }
       if(role==='food'){
         port.createDraft=(item,rev)=>{
           requireFields(item,['id','plate','mealType'],['id','plate']);id(item.id);const plate=validatePlate(item.plate);
@@ -982,7 +1045,7 @@
         };
         // Confirm factual administration + link to meal atomically; never infer from dose intent.
         port.recordSessionInjection=(item,rev)=>{
-          requireFields(item,['sessionId','expectedVersion','opId','injectionId','insulinId','units','administeredAt','injectionSite','injectionContext','iobEvidence','distinctActionAcknowledged','distinctActionReason'],['sessionId','expectedVersion','opId','injectionId','insulinId','units','administeredAt']);
+          requireFields(item,['sessionId','expectedVersion','opId','injectionId','insulinId','units','administeredAt','injectionSite','injectionContext','iobEvidence','acceptTiming','distinctActionAcknowledged','distinctActionReason'],['sessionId','expectedVersion','opId','injectionId','insulinId','units','administeredAt']);
           id(item.injectionId);drug(item.insulinId);range(item.units,0.001,200);iso(item.administeredAt);
           if(Date.parse(item.administeredAt)>Date.parse(clock())+60000)fail('Нельзя подтверждать будущую инъекцию');
           return changeSession(role,'confirm_injection',item.sessionId,item.expectedVersion,item.opId,rev,(old,d,now)=>{
@@ -998,6 +1061,16 @@
                 fail('Снимок исторического IOB устарел');
               extra.iobEvidence=validatePreinjectionIob(item.iobEvidence,
                 {id:item.injectionId,insulinId:item.insulinId,administeredAt:item.administeredAt},d.events,rev);
+            }
+            if(item.acceptTiming===true&&currentTiming?.estimate){
+              const result=currentTiming;
+              if(result.sourceRevision!==rev||result.sessionId!==old.id||result.mealVersion!==old.version||
+                 result.units!==item.units||result.site!==(extra.injectionSite?.region??null)||
+                 result.referenceAt!==item.administeredAt||old.injectionIds.length||old.startedAt||
+                 item.insulinId!=='rinfast'||Date.parse(item.administeredAt)>Date.parse(now))
+                fail('MEAL_TIMING_STALE');
+              extra.mealTiming={injectionId:item.injectionId,sessionId:old.id,mealVersion:old.version,
+                sourceRevision:rev,referenceAt:result.referenceAt,chosenAt:now,estimate:result.estimate};
             }
             d.events.push({type:'insulin_injection',status:'confirmed',id:item.injectionId,insulinId:item.insulinId,units:item.units,administeredAt:item.administeredAt,linkedMealSessionId:item.sessionId,...extra,
               ...(item.distinctActionAcknowledged?{distinctActionAcknowledged:true,distinctActionReason:item.distinctActionReason}: {})});

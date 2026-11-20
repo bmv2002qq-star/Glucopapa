@@ -25,7 +25,7 @@
       activity,settingKey:setting?.length<=512?setting:null,clinicalUse:false};
   }
 
-  function record({host,item,mealId=null,confirmed,revision}) {
+  function record({host,item,mealId=null,confirmed,revision,mealWorkflow=false}) {
     if(confirmed!==true)throw Error('INJECTION_CONFIRMATION_REQUIRED');
     const writer=host.connect('actionWriter');
     const existing=writer.read('events').find(row=>row.id===item.id);
@@ -42,7 +42,7 @@
     if(item.insulinId!=='rinfast')throw Error('MEAL_LINK_RAPID_ONLY');
     const meal=writer.read('mealSessions').find(row=>row.id===mealId);
     if(!meal||!allowedStates.includes(meal.status))throw Error('MEAL_LINK_UNAVAILABLE');
-    if(meal.startedAt&&ts(item.administeredAt)>ts(meal.startedAt))throw Error('MEAL_LINK_AFTER_START');
+    if(!mealWorkflow&&meal.startedAt&&ts(item.administeredAt)>ts(meal.startedAt))throw Error('MEAL_LINK_AFTER_START');
     const settings=host.connect('settings').getSnapshot();
     if(settings.revision!==revision)throw Error('REVISION_CHANGED');
     const iobEvidence=modelEvidence({host,atIso:item.administeredAt,revision,settings});
@@ -50,11 +50,12 @@
       sessionId:meal.id,expectedVersion:meal.version,opId:'confirm:'+item.id,injectionId:item.id,
       insulinId:item.insulinId,units:item.units,administeredAt:item.administeredAt,
       ...(item.injectionSite?{injectionSite:item.injectionSite}:{}),
+      ...(mealWorkflow?{acceptTiming:!meal.startedAt}:{}),
       ...(iobEvidence?{iobEvidence}:{}),
     },revision);
   }
 
-  const api=Object.freeze({record,allowedStates:Object.freeze(allowedStates)});
+  const api=Object.freeze({record,modelEvidence,allowedStates:Object.freeze(allowedStates)});
   root.GFInjectionFact=api;
   if(typeof module==='object'&&module.exports)module.exports=api;
 })(globalThis);
