@@ -159,6 +159,10 @@ test('One manual confirmed portion creates one durable completed meal and an ide
     assert.equal(one[0].actualPlate.items[0].glycemicIndex, 49);
     assert.equal(durable.events.length, 0);
     assert.deepEqual(JSON.parse(audit.exportJson(host)).mealSessions.find(row => row.id === one[0].id), one[0]);
+    const cob = fromWeb('integration/GFAutoCOBProfile_v0.1.0.js').inspect({host, nowMs: at});
+    assert.equal(cob.sourceRevision, durable.revision);
+    assert.equal(cob.rows.filter(row => row.mealId === one[0].id).length, 1);
+    assert.equal(cob.rows.find(row => row.mealId === one[0].id).recordedCarbsG, 14.925);
     const rebooted = Storage.createHost({clock: () => iso(at), driver});
     assert.equal(low.recordFact({host: rebooted, confirmation: true, pending,
         expectedRevision: durable.revision}).idempotent, true);

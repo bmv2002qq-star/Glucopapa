@@ -53,7 +53,8 @@
    Fixed parent navigation can intercept the modal's confirmation button on 320/390px.
    Keep the parent's navigation in document flow only on the approved nutrition screen;
    no approved HTML, application data port, or user-facing formula is changed. */
-body[data-active-screen="approved-nutrition"] .nav{position:static;left:auto;bottom:auto;transform:none;box-shadow:none;margin:12px auto 0;max-width:570px}
+body[data-active-screen="approved-nutrition"] .nav,
+body[data-active-screen="approved-low"] .nav{position:static;left:auto;bottom:auto;transform:none;box-shadow:none;margin:12px auto 0;max-width:570px}
 
 .gf-illness-context{margin-top:16px}
 .gf-evidence-text{white-space:pre-line}
