@@ -13,7 +13,7 @@ eb84178b272b5beeaa8d695faa45b340bc9bc66963ca34c42ddde43a85d83d8f  android-mvp3/a
 f113833de7c51e77b4d3326eda35d5fa74142a3233aec42102ea6a85f780e730  android-mvp3/app/src/androidTest/java/com/glucopapa/shell/qa/WebViewChecks.java
 8b8a40ceddf4d042e18531c57c18c62c1f8be576d5f9215dc1a05b0b45e404ad  android-mvp3/app/src/fixture/assets/www/qa-shell.js
 b8b14ea04a8a87f498f67f2a436978bdd0b78914d93f7bfc88c3d989f098d717  android-mvp3/app/src/main/AndroidManifest.xml
-9c574f95a76b8abc2dbd0a7b32157533227b4e6bb26b1d89f4afd5e8c71b7d51  android-mvp3/app/src/main/assets/www/app.js
+2937f5d81249590597e5cc7111e0f99742bc13e1762c8243a84b55c7d398d810  android-mvp3/app/src/main/assets/www/app.js
 0abc9b584922377403d2edca6de42f9aea5f31e152415bcda186b6c9f35dc84b  android-mvp3/app/src/main/assets/www/approved-library/CGM_Chart_v0.2A.html
 d78a8ef8d236fc89ecb4776ff5e086fb0202b5b4f522c6290421d6d7ff1ac6a2  android-mvp3/app/src/main/assets/www/approved-library/GFAPSEnhancer_v0.1.1.html
 5cc5433d2d4b340106570360fe325b54cf2c4597c22a31e18e58ad620b016a9e  android-mvp3/app/src/main/assets/www/approved-library/GFAuditExport_v0.1.2.html
@@ -114,7 +114,7 @@ faab699b9c053365c18658ce7ec844ed44eb7b5f2c3cf2e94156009c7a44f2c7  android-mvp3/a
 5953fb61b7a0fd5e8ca44a1616a934b095164ff1c38579ecc0ef7ac03b4282ef  android-mvp3/app/src/main/assets/www/modules/GFLOW_v0.4.0/GFXDripLowAlert_v0.1.0.js
 23d948f4001045dcfcf97f2dc86d18fe0fa8d19912efb5b901d3c4d1d3ac9569  android-mvp3/app/src/main/assets/www/modules/GFMealCalc_v0.1.2/adapters/gf_food_entrypoint.js
 e963ebc3fe35a2376b68849d0fc8365452c97fbbdb6930c7f030dfac1c7a1a00  android-mvp3/app/src/main/assets/www/modules/GFMealCalc_v0.1.2/adapters/gf_food_entrypoint_v0.1.2.js
-bc328061ef625a73e0075b2297ec222300fb98358e97fede237b27e778dde400  android-mvp3/app/src/main/assets/www/modules/GFMealCalc_v0.1.2/adapters/gfmeal_controller.js
+84f91a1fa3ffc0cbf459306471c550c4adb3a27f234f7e86c0c1db7f27bbf361  android-mvp3/app/src/main/assets/www/modules/GFMealCalc_v0.1.2/adapters/gfmeal_controller.js
 9e2e2df6074468ceee9e6787feae2d62db28f615ead75cf742df383e44893b16  android-mvp3/app/src/main/assets/www/modules/GFMealCalc_v0.1.2/src/gf_meal_calc.js
 7c581e71d62df8c70cbeb40cf77026c57a3208abb570e46b4295d5bf3ec7a1f1  android-mvp3/app/src/main/assets/www/modules/GFMealCalc_v0.1.3/src/gf_meal_calc.js
 6901046f6bf8010435808af13016a8d184b6e3b93c412d150ba4472e2b62c67a  android-mvp3/app/src/main/assets/www/modules/GFMealCalc_v0.1.4/src/gf_meal_calc.js
@@ -140,7 +140,7 @@ eb1416fb1d64631976f6a761538d23094fbc20b2dd887344521bc39ceba4ffac  android-mvp3/a
 78449446bc9eaebf41a168a409761fbb3d41602ef6ea0afb8272277df788142b  android-mvp3/app/src/main/assets/www/modules/GFStorage_v0.5.0/src/gfstorage_core.js
 360f298bf5ee6c717ef4053a0e8fa009b42897615c61ad584929c5a3298d165f  android-mvp3/app/src/main/assets/www/modules/GFStorage_v0.5.10/src/gfstorage_core.js
 9866bcd5b06a3f21e57708fbd7ff6f453ade72e997a2e6817c76010facbabea5  android-mvp3/app/src/main/assets/www/modules/GFStorage_v0.5.11/src/gfstorage_core.js
-0ca1cfee7181ab2201f79828da0178164bf17db6be08a627a12719045ab7ce15  android-mvp3/app/src/main/assets/www/modules/GFStorage_v0.5.12/src/gfstorage_core.js
+93a3e07d152442a61ec6c4eda1cf678c1fcaa4b02bc2c2e7ad3c38ee5d7df64b  android-mvp3/app/src/main/assets/www/modules/GFStorage_v0.5.12/src/gfstorage_core.js
 c68cb560877a33f672cad539cd1689be55cd5591058de582fb2828874f257437  android-mvp3/app/src/main/assets/www/modules/GFStorage_v0.5.5/src/gfstorage_core.js
 f5367d7417962187c5a242665c4bd6e23e3feba1ec209c559098bb2c435b6508  android-mvp3/app/src/main/assets/www/modules/GFStorage_v0.5.6/src/gfstorage_core.js
 b57053c5f5cf9c3c82505318b7927cbd89ef152b3e11130d1696932205e99e09  android-mvp3/app/src/main/assets/www/modules/GFStorage_v0.5.7/src/gfstorage_core.js

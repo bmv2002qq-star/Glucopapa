@@ -15,7 +15,7 @@ const testJournal=globalThis.GFTestJournal;
 let mode='local',host=null,unsub=null,controller=null,bridge=null,settingsService=null,activeMeal=null,lastSafety=null,noticeTimer=null,sportMenuOpen=false;
 let fileOperation=null,xdripStatus='',xdripRequest=null,xdripHistoryRequest=null;
 const routes=[],foodRoutes=[];
-let returningInsideFood=false, mealDoseContext=false;
+let returningInsideFood=false, mealDoseContext=false, captureForInjection=false;
 let approvedQuickFoodSource;
 const MODULES=[
  ['GFStorage v'+(globalThis.GFStorage?.VERSION||'—'),'Android SQLite CAS, спорт и журнал','on'],['GFActionWriter','Единая запись фактических действий','on'],
@@ -761,9 +761,7 @@ function setMealDoseContext(open){
  $('saveActualInjection').textContent=open?'Сделал укол':'Сохранить фактический укол';
  $('injectionDrug').disabled=open;
 }
-function openMealInjection(peer){
- const plate=peer.GFFoodDemo.exportPlate();
- registerApprovedPlate(plate);
+function openMealInjection(){
  const evidence=GFCalculationEvidence.inspect({host,route:'meal',activeMeal,nowMs:Date.now()});
  $('injectionForm').reset();
  $('injectionDrug').value='rinfast';
@@ -927,6 +925,8 @@ function mountFoodPresentation(doc,peer){
  choose.prepend(placeholder);
  function refreshMealType(){
    if(choose.dataset.manual)return;
+   const meal=activeMeal&&controller?.lookup(activeMeal);
+   if(meal?.mealType&&['draft','planned'].includes(meal.status)){choose.value=meal.mealType;return;}
    const zone=host?.connect('settings').read('profile').timeZone;
    const hour=zone?Number(new Intl.DateTimeFormat('en-GB',{timeZone:zone,hour:'2-digit',hourCycle:'h23'}).format(new Date())):new Date().getHours();
    choose.value=hour<8?'':hour<11?'breakfast':hour<17?'lunch':'dinner';
@@ -940,7 +940,10 @@ function mountFoodPresentation(doc,peer){
    if(e.target.closest('#goPlate'))refreshMealType();
    if(e.target.closest('#plateCalculate')){
      e.preventDefault(); e.stopImmediatePropagation();
-     wrap(()=>openMealInjection(peer))();
+     wrap(()=>{
+       if(!sendApproved('nutrition',{type:'gp:capture:plate'}))throw Error('Каталог ещё загружается.');
+       captureForInjection=true;
+     })();
    }
    if(e.target.closest('#addToPlate'))setTimeout(()=>{
      if(!doc.getElementById('foodModal').classList.contains('on'))peer.GFFoodDemo.setTab('plate');
@@ -953,9 +956,10 @@ function watchPlateDialog(){
  document.body.classList.remove('plate-modal-open');
  const peer=approvedPeer('nutrition')?.peer;
  const doc=peer?.document, dialog=doc?.getElementById('foodModal');
- if(!dialog)return;
+ if(!dialog||!peer.GFFoodDemo||!peer.GFStorageNutritionPort)return;
  if(foodDocument!==doc){
    foodDocument=doc;
+   mountFoodPresentation(doc,peer);
    try{
      approvedQuickFoodSource=JSON.parse(doc.getElementById('foodsData').textContent);
      host?.bindApprovedQuickFoods(approvedQuickFoodSource);
@@ -1068,16 +1072,23 @@ function broadcastApproved(role=null){
  }
 }
 function registerApprovedPlate(payload){const converted=GFFoodMealEntry.normalizePlate(payload);const p=converted.plate;if(!p.items.length)throw Error('Тарелка пуста');
+ const mealType=foodDocument?.getElementById('mealType')?.value||null;
  const current=activeMeal?controller.lookup(activeMeal):null;
- if(current&&current.status==='draft'&&JSON.stringify(current.plannedPlate?.items)===JSON.stringify(p.items)){
+ if(current&&current.status==='draft'&&(current.mealType??null)===mealType&&JSON.stringify(current.plannedPlate?.items)===JSON.stringify(p.items)){
    $('approvedPlateStatus').textContent='Такая тарелка уже сохранена · ID '+activeMeal;notify('Повторная запись еды не создана');return;
  }
- const id=uid('meal');controller.createFromFood(p,id);activeMeal=id;if(document.body.dataset.activeScreen==='approved-nutrition')renderCalculationEvidence('meal',Date.now());$('approvedPlateStatus').textContent='План зарегистрирован: '+id+' · '+p.items.length+' позиций. Для отметки фактически съеденного откройте «План / факт еды». Подтверждённый план не считается съеденным.';notify('Моя тарелка v0.4.6 передана в GFStorage: '+id);}
+ const id=uid('meal');controller.createFromFood(p,id,mealType);activeMeal=id;if(document.body.dataset.activeScreen==='approved-nutrition')renderCalculationEvidence('meal',Date.now());$('approvedPlateStatus').textContent='План зарегистрирован: '+id+' · '+p.items.length+' позиций. Для отметки фактически съеденного откройте «План / факт еды». Подтверждённый план не считается съеденным.';notify('Моя тарелка v0.4.6 передана в GFStorage: '+id);}
 window.addEventListener('message',wrap(e=>{const d=e.data||{};if(!d.type?.startsWith?.('gp:'))return;
  const role=d.role;if(typeof role!=='string'||!isApprovedMessage(role,e))return;
  if(d.type==='gp:ready'){broadcastApproved(role);return;}
- if(d.type==='gp:plate'&&role==='nutrition'){registerApprovedPlate(d.plate);return;}
- if(d.type==='gp:error'){notify(String(d.error||'Ошибка исходного модуля'),true);return;}
+ if(d.type==='gp:plate'&&role==='nutrition'){
+   const showInjection=captureForInjection&&document.body.dataset.activeScreen==='approved-nutrition';
+   captureForInjection=false;
+   registerApprovedPlate(d.plate);
+   if(showInjection)openMealInjection();
+   return;
+ }
+ if(d.type==='gp:error'){if(role==='nutrition')captureForInjection=false;notify(String(d.error||'Ошибка исходного модуля'),true);return;}
  if(d.type==='gp:workflow'&&role==='nutrition'){notify('Чтобы зарегистрировать фактическое действие, используйте общий раздел «План / факт еды»; фиктивная запись в модуле питания отключена.');return;}
  if(d.type==='gp:measurement'&&role==='settings'){
  const record=d.record||{}, output=approvedPeer('settings')?.peer.document.getElementById('gpApprovedSettingsNotice');

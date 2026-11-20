@@ -10,9 +10,9 @@ function createController(host,{makeId=prefix=>prefix+'-'+(typeof crypto!=='unde
  const ports={food:host.connect('food'),mealFlow:host.connect('mealFlow'),actionWriter:host.connect('actionWriter'),calculator:host.connect('calculator')};
  const lookup=id=>{const s=ports.calculator.getSnapshot(),m=s.mealSessions.find(x=>x.id===id);if(!m)throw Error('Нет такого приёма пищи');return m;};
  const v=id=>{const m=lookup(id);return {sessionId:id,expectedVersion:m.version,opId:makeId('op')};};
- function createFromFood(plate,sessionId){
+ function createFromFood(plate,sessionId,mealType=null){
   if(!sessionId||typeof sessionId!=='string')throw Error('Нужен устойчивый sessionId: создаётся один раз при начале действия');
-  ports.food.createDraft({id:sessionId,plate},ports.food.getRevision());return sessionId;
+  ports.food.createDraft({id:sessionId,plate,...(mealType===null?{}:{mealType})},ports.food.getRevision());return sessionId;
  }
  function updatePlan(id,plate){return ports.food.updatePlannedPlate({...v(id),plate},ports.food.getRevision());}
  function ready(id){return ports.mealFlow.markReady(v(id),ports.mealFlow.getRevision());}

@@ -18,6 +18,7 @@
   const XDRIP_HISTORY='xdrip_loopback_history', XDRIP_HISTORY_WINDOW=24*60*60*1000;
   const XDRIP_WEB='xdrip_loopback_live';
   const QUICK_FOOD_IDS=Object.freeze(['gf:00444','legacy:0075','legacy:0022','legacy:0145','legacy:0038','legacy:0040']);
+  const MEAL_TYPES=new Set(['breakfast','lunch','dinner','snack']);
   const isXDripHistory=row=>row.transport===XDRIP_HISTORY;
   // xDrip+ Constants.MMOLL_TO_MGDL. Store both the upstream value and the converted observation.
   const XDRIP_MGDL_PER_MMOL=18.01559;
@@ -387,6 +388,7 @@
     const linkedInjectionIds=new Set();
     for(const session of s.mealSessions){
       if(!object(session)||!Array.isArray(session.injectionIds))fail('Повреждена связь еды с инъекциями');
+      if(Object.hasOwn(session,'mealType')&&!MEAL_TYPES.has(session.mealType))fail('Некорректный тип приёма пищи');
       for(const injectionId of session.injectionIds){
         if(typeof injectionId!=='string'||!confirmedInjectionIds.has(injectionId))fail('MISSING_INJECTION_REFERENCE: связь еды без фактической инъекции');
         if(linkedInjectionIds.has(injectionId))fail('DUPLICATE_INJECTION_LINK: одна инъекция привязана к нескольким приёмам еды');
@@ -599,10 +601,12 @@
       };
       if(role==='food'){
         port.createDraft=(item,rev)=>{
-          requireFields(item,['id','plate'],['id','plate']);id(item.id);const plate=validatePlate(item.plate);
+          requireFields(item,['id','plate','mealType'],['id','plate']);id(item.id);const plate=validatePlate(item.plate);
+          if(Object.hasOwn(item,'mealType')&&!MEAL_TYPES.has(item.mealType))fail('Некорректный тип приёма пищи');
           return changeSession(role,'create_draft',item.id,0,'new:'+item.id,rev,(old,d,now)=>{
             if(old)fail('Приём пищи существует');
-            return {id:item.id,version:1,status:'draft',createdAt:now,lastChangedAt:now,plannedPlate:plate,actualPlate:null,doseIntent:null,injectionIds:[],startedAt:null,completedAt:null};
+            return {id:item.id,version:1,status:'draft',createdAt:now,lastChangedAt:now,plannedPlate:plate,actualPlate:null,doseIntent:null,injectionIds:[],startedAt:null,completedAt:null,
+              ...(item.mealType?{mealType:item.mealType}:{})};
           });
         };
         port.updatePlannedPlate=(item,rev)=>{

@@ -111,6 +111,7 @@ def main():
             'integration/GFCalculationEvidence_v0.1.0.js', 'integration/GFResearchForecastRun_v0.1.0.js',
             'integration/GFHighTargetView_v0.1.0.js', 'integration/GFLOWView_v0.4.1.js','integration/GFLOWStorage_v0.4.1.js',
             'integration/GFInjectionTimingStorage_v0.1.0.js', 'integration/GFMealAbsorption_v0.1.0.js',
+            'integration/GFInjectionFact_v0.1.0.js','modules/GFMealCalc_v0.1.2/adapters/gfmeal_controller.js',
             'integration/GFProviderCgm_v0.1.0.js', core[0],
             'modules/GFAuditExport_v0.1.4/src/gfaudit_export_storage_adapter.js',
         }, changes

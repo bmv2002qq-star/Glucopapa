@@ -91,7 +91,12 @@ def check_food_diary_coefficients(page, output, state):
     expect(food.locator('#tab-plate')).to_be_visible()
     expect(food.locator('#plateItems')).to_contain_text('Драник деревенский с мясом')
     assert not state()['events']
+    food.locator('#mealType').select_option('lunch')
     food.locator('#plateCalculate').click()
+    try:
+        expect(page.locator('#screen-injections.active')).to_be_visible(timeout=4000)
+    except AssertionError as error:
+        raise AssertionError(page.locator('#notice').text_content()) from error
     expect(page.locator('#mealModelDose')).to_have_value('Недоступно')
     assert not state()['events']
     assert page.locator('#injectionConfirm').count() == 0
@@ -102,7 +107,8 @@ def check_food_diary_coefficients(page, output, state):
     event,=saved['events']
     assert event['linkedMealSessionId'] and event['status']=='confirmed'
     assert event['units']==.5 and event['insulinId']=='rinfast'
-    assert not next(row for row in saved['mealSessions'] if row['id']==event['linkedMealSessionId'])['actualPlate']
+    meal=next(row for row in saved['mealSessions'] if row['id']==event['linkedMealSessionId'])
+    assert not meal['actualPlate'] and meal['mealType']=='lunch'
 
     page.evaluate("GPApp.open('approved-journal')")
     journal=page.frame_locator('#iframeApprovedJournal')
