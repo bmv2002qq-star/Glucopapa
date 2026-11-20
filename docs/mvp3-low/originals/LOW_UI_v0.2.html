@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f3f6fa">
+  <title>ГлюкоПапа · Низкий сахар — согласование v0.2</title>
+  <style>
+    :root {--bg:#f3f6fa;--paper:#fff;--ink:#172435;--muted:#66778b;--border:#dce4ec;--teal:#087f83;--tealbg:#eefafa;--red:#b8272e;--redbg:#fff0f1;--orange:#bd7926;--green:#2a8865;--shadow:0 7px 23px rgba(31,52,73,.045)}
+    *{box-sizing:border-box}html{color-scheme:light;scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.48 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif}button,input,select{font:inherit}button{cursor:pointer}a{color:var(--teal)}
+    .shell{width:min(820px,calc(100% - 32px));margin:24px auto 42px}.head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}.brand{display:flex;align-items:center;gap:11px;min-width:0}.mark{flex:none;width:40px;height:40px;border-radius:12px;display:grid;place-items:center;color:#087f83;background:#e3f4f4;font-size:24px;font-weight:800}.head h1{margin:0;font-size:20px;line-height:1.2}.head small{display:block;margin-top:3px;color:var(--muted);font-size:12px}.tag{font-size:11px;color:#627489;background:#fff;border:1px solid var(--border);border-radius:99px;padding:6px 10px;white-space:nowrap}
+    main{display:grid;gap:15px}.panel{background:var(--paper);border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow);overflow:hidden}.pad{padding:19px 21px}.eyebrow{font-size:11px;letter-spacing:.08em;font-weight:800;text-transform:uppercase;color:#7b8a9c}.h2{font-size:19px;letter-spacing:-.35px;font-weight:770;margin:2px 0 4px}.sub{font-size:12px;color:var(--muted);margin:0}.topline{display:flex;justify-content:space-between;gap:10px;align-items:start}.quiet{color:#738195;font-size:12px;text-align:right;white-space:nowrap}
+    .hero{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:12px 0 12px}.measure{display:flex;align-items:center;gap:15px}.number{font-size:67px;font-weight:800;letter-spacing:-3px;line-height:1}.sidevalue .trend{font-size:27px;line-height:1;font-weight:850;color:#bb3030}.sidevalue .unit{font-size:12px;color:var(--muted);margin-top:7px}.state{border-radius:10px;font-size:12px;font-weight:750;padding:8px 11px;text-align:center;background:#fff2f2;color:var(--red);border:1px solid #f3d2d5}.state.amber{background:#fff7e9;color:#985e20;border-color:#f5e1bd}.state.green{background:#effaf5;color:#287658;border-color:#cceade}.state.neutral{background:#f4f7fa;color:#536575;border-color:#e1e7ed}
+    .zonebar{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin:13px 0 0}.zone{border-radius:8px;padding:8px 4px;text-align:center;border:1px solid transparent;font-size:11px;color:#7b8998;font-weight:650;background:#f7f8fa}.zone strong{display:block;font-size:12px}.zone.red{background:#fff1f1;color:#ad2d31}.zone.orange{background:#fff5e6;color:#a16a28}.zone.green{background:#ebf8f0;color:#247b58}.zone.selected{outline:2px solid currentColor;outline-offset:-2px}.zone-desc{margin:8px 0 0;color:#758295;font-size:11px}
+    .urgent{margin-top:16px;border:1px solid #efc1c6;background:#fff3f3;border-radius:13px;padding:15px 17px}.urgent .name{color:#a92930;font-size:12px;font-weight:820;letter-spacing:.015em}.urgent .dose{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-top:6px;color:#b2272b}.urgent .dose strong{font-size:30px;line-height:1.2}.urgent .dose span{font-weight:680;font-size:13px}.urgent .equivalent{font-size:13px;margin-top:4px;color:#833d41}.urgent .equivalent strong{color:#a7232a}.urgent[hidden]{display:none}
+    .formline{display:grid;grid-template-columns:minmax(0,1fr) minmax(165px,.72fr);align-items:end;gap:12px;margin-top:16px}.field label{display:block;font-weight:650;color:#526379;font-size:12px;margin-bottom:5px}.field input,.field select{width:100%;min-height:43px;border:1px solid #cdd8e2;border-radius:11px;background:white;color:#172435;padding:9px 12px;outline-color:var(--teal);font-size:16px}.field input:focus-visible,.field select:focus-visible{outline:2px solid #81cccc;outline-offset:1px}.button{border:1px solid #087f83;background:#087f83;border-radius:11px;color:white;font-weight:780;padding:11px 16px;min-height:43px}.button.ghost{background:white;color:#087f83}.button.small{min-height:35px;padding:7px 11px;font-size:12px}.button:focus-visible{outline:2px solid #1f7ba8;outline-offset:2px}.button:disabled{opacity:.45;cursor:default}
+    .support{display:flex;gap:7px;flex-wrap:wrap;margin-top:13px}.support .chip{background:#f4f8fb;border:1px solid #e2e9ef;color:#617387;border-radius:7px;padding:5px 8px;font-size:11px}.result{border:1px solid #c8e5e2;background:#f1fbfa;padding:14px 15px;border-radius:13px;margin-top:14px}.result[hidden]{display:none}.result .rtitle{font-size:12px;font-weight:750;color:#3d7777}.result .rnumber{font-size:30px;font-weight:820;color:#06777b;margin-top:2px;line-height:1.18}.result .rnumber small{font-size:13px;font-weight:650}.result .detail{font-size:12px;color:#536a6d;margin:8px 0 10px}.result .buttons{display:flex;justify-content:flex-start;gap:10px}.muted{font-size:12px;color:var(--muted)}.notice{margin-top:11px;font-size:11.5px;color:#6d7282;line-height:1.5}
+    .volume{background:var(--tealbg);border:1px solid #c3e4e3;border-radius:13px;margin-top:15px;padding:15px}.volhead{display:flex;align-items:center;justify-content:space-between;gap:10px}.volhead strong{font-size:13px}.entry{display:flex;align-items:center;gap:5px}.entry input{width:90px;height:39px;text-align:right;font-size:20px;font-weight:800;color:#087b7d;border:1px solid #bcd8d6;background:white;border-radius:9px;padding:4px 8px}.entry span{color:#087b7d;font-weight:700}.range{width:100%;accent-color:var(--teal);margin:16px 0 6px}.scale{display:flex;justify-content:space-between;color:#7c909c;font-size:11px}.presets{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.preset{background:white;color:#346970;border:1px solid #bfdada;border-radius:9px;padding:6px 10px;font-size:12px;font-weight:700}.preset.active{border-color:#087f83;background:#dff3f1;color:#087276}.gcarbs{font-size:12px;color:#536e75;margin-top:10px}
+    .stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:15px}.stat{padding:12px;border:1px solid var(--border);border-radius:11px;min-width:0}.stat small{display:block;color:#76869b;font-size:11px;margin-bottom:3px}.stat strong{font-size:22px;letter-spacing:-.6px;white-space:nowrap}.stat strong.risk{color:var(--red)}.stat strong.good{color:var(--green)}.stat em{font-size:10px;font-weight:550;color:#8090a0;font-style:normal}.eta{font-size:12px;color:#66788a;margin:12px 2px 0}
+    .graph{margin-top:14px;border:1px solid var(--border);border-radius:13px;overflow:hidden;background:#fff}.graph-head{padding:11px 13px 0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:12px}.legend{display:flex;gap:13px;flex-wrap:wrap;color:#65778b;font-size:11px}.legend i{display:inline-block;width:17px;height:3px;margin:0 5px 3px 0;vertical-align:middle;border-radius:2px}.chart{width:100%;height:auto;display:block;min-height:230px}.chart text{fill:#7c8a9c;font-size:11px;font-family:inherit}.chart .grid{stroke:#e8eef2;stroke-width:1}.chart .juice{stroke:#087f83;stroke-width:3.2;fill:none;stroke-linecap:round;stroke-linejoin:round}.chart .nojuice{stroke:#a6b2bf;stroke-width:2;fill:none;stroke-dasharray:6 6}.chart .hypo{stroke:#dc6668;stroke-width:1.6;stroke-dasharray:4 4}.chart .goal{stroke:#419e80;stroke-width:1.4;stroke-dasharray:4 5}.chart .now{fill:#087f83;stroke:white;stroke-width:2}.chart .quarter{stroke:#dce2ec;stroke-width:1;stroke-dasharray:3 6}.chartlabel{color:#758297;font-size:11px;margin:0 13px 11px}
+    .tablebox{border:1px solid #e4eaf0;background:#f9fbfd;padding:11px 14px;border-radius:11px;margin-top:13px}.tablebox h3{margin:0 0 7px;font-size:13px}.table{border-collapse:collapse;width:100%;font-size:12px}.table th,.table td{padding:7px 4px;border-bottom:1px solid #e9eef3}.table th{color:#6d7d91;text-align:left;font-weight:600}.table td:not(:first-child),.table th:not(:first-child){text-align:right}.table tr:last-child td{border-bottom:none}
+    details{margin-top:13px;border:1px solid var(--border);border-radius:11px;background:#fff}summary{cursor:pointer;padding:12px 14px;font-weight:700;color:#45586c;font-size:13px}.inside{padding:0 15px 14px;color:#52677d;font-size:12px}.inside p{margin:7px 0}.inside code{overflow-wrap:anywhere;font-size:11px}.inputs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px;margin-top:11px}.disclaimer{font-size:11px;line-height:1.5;color:#708097;margin:15px 2px 0}.bottomline{margin-top:15px;border-top:1px solid #e4eaf0;padding-top:12px}.bottomline button{border:1px solid #c8dce0;background:#f5fafb;color:#40727a;border-radius:10px;width:100%;padding:10px;font-weight:700}.bottomline p{color:#78889a;font-size:11px;margin:8px 0 0}
+    @media(max-width:650px){.shell{width:min(510px,calc(100% - 18px));margin:11px auto 20px}.head h1{font-size:17px}.head small{font-size:11px}.tag{display:none}.pad{padding:15px}.panel{border-radius:15px}.number{font-size:57px}.state{max-width:132px;padding:7px}.urgent{padding:13px 14px}.urgent .dose strong{font-size:28px}.stats{gap:6px}.stat{padding:9px}.stat strong{font-size:18px}.stat small{font-size:10px}.chart{min-height:210px}.inputs{grid-template-columns:repeat(2,minmax(0,1fr))}.notice{font-size:11px}}
+    @media(max-width:390px){.formline{grid-template-columns:1fr}.number{font-size:51px}.hero{gap:6px}.measure{gap:7px}.state{font-size:11px;max-width:111px}.zone{font-size:10px;padding:7px 2px}.zone strong{font-size:11px}.stat strong{font-size:17px}.stat em{display:block}.volume{padding:12px}.volhead strong{font-size:12px}.entry input{width:69px;font-size:18px}.inputs{grid-template-columns:1fr 1fr}}
+  </style>
+</head>
+<body>
+<div class="shell">
+  <header class="head">
+    <div class="brand"><div class="mark">◈</div><div><h1>ГлюкоПапа · Низкий сахар</h1><small>Экран на согласование · v0.2</small></div></div>
+    <div class="tag">HTML-макет · офлайн</div>
+  </header>
+  <main>
+    <section class="panel pad" aria-label="Текущий сахар и помощь при гипогликемии">
+      <div class="topline"><div><div class="eyebrow">01 · Текущий CGM</div><div class="sub">Данные на экране — пример для согласования</div></div><span class="quiet" id="dataAge">→ ровный тренд</span></div>
+      <div class="hero"><div class="measure"><div class="number" id="heroGlucose">3,0</div><div class="sidevalue"><div class="trend" id="heroArrow">→</div><div class="unit">ммоль/л</div></div></div><div class="state" id="statusLabel">Гипогликемия</div></div>
+      <div class="zonebar" aria-label="Цветовая шкала уровня глюкозы">
+        <div class="zone red selected" id="zoneRed"><strong>Красная зона</strong>&lt; 3,9</div>
+        <div class="zone orange" id="zoneOrange"><strong>Оранжевая зона</strong>3,9–4,4</div>
+        <div class="zone green" id="zoneGreen"><strong>Зелёная зона</strong>4,5–10,0</div>
+      </div>
+      <div class="zone-desc">Пороги цветовых зон в этом макете используются для отображения LOW.</div>
+      <div class="urgent" id="ispadBox" role="note">
+        <div class="name">● ГИПОГЛИКЕМИЯ · ПЕРВОНАЧАЛЬНЫЙ ОРИЕНТИР ISPAD</div>
+        <div class="dose"><strong id="ispadCarbs">6 г</strong><span>быстрых углеводов</span></div>
+        <div class="equivalent"><strong id="ispadJuice">≈ 57 мл яблочного сока</strong> · 10,5 г У на 100 мл</div>
+      </div>
+    </section>
+
+    <section class="panel pad" aria-label="Калькулятор количества сока">
+      <div class="topline"><div><div class="eyebrow">02 · Калькулятор</div><h2 class="h2">Рассчитать количество</h2></div><span class="quiet">Модельный расчёт</span></div>
+      <p class="sub">Какой объём сока в условной модели соответствует выбранной цели к 120-й минуте.</p>
+      <div class="formline">
+        <div class="field"><label for="calcProduct">Продукт</label><select id="calcProduct"><option value="apple">Яблочный сок</option></select></div>
+        <div class="field"><label for="goal">Целевой сахар, ммоль/л</label><input id="goal" type="number" min="3.9" max="12" step="0.1" value="6.0"></div>
+      </div>
+      <div style="margin-top:13px"><button class="button" id="calculate" type="button">Рассчитать</button></div>
+      <div class="support"><span class="chip" id="dataChip">CGM 3,0 · →</span><span class="chip" id="iobChip">РинФаст IOB 0 ЕД</span><span class="chip" id="cobChip">COB 0 г</span><span class="chip" id="activityChip">Активность: обычная</span></div>
+      <div class="result" id="calcResult" hidden aria-live="polite">
+        <div class="rtitle" id="resultTitle">Иллюстративный расчёт до цели</div>
+        <div class="rnumber" id="resultMl">—</div>
+        <div class="detail" id="resultExplain">—</div>
+        <div class="buttons"><button class="button ghost small" id="applyResult" type="button">Показать на графике</button></div>
+      </div>
+      <p class="notice">Калькулятор показывает результат математической модели, а не объём для лечения гипогликемии. Первоначальный ориентир ISPAD вынесен отдельно наверх.</p>
+    </section>
+
+    <section class="panel pad" aria-label="Справочный прогноз глюкозы">
+      <div class="topline"><div><div class="eyebrow">03 · Справочная информация</div><h2 class="h2">Как может измениться сахар</h2></div><span class="quiet">0–120 минут</span></div>
+      <p class="sub">Выбери объём сока — кривая изменится сразу. Пунктир показывает тот же сценарий без дополнительного сока.</p>
+      <div class="volume">
+        <div class="volhead"><strong>Яблочный сок · 10,5 г У / 100 мл</strong><label class="entry"><input id="juiceNumber" type="number" min="0" max="200" step="1" value="60" aria-label="Объём сока в миллилитрах"><span>мл</span></label></div>
+        <input id="juice" class="range" type="range" min="0" max="200" step="1" value="60" aria-label="Объём яблочного сока на графике">
+        <div class="scale"><span>0 мл</span><span>100 мл</span><span>200 мл</span></div>
+        <div class="presets"><button class="preset" type="button" data-juice="30">30 мл</button><button class="preset" type="button" data-juice="60">60 мл</button><button class="preset" type="button" data-juice="100">100 мл</button><button class="preset" type="button" data-juice="150">150 мл</button></div>
+        <div class="gcarbs">В выбранном объёме: <strong id="carbs">6,3 г</strong> углеводов.</div>
+      </div>
+      <div class="stats"><div class="stat"><small>Через 15 минут</small><strong id="g15">—</strong><em> ммоль/л</em></div><div class="stat"><small>Через 60 минут</small><strong id="g60">—</strong><em> ммоль/л</em></div><div class="stat"><small>Через 120 минут</small><strong id="g120">—</strong><em> ммоль/л</em></div></div>
+      <p class="eta" id="eta">Цель 6,0: —</p>
+      <div class="graph"><div class="graph-head"><strong>Условная траектория · ммоль/л</strong><div class="legend"><span><i style="background:#087f83"></i>С соком</span><span><i style="background:#9caab8"></i>Без нового сока</span></div></div>
+        <svg id="chart" class="chart" viewBox="0 0 690 300" role="img" aria-label="Изменение сахара на графике 0–120 минут с соком и без нового сока"></svg>
+        <div class="chartlabel">Ориентиры: красный пунктир — 3,9 ммоль/л, зелёный — выбранная цель. Кривые синтетические.</div>
+      </div>
+      <div class="tablebox"><h3>Контрольные точки</h3><table class="table"><thead><tr><th>Время</th><th>Без сока</th><th>С выбранным соком</th></tr></thead><tbody id="points"></tbody></table></div>
+      <details><summary>Расчёт · показать формулы макета</summary><div class="inside"><p>Доля усвоения сока: <code>F(t) = 1 − (1 + t/20) × exp(−t/20)</code>. Углеводы сока: <code>объём × 0,105</code> г; условный отклик: <code>углеводы × 3/10 × F(t)</code> ммоль/л.</p><p>Для теста добавлены упрощённые остаточные эффекты: IOB — отрицательная кривая, COB — положительная; тренд глюкозы с затуханием. Они не должны подменять реальные RinFastEngine, GFForecast/GFCOB и согласованный GFStorage, а двойной учёт уже проявившихся воздействий необходимо исключить при интеграции.</p><p>В тестовом HTML активность лишь отображается как вход; её влияние не моделируется. Итоговые численные значения не валидированы для клинического использования.</p></div></details>
+      <details id="testData"><summary>Тестовые данные · только для проверки HTML</summary><div class="inside">
+        <p>В рабочем приложении эти поля не показываются: CGM, IOB, COB и параметры ребёнка поступают через единый GFStorage.</p>
+        <div class="inputs">
+          <div class="field"><label for="glucose">CGM, ммоль/л</label><input id="glucose" type="number" min="1" max="20" step="0.1" value="3.0"></div>
+          <div class="field"><label for="trend">Тренд за 5 мин</label><input id="trend" type="number" min="-1.5" max="1.5" step="0.05" value="0"></div>
+          <div class="field"><label for="iob">РинФаст IOB, ЕД</label><input id="iob" type="number" min="0" max="10" step="0.1" value="0"></div>
+          <div class="field"><label for="cob">Остаток еды COB, г</label><input id="cob" type="number" min="0" max="200" step="1" value="0"></div>
+          <div class="field"><label for="weight">Вес ребёнка, кг</label><input id="weight" type="number" min="5" max="120" step="0.1" value="20"></div>
+          <div class="field"><label for="activity">Активность</label><select id="activity"><option>Обычная</option><option>Низкая</option><option>Высокая</option><option>Спорт</option></select></div>
+        </div>
+        <button id="resetDemo" class="button ghost small" type="button" style="margin-top:12px">Восстановить пример</button>
+      </div></details>
+      <div class="bottomline"><button type="button" id="journal">Дал еду · запись в журнал</button><p id="journalText">В макете кнопка не записывает события: GFStorage не подключён.</p></div>
+    </section>
+  </main>
+  <footer class="disclaimer">Автономный макет для согласования компоновки и поведения калькулятора. Прогнозные значения иллюстративны и не предназначены для лечения. При реальной гипогликемии нужна незамедлительная помощь и повторный контроль по индивидуальному плану; глюкоза предпочтительнее сока. Экран не связан с CGM/xDrip или GFStorage.</footer>
+</div>
+<script>
+(() => {
+  'use strict';
+  const $ = (id) => document.getElementById(id);
+  const clamp = (v, a, b, def) => Number.isFinite(v) ? Math.max(a, Math.min(b, v)) : def;
+  const val = (id,a,b,d) => clamp(Number.parseFloat($(id).value),a,b,d);
+  const fmt = (x,d=1) => Number(x).toFixed(d).replace('.',',');
+  const F = (t,tau) => Math.max(0,1 - (1+t/tau) * Math.exp(-t/tau));
+  const SVG = 'http://www.w3.org/2000/svg';
+  let candidateMl = null;
+  const node = (kind,attrs,text) => {const e=document.createElementNS(SVG,kind);for(const [k,v] of Object.entries(attrs))e.setAttribute(k,String(v));if(text!==undefined)e.textContent=text;return e;};
+  function inputs(){ return {g:val('glucose',1,20,3),trend:val('trend',-1.5,1.5,0),iob:val('iob',0,10,0),cob:val('cob',0,200,0),goal:val('goal',3.9,12,6),weight:val('weight',5,120,20),ml:val('juice',0,200,60),activity:$('activity').value}; }
+  function makeModel(a){
+    const baseline=(t)=>a.g+(a.trend/5)*35*(1-Math.exp(-t/35))-a.iob*3*(1-Math.exp(-t/105))+a.cob*.3*F(t,35);
+    const juiceGain=(t,ml)=>ml*.105*.3*F(t,20);
+    const withJuice=(t,ml=a.ml)=>baseline(t)+juiceGain(t,ml);
+    return {baseline,juiceGain,withJuice};
+  }
+  function setMl(ml){const n=clamp(Number(ml),0,200,60);$('juice').value=n;$('juiceNumber').value=n;render();}
+  function render(){
+    const a=inputs(),m=makeModel(a);$('juiceNumber').value=a.ml;
+    const arr=a.trend < -.1?'↘':a.trend>.1?'↗':'→';const name=a.trend<-.1?'снижается':a.trend>.1?'растёт':'ровный тренд';
+    $('heroGlucose').textContent=fmt(a.g);$('heroArrow').textContent=arr;$('dataAge').textContent=arr+' '+name;
+    let zone='';if(a.g<3.9)zone='Red';else if(a.g<4.5)zone='Orange';else if(a.g<=10)zone='Green';
+    for(const z of ['Red','Orange','Green'])$('zone'+z).classList.toggle('selected',z===zone);
+    const st=$('statusLabel');st.className='state '+(zone==='Orange'?'amber':zone==='Green'?'green':zone===''?'neutral':'');st.textContent=zone==='Red'?'Гипогликемия':zone==='Orange'?'Близко к нижней границе':zone==='Green'?'В диапазоне LOW':'Вне диапазона LOW';
+    $('ispadBox').hidden=a.g>=3.9;
+    const grams=.3*a.weight;$('ispadCarbs').textContent=fmt(grams)+' г';$('ispadJuice').textContent='≈ '+Math.round(grams/.105)+' мл яблочного сока';
+    $('dataChip').textContent='CGM '+fmt(a.g)+' · '+arr;$('iobChip').textContent='РинФаст IOB '+fmt(a.iob)+' ЕД';$('cobChip').textContent='COB '+fmt(a.cob)+' г';$('activityChip').textContent='Активность: '+a.activity.toLowerCase();
+    $('carbs').textContent=fmt(a.ml*.105)+' г';document.querySelectorAll('[data-juice]').forEach(b=>b.classList.toggle('active',Number(b.dataset.juice)===a.ml));
+    for(const t of [15,60,120]){const el=$('g'+t),g=m.withJuice(t);el.textContent=fmt(g);el.className=g<3.9?'risk':Math.abs(g-a.goal)<=.3?'good':'';}
+    const targetReached=a.g>=a.goal?0:(()=>{let last=m.withJuice(0);for(let t=1;t<=120;t++){const now=m.withJuice(t);if(last<a.goal&&now>=a.goal)return t;last=now;}return null;})();
+    $('eta').textContent='Ориентир '+fmt(a.goal)+' ммоль/л: '+(targetReached===null?'по выбранной модели не достигается за 120 минут':targetReached===0?'уже достигнут в начале':'первое расчётное достижение примерно через '+targetReached+' мин');
+    $('points').innerHTML=[0,15,30,60,90,120].map(t=>'<tr><td>'+(t===0?'Сейчас':t+' мин')+'</td><td>'+fmt(m.baseline(t))+'</td><td><strong>'+fmt(m.withJuice(t))+'</strong></td></tr>').join('');
+    renderChart(a,m);
+    if(!$('calcResult').hidden)calculate(false);
+  }
+  function renderChart(a,m){
+    const svg=$('chart');svg.replaceChildren();const W=690,H=300,L=50,R=16,T=24,B=35;
+    const ys=[];for(let t=0;t<=120;t+=2)ys.push(m.baseline(t),m.withJuice(t));
+    const lo=Math.max(0,Math.floor((Math.min(...ys,3.9,a.goal)-.5)*2)/2);
+    const hi=Math.max(lo+1,Math.ceil((Math.max(...ys,3.9,a.goal)+.5)*2)/2);
+    const x=t=>L+(W-L-R)*(t/120),y=v=>H-B-(H-B-T)*(v-lo)/(hi-lo);
+    let step=(hi-lo)>10?2:(hi-lo)>5?1:.5;
+    for(let v=Math.ceil(lo/step)*step;v<hi+1e-6;v+=step){svg.append(node('line',{x1:L,x2:W-R,y1:y(v),y2:y(v),class:'grid'}),node('text',{x:L-9,y:y(v)+4,'text-anchor':'end'},fmt(v,Number.isInteger(v)?0:1)));}
+    for(const t of [0,15,30,60,90,120]){svg.append(node('text',{x:x(t),y:H-11,'text-anchor':'middle'},String(t)));if(t===15)svg.append(node('line',{x1:x(t),x2:x(t),y1:T,y2:H-B,class:'quarter'}));}
+    svg.append(node('line',{x1:L,x2:W-R,y1:y(3.9),y2:y(3.9),class:'hypo'}),node('line',{x1:L,x2:W-R,y1:y(a.goal),y2:y(a.goal),class:'goal'}));
+    const curve=fn=>{let d='';for(let t=0;t<=120;t+=2)d+=(t?'L':'M')+x(t).toFixed(2)+' '+y(fn(t)).toFixed(2)+' ';return d;};
+    svg.append(node('path',{d:curve(m.baseline),class:'nojuice'}),node('path',{d:curve(m.withJuice),class:'juice'}),node('circle',{cx:x(0),cy:y(a.g),r:5,class:'now'}),node('text',{x:W-R,y:H-4,'text-anchor':'end'},'Минуты'));
+  }
+  function calculate(show=true){
+    const a=inputs(),m=makeModel(a),base=m.baseline(120),perMl=m.juiceGain(120,1);const requested=(a.goal-base)/perMl;
+    let txt='',note='';candidateMl=null;
+    if(requested<=0){txt='0 мл';note='Модель без нового сока уже показывает '+fmt(base)+' ммоль/л на 120-й минуте. Это не исключает низких значений раньше.';candidateMl=0;}
+    else if(requested>200){txt='Более 200 мл';note='Для этой модельной цели понадобилось бы около '+Math.round(requested)+' мл, что вне диапазона макета. Объём не является рекомендацией.';}
+    else {candidateMl=Math.round(requested);txt=candidateMl+' мл';note='При исходных тестовых данных модель даёт около '+fmt(a.goal)+' ммоль/л через 120 мин. Оценка не гарантирует результат и не заменяет помощь при гипогликемии.';}
+    $('resultMl').innerHTML=txt+' <small>яблочного сока · оценка модели</small>';
+    $('resultExplain').textContent=note+' Базовый сценарий без сока: '+fmt(base)+' ммоль/л к 120 мин.';
+    $('applyResult').disabled=candidateMl===null;
+    if(show){$('calcResult').hidden=false;$('calcResult').scrollIntoView({block:'nearest',behavior:'smooth'});}
+  }
+  $('calculate').addEventListener('click',()=>calculate(true));
+  $('applyResult').addEventListener('click',()=>{if(candidateMl!==null){setMl(candidateMl);$('chart').scrollIntoView({block:'center',behavior:'smooth'});}});
+  $('juice').addEventListener('input',e=>setMl(e.target.value));
+  $('juiceNumber').addEventListener('input',e=>{if(e.target.value.trim()!=='')setMl(e.target.value);});
+  $('juiceNumber').addEventListener('change',()=>setMl($('juiceNumber').value));
+  document.querySelectorAll('[data-juice]').forEach(b=>b.addEventListener('click',()=>setMl(Number(b.dataset.juice))));
+  ['glucose','trend','iob','cob','goal','weight','activity'].forEach(id=>$(id).addEventListener('input',render));
+  $('resetDemo').addEventListener('click',()=>{Object.entries({glucose:3,trend:0,iob:0,cob:0,weight:20,goal:6}).forEach(([k,v])=>{$(k).value=v});$('activity').value='Обычная';setMl(60);$('calcResult').hidden=true;});
+  $('journal').addEventListener('click',()=>{$('journalText').textContent='Запись не создана: макет не подключён к GFStorage и ничего не сохраняет.';});
+  render();
+})();
+</script>
+</body>
+</html>
