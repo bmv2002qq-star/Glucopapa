@@ -1,0 +1,179 @@
+{
+  "testStatus": "PASS",
+  "checks": 20,
+  "pass": 20,
+  "observations": [
+    {
+      "label": "полный GFStorage v5 работает в read-only",
+      "expected": "READ_ONLY",
+      "actual": "READ_ONLY",
+      "pass": true,
+      "issue": null
+    },
+    {
+      "label": "чтение не меняет revision",
+      "expected": "revision 13",
+      "actual": 13,
+      "pass": true,
+      "issue": null
+    },
+    {
+      "label": "цель по диапазону [5.5,6.5] становится 6",
+      "expected": "6",
+      "actual": 6,
+      "pass": true,
+      "issue": null
+    },
+    {
+      "label": "целевой TIR [4,10] без выбранной точки даёт midpoint 7",
+      "expected": "7",
+      "actual": 7,
+      "pass": true,
+      "issue": null
+    },
+    {
+      "label": "global activity usual does not calculate",
+      "expected": "UNVERIFIED_ACTIVITY_MODEL",
+      "actual": "UNVERIFIED_ACTIVITY_MODEL",
+      "pass": true,
+      "issue": null
+    },
+    {
+      "label": "global activity high does not calculate",
+      "expected": "UNVERIFIED_ACTIVITY_MODEL",
+      "actual": "UNVERIFIED_ACTIVITY_MODEL",
+      "pass": true,
+      "issue": null
+    },
+    {
+      "label": "old cgm rows without source are silently backfilled",
+      "expected": "READ_ONLY",
+      "actual": "READ_ONLY",
+      "pass": true,
+      "issue": null
+    },
+    {
+      "label": "source metadata missing must block",
+      "expected": "CGM_SOURCE_MISSING",
+      "actual": "CGM_SOURCE_MISSING",
+      "pass": true,
+      "issue": null
+    },
+    {
+      "label": "low declared sensor quality 0 still produces read-only points",
+      "expected": "READ_ONLY",
+      "actual": "READ_ONLY",
+      "pass": true,
+      "issue": null
+    },
+    {
+      "label": "food coverage incomplete must block",
+      "expected": "HISTORY_COVERAGE_UNKNOWN",
+      "actual": "HISTORY_COVERAGE_UNKNOWN",
+      "pass": true,
+      "issue": null
+    },
+    {
+      "label": "site string (UI code) blocked",
+      "expected": "STORAGE_WRITE_REJECTED",
+      "actual": "STORAGE_WRITE_REJECTED",
+      "pass": true,
+      "issue": null
+    },
+    {
+      "label": "site object accepted",
+      "expected": "RECORDED",
+      "actual": "RECORDED",
+      "pass": true,
+      "issue": null
+    },
+    {
+      "label": "site with arm and side accepted",
+      "expected": "RECORDED",
+      "actual": "RECORDED",
+      "pass": true,
+      "issue": null
+    },
+    {
+      "label": "unsupported site blocked",
+      "expected": "STORAGE_WRITE_REJECTED",
+      "actual": "STORAGE_WRITE_REJECTED",
+      "pass": true,
+      "issue": null
+    },
+    {
+      "label": "site omitted accepted",
+      "expected": "RECORDED",
+      "actual": "RECORDED",
+      "pass": true,
+      "issue": null
+    },
+    {
+      "label": "no confirmation cannot record",
+      "expected": "NO_FACT_CONFIRMATION",
+      "actual": "NO_FACT_CONFIRMATION",
+      "pass": true,
+      "issue": null
+    },
+    {
+      "label": "no fact=no store mutation",
+      "expected": "0",
+      "actual": 0,
+      "pass": true,
+      "issue": null
+    },
+    {
+      "label": "same injection id idempotent",
+      "expected": "RECORDED and ALREADY_RECORDED",
+      "actual": "first RECORDED second ALREADY_RECORDED",
+      "pass": true,
+      "issue": null
+    },
+    {
+      "label": "same timestamp dose with another ID blocked",
+      "expected": "STORAGE_WRITE_REJECTED",
+      "actual": "STORAGE_WRITE_REJECTED",
+      "pass": true,
+      "issue": null
+    },
+    {
+      "label": "0.3U not on pen grid blocked",
+      "expected": "FACT_INVALID",
+      "actual": "FACT_INVALID",
+      "pass": true,
+      "issue": null
+    }
+  ],
+  "bugs": [
+    {
+      "code": "HIGH-SITE-001",
+      "severity": "P1",
+      "evidence": "UI code abdomen is passed by adapter as string, while GFStorage actionWriter requires injectionSite={region:\"abdomen\"}; rejected as STORAGE_WRITE_REJECTED"
+    },
+    {
+      "code": "HIGH-ACT-002",
+      "severity": "P1",
+      "evidence": "complete host activityBaseLevel usual/high -> UNVERIFIED_ACTIVITY_MODEL; new HIGH activity coefficients are not persisted in GFStorage"
+    },
+    {
+      "code": "HIGH-TARGET-003",
+      "severity": "P1",
+      "evidence": "target_range_mmol [4,10] maps to 7.0; separately entered HIGH target=5 is unavailable via adapter"
+    },
+    {
+      "code": "HIGH-CGM-004",
+      "severity": "P1",
+      "evidence": "legacy rows without sourceDeviceId are assigned cgmMetadata source ID silently; could falsely imply trusted provenance"
+    },
+    {
+      "code": "HIGH-CGM-005",
+      "severity": "P2",
+      "evidence": "metadata qualityScore 0 accepted as read-only forecast; no threshold/quality policy in adapter; no clinical claim"
+    },
+    {
+      "code": "HIGH-ACT-006",
+      "severity": "P2",
+      "evidence": "coefficients entered in standalone UI reset on reload; GFSettings/GFStorage persistence absent (known integration blocker)"
+    }
+  ]
+}

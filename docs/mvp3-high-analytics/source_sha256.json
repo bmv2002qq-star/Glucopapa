@@ -1,0 +1,20 @@
+{
+  "source_commit": "5235f1f50ec87c517cdec93b6503fd5cbf48d101",
+  "baseline_commit": "6224d9454b708fee642fd27a007ce9e5e251a72f",
+  "source-high-cl047.zip": "e96ad3972d92e545a28764491c5ea8ced3d47ecfa144efd534c3ad608524f705",
+  "source-high-cl047.diff": "07249635f93e9c9be3bfa51d04e93162d82d7d5b41c569a1d413cec348932f3d",
+  "Glucopapa_V2_HIGH_CL047_debug.apk": "5930f22dbe5eca0d6427897bb13dde7adf75955b6e5f1d4a32d53c091a3c7465",
+  "android-source.sha256": "a27aa9a6d42ec4c9a57e1db08d7840e1475ffd51d498e2ccc2c6416b382c2a0a",
+  "original-high-v0.1.3": "d82001e180b561f759a7d464813f6057c67991e22c90660b49954e02d9a6c26b",
+  "archive-high-adapter": "d2d28ff868b275440cfbd8e50aa93ac05e3379ee23296477713b72f4fce2637d",
+  "archive-high-core": "0fba7876858145be7b361ce8fd70d745c7e7c6c72d9215a030243dcf509a120e",
+  "runtime-high-core": "3fce860b5393010503449735e64674812875fb6118cb5b1f33ec74109716e93b",
+  "runtime-gfinjectionanalytics-v0.2.1": "8d482c02cb999fdae58b8b5366b94e9df3adb83f80d683fec3798a9777389951",
+  "high-derived-view": "b65f68d65928aaf6f400e034ef142dd7bbf0d7346031a9bddead8fd57452a203",
+  "inputs": {
+    "HIGH_RAR": "650a966dad99dbde9185c9754695bd0ec405ca115bb52ffa4880aacfb869bb06",
+    "HIGH_FULL_SOURCE": "8bb6199874aefc6b207dcd75f6a2abe28f87286848996ba0ee9848472e82964d",
+    "HIGH_VIRTUAL_QA": "8cdb0dc5054c33e8b5a4082b9d9b8598307933f49b013bf16dcfe555c1b6c247",
+    "GFInjectionAnalytics_v0.2.1_ZIP": "bc1134abc5464f740062d7758f07dcb842ff8600b14915981b7005633dbbe279"
+  }
+}

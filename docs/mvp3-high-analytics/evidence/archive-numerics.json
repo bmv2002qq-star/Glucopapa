@@ -1,0 +1,54 @@
+{
+  "status": "PASS",
+  "data": "SYNTHETIC_ONLY",
+  "report": [
+    {
+      "id": "LOW-F1",
+      "status": "PASS",
+      "amounts": [
+        {
+          "amount": 30,
+          "inMmol": 6.4,
+          "expected": 6.3979571403173425
+        },
+        {
+          "amount": 40,
+          "inMmol": 6.53,
+          "expected": 6.530609520423123
+        },
+        {
+          "amount": 50,
+          "inMmol": 6.66,
+          "expected": 6.663261900528903
+        },
+        {
+          "amount": 60,
+          "inMmol": 6.8,
+          "expected": 6.795914280634684
+        }
+      ]
+    },
+    {
+      "id": "LOW-F2/FOOD-F1",
+      "status": "PASS",
+      "explicitSharedTau": 40,
+      "expected": 6.429332643960894,
+      "gffAt60": 6.43,
+      "lowAt60": 6.43
+    },
+    {
+      "id": "LOW-F3/HIGH-F1",
+      "status": "PASS",
+      "rounded": 1,
+      "zero": 0,
+      "unknownRejected": true,
+      "conversionMl": 120
+    },
+    {
+      "id": "MEAL-F1",
+      "status": "PASS",
+      "recorded": false,
+      "researchEquivalent": 1.2437500000000001
+    }
+  ]
+}

@@ -1,0 +1,71 @@
+TAP version 13
+# Subtest: ST-02 / MEAL-03: planned plate, one confirmed portion, correction and one integral audit path
+ok 1 - ST-02 / MEAL-03: planned plate, one confirmed portion, correction and one integral audit path
+  ---
+  duration_ms: 46.860546
+  type: 'test'
+  ...
+# Subtest: ST-08: repeated local DST time, Minsk midnight, and stable historical time after correction
+ok 2 - ST-08: repeated local DST time, Minsk midnight, and stable historical time after correction
+  ---
+  duration_ms: 52.09119
+  type: 'test'
+  ...
+# Subtest: ST-06: legacy schema 1–4 projections retain factual and optional data when representable
+ok 3 - ST-06: legacy schema 1–4 projections retain factual and optional data when representable
+  ---
+  duration_ms: 9.096402
+  type: 'test'
+  ...
+# Subtest: ACT-08: reversed end and overlapping sessions are rejected without changing the snapshot
+ok 4 - ACT-08: reversed end and overlapping sessions are rejected without changing the snapshot
+  ---
+  duration_ms: 3.031286
+  type: 'test'
+  ...
+# Subtest: GRAPH-01: two established injections preserve separate observed link, dashed line and peak
+ok 5 - GRAPH-01: two established injections preserve separate observed link, dashed line and peak
+  ---
+  duration_ms: 18.484141
+  type: 'test'
+  ...
+# Subtest: Pinned GFForecast and AAPS-inspired engine independently preserve a stable synthetic CGM history
+ok 6 - Pinned GFForecast and AAPS-inspired engine independently preserve a stable synthetic CGM history
+  ---
+  duration_ms: 92.156535
+  type: 'test'
+  ...
+# {"fixture":"SYNTHETIC_STABLE_CGM","revision":12,"pointsByModel":[25,25],"expectedMmol":6,"thirdEngine":"LICENSE_BLOCKED"}
+# Subtest: IOB-01: 75/300 independent quadrature at the exact CL-040 minutes
+ok 7 - IOB-01: 75/300 independent quadrature at the exact CL-040 minutes
+  ---
+  duration_ms: 8.700348
+  type: 'test'
+  ...
+# Subtest: IOB-02 / IOB-07: four overlapping facts, ordering invariance and mutation through actual consumer
+ok 8 - IOB-02 / IOB-07: four overlapping facts, ordering invariance and mutation through actual consumer
+  ---
+  duration_ms: 93.385848
+  type: 'test'
+  ...
+# Subtest: IOB-03 / IOB-05: unknown history, full empty history, and rejected facts
+ok 9 - IOB-03 / IOB-05: unknown history, full empty history, and rejected facts
+  ---
+  duration_ms: 8.172866
+  type: 'test'
+  ...
+# Subtest: ST-01 / ST-04 / ST-07: same immutable fact across least-privilege ports and export
+ok 10 - ST-01 / ST-04 / ST-07: same immutable fact across least-privilege ports and export
+  ---
+  duration_ms: 61.86663
+  type: 'test'
+  ...
+1..10
+# tests 10
+# suites 0
+# pass 10
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 970.602024

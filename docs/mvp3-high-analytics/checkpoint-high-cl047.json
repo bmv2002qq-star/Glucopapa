@@ -1,0 +1,48 @@
+{
+  "date": "2026-11-20",
+  "timezone": "Europe/Minsk",
+  "repo": "bmv2002qq-star/Glucopapa",
+  "branch": "qa/mvp3-high-analytics-20261120",
+  "source_sha": "5235f1f50ec87c517cdec93b6503fd5cbf48d101",
+  "baseline_sha": "6224d9454b708fee642fd27a007ce9e5e251a72f",
+  "workflow": "https://github.com/bmv2002qq-star/Glucopapa/actions/runs/44644746370",
+  "workflow_attempt": 1,
+  "main_verified_sha": "2151fbbf2b40ac6eca4f5b02c2ba355c4e9a75f8",
+  "status": {
+    "CODE": "PASS_WITH_REPORTED_GAPS",
+    "BROWSER_SINGLE_FILE": "PASS_LOOPBACK",
+    "BROWSER_MULTI_FILE": "PASS",
+    "ANDROID_EMULATOR": {
+      "api31": "PASS",
+      "api34": "PASS",
+      "api35-core": "PASS",
+      "api35": "PASS",
+      "api36": "PASS"
+    },
+    "ANDROID_DEVICE": "NOT_TESTED",
+    "REAL_XDRIP": "NOT_TESTED",
+    "CLINICAL": "NOT_VALIDATED"
+  },
+  "cl040": {
+    "PASS": 75,
+    "BLOCKED": 35,
+    "NOT_RUN": 11,
+    "PARTIAL": 2
+  },
+  "cl047_android_positive": 4,
+  "open": [
+    "IA-047-CONTEXT",
+    "HIGH-QA-001",
+    "HIGH-QA-002",
+    "HIGH-QA-010",
+    "HIGH-QA-011",
+    "HIGH-XDRIP-DEVICE",
+    "IA-047-CLINICAL",
+    "GFxDrip-license-and-adapter"
+  ],
+  "local_debug_apk_sha256": "5930f22dbe5eca0d6427897bb13dde7adf75955b6e5f1d4a32d53c091a3c7465",
+  "provenance": "source_sha256.json",
+  "continuation": "NEXT_STEPS.md",
+  "reproduction": "REPRODUCE.md",
+  "library": "DELIVERY_FILES_READY_NOT_UPLOADED"
+}

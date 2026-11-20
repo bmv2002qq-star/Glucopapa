@@ -1,0 +1,23 @@
+{
+  "unit": {
+    "passed": 17,
+    "total": 17,
+    "failed": []
+  },
+  "fuzz": {
+    "iterations": 3000,
+    "readOnly": 2002,
+    "blocked": 998,
+    "exceptions": 0,
+    "invalidCandidates": 0,
+    "unreasonablePredictions": 0,
+    "byCode": {
+      "UNSTABLE_RESIDUAL": 60,
+      "CLINICAL_FORMULA_NOT_VALIDATED": 2002,
+      "HISTORY_COVERAGE_UNKNOWN": 283,
+      "UNVERIFIED_ACTIVITY_MODEL": 281,
+      "UNVERIFIED_ILLNESS_MODEL": 366,
+      "HORIZON_CAPPED": 8
+    }
+  }
+}

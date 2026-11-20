@@ -1,0 +1,179 @@
+{
+  "runCount": 140,
+  "byStatus": {
+    "CLINICAL_FORMULA_NOT_VALIDATED": 138,
+    "CGM_TREND_UNSTABLE": 2
+  },
+  "comparison": {
+    "GFForecast": {
+      "acceptedReplays": 69,
+      "byH": {
+        "30": {
+          "pairs": 69,
+          "mae": 0.413,
+          "bias": 0.337,
+          "rmse": 0.736
+        },
+        "60": {
+          "pairs": 69,
+          "mae": 0.91,
+          "bias": 0.744,
+          "rmse": 1.61
+        },
+        "120": {
+          "pairs": 69,
+          "mae": 1.743,
+          "bias": 1.407,
+          "rmse": 2.939
+        },
+        "180": {
+          "pairs": 69,
+          "mae": 2.459,
+          "bias": 1.938,
+          "rmse": 3.919
+        },
+        "300": {
+          "pairs": 69,
+          "mae": 3.659,
+          "bias": 2.941,
+          "rmse": 5.459
+        },
+        "360": {
+          "pairs": 69,
+          "mae": 4.067,
+          "bias": 3.237,
+          "rmse": 5.943
+        }
+      }
+    },
+    "GFCOB": {
+      "acceptedReplays": 69,
+      "byH": {
+        "30": {
+          "pairs": 69,
+          "mae": 0.49,
+          "bias": 0.451,
+          "rmse": 0.74
+        },
+        "60": {
+          "pairs": 69,
+          "mae": 1.2,
+          "bias": 1.122,
+          "rmse": 1.662
+        },
+        "120": {
+          "pairs": 69,
+          "mae": 2.028,
+          "bias": 1.833,
+          "rmse": 2.979
+        },
+        "180": {
+          "pairs": 69,
+          "mae": 2.896,
+          "bias": 2.578,
+          "rmse": 4.324
+        },
+        "300": {
+          "pairs": 69,
+          "mae": 4.42,
+          "bias": 3.875,
+          "rmse": 6.413
+        },
+        "360": {
+          "pairs": 69,
+          "mae": 4.786,
+          "bias": 4.136,
+          "rmse": 6.837
+        }
+      }
+    }
+  },
+  "modelledSafelookingButVirtualLow": 1,
+  "simCandidates": 70,
+  "simCandidatesBelowVirtualFloor": 25
+}
+SAMPLE [
+  {
+    "scenario": "без еды / устойчивый фон",
+    "currentBG": 8.398,
+    "code": "CLINICAL_FORMULA_NOT_VALIDATED",
+    "candidate": null,
+    "virtualMin": 8.398,
+    "modelMin": 8.398,
+    "future120": {
+      "forecast": 8.398,
+      "virtual": 8.398,
+      "error": 0
+    }
+  },
+  {
+    "scenario": "еда 25 г без болюса",
+    "currentBG": 17.421,
+    "code": "CLINICAL_FORMULA_NOT_VALIDATED",
+    "candidate": 4,
+    "virtualMin": 9.603,
+    "modelMin": 17.421,
+    "future120": {
+      "forecast": 17.819,
+      "virtual": 15.833,
+      "error": 1.986
+    }
+  },
+  {
+    "scenario": "еда 25 г и РинФаст 1 ЕД",
+    "currentBG": 14.802,
+    "code": "CLINICAL_FORMULA_NOT_VALIDATED",
+    "candidate": 2.5,
+    "virtualMin": 7.492,
+    "modelMin": 13.392,
+    "future120": {
+      "forecast": 13.47,
+      "virtual": 11.419,
+      "error": 2.051
+    }
+  },
+  {
+    "scenario": "инсулин перед едой",
+    "currentBG": 14.768,
+    "code": "CLINICAL_FORMULA_NOT_VALIDATED",
+    "candidate": 3,
+    "virtualMin": 7.826,
+    "modelMin": 14.718,
+    "future120": {
+      "forecast": 14.721,
+      "virtual": 13.037,
+      "error": 1.684
+    }
+  },
+  {
+    "scenario": "два приёма пищи и болюс",
+    "currentBG": 19.521,
+    "code": "CLINICAL_FORMULA_NOT_VALIDATED",
+    "candidate": null,
+    "virtualMin": 9.219,
+    "modelMin": 19.521,
+    "future120": {
+      "forecast": 24.932,
+      "virtual": 18.599,
+      "error": 6.333
+    }
+  },
+  {
+    "scenario": "поздняя еда и РинФаст",
+    "currentBG": 19.839,
+    "code": "CGM_TREND_UNSTABLE"
+  },
+  {
+    "scenario": "изменение фоновой динамики −15%",
+    "currentBG": 8.435,
+    "code": "CLINICAL_FORMULA_NOT_VALIDATED",
+    "candidate": null,
+    "virtualMin": 8.435,
+    "modelMin": 8.434,
+    "future120": {
+      "forecast": 8.467,
+      "virtual": 8.686,
+      "error": -0.219
+    }
+  }
+]

@@ -1,0 +1,44 @@
+{
+  "status": "PASS",
+  "synthetic": true,
+  "reports": [
+    {
+      "id": "ACT-06",
+      "status": "PASS",
+      "offsets": [
+        0,
+        30,
+        120,
+        360
+      ],
+      "midnight": true
+    },
+    {
+      "id": "ILL-01/ILL-04",
+      "status": "PASS",
+      "effectiveAtBoundary": 1,
+      "missingAndOverlapDetected": true
+    },
+    {
+      "id": "FOOD-05",
+      "status": "PASS",
+      "unknownQuantity": true,
+      "badMacros": true,
+      "unknownGI": true
+    },
+    {
+      "id": "FOOD-07",
+      "status": "PASS",
+      "changedOnly": "one",
+      "shiftMinutes": 30,
+      "unchanged": "two"
+    },
+    {
+      "id": "BASAL-02",
+      "status": "PASS",
+      "recorded": 4,
+      "fastIOB": 0,
+      "basalRemaining": 1.0806198068717716
+    }
+  ]
+}

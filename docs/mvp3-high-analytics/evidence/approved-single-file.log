@@ -1,0 +1,25 @@
+{
+  "status": "PASS",
+  "origin": "loopback single-document",
+  "file_uri": "ENV_BLOCKED_BY_BROWSER_POLICY",
+  "widths": {
+    "GFNutrition_v0.4.6_LIVE.html": [
+      320,
+      390,
+      428,
+      1280
+    ],
+    "GFJournal_v0.1.2_3COL_CANDIDATE.html": [
+      320,
+      390,
+      428,
+      1280
+    ],
+    "GFSettings_v0.1.4_LIVE.html": [
+      320,
+      390,
+      428,
+      1280
+    ]
+  }
+}

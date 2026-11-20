@@ -1,0 +1,20 @@
+--- original-HIGH-v0.1.0
++++ candidate-HIGH-v0.1.1
+@@ -5,7 +5,7 @@
+  */
+ (function(root,factory){'use strict';const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;if(root)root.GFHighTarget=api;})(typeof globalThis!=='undefined'?globalThis:this,function(){
+ 'use strict';
+-const VERSION='0.1.0',MS=60000,STEP=5;
++const VERSION='0.1.1-candidate',MS=60000,STEP=5;
+ const finite=n=>typeof n==='number'&&Number.isFinite(n);
+ const iso=t=>typeof t==='string'&&/(Z|[+-]\d\d:\d\d)$/.test(t)&&Number.isFinite(Date.parse(t))?Date.parse(t):NaN;
+ const round=(v,n=3)=>+v.toFixed(n);
+@@ -66,7 +66,7 @@
+   if(r.status!=='completed')return {error:'MEAL_NOT_CONFIRMED'};
+   const t=iso(r.startedAt);if(!finite(t)||t>now)return {error:'MEAL_TIME_INVALID'};
+   const plate=r.actualPlate;
+-  if(!plate||plate.containsEstimatedValues===true||!plate.totals||!finite(plate.totals.carbs)||plate.totals.carbs<0||!finite(plate.totals.fat)||!finite(plate.totals.protein))return {error:'MEAL_COMPOSITION_UNKNOWN'};
++  if(!plate||plate.containsEstimatedValues===true||!plate.totals||!finite(plate.totals.carbs)||plate.totals.carbs<0||!finite(plate.totals.fat)||plate.totals.fat<0||!finite(plate.totals.protein)||plate.totals.protein<0)return {error:'MEAL_COMPOSITION_UNKNOWN'};
+   const k=r.kinetics;
+   if(!k||!['plate_auto_research_preset_v1','explicit_research_scenario'].includes(k.origin)||!finite(k.lagMinutes)||k.lagMinutes<0||k.lagMinutes>120||!finite(k.slowDurationMinutes)||k.slowDurationMinutes<20||k.slowDurationMinutes>720)return {error:'MEAL_KINETICS_UNKNOWN'};
+   const age=(now-t)/MS,lag=k.lagMinutes,slowDuration=k.slowDurationMinutes;

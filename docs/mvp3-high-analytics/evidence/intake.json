@@ -1,0 +1,336 @@
+[
+  {
+    "name": "HIGH_v0.1.4_9F9E9B9DAB99_9C9E94A39BAC_A297_98_A295A1A2AB_CODEX.rar",
+    "bytes": 4628754,
+    "sha256": "650a966dad99dbde9185c9754695bd0ec405ca115bb52ffa4880aacfb869bb06",
+    "files": [
+      {
+        "file": "CODEX/CODEX_KNOWN_ISSUES.md",
+        "bytes": 7228,
+        "sha256": "ba0630779aad4ef0f7ca86f710ff024f9c6d4f68d8966227db033d1448b507d2"
+      },
+      {
+        "file": "CODEX/CODEX_PREVIOUS_TASK.txt",
+        "bytes": 2837,
+        "sha256": "9390a436b9cebacbda95f933e0951853af526c4326959034ffa3ed91519aedb3"
+      },
+      {
+        "file": "CODEX/CODEX_TECHNICAL_TASK.md",
+        "bytes": 9676,
+        "sha256": "be908cda96672acbcdcef735b42925f994888d5c3b81d4db9d0e77e11fe22661"
+      },
+      {
+        "file": "CODEX/CODEX_TEST_PLAN.md",
+        "bytes": 8152,
+        "sha256": "fa4930db11508294e0d814bdf2cd8c9c9c9ec613f07206e227518c9b74929d10"
+      },
+      {
+        "file": "MODULE/HIGH_Approved_UI.html",
+        "bytes": 58588,
+        "sha256": "d82001e180b561f759a7d464813f6057c67991e22c90660b49954e02d9a6c26b"
+      },
+      {
+        "file": "MODULE/MANIFEST_SHA256.json",
+        "bytes": 4576,
+        "sha256": "797b8f6c504d6bbb789aa9118c2d29dfe98a0bcc95fda58734edec945b16c3b5"
+      },
+      {
+        "file": "MODULE/README.md",
+        "bytes": 5250,
+        "sha256": "6661c792787b19b8bafcd80ed6bc6536c521202d7312645efab9ac3faba41f75"
+      },
+      {
+        "file": "MODULE/SOURCE_LOCK_v0.1.3.json",
+        "bytes": 845,
+        "sha256": "d66adedfe199e1a9ae0d3d496599c6a71d0bc22768a40f73e6f5fa95be000828"
+      },
+      {
+        "file": "MODULE/docs/CHANGELOG_v0.1.4.md",
+        "bytes": 1230,
+        "sha256": "01ed73a7075b6662175084479f85706c489a7a67c74132c6c3e0f2e73cc25b94"
+      },
+      {
+        "file": "MODULE/docs/FORMULAS.md",
+        "bytes": 6246,
+        "sha256": "4f14ab74667246d3e721e137cca53ba7ad5ea2f68ae0be531591b586fd2e5681"
+      },
+      {
+        "file": "MODULE/docs/GFSTORAGE_CONTRACT.md",
+        "bytes": 4989,
+        "sha256": "1c6eb731943411652758d08ba522d049d38317f1f4ab8e9be79e58414b56530f"
+      },
+      {
+        "file": "MODULE/docs/RELEASE_ACCEPTANCE.md",
+        "bytes": 3772,
+        "sha256": "8148cf8e3e05034b27ceb98c36b6030f011a4ad7c2295d5c8aaf902d9eaa725e"
+      },
+      {
+        "file": "MODULE/integration/CODEX_TASK_FINAL.md",
+        "bytes": 9676,
+        "sha256": "be908cda96672acbcdcef735b42925f994888d5c3b81d4db9d0e77e11fe22661"
+      },
+      {
+        "file": "MODULE/src/gfhigh_storage_adapter.js",
+        "bytes": 7778,
+        "sha256": "d2d28ff868b275440cfbd8e50aa93ac05e3379ee23296477713b72f4fce2637d"
+      },
+      {
+        "file": "MODULE/src/gfhigh_target_core.js",
+        "bytes": 15515,
+        "sha256": "0fba7876858145be7b361ce8fd70d745c7e7c6c72d9215a030243dcf509a120e"
+      },
+      {
+        "file": "MODULE/tests/fixtures/modules/GFStorage_v0.5.10/src/gfstorage_core.js",
+        "bytes": 67447,
+        "sha256": "360f298bf5ee6c717ef4053a0e8fa009b42897615c61ad584929c5a3298d165f"
+      },
+      {
+        "file": "MODULE/tests/fixtures/shared/GFTimeGrid_v0.1.0.js",
+        "bytes": 2724,
+        "sha256": "e8ea5f37150b2d576aa04a39fd81d3f9c0445f63e5ee5666635f981e8022eee8"
+      },
+      {
+        "file": "MODULE/tests/test_browser_ui_v013.py",
+        "bytes": 4761,
+        "sha256": "613f8ccdf89825ea3502343039f42f1a46b8e937a3dbd06f90f843fe878ce5a4"
+      },
+      {
+        "file": "MODULE/tests/test_core.js",
+        "bytes": 10137,
+        "sha256": "9a36ad0a7eb9675c0daadd58d2c8b18fdf320932d291c29401f45a6173669dd4"
+      },
+      {
+        "file": "MODULE/tests/test_release_contract.py",
+        "bytes": 2544,
+        "sha256": "c3d487787e5ad52c1f031026e3e52398d09e8aa8a62b00a4fa4df3a720bddcbf"
+      },
+      {
+        "file": "MODULE/tests/test_stress.js",
+        "bytes": 1861,
+        "sha256": "03c805771a7bdd6cffaddf71fbba8ec7ba7128e86dd0c64b742c55c1cc4c58bd"
+      },
+      {
+        "file": "MODULE/vendor/GFAutoCOBProfile_v0.1.0_UNMODIFIED.js",
+        "bytes": 7066,
+        "sha256": "68fa7b0faadb8fa86ddc98582744c8362388b1169050810851c0f360268e7ae2"
+      },
+      {
+        "file": "MODULE/vendor/RinfastEngine_v0.3.0_UNMODIFIED.js",
+        "bytes": 19277,
+        "sha256": "9bdc65e84c1ff3930afe554779bd6c7537bac1b04b71fc5095b654d617d5d30f"
+      },
+      {
+        "file": "ORIGINAL_ARCHIVES/HIGH_v0.1.4_FULL_SOURCE.zip",
+        "bytes": 1217976,
+        "sha256": "8bb6199874aefc6b207dcd75f6a2abe28f87286848996ba0ee9848472e82964d"
+      },
+      {
+        "file": "ORIGINAL_ARCHIVES/HIGH_v0.1.4_VIRTUAL_QA.zip",
+        "bytes": 2687048,
+        "sha256": "8cdb0dc5054c33e8b5a4082b9d9b8598307933f49b013bf16dcfe555c1b6c247"
+      },
+      {
+        "file": "QA/Check_List.md",
+        "bytes": 1535,
+        "sha256": "c5db51209beeabec5c87336c0a85275daec0bbccbc60fb4d2b5ae2a2b65f8151"
+      },
+      {
+        "file": "QA/Virtual_Test_Report.md",
+        "bytes": 12649,
+        "sha256": "7a60c6d3759c1f5011704f0336602eb48c60bb448195fc898a788eca7357e27f"
+      },
+      {
+        "file": "QA/browser_matrix.py",
+        "bytes": 4088,
+        "sha256": "6270e7cf3d4967fc3d80edca1a15388a2057e70ef43cfd806faabb080c643ce5"
+      },
+      {
+        "file": "QA/graphs/HIGH_virtual_example.png",
+        "bytes": 104432,
+        "sha256": "8b2063515bd5631c2ea2bc04c2d2d78d81b56cfc7689faf32c6f3936423f9258"
+      },
+      {
+        "file": "QA/graphs/HIGH_vs_GFPhysio_MAE.png",
+        "bytes": 98412,
+        "sha256": "205135377e8a2866daba8d97ffba199fdbd695f037e025b4469571c8714afadf"
+      },
+      {
+        "file": "QA/independent_models/GFPhysio_30_virtual_subjects.json",
+        "bytes": 42181,
+        "sha256": "8c2081bcdb4bc5dab59cb5bc062b50dc2f4ac779ed466c30add7df405e8163b1"
+      },
+      {
+        "file": "QA/independent_models/LICENSE_GFPhysio.txt",
+        "bytes": 1052,
+        "sha256": "ddfd0daee4b3569977580f2d4fc52ffc953c88db7b97f81abecfe2c003e10c75"
+      },
+      {
+        "file": "QA/independent_models/gfphysio_core_v0.1.0.js",
+        "bytes": 5155,
+        "sha256": "312842e0c6f3e3b618259d8a25eb97090e9ffe068cc1e34790199219da134e70"
+      },
+      {
+        "file": "QA/integration_matrix.js",
+        "bytes": 7905,
+        "sha256": "16ee0ab1459385a7bb1fdc6a5e941264b9e7cf0b5c4af4d8cc065f8c3447c815"
+      },
+      {
+        "file": "QA/make_qa_figures.py",
+        "bytes": 2311,
+        "sha256": "dae7cd760579b46da58818487400d57206fdeb4bc3f334ffc91b7eea950fb527"
+      },
+      {
+        "file": "QA/negative_and_fuzz.js",
+        "bytes": 5078,
+        "sha256": "956c339c04d7a784dd57081d5ded87b9b8452cab032672730aba032eb7f78307"
+      },
+      {
+        "file": "QA/physio_substep_check.js",
+        "bytes": 1124,
+        "sha256": "094a4a9b947f3c9c0a4fa0e7058ce7c106974154e69b6aecd0a31bd19b842aee"
+      },
+      {
+        "file": "QA/results/BROWSER_MATRIX_RESULTS.json",
+        "bytes": 567,
+        "sha256": "3faacc57528c2a1e9bf5c5ec273a5a3c78d863d5e340f5c7eb6b2c75e133ee4b"
+      },
+      {
+        "file": "QA/results/INTEGRATION_MATRIX.json",
+        "bytes": 4987,
+        "sha256": "a0f1cad35473e5019d5b466be55aeb0fbf053ed0b4450631663de05d3c932b34"
+      },
+      {
+        "file": "QA/results/NEGATIVE_FUZZ_RESULTS.json",
+        "bytes": 659,
+        "sha256": "db4373bc85bb93855d561e8be6bb77a43e4720c54d9125d7f7e97e01c15b28d5"
+      },
+      {
+        "file": "QA/results/PHYSIO_NUMERIC_PARITY.json",
+        "bytes": 1504,
+        "sha256": "6dd974b1db641edf628423416b983dd600acbb9f65ad25c6196b53cd1fdd105c"
+      },
+      {
+        "file": "QA/results/VIRTUAL_PHYSIO_RESULTS.json",
+        "bytes": 151873,
+        "sha256": "2eb37fb6cd34037ac5f4f1859d90ba061d7bf61970cf7bc7f83c960b310508e5"
+      },
+      {
+        "file": "QA/virtual_physio_replay.js",
+        "bytes": 6275,
+        "sha256": "5a82b3dca27982d9d42c95ea3ad3219a421be60b920707fb3c412dcdb5932e74"
+      },
+      {
+        "file": "README_FIRST_RU.md",
+        "bytes": 2349,
+        "sha256": "007e4fc3d130b4c5657db87ffbc55946d8c4afcf6991b0a4115b2b6c898bcd2a"
+      },
+      {
+        "file": "VERIFY_SHA256.txt",
+        "bytes": 4474,
+        "sha256": "9b40d172a9afac8defc7b40ca32bcb37f577c6f9b9641fce4e8a7415885b5fff"
+      }
+    ]
+  },
+  {
+    "name": "Glucopapa_GFInjectionAnalytics_v0.2.1_919597_919E9B95979D98_CODEX.zip",
+    "bytes": 213395,
+    "sha256": "bc1134abc5464f740062d7758f07dcb842ff8600b14915981b7005633dbbe279",
+    "files": [
+      {
+        "file": "MANIFEST_SHA256.json",
+        "bytes": 3048,
+        "sha256": "4e204aff9a24dd5758694b6ee83e81ff5579822c2f816b326a82f7ae34562e44"
+      },
+      {
+        "file": "README.md",
+        "bytes": 3957,
+        "sha256": "7579c87a73ac0976b277b02d2510e58e0e968107eec0adadb2ea34e7a01ef5a7"
+      },
+      {
+        "file": "docs/CL-047_GFInjectionAnalytics_NO_ILLNESS.md",
+        "bytes": 1471,
+        "sha256": "ce20c4b8d36e3918e4d542b5128c1b3567f31b956b5288625ba305c612c8a942"
+      },
+      {
+        "file": "docs/CODEX_HANDOFF_v0.2.1.md",
+        "bytes": 4136,
+        "sha256": "e968a88b52d4213b75b7b99a0c72cc1defacb8b3bee88eca09d3b3b93aa6d8bf"
+      },
+      {
+        "file": "docs/JR-20261120-GFIA021.md",
+        "bytes": 2306,
+        "sha256": "62fd45cd2d4ddd0b1118f7b10af7c958bcd77dd0c9679faa9c0e66d97494fe1c"
+      },
+      {
+        "file": "docs/QA_REPORT_v0.2.1.md",
+        "bytes": 2008,
+        "sha256": "ac244fcd2fec64b3e134c4487531c944aae06fe3dca270438ad24438cef95e4a"
+      },
+      {
+        "file": "docs/node_tests.log",
+        "bytes": 7256,
+        "sha256": "3de45ea150a6c36869f39339b4b44a9a27b9b97f8dd6c827ca5a1caad29d8fbd"
+      },
+      {
+        "file": "docs/РЕЕСТР_ДОПОЛНЕНИЕ_GFIA021.md",
+        "bytes": 911,
+        "sha256": "488232283dd7b366a5193b0170ca9d2550194b6645b9c78dbeec66ff4d87a288"
+      },
+      {
+        "file": "lab/fictional_journal.json",
+        "bytes": 4429230,
+        "sha256": "74b344a2678bd91f3ee392ccd9967a4b2f20402792654e9b917ac818711d2369"
+      },
+      {
+        "file": "lab/holdout_cases.csv",
+        "bytes": 23011,
+        "sha256": "6bb309d1287b2ac5b6592a48c2683dd81f8b60380396bbeadd521948eb764861"
+      },
+      {
+        "file": "lab/old_holdout_cases.csv",
+        "bytes": 22913,
+        "sha256": "aa592c8fcaa95721ed7e56b85c4064f794f68222912f99bf35c8e5d00dc1d7dd"
+      },
+      {
+        "file": "lab/report_stdout.json",
+        "bytes": 17129,
+        "sha256": "a0ebd453e5d74ffd5a0f4dea239880240fc3ab6f589ce2fab46f15c30be7d62b"
+      },
+      {
+        "file": "lab/results.json",
+        "bytes": 17128,
+        "sha256": "b98efe892697bc53ba696fc92319ebdfde88fc793e8fc4212938d16cd625b85b"
+      },
+      {
+        "file": "lab/virtual_lab.cjs",
+        "bytes": 15861,
+        "sha256": "a1f02b16d5f72d74acef4e22c58741377a6010cfa50207efa6d299f8f29069d9"
+      },
+      {
+        "file": "lab/СРАВНЕНИЕ_400_ЗАПРОСОВ.csv",
+        "bytes": 30875,
+        "sha256": "cf7b16467f66088ea8063cb1b3f7eb690f2d8c51c725ad1a15bde6204a850b34"
+      },
+      {
+        "file": "lab/СРАВНЕНИЕ_РЕЗУЛЬТАТЫ.json",
+        "bytes": 423,
+        "sha256": "d918a2ca229561f777b4731d8f05d61beb59400c0cacca867ea55cc89a6b9081"
+      },
+      {
+        "file": "src/GFInjectionAnalytics_v0.2.1.js",
+        "bytes": 23927,
+        "sha256": "8d482c02cb999fdae58b8b5366b94e9df3adb83f80d683fec3798a9777389951"
+      },
+      {
+        "file": "test/GFInjectionAnalytics.test.cjs",
+        "bytes": 16553,
+        "sha256": "f0fc3c46eb7e88845c502c9fa5f7c0810cc0d4a4c1233407254ea325628c4978"
+      },
+      {
+        "file": "test/compare_v020_v021.py",
+        "bytes": 2632,
+        "sha256": "dc1cac5b453816c724fda7181f7a8f1848dcdad864a731dd304eb731f226ba29"
+      }
+    ]
+  }
+]

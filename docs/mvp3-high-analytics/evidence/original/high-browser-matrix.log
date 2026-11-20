@@ -1,0 +1,27 @@
+{
+  "runs": 288,
+  "passed": 288,
+  "failed": 0,
+  "failedExamples": [],
+  "statuses": {
+    "BLOCKED": 144,
+    "SIMULATION_SOLUTION": 96,
+    "SIMULATION_NO_SOLUTION": 48
+  },
+  "pageErrors": [],
+  "extras": {
+    "invalidCoeffBlocked": true,
+    "invalidDoseRejected": true,
+    "invalidTargetBlocked": true,
+    "graphBeforeInjection": true,
+    "recordButtonDisabled": true,
+    "siteOptions": [
+      "Живот",
+      "Плечо",
+      "Бедро",
+      "Ягодица"
+    ],
+    "overflow": false,
+    "standaloneCoefficientResetsOnReload": true
+  }
+}

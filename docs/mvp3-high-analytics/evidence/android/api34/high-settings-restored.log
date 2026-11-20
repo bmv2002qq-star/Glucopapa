@@ -1,0 +1,5 @@
+INSTRUMENTATION_RESULT: stream=
+QA_PASS stock
+
+INSTRUMENTATION_RESULT: webview={"fixture":"SYNTHETIC","revision":12,"sqlite":true,"status":"PASS","step":"high-settings-restored"}
+INSTRUMENTATION_CODE: -1

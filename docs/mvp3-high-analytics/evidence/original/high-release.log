@@ -1,0 +1,15 @@
+test_approved_html_equals_demo (__main__.Contract.test_approved_html_equals_demo) ... ok
+test_approved_screen_order (__main__.Contract.test_approved_screen_order) ... ok
+test_checkbox_on (__main__.Contract.test_checkbox_on) ... ok
+test_coeffs (__main__.Contract.test_coeffs) ... ok
+test_documentation_current (__main__.Contract.test_documentation_current) ... ok
+test_live_read_only (__main__.Contract.test_live_read_only) ... ok
+test_manual_step_and_site (__main__.Contract.test_manual_step_and_site) ... ok
+test_rinfast_only_and_leve_ignore (__main__.Contract.test_rinfast_only_and_leve_ignore) ... ok
+test_storage_single_host_and_action_gate (__main__.Contract.test_storage_single_host_and_action_gate) ... ok
+test_ui_three_levels_only (__main__.Contract.test_ui_three_levels_only) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 0.001s
+
+OK

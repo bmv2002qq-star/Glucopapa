@@ -1,0 +1,14 @@
+{
+  "dataset": "fixed synthetic 400-query holdout, not real patient data",
+  "old_found": 366,
+  "new_found": 373,
+  "newly_answered": 7,
+  "lost_answers": 0,
+  "changed_lags_on_shared_answers": 24,
+  "old_mae_all_answers": 1.511,
+  "new_mae_all_answers": 1.523,
+  "old_mae_common": 1.511,
+  "new_mae_common": 1.511,
+  "previously_separated_history_condition": "ignored in candidate v0.2.1",
+  "medical_validation": false
+}

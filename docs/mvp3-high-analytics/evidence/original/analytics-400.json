@@ -1,0 +1,696 @@
+{
+  "generatedAt": "2026-11-19T20:30:00.000Z",
+  "type": "FICTIONAL_ONLY",
+  "provenanceNote": "Данные полностью вымышлены; для теста используется устройство-совместимая метка device_recorded. Это не данные настоящего датчика.",
+  "moduleVersion": "0.2.1-history-only",
+  "input": {
+    "historyDays": 179,
+    "cgmCadenceMin": 5,
+    "raw": {
+      "meals": 514,
+      "corrections": 12,
+      "low": 4,
+      "withoutActual": 4,
+      "activity": {
+        "usual": 404,
+        "high": 45,
+        "low": 43,
+        "sport": 22
+      },
+      "illness": {
+        "no": 502,
+        "yes": 12
+      },
+      "bySlot": {
+        "morning": 167,
+        "day": 167,
+        "evening": 167,
+        "night": 13
+      }
+    },
+    "events": 526,
+    "cgmRows": 23048,
+    "mealSessions": 514
+  },
+  "index": {
+    "status": "READY",
+    "eligibleMeals": 510,
+    "corrections": 12,
+    "rejected": {
+      "actual_meal_unconfirmed": 4
+    },
+    "cgmCount": 23048,
+    "indexMs": 263.88,
+    "bySlot": {
+      "night": 13,
+      "morning": 167,
+      "day": 167,
+      "evening": 163
+    }
+  },
+  "examples": [
+    {
+      "name": "Гречка утром 100 г",
+      "food": "buckwheat",
+      "slot": "morning",
+      "status": "HISTORICAL_ESTIMATE",
+      "code": null,
+      "lagMin": 13,
+      "range": [
+        11,
+        14
+      ],
+      "matched": 20,
+      "days": 20,
+      "qualifier": "near",
+      "firstMatches": [
+        {
+          "id": "session-19-morning-buckwheat",
+          "similarity": 1,
+          "lag": 14,
+          "at": "2026-10-31T05:14:00.000Z"
+        },
+        {
+          "id": "session-8-morning-pasta",
+          "similarity": 0.9,
+          "lag": 13,
+          "at": "2026-11-11T05:13:00.000Z"
+        },
+        {
+          "id": "session-64-morning-buckwheat",
+          "similarity": 1,
+          "lag": 14,
+          "at": "2026-09-16T05:14:00.000Z"
+        },
+        {
+          "id": "session-53-morning-pasta",
+          "similarity": 0.9,
+          "lag": 12,
+          "at": "2026-09-27T05:12:00.000Z"
+        },
+        {
+          "id": "session-109-morning-buckwheat",
+          "similarity": 1,
+          "lag": 14,
+          "at": "2026-08-02T05:14:00.000Z"
+        },
+        {
+          "id": "session-45-morning-porridge",
+          "similarity": 0.9,
+          "lag": 11,
+          "at": "2026-10-05T05:11:00.000Z"
+        }
+      ]
+    },
+    {
+      "name": "Гречка утром 150 г",
+      "food": "buckwheat",
+      "slot": "morning",
+      "status": "HISTORICAL_ESTIMATE",
+      "code": null,
+      "lagMin": 12,
+      "range": [
+        9,
+        15
+      ],
+      "matched": 20,
+      "days": 20,
+      "qualifier": "near",
+      "firstMatches": [
+        {
+          "id": "session-37-morning-buckwheat",
+          "similarity": 0.9,
+          "lag": 13,
+          "at": "2026-10-13T05:13:00.000Z"
+        },
+        {
+          "id": "session-1-morning-buckwheat",
+          "similarity": 0.9,
+          "lag": 13,
+          "at": "2026-11-18T05:13:00.000Z"
+        },
+        {
+          "id": "session-26-morning-pasta",
+          "similarity": 0.9,
+          "lag": 11,
+          "at": "2026-10-24T05:11:00.000Z"
+        },
+        {
+          "id": "session-82-morning-buckwheat",
+          "similarity": 1,
+          "lag": 12,
+          "at": "2026-08-29T05:12:00.000Z"
+        },
+        {
+          "id": "session-17-morning-pasta",
+          "similarity": 0.9,
+          "lag": 15,
+          "at": "2026-11-02T05:15:00.000Z"
+        },
+        {
+          "id": "session-18-morning-porridge",
+          "similarity": 0.9,
+          "lag": 11,
+          "at": "2026-11-01T05:11:00.000Z"
+        }
+      ]
+    },
+    {
+      "name": "Омлет утром 100 г",
+      "food": "omelette",
+      "slot": "morning",
+      "status": "HISTORICAL_ESTIMATE",
+      "code": null,
+      "lagMin": 14,
+      "range": [
+        13,
+        16
+      ],
+      "matched": 9,
+      "days": 9,
+      "qualifier": "near",
+      "firstMatches": [
+        {
+          "id": "session-32-morning-omelette",
+          "similarity": 0.9,
+          "lag": 14,
+          "at": "2026-10-18T05:14:00.000Z"
+        },
+        {
+          "id": "session-122-morning-omelette",
+          "similarity": 0.9,
+          "lag": 14,
+          "at": "2026-07-20T05:14:00.000Z"
+        },
+        {
+          "id": "session-68-morning-omelette",
+          "similarity": 0.9,
+          "lag": 13,
+          "at": "2026-09-12T05:13:00.000Z"
+        },
+        {
+          "id": "session-41-morning-omelette",
+          "similarity": 0.8,
+          "lag": 16,
+          "at": "2026-10-09T05:16:00.000Z"
+        },
+        {
+          "id": "session-113-morning-omelette",
+          "similarity": 0.9,
+          "lag": 15,
+          "at": "2026-07-29T05:15:00.000Z"
+        },
+        {
+          "id": "session-167-morning-omelette",
+          "similarity": 0.9,
+          "lag": 16,
+          "at": "2026-06-05T05:16:00.000Z"
+        }
+      ]
+    },
+    {
+      "name": "Омлет утром 150 г",
+      "food": "omelette",
+      "slot": "morning",
+      "status": "HISTORICAL_ESTIMATE",
+      "code": null,
+      "lagMin": 15,
+      "range": [
+        12,
+        16
+      ],
+      "matched": 11,
+      "days": 11,
+      "qualifier": "near",
+      "firstMatches": [
+        {
+          "id": "session-41-morning-omelette",
+          "similarity": 0.9,
+          "lag": 16,
+          "at": "2026-10-09T05:16:00.000Z"
+        },
+        {
+          "id": "session-5-morning-omelette",
+          "similarity": 0.9,
+          "lag": 16,
+          "at": "2026-11-14T05:16:00.000Z"
+        },
+        {
+          "id": "session-86-morning-omelette",
+          "similarity": 0.9,
+          "lag": 15,
+          "at": "2026-08-25T05:15:00.000Z"
+        },
+        {
+          "id": "session-131-morning-omelette",
+          "similarity": 1,
+          "lag": 15,
+          "at": "2026-07-11T05:15:00.000Z"
+        },
+        {
+          "id": "session-32-morning-omelette",
+          "similarity": 0.8,
+          "lag": 14,
+          "at": "2026-10-18T05:14:00.000Z"
+        },
+        {
+          "id": "session-95-morning-omelette",
+          "similarity": 0.9,
+          "lag": 12,
+          "at": "2026-08-16T05:12:00.000Z"
+        }
+      ]
+    },
+    {
+      "name": "Рис днём 160 г",
+      "food": "rice",
+      "slot": "day",
+      "status": "HISTORICAL_ESTIMATE",
+      "code": null,
+      "lagMin": 9,
+      "range": [
+        6,
+        11
+      ],
+      "matched": 20,
+      "days": 20,
+      "qualifier": "near",
+      "firstMatches": [
+        {
+          "id": "session-32-day-rice",
+          "similarity": 0.9,
+          "lag": 10,
+          "at": "2026-10-18T11:10:00.000Z"
+        },
+        {
+          "id": "session-68-day-rice",
+          "similarity": 0.9,
+          "lag": 6,
+          "at": "2026-09-12T11:06:00.000Z"
+        },
+        {
+          "id": "session-2-day-buckwheat",
+          "similarity": 0.8,
+          "lag": 10,
+          "at": "2026-11-17T11:10:00.000Z"
+        },
+        {
+          "id": "session-122-day-rice",
+          "similarity": 1,
+          "lag": 6,
+          "at": "2026-07-20T11:06:00.000Z"
+        },
+        {
+          "id": "session-36-day-pasta",
+          "similarity": 0.9,
+          "lag": 11,
+          "at": "2026-10-14T11:11:00.000Z"
+        },
+        {
+          "id": "session-113-day-rice",
+          "similarity": 0.9,
+          "lag": 9,
+          "at": "2026-07-29T11:09:00.000Z"
+        }
+      ]
+    },
+    {
+      "name": "Пицца вечером 120 г",
+      "food": "pizza",
+      "slot": "evening",
+      "status": "HISTORICAL_ESTIMATE",
+      "code": null,
+      "lagMin": 13,
+      "range": [
+        11,
+        16
+      ],
+      "matched": 20,
+      "days": 20,
+      "qualifier": "near",
+      "firstMatches": [
+        {
+          "id": "session-9-evening-pizza",
+          "similarity": 1,
+          "lag": 12,
+          "at": "2026-11-10T17:12:00.000Z"
+        },
+        {
+          "id": "session-54-evening-pizza",
+          "similarity": 0.9,
+          "lag": 16,
+          "at": "2026-09-26T17:16:00.000Z"
+        },
+        {
+          "id": "session-18-evening-pizza",
+          "similarity": 0.9,
+          "lag": 16,
+          "at": "2026-11-01T17:16:00.000Z"
+        },
+        {
+          "id": "session-144-evening-pizza",
+          "similarity": 1,
+          "lag": 12,
+          "at": "2026-06-28T17:12:00.000Z"
+        },
+        {
+          "id": "session-13-evening-sandwich",
+          "similarity": 0.8,
+          "lag": 11,
+          "at": "2026-11-06T17:11:00.000Z"
+        },
+        {
+          "id": "session-67-evening-sandwich",
+          "similarity": 0.9,
+          "lag": 13,
+          "at": "2026-09-13T17:13:00.000Z"
+        }
+      ]
+    },
+    {
+      "name": "Ночной перекус",
+      "food": "sandwich",
+      "slot": "night",
+      "status": "HISTORICAL_ESTIMATE",
+      "code": null,
+      "lagMin": 10,
+      "range": [
+        9,
+        12
+      ],
+      "matched": 11,
+      "days": 11,
+      "qualifier": "extended",
+      "firstMatches": [
+        {
+          "id": "session-91-night-sandwich",
+          "similarity": 0.9,
+          "lag": 12,
+          "at": "2026-08-19T23:12:00.000Z"
+        },
+        {
+          "id": "session-119-night-potato",
+          "similarity": 0.7,
+          "lag": 10,
+          "at": "2026-07-22T23:10:00.000Z"
+        },
+        {
+          "id": "session-7-night-pasta",
+          "similarity": 0.7,
+          "lag": 9,
+          "at": "2026-11-11T23:09:00.000Z"
+        },
+        {
+          "id": "session-105-night-pizza",
+          "similarity": 0.8,
+          "lag": 15,
+          "at": "2026-08-05T23:15:00.000Z"
+        },
+        {
+          "id": "session-35-night-porridge",
+          "similarity": 0.7,
+          "lag": 9,
+          "at": "2026-10-14T23:09:00.000Z"
+        },
+        {
+          "id": "session-21-night-rice",
+          "similarity": 0.7,
+          "lag": 9,
+          "at": "2026-10-28T23:09:00.000Z"
+        }
+      ]
+    },
+    {
+      "name": "Болезнь днём",
+      "food": "rice",
+      "slot": "day",
+      "status": "HISTORICAL_ESTIMATE",
+      "code": null,
+      "lagMin": 8,
+      "range": [
+        8,
+        12
+      ],
+      "matched": 20,
+      "days": 20,
+      "qualifier": "near",
+      "firstMatches": [
+        {
+          "id": "session-5-day-rice",
+          "similarity": 0.9,
+          "lag": 8,
+          "at": "2026-11-14T11:08:00.000Z"
+        },
+        {
+          "id": "session-59-day-rice",
+          "similarity": 0.9,
+          "lag": 8,
+          "at": "2026-09-21T11:08:00.000Z"
+        },
+        {
+          "id": "session-18-day-pasta",
+          "similarity": 0.9,
+          "lag": 8,
+          "at": "2026-11-01T11:08:00.000Z"
+        },
+        {
+          "id": "session-27-day-pasta",
+          "similarity": 0.9,
+          "lag": 8,
+          "at": "2026-10-23T11:08:00.000Z"
+        },
+        {
+          "id": "session-104-day-rice",
+          "similarity": 0.9,
+          "lag": 9,
+          "at": "2026-08-07T11:09:00.000Z"
+        },
+        {
+          "id": "session-29-day-buckwheat",
+          "similarity": 0.8,
+          "lag": 10,
+          "at": "2026-10-21T11:10:00.000Z"
+        }
+      ]
+    },
+    {
+      "name": "Спорт вечером",
+      "food": "pizza",
+      "slot": "evening",
+      "status": "HISTORICAL_ESTIMATE",
+      "code": null,
+      "lagMin": 8,
+      "range": [
+        6,
+        12
+      ],
+      "matched": 5,
+      "days": 5,
+      "qualifier": "extended",
+      "firstMatches": [
+        {
+          "id": "session-23-evening-potato",
+          "similarity": 0.7,
+          "lag": 6,
+          "at": "2026-10-27T17:06:00.000Z"
+        },
+        {
+          "id": "session-46-evening-pasta",
+          "similarity": 0.7,
+          "lag": 8,
+          "at": "2026-10-04T17:08:00.000Z"
+        },
+        {
+          "id": "session-138-evening-buckwheat",
+          "similarity": 0.7,
+          "lag": 10,
+          "at": "2026-07-04T17:10:00.000Z"
+        },
+        {
+          "id": "session-115-evening-omelette",
+          "similarity": 0.7,
+          "lag": 12,
+          "at": "2026-07-27T17:12:00.000Z"
+        },
+        {
+          "id": "session-92-evening-porridge",
+          "similarity": 0.6,
+          "lag": 8,
+          "at": "2026-08-19T17:08:00.000Z"
+        }
+      ]
+    },
+    {
+      "name": "Гречка утром, иной ГИ",
+      "food": "buckwheat",
+      "slot": "morning",
+      "status": "HISTORICAL_ESTIMATE",
+      "code": null,
+      "lagMin": 13,
+      "range": [
+        10,
+        14
+      ],
+      "matched": 20,
+      "days": 20,
+      "qualifier": "extended",
+      "firstMatches": [
+        {
+          "id": "session-19-morning-buckwheat",
+          "similarity": 0.9,
+          "lag": 14,
+          "at": "2026-10-31T05:14:00.000Z"
+        },
+        {
+          "id": "session-8-morning-pasta",
+          "similarity": 0.8,
+          "lag": 13,
+          "at": "2026-11-11T05:13:00.000Z"
+        },
+        {
+          "id": "session-64-morning-buckwheat",
+          "similarity": 0.9,
+          "lag": 14,
+          "at": "2026-09-16T05:14:00.000Z"
+        },
+        {
+          "id": "session-53-morning-pasta",
+          "similarity": 0.8,
+          "lag": 12,
+          "at": "2026-09-27T05:12:00.000Z"
+        },
+        {
+          "id": "session-109-morning-buckwheat",
+          "similarity": 0.9,
+          "lag": 14,
+          "at": "2026-08-02T05:14:00.000Z"
+        },
+        {
+          "id": "session-4-morning-rice",
+          "similarity": 0.8,
+          "lag": 12,
+          "at": "2026-11-15T05:12:00.000Z"
+        }
+      ]
+    }
+  ],
+  "holdout": {
+    "queries": 400,
+    "covered": 373,
+    "coveragePct": 93.3,
+    "notFound": {
+      "SIMILAR_CASES_INSUFFICIENT": 27
+    },
+    "meanAbsErrorMin": 1.52,
+    "medianAbsErrorMin": 1,
+    "p90AbsErrorMin": 3,
+    "within3MinPct": 95.4,
+    "bySlot": {
+      "night": {
+        "queries": 100,
+        "found": 75,
+        "coveragePct": 75,
+        "meanAbsErrorMin": 1.61,
+        "medianAbsErrorMin": 2,
+        "p90AbsErrorMin": 3,
+        "within3MinPct": 90.7
+      },
+      "morning": {
+        "queries": 100,
+        "found": 100,
+        "coveragePct": 100,
+        "meanAbsErrorMin": 1.36,
+        "medianAbsErrorMin": 1,
+        "p90AbsErrorMin": 3,
+        "within3MinPct": 97
+      },
+      "day": {
+        "queries": 100,
+        "found": 98,
+        "coveragePct": 98,
+        "meanAbsErrorMin": 1.5,
+        "medianAbsErrorMin": 1,
+        "p90AbsErrorMin": 3,
+        "within3MinPct": 98
+      },
+      "evening": {
+        "queries": 100,
+        "found": 100,
+        "coveragePct": 100,
+        "meanAbsErrorMin": 1.64,
+        "medianAbsErrorMin": 1,
+        "p90AbsErrorMin": 3,
+        "within3MinPct": 95
+      }
+    },
+    "topSameFoodPct": 81.5,
+    "shiftedIndividualBaselineTest": {
+      "scenario": "fictional latency suddenly increases by +8 minutes, with otherwise identical inputs",
+      "meanAbsErrorMin": 8.32,
+      "within3MinPct": 0
+    }
+  },
+  "checks": [
+    {
+      "name": "Четыре временных сегмента не смешиваются",
+      "pass": true,
+      "details": {
+        "code": "HISTORY_LESS_THAN_3_DAYS"
+      }
+    },
+    {
+      "name": "Все события индекса в пределах 6 месяцев",
+      "pass": true,
+      "details": {
+        "count": 522
+      }
+    },
+    {
+      "name": "Все коррекционные уколы отдельно",
+      "pass": true,
+      "details": {
+        "corrections": 12
+      }
+    },
+    {
+      "name": "При неизвестном IOB нет интервала",
+      "pass": true,
+      "details": {}
+    },
+    {
+      "name": "Нет резервного RinfastEngine или GFForecast",
+      "pass": true,
+      "details": {
+        "version": "0.2.1-history-only"
+      }
+    },
+    {
+      "name": "При отсутствии аналогов нет числового времени",
+      "pass": true,
+      "details": {}
+    },
+    {
+      "name": "Низкий сахар блокирует выдачу времени",
+      "pass": true,
+      "details": {
+        "code": "CURRENT_GLUCOSE_LOW"
+      }
+    },
+    {
+      "name": "Чтение не изменяет GFStorage-фикстуру",
+      "pass": true,
+      "details": {
+        "testResult": "HISTORICAL_ESTIMATE"
+      }
+    },
+    {
+      "name": "Статус обратной рекомендации запрещён",
+      "pass": true,
+      "details": {}
+    }
+  ],
+  "notes": [
+    "MAE сравнивает вымышленный исторический интервал, а не медицински оптимальное время.",
+    "Найденное время — описательная статистика, не инструкция для инъекции."
+  ]
+}

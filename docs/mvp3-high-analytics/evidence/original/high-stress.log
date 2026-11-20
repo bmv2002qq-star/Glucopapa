@@ -1,0 +1,10 @@
+{
+  "suite": "GFHighTarget_stress",
+  "runs": 377,
+  "solved": 87,
+  "noSolution": 290,
+  "blocked": 0,
+  "broken": 0,
+  "maxEvaluationMilliseconds": 40.159,
+  "passed": true
+}

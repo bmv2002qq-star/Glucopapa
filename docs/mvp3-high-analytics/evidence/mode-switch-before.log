@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "/workspace/work/glucopapa-high-analytics/repo/qa/mvp3-high-analytics/browser.py", line 232, in <module>
+    main()
+  File "/workspace/work/glucopapa-high-analytics/repo/qa/mvp3-high-analytics/browser.py", line 221, in main
+    'timing_positive':positive_history(browser,origin,args.output)}
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/work/glucopapa-high-analytics/repo/qa/mvp3-high-analytics/browser.py", line 198, in positive_history
+    assert select.locator('option').count() == 1 and select.input_value() == ''
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

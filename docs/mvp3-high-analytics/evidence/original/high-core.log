@@ -1,0 +1,41 @@
+PASS no hardcoded time target; synthetic plateau reached
+PASS no dose recommendation on live inputs even when complete
+PASS basal Levemir is completely ignored and has no effect
+PASS old Rinfast changes baseline exactly once; IOB displayed
+PASS old Rinfast with matching CGM slope is not counted twice
+PASS no food record is not assumed zero without coverage
+PASS no injection record is not zero without coverage
+PASS stale CGM blocks
+PASS CGM conflicting duplicate blocks
+PASS CGM source switch blocks
+PASS CGM anomalous jump blocks
+PASS missing target or isf or UK blocks
+PASS model setting validation
+PASS fatty meal gets late horizon from actual food
+PASS smooth and linear food are not treated as identical
+PASS unconfirmed meal blocks
+PASS unknown GI profile blocks
+PASS illness requires explicit nonoverlap model
+PASS sport requires explicit model
+PASS physio optional: not silently applied
+PASS a declared incremental modifier gets accounted for, not hidden
+PASS no stable solution is a valid result
+PASS manual hypothetical dose recalculates displayed trajectory live
+PASS hypoglycemia routes away from HIGH
+PASS dose grid is 0.5 U ONLY for synthetic test
+PASS never records anything during analysis
+PASS snapshot revision adapter read-only on real host
+PASS recording cannot happen without explicit fact confirmation
+PASS confirmed actual injection uses real GFStorage actionWriter, one event
+PASS no duplicate actual injection
+PASS cannot record an unbounded or non-half-unit quantity
+PASS timezones map 4x6 slots
+PASS no hardcoded 120 minutes target
+PASS malformed recent shot blocks, not zero
+PASS live nominal data produces only read-only points
+{
+  "suite": "GFHighTarget",
+  "passed": 35,
+  "total": 35,
+  "failed": 0
+}

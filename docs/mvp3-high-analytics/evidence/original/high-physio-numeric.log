@@ -1,0 +1,54 @@
+{
+  "comparisons": 8,
+  "maxAbsDifferenceMmol": 1.1515780684590027e-7,
+  "rows": [
+    {
+      "patient": "child#001",
+      "kind": "no_meal",
+      "maxAbsDifferenceMmol": 7.749356711883593e-12,
+      "meanAbsDifferenceMmol": 2.4524331283697182e-12
+    },
+    {
+      "patient": "child#001",
+      "kind": "meal_and_bolus",
+      "maxAbsDifferenceMmol": 1.1515780684590027e-7,
+      "meanAbsDifferenceMmol": 1.1300686314924107e-8
+    },
+    {
+      "patient": "child#004",
+      "kind": "no_meal",
+      "maxAbsDifferenceMmol": 4.839684208945982e-12,
+      "meanAbsDifferenceMmol": 2.1583828741383444e-12
+    },
+    {
+      "patient": "child#004",
+      "kind": "meal_and_bolus",
+      "maxAbsDifferenceMmol": 3.425928873923567e-8,
+      "meanAbsDifferenceMmol": 3.4890248459604415e-9
+    },
+    {
+      "patient": "child#008",
+      "kind": "no_meal",
+      "maxAbsDifferenceMmol": 5.277556169858144e-12,
+      "meanAbsDifferenceMmol": 1.6723716428784358e-12
+    },
+    {
+      "patient": "child#008",
+      "kind": "meal_and_bolus",
+      "maxAbsDifferenceMmol": 1.532312232654931e-8,
+      "meanAbsDifferenceMmol": 2.873680423535282e-9
+    },
+    {
+      "patient": "child#010",
+      "kind": "no_meal",
+      "maxAbsDifferenceMmol": 2.006395050102583e-12,
+      "meanAbsDifferenceMmol": 8.113356140772619e-13
+    },
+    {
+      "patient": "child#010",
+      "kind": "meal_and_bolus",
+      "maxAbsDifferenceMmol": 5.15930143052401e-9,
+      "meanAbsDifferenceMmol": 1.865590951807187e-9
+    }
+  ]
+}

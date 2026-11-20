@@ -1,0 +1,5 @@
+INSTRUMENTATION_RESULT: stream=
+QA_PASS stock
+
+INSTRUMENTATION_RESULT: webview={"fixture":"SYNTHETIC","model":{"id":"GFCOB","version":"0.1.1"},"revision":2,"sqlite":true,"status":"PASS","step":"meal-model-restored"}
+INSTRUMENTATION_CODE: -1

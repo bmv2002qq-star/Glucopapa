@@ -1,0 +1,47 @@
+✔ 4 fixed six-hour slots and exact boundaries (52.63103ms)
+✔ calendar six months with clamped end-of-month (0.629757ms)
+✔ GFPlate normalize / GI and exact BJU (0.555414ms)
+✔ normal valid history yields deterministic descriptive interval, no injection advice (14.79396ms)
+✔ empty history -> no data and no numerical time (0.757849ms)
+✔ history under 3 days is rejected (2.107287ms)
+✔ 2 cases not enough, regardless of freshness (3.465428ms)
+✔ morning does not borrow records from day/evening/night (4.255985ms)
+✔ one egg vs one and a half similar by density, not identical by absolute carbs (2.247307ms)
+✔ fat and GI differences still affect rank when carb similar (4.436967ms)
+✔ activity remains a hard category (1.941067ms)
+✔ missing IOB -> no data without guessing IOB (1.467695ms)
+✔ marked hypoglycemia excluded (2.16888ms)
+✔ correction-only records do not become meal intervals (4.823128ms)
+✔ history beyond six calendar months is excluded (1.23109ms)
+✔ planned rather than actual plate is not historical evidence (1.991032ms)
+✔ duplicate injection IDs quarantined rather than counted twice (1.23814ms)
+✔ factual history is read-only: no state changes and no new file (3.223835ms)
+✔ adapter uses only the two GFStorage ports and verifies the same revision (2.127858ms)
+✔ revision mismatch fail closed (0.417698ms)
+✔ stale CGM missing -> cannot offer time (1.609889ms)
+✔ unknown timezone fails safely (1.669018ms)
+✔ context and absences never invent a 10- or 15-minute fallback (0.533111ms)
+✔ 10-minute CGM cadence is allowed if coverage is complete (2.804555ms)
+✔ low current glucose blocks retrospective interval output (37.255374ms)
+✔ coefficient revision and injection site can be required for matching (5.491972ms)
+✔ missing CGM provenance fails closed (1.264731ms)
+✔ GFStorage adapter rejects IOB value without the same revision (0.517878ms)
+✔ historical corrections are separately indexed, never used as meal substitute (0.486ms)
+✔ browser UMD global loads without a require or shared app state (3.26792ms)
+✔ six-month stress index on 170 realistic confirmed synthetic meals (197.146776ms)
+✔ recency affects weighted historical estimate within the same quality tier (4.753103ms)
+✔ different meal time slots remain isolated even at six-month boundary (1.706795ms)
+✔ synthetic source does not count as real individual learning history (0.477618ms)
+✔ low device quality is rejected instead of giving false precision (0.389796ms)
+✔ completed sport sessions from GFStorage override historical base activity (8.360152ms)
+✔ correction marked without_meal cannot be laundered into meal bolus by a link (1.173353ms)
+✔ historical sickness flags cannot partition, bias or enter result schema (20.936742ms)
+✔ mixed historic sickness flags produce same selection as absent flags (4.933994ms)
+ℹ tests 39
+ℹ suites 0
+ℹ pass 39
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 582.734356
