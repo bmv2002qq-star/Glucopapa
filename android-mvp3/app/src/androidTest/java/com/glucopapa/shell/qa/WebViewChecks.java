@@ -4,14 +4,15 @@ import android.app.Activity;
 import android.app.Instrumentation;
 import android.content.Intent;
 import android.os.SystemClock;
+import android.os.ParcelFileDescriptor;
 import android.graphics.Rect;
-import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebView;
 import com.glucopapa.shell.MainActivity;
+import com.glucopapa.shell.R;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -81,19 +82,27 @@ final class WebViewChecks {
 
     JSONObject checkBack() throws Exception {
         WebView web = startWebView();
-        evaluate(web, "GPApp.open('home'); GPApp.open('approved-low'); GPApp.open('approved-nutrition'); true");
+        String before = evaluate(web, "(() => { GPApp.open('home'); GPApp.open('approved-low');"
+            + " GPApp.open('approved-nutrition'); return document.body.dataset.activeScreen; })()");
+        boolean predictive = instrumentation.getTargetContext().getResources().getBoolean(R.bool.gf_predictive_back);
+        if (!"\"approved-nutrition\"".equals(before))
+            throw new IllegalStateException("Precondition: " + before + ", predictive=" + predictive);
         for (String expected : new String[]{"approved-low", "home"}) {
-            instrumentation.sendKeyDownUpSync(KeyEvent.KEYCODE_BACK);
+            try (ParcelFileDescriptor fd=instrumentation.getUiAutomation().executeShellCommand("input keyevent KEYCODE_BACK");
+                 InputStream result=new ParcelFileDescriptor.AutoCloseInputStream(fd)) {
+                while (result.read() != -1) { }
+            }
             long until = SystemClock.elapsedRealtime() + 5000;
             String active = "document.body.dataset.activeScreen===" + JSONObject.quote(expected);
             while (!"true".equals(evaluate(web, active))) {
                 if (SystemClock.elapsedRealtime() >= until)
-                    throw new IllegalStateException("Android Back did not return to " + expected);
+                    throw new IllegalStateException("Shell Back did not return to " + expected + ", observed "
+                        + evaluate(web,"document.body.dataset.activeScreen") + ", predictive=" + predictive);
                 SystemClock.sleep(100);
             }
         }
         return new JSONObject().put("status", "PASS").put("routes", "nutrition → LOW → home")
-            .put("input", "ANDROID_KEYCODE_BACK");
+            .put("input", "ADB_SHELL_KEYCODE_BACK").put("predictive",predictive);
     }
 
     private boolean containsJournalDate(AccessibilityNodeInfo node) {

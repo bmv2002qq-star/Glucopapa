@@ -1,0 +1,12 @@
+name: GlucoPapa MVP3 Android 16 System Back QA
+on:
+  push:
+    branches: [qa/mvp3-phone-api36-input-20261120]
+permissions:
+  contents: read
+jobs:
+  android-16:
+    uses: ./.github/workflows/mvp3-android-device.yml
+    with:
+      api: 36
+      artifact-suffix: '-shell-back'

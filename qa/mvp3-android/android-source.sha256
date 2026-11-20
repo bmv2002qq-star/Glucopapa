@@ -10,7 +10,7 @@ ed7dc4d9c0474c08d2c83d2b61abbaac255dc3ae02ef2004ec93a21830d0ada5  android-mvp3/a
 2686c692f7e7eebe69f6f12115125cd0f4d6aac359c020bce2cb204ca26b9b13  android-mvp3/app/src/androidTest/java/com/glucopapa/shell/HistoryContractChecks.java
 5b7d75572a425a31e4dd8622edef1cf074f3c38af107d5b852150b191180a1af  android-mvp3/app/src/androidTest/java/com/glucopapa/shell/ProviderContractChecks.java
 eb84178b272b5beeaa8d695faa45b340bc9bc66963ca34c42ddde43a85d83d8f  android-mvp3/app/src/androidTest/java/com/glucopapa/shell/qa/StorageInstrumentation.java
-f5a0e327afceb185b569ec5b1947f33254efc3b635f6b7c8bb2ea0772586430a  android-mvp3/app/src/androidTest/java/com/glucopapa/shell/qa/WebViewChecks.java
+1bfef5aaef8968b1a4e9ac611f0673085af277d41a58d2999c27f3699ed93335  android-mvp3/app/src/androidTest/java/com/glucopapa/shell/qa/WebViewChecks.java
 8b8a40ceddf4d042e18531c57c18c62c1f8be576d5f9215dc1a05b0b45e404ad  android-mvp3/app/src/fixture/assets/www/qa-shell.js
 d7777f44ec2186ec3e1251cd14687b110bb6fa2b06cea50d7504f9d9bc79350a  android-mvp3/app/src/main/AndroidManifest.xml
 b9a7a5a0fb1138973db86e7e20602d4cf36349847a0658a8ec8ee0edc23587c9  android-mvp3/app/src/main/assets/www/app.js
