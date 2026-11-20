@@ -1,0 +1,33 @@
+name: GFConsensus isolated QA
+
+on:
+  push:
+    branches:
+      - qa/gfconsensus-auto-v012-20261120
+
+permissions:
+  contents: read
+
+jobs:
+  consensus-regression:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax validation of modified JS
+        run: |
+          node --check android-mvp3/app/src/main/assets/www/integration/GFConsensusAutoSelection_v0.1.2.js
+          node --check android-mvp3/app/src/main/assets/www/integration/GFGraphFourLines_v0.1.0.js
+          node --check android-mvp3/app/src/main/assets/www/modules/GFStorage_v0.5.11/src/gfstorage_core.js
+          node --check android-mvp3/app/src/main/assets/www/app.js
+      - name: Regression tests - new GFConsensus and previous CL040/CL041/CL042
+        run: |
+          node --test qa/gfconsensus/*.test.cjs
+          node --test qa/mvp3-cl040/*.test.cjs
+          node --test qa/mvp3-cl041/*.test.cjs
+          node --test qa/mvp3-cl042/*.test.cjs
