@@ -12,6 +12,9 @@ on:
       artifact-suffix:
         type: string
         default: ''
+      image:
+        type: string
+        default: default
       publish-pilot-apk:
         type: boolean
         default: false
@@ -26,6 +29,7 @@ jobs:
     env:
       ANDROID_QA_API: ${{ inputs.api }}
       ANDROID_QA_EXTENDED: ${{ inputs.extended }}
+      ANDROID_QA_IMAGE: ${{ inputs.image }}
     steps:
       - name: Prepare evidence directory
         shell: bash
@@ -59,7 +63,8 @@ jobs:
             sudo chmod g+rw /dev/kvm
           fi
           test -r /dev/kvm && test -w /dev/kvm
-          sdkmanager --install 'platforms;android-36' 'build-tools;35.0.0' 'platform-tools' 'emulator' "system-images;android-$ANDROID_QA_API;default;x86_64" < /dev/null
+          [[ "$ANDROID_QA_IMAGE" == default || "$ANDROID_QA_IMAGE" == google_apis ]]
+          sdkmanager --install 'platforms;android-36' 'build-tools;35.0.0' 'platform-tools' 'emulator' "system-images;android-$ANDROID_QA_API;$ANDROID_QA_IMAGE;x86_64" < /dev/null
           "$ANDROID_HOME/emulator/emulator" -accel-check
       - name: Assemble candidate
         working-directory: android-mvp3

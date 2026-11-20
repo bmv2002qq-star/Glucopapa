@@ -1,0 +1,14 @@
+name: GlucoPapa MVP3 Android 12 Google APIs QA
+on:
+  push:
+    branches: [qa/mvp3-phone-api31-20261120]
+permissions:
+  contents: read
+jobs:
+  android-12:
+    uses: ./.github/workflows/mvp3-android-device.yml
+    with:
+      api: 31
+      extended: true
+      image: google_apis
+      artifact-suffix: '-google-apis'

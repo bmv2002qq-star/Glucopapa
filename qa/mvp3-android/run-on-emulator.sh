@@ -4,6 +4,8 @@ set -euo pipefail
 sdk=${ANDROID_HOME:?Set ANDROID_HOME to the installed SDK}
 evidence=${EVIDENCE:?Set EVIDENCE to a new test output directory}
 api=${ANDROID_QA_API:-35}
+image=${ANDROID_QA_IMAGE:-default}
+[[ "$image" == default || "$image" == google_apis ]]
 serial=emulator-5554
 avd=GlucoPapaMvp3CiQa
 adb="$sdk/platform-tools/adb"
@@ -12,7 +14,7 @@ export ANDROID_USER_HOME="$evidence/android-user"
 export ANDROID_EMULATOR_HOME="$ANDROID_USER_HOME"
 export ANDROID_AVD_HOME="$evidence/avd"
 
-printf 'no\n' | avdmanager create avd --name "$avd" --package "system-images;android-$api;default;x86_64" --device pixel_5
+printf 'no\n' | avdmanager create avd --name "$avd" --package "system-images;android-$api;$image;x86_64" --device pixel_5
 "$adb" start-server
 compatibility_options=()
 if [[ $api == 31 ]]; then
@@ -55,6 +57,7 @@ if [[ $api == 31 ]]; then
     "$adb" -s "$serial" shell wm size 720x1560
     "$adb" -s "$serial" shell wm density 360
 fi
+"$adb" -s "$serial" shell dumpsys webviewupdate > "$evidence/webview-provider.log"
 
 # Check the exact ordinary APK before installing the separately named fixture.
 ordinary_apk=android-mvp3/app/build/outputs/apk/debug/app-debug.apk
