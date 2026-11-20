@@ -1,0 +1,32 @@
+{
+  "source_commit": "c091860497d3bae24129ca392c0517be22f653b1",
+  "branch": "qa/mvp3-unified-20261120",
+  "base_commit": "7f3082c5cc6c256ddce90a0f5f4873a4dc5bd47a",
+  "main_verified": "2151fbbf2b40ac6eca4f5b02c2ba355c4e9a75f8",
+  "input_package_sha256": "d857a7a96eea6df2868b55a636b7dd60ed031e633b47e8a0be14479f852264b4",
+  "input_module_archives": {},
+  "artifact": {
+    "name": "Glucopapa_V2_Unified_debug.apk",
+    "sha256": "43acfe30fce0b71f9900dcd346855024ea88c68de6d038812596f99e600c8b81",
+    "bytes": 1818201,
+    "webview_assets": 101,
+    "protected_assets": 26
+  },
+  "workflow": {
+    "conclusion": "success",
+    "head_sha": "c091860497d3bae24129ca392c0517be22f653b1",
+    "html_url": "https://github.com/bmv2002qq-star/Glucopapa/actions/runs/44719552563",
+    "id": 44719552563,
+    "run_attempt": 2,
+    "status": "completed"
+  },
+  "ci_artifact_sha256": {
+    "14620169172": "358829c1c8233ff5560f69233d00848a2449e0f2604c6d7269e2ffc5be862684",
+    "14620389771": "bdc847b808e209932582562e35428138cc608d3f0cf60973530915bb21fb9059",
+    "14621254513": "fb20605199ae9a5c84e6d324c9da492fc425f056699a918c319ddf2ff7c8cfe0",
+    "14621377781": "faf6fa48afbbeaa038d1ad8b93f948a7a50e1d4fc13c08bd54c55371f58468c4",
+    "14621617970": "1bd6392bdd63ea1e50417f42dcbf953ce9f0e9fdccbd4c73fe2f04e8b857c16d",
+    "14621877612": "10fe0d69e7b18f827915821c8a2c4eb80fd386a39d58f5baa12d2da4b8a3fabe",
+    "14622966221": "534939ac12f1580bdbbc5b097def43cec7bbf0821bc4e04b8d0c8b51eab08cd8"
+  }
+}

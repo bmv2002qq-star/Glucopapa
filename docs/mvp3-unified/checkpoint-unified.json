@@ -1,0 +1,30 @@
+{
+  "stage": "UNIFIED_MVP3",
+  "source_commit": "c091860497d3bae24129ca392c0517be22f653b1",
+  "github_branch": "qa/mvp3-unified-20261120",
+  "code": "PASS",
+  "browser_single_file": "PASS_SCOPED",
+  "browser_multi_file": "PASS",
+  "android_emulator": {
+    "31": "PASS_SCOPED",
+    "34": "PASS",
+    "35": "PASS_AFTER_RETRY",
+    "36": "PASS"
+  },
+  "android_device": "NOT_TESTED",
+  "real_xdrip": "NOT_TESTED",
+  "clinical": "NOT_VALIDATED",
+  "known_blockers": [
+    "XDRIP-PHONE-005",
+    "XDRIP-GAP-006",
+    "GFXDRIP-INPUT-007",
+    "FORECAST-FOOD-008",
+    "CONSENSUS-REAL-009",
+    "LOWHIGH-MODEL-010",
+    "SQLITE-LIMIT-011",
+    "UI-PARITY-012",
+    "QA-MATRIX-013"
+  ],
+  "journal_index": "ЖУРНАЛ.md",
+  "resume": "NEXT_STEPS.md"
+}

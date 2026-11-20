@@ -1,0 +1,41 @@
+﻿id,module,scenario,expected,status,environment,checked_code,evidence
+U01,AUDIT,All production entrypoints,No active demo/mock/placeholder in local,PARTIAL,CODE,c091860497d3bae24129ca392c0517be22f653b1,DEMO_HANDLER_AUDIT.md
+U02,AUDIT,No CGM,"No fabricated value, no events",PASS,ANDROID_EMULATOR,c091860497d3bae24129ca392c0517be22f653b1,tests/ci/api35-core/production-isolation.log
+U03,AUDIT,Loss of provider,Explicit fail-closed status; no demo fallback,PASS_SCOPED,ANDROID_EMULATOR,c091860497d3bae24129ca392c0517be22f653b1,tests/ci/api35-core/provider-write.log; XDRIP_FOLLOWER_AUDIT.md
+U04,AUDIT,All controls,Every active control has real GFStorage operation or explicit blocked state,PARTIAL,BROWSER_MULTI_FILE,c091860497d3bae24129ca392c0517be22f653b1,screenshots/browser/modules; МАТРИЦА_29_МОДУЛЕЙ_MVP3.md
+U05,AUDIT,JS bridge,Allowed provenance and one actionWriter commit,PASS_SCOPED,BROWSER_MULTI_FILE + ANDROID_EMULATOR,c091860497d3bae24129ca392c0517be22f653b1,screenshots/browser/modules; tests/ci/api35-core/checks/result.json
+U06,AUDIT,QA isolation,No synthetic records in local or export,PASS,BROWSER_MULTI_FILE + ANDROID_EMULATOR,c091860497d3bae24129ca392c0517be22f653b1,screenshots/browser/unified/report.json; tests/ci/api35-core/production-isolation.log
+U07,AUDIT,APK inventory,"No QA fixture, source hashes match APK",PASS,CODE,c091860497d3bae24129ca392c0517be22f653b1,tests/final-integrity.json
+U08,STORAGE,One host,No secondary journal or stale write,PASS,CODE + ANDROID_EMULATOR,c091860497d3bae24129ca392c0517be22f653b1,tests/final-node.tap; tests/ci/api35-core/native-exercise.log
+U09,STORAGE,Migration,Single canonical key and preserved flags,PASS_SCOPED,CODE + ANDROID_EMULATOR,c091860497d3bae24129ca392c0517be22f653b1,tests/final-node.tap; tests/ci/api35-core/native-exercise.log
+U10,STORAGE,Conflict,No partial event; one ID; CAS,PASS,CODE + ANDROID_EMULATOR,c091860497d3bae24129ca392c0517be22f653b1,tests/final-node.tap; tests/ci/api35-core/native-reopen.log
+U11,MAIN,Approved layout,No undesired redesign,PASS_SCOPED,BROWSER_MULTI_FILE,c091860497d3bae24129ca392c0517be22f653b1,screenshots/browser/unified/report.json; DIFF_APPROVED.md
+U12,MAIN,Graph pan/zoom,Functional xDrip-style plot,PASS_SCOPED,BROWSER_MULTI_FILE,c091860497d3bae24129ca392c0517be22f653b1,screenshots/browser/unified/report.json
+U13,MAIN,Forecast visibility,"Independent visibility, stored after restart",PASS,BROWSER_MULTI_FILE + ANDROID_EMULATOR,c091860497d3bae24129ca392c0517be22f653b1,screenshots/browser/unified/report.json; tests/ci/api35-core/unified-restored.log
+U14,MAIN,Sport,One persisted period with correct duration,PASS,BROWSER_MULTI_FILE + ANDROID_EMULATOR,c091860497d3bae24129ca392c0517be22f653b1,screenshots/browser/unified/report.json; tests/ci/api35-core/unified-restored.log
+U15,MAIN,Nutrition,"Accurate day totals, unknown != 0",PASS,CODE + BROWSER_MULTI_FILE,c091860497d3bae24129ca392c0517be22f653b1,tests/final-node.tap; screenshots/browser/low/report.json
+U16,MAIN,Journal,Same IDs as journal/export,PASS,CODE + BROWSER_MULTI_FILE,c091860497d3bae24129ca392c0517be22f653b1,tests/final-node.tap; screenshots/browser/unified/report.json
+U17,MAIN,Routes,"Open correct approved screens, no duplicate listeners",PASS,BROWSER_MULTI_FILE,c091860497d3bae24129ca392c0517be22f653b1,screenshots/browser/unified/report.json
+U18,GFxDRIP,Source adapter,Reject untrusted or stale data,PASS_SCOPED,CODE PRIVATE_PARITY,c091860497d3bae24129ca392c0517be22f653b1,tests/gfxdrip-adapter.log; GFXDRIP_RESEARCH.md
+U19,GFxDRIP,Insulin filter,No basal short-IOB injection,PASS,CODE PRIVATE_PARITY,c091860497d3bae24129ca392c0517be22f653b1,tests/gfxdrip-adapter.log
+U20,GFxDRIP,Food coverage,No assumed zero; BLOCKED,PASS,CODE PRIVATE_PARITY,c091860497d3bae24129ca392c0517be22f653b1,tests/gfxdrip-adapter.log
+U21,GFxDRIP,Baseline parity,Document numeric parity and differences,PARTIAL,CODE PRIVATE_PARITY,c091860497d3bae24129ca392c0517be22f653b1,tests/gfxdrip-adapter.log; GFXDRIP_RESEARCH.md
+U22,GFxDRIP,License,Document GPL obligations; do not make unlicensed release,BLOCKED,DISTRIBUTION,c091860497d3bae24129ca392c0517be22f653b1,GFXDRIP_RESEARCH.md
+U23,GFCONSENSUS,No future leakage,Compare issued before observation,PASS,CODE,c091860497d3bae24129ca392c0517be22f653b1,tests/final-node.tap; tests/consensus-original.tap
+U24,GFCONSENSUS,24h & 3mo,LEADER/COMPOSITE/TIE/NO_LEADER correct,PASS_SCOPED,CODE,c091860497d3bae24129ca392c0517be22f653b1,tests/final-node.tap; tests/consensus-original.tap
+U25,GFCONSENSUS,Sensor change,No mixed cohorts,PASS,CODE,c091860497d3bae24129ca392c0517be22f653b1,tests/final-node.tap
+U26,GFCONSENSUS,2 vs 3 engines,No invented third curve,PASS,CODE + BROWSER_MULTI_FILE,c091860497d3bae24129ca392c0517be22f653b1,tests/final-node.tap; screenshots/browser/unified/report.json
+U27,GFCONSENSUS,Prediction,No fake consensus based on UI mean,PASS,CODE,c091860497d3bae24129ca392c0517be22f653b1,tests/final-node.tap
+U28,INSULIN_MODEL,GFStorage output,"Consensus participates, no direct crossmodule calls",PARTIAL,CODE,c091860497d3bae24129ca392c0517be22f653b1,CONTRACTS.md
+U29,INSULIN_MODEL,No double-count,"One modeled contribution, no duplicate effects",PASS_SCOPED,CODE,c091860497d3bae24129ca392c0517be22f653b1,tests/final-node.tap; SMOOTH_PROFILE_MISSING
+U30,INSULIN_MODEL,No auto-write,No actual injection until explicit user confirmation,PASS,CODE + ANDROID_EMULATOR,c091860497d3bae24129ca392c0517be22f653b1,tests/final-node.tap; tests/ci/api35-core/checks/result.json
+U31,LOW,Food fact,One actual meal and one diary/export record,PASS,BROWSER_MULTI_FILE + ANDROID_EMULATOR,c091860497d3bae24129ca392c0517be22f653b1,screenshots/browser/low/report.json; ANDROID_QA.md
+U32,LOW,Absorption,Block numeric treatment result and explain cause,BLOCKED,FORMULA,c091860497d3bae24129ca392c0517be22f653b1,BUGS.md
+U33,HIGH,Correction,No silently altered formulas; model divergences documented,PASS_SCOPED,CODE + BROWSER_MULTI_FILE,c091860497d3bae24129ca392c0517be22f653b1,tests/final-node.tap; screenshots/browser/high-analytics
+U34,INJANALYTICS,No link / IOB,NO_DATA with exact reason,PASS,CODE,c091860497d3bae24129ca392c0517be22f653b1,tests/final-node.tap
+U35,INJANALYTICS,Linked fact,Retrospective estimate/NO_DATA based on evidence only,PASS_SCOPED,CODE,c091860497d3bae24129ca392c0517be22f653b1,tests/final-node.tap; CONTRACTS.md
+U36,INJANALYTICS,No illness,Identical ranking when all other facts same,PASS,CODE,c091860497d3bae24129ca392c0517be22f653b1,tests/final-node.tap
+U37,ANDROID,Emulator,Logs + screenshot and no crash,PASS_SCOPED,ANDROID_EMULATOR,c091860497d3bae24129ca392c0517be22f653b1,ANDROID_QA.md
+U38,ANDROID,Persistence,Exact same journal and preferences,PASS_SCOPED,ANDROID_EMULATOR,c091860497d3bae24129ca392c0517be22f653b1,tests/ci/api35-core/checks/result.json; tests/ci/api35-core/provider-restored.log
+U39,ANDROID,Device,NOT_TESTED until actual physical device evidence,NOT_TESTED,ANDROID_DEVICE,c091860497d3bae24129ca392c0517be22f653b1,XDRIP_FOLLOWER_AUDIT.md
+U40,CLINICAL,Model validity,NOT_VALIDATED until independent evaluation,NOT_VALIDATED,CLINICAL,c091860497d3bae24129ca392c0517be22f653b1,BUGS.md

@@ -1,0 +1,35 @@
+{
+  "status": "PASS",
+  "synthetic": true,
+  "FOOD-01": {
+    "catalog": true,
+    "favorite": true,
+    "portion_unchanged": true,
+    "widths": [
+      320,
+      390,
+      428,
+      1280
+    ],
+    "sha256": "6b9da4dfe3655f4d18fc8e361f050a75127e17eae7399fb3605c222d4c957cfb"
+  },
+  "LOG-06": {
+    "origin": "Chromium with observer at native bridge boundary",
+    "rendersAndScrolls": 10000,
+    "operations": [
+      "basal_review",
+      "basal_review",
+      "basal_review",
+      "basal_review",
+      "basal_review",
+      "basal_review",
+      "basal_review",
+      "basal_review",
+      "basal_review",
+      "basal_review"
+    ],
+    "afterRender": 0,
+    "revisionDelta": 0,
+    "elapsedMs": 33479
+  }
+}

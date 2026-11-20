@@ -1,0 +1,963 @@
+{
+  "fixture": "SYNTHETIC",
+  "sizes": [
+    {
+      "width": 320,
+      "height": 760,
+      "density": 160,
+      "navigation_safe": true
+    },
+    {
+      "width": 390,
+      "height": 850,
+      "density": 160,
+      "navigation_safe": true
+    },
+    {
+      "width": 428,
+      "height": 900,
+      "density": 160,
+      "navigation_safe": true
+    },
+    {
+      "width": 1280,
+      "height": 850,
+      "density": 160,
+      "navigation_safe": true
+    }
+  ],
+  "soak_seconds": 85.0,
+  "pss_kb": [
+    89542,
+    90377,
+    90443,
+    90087
+  ],
+  "trim_memory_signal": {
+    "command_accepted": true,
+    "resumed": true,
+    "diagnostic": ""
+  },
+  "interruptions": {
+    "diary_open_then_force_stop": {
+      "GFV2SHELL_DATA_v1_demo": {
+        "schemaVersion": 5,
+        "revision": 7,
+        "profile": {
+          "birthDate": null,
+          "timeZone": null,
+          "displayName": null,
+          "sex": null,
+          "allergies": [],
+          "dailyNutritionReference": null,
+          "exerciseGuidance": null,
+          "exerciseGuidanceEnabled": true,
+          "hypoActivityMultipliers": null,
+          "hypoActivityEnabled": true,
+          "activityBaseLevel": "low",
+          "coefficientModes": {
+            "carb_g_per_u": "manual",
+            "isf_mmol_per_u": "manual"
+          },
+          "illnessFactor": null
+        },
+        "measurements": [],
+        "drugs": {
+          "rinfast": {
+            "id": "rinfast",
+            "name": "\u0420\u0438\u043d\u0424\u0430\u0441\u0442",
+            "substance": "\u0438\u043d\u0441\u0443\u043b\u0438\u043d \u0430\u0441\u043f\u0430\u0440\u0442",
+            "type": "rapid"
+          },
+          "levemir": {
+            "id": "levemir",
+            "name": "\u041b\u0435\u0432\u0435\u043c\u0438\u0440",
+            "substance": "\u0438\u043d\u0441\u0443\u043b\u0438\u043d \u0434\u0435\u0442\u0435\u043c\u0438\u0440",
+            "type": "basal"
+          }
+        },
+        "models": {
+          "rinfast": {
+            "drugId": "rinfast",
+            "approvedModuleVersion": "0.3.1",
+            "engineVersion": "0.3.0",
+            "model": "openaps_exponential_rapid",
+            "clinicalValidation": false,
+            "profile": {
+              "drugId": "rinfast",
+              "drugName": "\u0420\u0438\u043d\u0424\u0430\u0441\u0442",
+              "substance": "\u0438\u043d\u0441\u0443\u043b\u0438\u043d \u0430\u0441\u043f\u0430\u0440\u0442",
+              "model": "openaps_exponential_rapid",
+              "modelVersion": "0.3.0",
+              "diaMinutes": 300,
+              "peakMinutes": 75,
+              "clinicalValidation": false
+            }
+          },
+          "levemir": {
+            "drugId": "levemir",
+            "approvedModuleVersion": "0.1.2",
+            "engineVersion": "0.1.0",
+            "model": "detemir_population_time_trapezoid",
+            "clinicalValidation": false,
+            "profile": {
+              "drugId": "levemir",
+              "name": "\u041b\u0435\u0432\u0435\u043c\u0438\u0440",
+              "substance": "\u0438\u043d\u0441\u0443\u043b\u0438\u043d \u0434\u0435\u0442\u0435\u043c\u0438\u0440",
+              "model": "detemir_population_time_trapezoid",
+              "modelVersion": "0.1.0",
+              "clinicalValidation": false,
+              "doseResponseInChildrenValidated": false,
+              "minimumJournalHours": 48
+            }
+          }
+        },
+        "orders": [],
+        "coefficients": [],
+        "events": [
+          {
+            "type": "insulin_injection",
+            "status": "confirmed",
+            "id": "high-37ba0228644ddd8ab985184f5c63c18b",
+            "insulinId": "rinfast",
+            "units": 0.5,
+            "administeredAt": "2026-11-20T10:48:02.880Z",
+            "injectionSite": {
+              "region": "abdomen"
+            }
+          }
+        ],
+        "mealSessions": [
+          {
+            "id": "meal-mwouwwti-2qlrkzy0",
+            "version": 6,
+            "status": "completed",
+            "createdAt": "2026-11-20T10:49:17.095Z",
+            "lastChangedAt": "2026-11-20T10:49:17.518Z",
+            "plannedPlate": {
+              "schema": "GFPlate.v1",
+              "source": "GFFoodOnly",
+              "createdAt": "2026-11-20T10:49:17.093Z",
+              "items": [
+                {
+                  "kind": "catalog",
+                  "foodId": "legacy:0001",
+                  "name": "\u0413\u0440\u0435\u0447\u043a\u0430 \u0432\u0430\u0440\u0451\u043d\u0430\u044f",
+                  "amount": 100,
+                  "unit": "\u0433",
+                  "carbs": 19.9,
+                  "protein": 3.4,
+                  "fat": 0.6,
+                  "kcal": 92,
+                  "note": "\u0418\u0437 \u0441\u0442\u0430\u0440\u043e\u0439 \u0432\u0435\u0440\u0441\u0438\u0438 \u0413\u043b\u044e\u043a\u043e\u041f\u0430\u043f\u044b, \u0441\u043e\u0441\u0442\u0430\u0432 \u0442\u0440\u0435\u0431\u0443\u0435\u0442 \u043f\u0440\u043e\u0432\u0435\u0440\u043a\u0438; \u043d\u0435 \u043e\u0444\u0438\u0446\u0438\u0430\u043b\u044c\u043d\u0430\u044f \u044d\u0442\u0438\u043a\u0435\u0442\u043a\u0430",
+                  "nutritionStatus": "legacy_reference",
+                  "glycemicIndex": 49,
+                  "glycemicIndexStatus": "heuristic_low_confidence"
+                }
+              ],
+              "totals": {
+                "protein": 3.4,
+                "fat": 0.6,
+                "carbs": 19.9,
+                "kcal": 92,
+                "amount": 100,
+                "count": 1
+              },
+              "containsEstimatedValues": true
+            },
+            "actualPlate": {
+              "schema": "GFPlate.v1",
+              "source": "GFFoodOnly",
+              "createdAt": "2026-11-20T10:49:17.518Z",
+              "items": [
+                {
+                  "kind": "catalog",
+                  "foodId": "legacy:0001",
+                  "name": "\u0413\u0440\u0435\u0447\u043a\u0430 \u0432\u0430\u0440\u0451\u043d\u0430\u044f",
+                  "amount": 50,
+                  "unit": "\u0433",
+                  "carbs": 9.95,
+                  "protein": 1.7,
+                  "fat": 0.3,
+                  "kcal": 46,
+                  "note": "\u0418\u0437 \u0441\u0442\u0430\u0440\u043e\u0439 \u0432\u0435\u0440\u0441\u0438\u0438 \u0413\u043b\u044e\u043a\u043e\u041f\u0430\u043f\u044b, \u0441\u043e\u0441\u0442\u0430\u0432 \u0442\u0440\u0435\u0431\u0443\u0435\u0442 \u043f\u0440\u043e\u0432\u0435\u0440\u043a\u0438; \u043d\u0435 \u043e\u0444\u0438\u0446\u0438\u0430\u043b\u044c\u043d\u0430\u044f \u044d\u0442\u0438\u043a\u0435\u0442\u043a\u0430",
+                  "nutritionStatus": "legacy_reference",
+                  "glycemicIndex": 49,
+                  "glycemicIndexStatus": "heuristic_low_confidence"
+                }
+              ],
+              "totals": {
+                "amount": 50,
+                "count": 1,
+                "carbs": 9.95,
+                "protein": 1.7,
+                "fat": 0.3,
+                "kcal": 46
+              },
+              "containsEstimatedValues": true
+            },
+            "doseIntent": null,
+            "injectionIds": [],
+            "startedAt": "2026-11-20T10:49:17.260Z",
+            "completedAt": "2026-11-20T10:49:17.292Z",
+            "actualReason": "SYNTHETIC correction"
+          }
+        ],
+        "workflowLog": [
+          {
+            "id": "new:meal-mwouwwti-2qlrkzy0",
+            "sessionId": "meal-mwouwwti-2qlrkzy0",
+            "action": "create_draft",
+            "actor": "food",
+            "at": "2026-11-20T10:49:17.095Z",
+            "revision": 2,
+            "before": null,
+            "after": {
+              "id": "meal-mwouwwti-2qlrkzy0",
+              "version": 1,
+              "status": "draft",
+              "createdAt": "2026-11-20T10:49:17.095Z",
+              "lastChangedAt": "2026-11-20T10:49:17.095Z",
+              "plannedPlate": {
+                "schema": "GFPlate.v1",
+                "source": "GFFoodOnly",
+                "createdAt": "2026-11-20T10:49:17.093Z",
+                "items": [
+                  {
+                    "kind": "catalog",
+                    "foodId": "legacy:0001",
+                    "name": "\u0413\u0440\u0435\u0447\u043a\u0430 \u0432\u0430\u0440\u0451\u043d\u0430\u044f",
+                    "amount": 100,
+                    "unit": "\u0433",
+                    "carbs": 19.9,
+                    "protein": 3.4,
+                    "fat": 0.6,
+                    "kcal": 92,
+                    "note": "\u0418\u0437 \u0441\u0442\u0430\u0440\u043e\u0439 \u0432\u0435\u0440\u0441\u0438\u0438 \u0413\u043b\u044e\u043a\u043e\u041f\u0430\u043f\u044b, \u0441\u043e\u0441\u0442\u0430\u0432 \u0442\u0440\u0435\u0431\u0443\u0435\u0442 \u043f\u0440\u043e\u0432\u0435\u0440\u043a\u0438; \u043d\u0435 \u043e\u0444\u0438\u0446\u0438\u0430\u043b\u044c\u043d\u0430\u044f \u044d\u0442\u0438\u043a\u0435\u0442\u043a\u0430",
+                    "nutritionStatus": "legacy_reference",
+                    "glycemicIndex": 49,
+                    "glycemicIndexStatus": "heuristic_low_confidence"
+                  }
+                ],
+                "totals": {
+                  "protein": 3.4,
+                  "fat": 0.6,
+                  "carbs": 19.9,
+                  "kcal": 92,
+                  "amount": 100,
+                  "count": 1
+                },
+                "containsEstimatedValues": true
+              },
+              "actualPlate": null,
+              "doseIntent": null,
+              "injectionIds": [],
+              "startedAt": null,
+              "completedAt": null
+            }
+          },
+          {
+            "id": "op-1b6e4585-6b1d-4e06-8310-a9a53f437030",
+            "sessionId": "meal-mwouwwti-2qlrkzy0",
+            "action": "mark_ready",
+            "actor": "mealFlow",
+            "at": "2026-11-20T10:49:17.242Z",
+            "revision": 3,
+            "before": {
+              "id": "meal-mwouwwti-2qlrkzy0",
+              "version": 1,
+              "status": "draft",
+              "createdAt": "2026-11-20T10:49:17.095Z",
+              "lastChangedAt": "2026-11-20T10:49:17.095Z",
+              "plannedPlate": {
+                "schema": "GFPlate.v1",
+                "source": "GFFoodOnly",
+                "createdAt": "2026-11-20T10:49:17.093Z",
+                "items": [
+                  {
+                    "kind": "catalog",
+                    "foodId": "legacy:0001",
+                    "name": "\u0413\u0440\u0435\u0447\u043a\u0430 \u0432\u0430\u0440\u0451\u043d\u0430\u044f",
+                    "amount": 100,
+                    "unit": "\u0433",
+                    "carbs": 19.9,
+                    "protein": 3.4,
+                    "fat": 0.6,
+                    "kcal": 92,
+                    "note": "\u0418\u0437 \u0441\u0442\u0430\u0440\u043e\u0439 \u0432\u0435\u0440\u0441\u0438\u0438 \u0413\u043b\u044e\u043a\u043e\u041f\u0430\u043f\u044b, \u0441\u043e\u0441\u0442\u0430\u0432 \u0442\u0440\u0435\u0431\u0443\u0435\u0442 \u043f\u0440\u043e\u0432\u0435\u0440\u043a\u0438; \u043d\u0435 \u043e\u0444\u0438\u0446\u0438\u0430\u043b\u044c\u043d\u0430\u044f \u044d\u0442\u0438\u043a\u0435\u0442\u043a\u0430",
+                    "nutritionStatus": "legacy_reference",
+                    "glycemicIndex": 49,
+                    "glycemicIndexStatus": "heuristic_low_confidence"
+                  }
+                ],
+                "totals": {
+                  "protein": 3.4,
+                  "fat": 0.6,
+                  "carbs": 19.9,
+                  "kcal": 92,
+                  "amount": 100,
+                  "count": 1
+                },
+                "containsEstimatedValues": true
+              },
+              "actualPlate": null,
+              "doseIntent": null,
+              "injectionIds": [],
+              "startedAt": null,
+              "completedAt": null
+            },
+            "after": {
+              "id": "meal-mwouwwti-2qlrkzy0",
+              "version": 2,
+              "status": "planned",
+              "createdAt": "2026-11-20T10:49:17.095Z",
+              "lastChangedAt": "2026-11-20T10:49:17.242Z",
+              "plannedPlate": {
+                "schema": "GFPlate.v1",
+                "source": "GFFoodOnly",
+                "createdAt": "2026-11-20T10:49:17.093Z",
+                "items": [
+                  {
+                    "kind": "catalog",
+                    "foodId": "legacy:0001",
+                    "name": "\u0413\u0440\u0435\u0447\u043a\u0430 \u0432\u0430\u0440\u0451\u043d\u0430\u044f",
+                    "amount": 100,
+                    "unit": "\u0433",
+                    "carbs": 19.9,
+                    "protein": 3.4,
+                    "fat": 0.6,
+                    "kcal": 92,
+                    "note": "\u0418\u0437 \u0441\u0442\u0430\u0440\u043e\u0439 \u0432\u0435\u0440\u0441\u0438\u0438 \u0413\u043b\u044e\u043a\u043e\u041f\u0430\u043f\u044b, \u0441\u043e\u0441\u0442\u0430\u0432 \u0442\u0440\u0435\u0431\u0443\u0435\u0442 \u043f\u0440\u043e\u0432\u0435\u0440\u043a\u0438; \u043d\u0435 \u043e\u0444\u0438\u0446\u0438\u0430\u043b\u044c\u043d\u0430\u044f \u044d\u0442\u0438\u043a\u0435\u0442\u043a\u0430",
+                    "nutritionStatus": "legacy_reference",
+                    "glycemicIndex": 49,
+                    "glycemicIndexStatus": "heuristic_low_confidence"
+                  }
+                ],
+                "totals": {
+                  "protein": 3.4,
+                  "fat": 0.6,
+                  "carbs": 19.9,
+                  "kcal": 92,
+                  "amount": 100,
+                  "count": 1
+                },
+                "containsEstimatedValues": true
+              },
+              "actualPlate": null,
+              "doseIntent": null,
+              "injectionIds": [],
+              "startedAt": null,
+              "completedAt": null
+            }
+          },
+          {
+            "id": "op-7f476d83-291d-41b1-938c-bfeeee81a0f8",
+            "sessionId": "meal-mwouwwti-2qlrkzy0",
+            "action": "confirm_meal_start",
+            "actor": "actionWriter",
+            "at": "2026-11-20T10:49:17.260Z",
+            "revision": 4,
+            "before": {
+              "id": "meal-mwouwwti-2qlrkzy0",
+              "version": 2,
+              "status": "planned",
+              "createdAt": "2026-11-20T10:49:17.095Z",
+              "lastChangedAt": "2026-11-20T10:49:17.242Z",
+              "plannedPlate": {
+                "schema": "GFPlate.v1",
+                "source": "GFFoodOnly",
+                "createdAt": "2026-11-20T10:49:17.093Z",
+                "items": [
+                  {
+                    "kind": "catalog",
+                    "foodId": "legacy:0001",
+                    "name": "\u0413\u0440\u0435\u0447\u043a\u0430 \u0432\u0430\u0440\u0451\u043d\u0430\u044f",
+                    "amount": 100,
+                    "unit": "\u0433",
+                    "carbs": 19.9,
+                    "protein": 3.4,
+                    "fat": 0.6,
+                    "kcal": 92,
+                    "note": "\u0418\u0437 \u0441\u0442\u0430\u0440\u043e\u0439 \u0432\u0435\u0440\u0441\u0438\u0438 \u0413\u043b\u044e\u043a\u043e\u041f\u0430\u043f\u044b, \u0441\u043e\u0441\u0442\u0430\u0432 \u0442\u0440\u0435\u0431\u0443\u0435\u0442 \u043f\u0440\u043e\u0432\u0435\u0440\u043a\u0438; \u043d\u0435 \u043e\u0444\u0438\u0446\u0438\u0430\u043b\u044c\u043d\u0430\u044f \u044d\u0442\u0438\u043a\u0435\u0442\u043a\u0430",
+                    "nutritionStatus": "legacy_reference",
+                    "glycemicIndex": 49,
+                    "glycemicIndexStatus": "heuristic_low_confidence"
+                  }
+                ],
+                "totals": {
+                  "protein": 3.4,
+                  "fat": 0.6,
+                  "carbs": 19.9,
+                  "kcal": 92,
+                  "amount": 100,
+                  "count": 1
+                },
+                "containsEstimatedValues": true
+              },
+              "actualPlate": null,
+              "doseIntent": null,
+              "injectionIds": [],
+              "startedAt": null,
+              "completedAt": null
+            },
+            "after": {
+              "id": "meal-mwouwwti-2qlrkzy0",
+              "version": 3,
+              "status": "started",
+              "createdAt": "2026-11-20T10:49:17.095Z",
+              "lastChangedAt": "2026-11-20T10:49:17.260Z",
+              "plannedPlate": {
+                "schema": "GFPlate.v1",
+                "source": "GFFoodOnly",
+                "createdAt": "2026-11-20T10:49:17.093Z",
+                "items": [
+                  {
+                    "kind": "catalog",
+                    "foodId": "legacy:0001",
+                    "name": "\u0413\u0440\u0435\u0447\u043a\u0430 \u0432\u0430\u0440\u0451\u043d\u0430\u044f",
+                    "amount": 100,
+                    "unit": "\u0433",
+                    "carbs": 19.9,
+                    "protein": 3.4,
+                    "fat": 0.6,
+                    "kcal": 92,
+                    "note": "\u0418\u0437 \u0441\u0442\u0430\u0440\u043e\u0439 \u0432\u0435\u0440\u0441\u0438\u0438 \u0413\u043b\u044e\u043a\u043e\u041f\u0430\u043f\u044b, \u0441\u043e\u0441\u0442\u0430\u0432 \u0442\u0440\u0435\u0431\u0443\u0435\u0442 \u043f\u0440\u043e\u0432\u0435\u0440\u043a\u0438; \u043d\u0435 \u043e\u0444\u0438\u0446\u0438\u0430\u043b\u044c\u043d\u0430\u044f \u044d\u0442\u0438\u043a\u0435\u0442\u043a\u0430",
+                    "nutritionStatus": "legacy_reference",
+                    "glycemicIndex": 49,
+                    "glycemicIndexStatus": "heuristic_low_confidence"
+                  }
+                ],
+                "totals": {
+                  "protein": 3.4,
+                  "fat": 0.6,
+                  "carbs": 19.9,
+                  "kcal": 92,
+                  "amount": 100,
+                  "count": 1
+                },
+                "containsEstimatedValues": true
+              },
+              "actualPlate": null,
+              "doseIntent": null,
+              "injectionIds": [],
+              "startedAt": "2026-11-20T10:49:17.260Z",
+              "completedAt": null
+            }
+          },
+          {
+            "id": "op-715e8064-7602-4e3b-b746-f07927dfb884",
+            "sessionId": "meal-mwouwwti-2qlrkzy0",
+            "action": "record_actual_plate",
+            "actor": "actionWriter",
+            "at": "2026-11-20T10:49:17.276Z",
+            "revision": 5,
+            "before": {
+              "id": "meal-mwouwwti-2qlrkzy0",
+              "version": 3,
+              "status": "started",
+              "createdAt": "2026-11-20T10:49:17.095Z",
+              "lastChangedAt": "2026-11-20T10:49:17.260Z",
+              "plannedPlate": {
+                "schema": "GFPlate.v1",
+                "source": "GFFoodOnly",
+                "createdAt": "2026-11-20T10:49:17.093Z",
+                "items": [
+                  {
+                    "kind": "catalog",
+                    "foodId": "legacy:0001",
+                    "name": "\u0413\u0440\u0435\u0447\u043a\u0430 \u0432\u0430\u0440\u0451\u043d\u0430\u044f",
+                    "amount": 100,
+                    "unit": "\u0433",
+                    "carbs": 19.9,
+                    "protein": 3.4,
+                    "fat": 0.6,
+                    "kcal": 92,
+                    "note": "\u0418\u0437 \u0441\u0442\u0430\u0440\u043e\u0439 \u0432\u0435\u0440\u0441\u0438\u0438 \u0413\u043b\u044e\u043a\u043e\u041f\u0430\u043f\u044b, \u0441\u043e\u0441\u0442\u0430\u0432 \u0442\u0440\u0435\u0431\u0443\u0435\u0442 \u043f\u0440\u043e\u0432\u0435\u0440\u043a\u0438; \u043d\u0435 \u043e\u0444\u0438\u0446\u0438\u0430\u043b\u044c\u043d\u0430\u044f \u044d\u0442\u0438\u043a\u0435\u0442\u043a\u0430",
+                    "nutritionStatus": "legacy_reference",
+                    "glycemicIndex": 49,
+                    "glycemicIndexStatus": "heuristic_low_confidence"
+                  }
+                ],
+                "totals": {
+                  "protein": 3.4,
+                  "fat": 0.6,
+                  "carbs": 19.9,
+                  "kcal": 92,
+                  "amount": 100,
+                  "count": 1
+                },
+                "containsEstimatedValues": true
+              },
+              "actualPlate": null,
+              "doseIntent": null,
+              "injectionIds": [],
+              "startedAt": "2026-11-20T10:49:17.260Z",
+              "completedAt": null
+            },
+            "after": {
+              "id": "meal-mwouwwti-2qlrkzy0",
+              "version": 4,
+              "status": "started",
+              "createdAt": "2026-11-20T10:49:17.095Z",
+              "lastChangedAt": "2026-11-20T10:49:17.276Z",
+              "plannedPlate": {
+                "schema": "GFPlate.v1",
+                "source": "GFFoodOnly",
+                "createdAt": "2026-11-20T10:49:17.093Z",
+                "items": [
+                  {
+                    "kind": "catalog",
+                    "foodId": "legacy:0001",
+                    "name": "\u0413\u0440\u0435\u0447\u043a\u0430 \u0432\u0430\u0440\u0451\u043d\u0430\u044f",
+                    "amount": 100,
+                    "unit": "\u0433",
+                    "carbs": 19.9,
+                    "protein": 3.4,
+                    "fat": 0.6,
+                    "kcal": 92,
+                    "note": "\u0418\u0437 \u0441\u0442\u0430\u0440\u043e\u0439 \u0432\u0435\u0440\u0441\u0438\u0438 \u0413\u043b\u044e\u043a\u043e\u041f\u0430\u043f\u044b, \u0441\u043e\u0441\u0442\u0430\u0432 \u0442\u0440\u0435\u0431\u0443\u0435\u0442 \u043f\u0440\u043e\u0432\u0435\u0440\u043a\u0438; \u043d\u0435 \u043e\u0444\u0438\u0446\u0438\u0430\u043b\u044c\u043d\u0430\u044f \u044d\u0442\u0438\u043a\u0435\u0442\u043a\u0430",
+                    "nutritionStatus": "legacy_reference",
+                    "glycemicIndex": 49,
+                    "glycemicIndexStatus": "heuristic_low_confidence"
+                  }
+                ],
+                "totals": {
+                  "protein": 3.4,
+                  "fat": 0.6,
+                  "carbs": 19.9,
+                  "kcal": 92,
+                  "amount": 100,
+                  "count": 1
+                },
+                "containsEstimatedValues": true
+              },
+              "actualPlate": {
+                "schema": "GFPlate.v1",
+                "source": "GFFoodOnly",
+                "createdAt": "2026-11-20T10:49:17.276Z",
+                "items": [
+                  {
+                    "kind": "catalog",
+                    "foodId": "legacy:0001",
+                    "name": "\u0413\u0440\u0435\u0447\u043a\u0430 \u0432\u0430\u0440\u0451\u043d\u0430\u044f",
+                    "amount": 75,
+                    "unit": "\u0433",
+                    "carbs": 14.925,
+                    "protein": 2.55,
+                    "fat": 0.45,
+                    "kcal": 69,
+                    "note": "\u0418\u0437 \u0441\u0442\u0430\u0440\u043e\u0439 \u0432\u0435\u0440\u0441\u0438\u0438 \u0413\u043b\u044e\u043a\u043e\u041f\u0430\u043f\u044b, \u0441\u043e\u0441\u0442\u0430\u0432 \u0442\u0440\u0435\u0431\u0443\u0435\u0442 \u043f\u0440\u043e\u0432\u0435\u0440\u043a\u0438; \u043d\u0435 \u043e\u0444\u0438\u0446\u0438\u0430\u043b\u044c\u043d\u0430\u044f \u044d\u0442\u0438\u043a\u0435\u0442\u043a\u0430",
+                    "nutritionStatus": "legacy_reference",
+                    "glycemicIndex": 49,
+                    "glycemicIndexStatus": "heuristic_low_confidence"
+                  }
+                ],
+                "totals": {
+                  "amount": 75,
+                  "count": 1,
+                  "carbs": 14.925,
+                  "protein": 2.55,
+                  "fat": 0.45,
+                  "kcal": 69
+                },
+                "containsEstimatedValues": true
+              },
+              "doseIntent": null,
+              "injectionIds": [],
+              "startedAt": "2026-11-20T10:49:17.260Z",
+              "completedAt": null,
+              "actualReason": "first_confirmation"
+            }
+          },
+          {
+            "id": "op-7125d521-e76f-44ba-9fe5-b62241bbd0a4",
+            "sessionId": "meal-mwouwwti-2qlrkzy0",
+            "action": "confirm_meal_finished",
+            "actor": "actionWriter",
+            "at": "2026-11-20T10:49:17.292Z",
+            "revision": 6,
+            "before": {
+              "id": "meal-mwouwwti-2qlrkzy0",
+              "version": 4,
+              "status": "started",
+              "createdAt": "2026-11-20T10:49:17.095Z",
+              "lastChangedAt": "2026-11-20T10:49:17.276Z",
+              "plannedPlate": {
+                "schema": "GFPlate.v1",
+                "source": "GFFoodOnly",
+                "createdAt": "2026-11-20T10:49:17.093Z",
+                "items": [
+                  {
+                    "kind": "catalog",
+                    "foodId": "legacy:0001",
+                    "name": "\u0413\u0440\u0435\u0447\u043a\u0430 \u0432\u0430\u0440\u0451\u043d\u0430\u044f",
+                    "amount": 100,
+                    "unit": "\u0433",
+                    "carbs": 19.9,
+                    "protein": 3.4,
+                    "fat": 0.6,
+                    "kcal": 92,
+                    "note": "\u0418\u0437 \u0441\u0442\u0430\u0440\u043e\u0439 \u0432\u0435\u0440\u0441\u0438\u0438 \u0413\u043b\u044e\u043a\u043e\u041f\u0430\u043f\u044b, \u0441\u043e\u0441\u0442\u0430\u0432 \u0442\u0440\u0435\u0431\u0443\u0435\u0442 \u043f\u0440\u043e\u0432\u0435\u0440\u043a\u0438; \u043d\u0435 \u043e\u0444\u0438\u0446\u0438\u0430\u043b\u044c\u043d\u0430\u044f \u044d\u0442\u0438\u043a\u0435\u0442\u043a\u0430",
+                    "nutritionStatus": "legacy_reference",
+                    "glycemicIndex": 49,
+                    "glycemicIndexStatus": "heuristic_low_confidence"
+                  }
+                ],
+                "totals": {
+                  "protein": 3.4,
+                  "fat": 0.6,
+                  "carbs": 19.9,
+                  "kcal": 92,
+                  "amount": 100,
+                  "count": 1
+                },
+                "containsEstimatedValues": true
+              },
+              "actualPlate": {
+                "schema": "GFPlate.v1",
+                "source": "GFFoodOnly",
+                "createdAt": "2026-11-20T10:49:17.276Z",
+                "items": [
+                  {
+                    "kind": "catalog",
+                    "foodId": "legacy:0001",
+                    "name": "\u0413\u0440\u0435\u0447\u043a\u0430 \u0432\u0430\u0440\u0451\u043d\u0430\u044f",
+                    "amount": 75,
+                    "unit": "\u0433",
+                    "carbs": 14.925,
+                    "protein": 2.55,
+                    "fat": 0.45,
+                    "kcal": 69,
+                    "note": "\u0418\u0437 \u0441\u0442\u0430\u0440\u043e\u0439 \u0432\u0435\u0440\u0441\u0438\u0438 \u0413\u043b\u044e\u043a\u043e\u041f\u0430\u043f\u044b, \u0441\u043e\u0441\u0442\u0430\u0432 \u0442\u0440\u0435\u0431\u0443\u0435\u0442 \u043f\u0440\u043e\u0432\u0435\u0440\u043a\u0438; \u043d\u0435 \u043e\u0444\u0438\u0446\u0438\u0430\u043b\u044c\u043d\u0430\u044f \u044d\u0442\u0438\u043a\u0435\u0442\u043a\u0430",
+                    "nutritionStatus": "legacy_reference",
+                    "glycemicIndex": 49,
+                    "glycemicIndexStatus": "heuristic_low_confidence"
+                  }
+                ],
+                "totals": {
+                  "amount": 75,
+                  "count": 1,
+                  "carbs": 14.925,
+                  "protein": 2.55,
+                  "fat": 0.45,
+                  "kcal": 69
+                },
+                "containsEstimatedValues": true
+              },
+              "doseIntent": null,
+              "injectionIds": [],
+              "startedAt": "2026-11-20T10:49:17.260Z",
+              "completedAt": null,
+              "actualReason": "first_confirmation"
+            },
+            "after": {
+              "id": "meal-mwouwwti-2qlrkzy0",
+              "version": 5,
+              "status": "completed",
+              "createdAt": "2026-11-20T10:49:17.095Z",
+              "lastChangedAt": "2026-11-20T10:49:17.292Z",
+              "plannedPlate": {
+                "schema": "GFPlate.v1",
+                "source": "GFFoodOnly",
+                "createdAt": "2026-11-20T10:49:17.093Z",
+                "items": [
+                  {
+                    "kind": "catalog",
+                    "foodId": "legacy:0001",
+                    "name": "\u0413\u0440\u0435\u0447\u043a\u0430 \u0432\u0430\u0440\u0451\u043d\u0430\u044f",
+                    "amount": 100,
+                    "unit": "\u0433",
+                    "carbs": 19.9,
+                    "protein": 3.4,
+                    "fat": 0.6,
+                    "kcal": 92,
+                    "note": "\u0418\u0437 \u0441\u0442\u0430\u0440\u043e\u0439 \u0432\u0435\u0440\u0441\u0438\u0438 \u0413\u043b\u044e\u043a\u043e\u041f\u0430\u043f\u044b, \u0441\u043e\u0441\u0442\u0430\u0432 \u0442\u0440\u0435\u0431\u0443\u0435\u0442 \u043f\u0440\u043e\u0432\u0435\u0440\u043a\u0438; \u043d\u0435 \u043e\u0444\u0438\u0446\u0438\u0430\u043b\u044c\u043d\u0430\u044f \u044d\u0442\u0438\u043a\u0435\u0442\u043a\u0430",
+                    "nutritionStatus": "legacy_reference",
+                    "glycemicIndex": 49,
+                    "glycemicIndexStatus": "heuristic_low_confidence"
+                  }
+                ],
+                "totals": {
+                  "protein": 3.4,
+                  "fat": 0.6,
+                  "carbs": 19.9,
+                  "kcal": 92,
+                  "amount": 100,
+                  "count": 1
+                },
+                "containsEstimatedValues": true
+              },
+              "actualPlate": {
+                "schema": "GFPlate.v1",
+                "source": "GFFoodOnly",
+                "createdAt": "2026-11-20T10:49:17.276Z",
+                "items": [
+                  {
+                    "kind": "catalog",
+                    "foodId": "legacy:0001",
+                    "name": "\u0413\u0440\u0435\u0447\u043a\u0430 \u0432\u0430\u0440\u0451\u043d\u0430\u044f",
+                    "amount": 75,
+                    "unit": "\u0433",
+                    "carbs": 14.925,
+                    "protein": 2.55,
+                    "fat": 0.45,
+                    "kcal": 69,
+                    "note": "\u0418\u0437 \u0441\u0442\u0430\u0440\u043e\u0439 \u0432\u0435\u0440\u0441\u0438\u0438 \u0413\u043b\u044e\u043a\u043e\u041f\u0430\u043f\u044b, \u0441\u043e\u0441\u0442\u0430\u0432 \u0442\u0440\u0435\u0431\u0443\u0435\u0442 \u043f\u0440\u043e\u0432\u0435\u0440\u043a\u0438; \u043d\u0435 \u043e\u0444\u0438\u0446\u0438\u0430\u043b\u044c\u043d\u0430\u044f \u044d\u0442\u0438\u043a\u0435\u0442\u043a\u0430",
+                    "nutritionStatus": "legacy_reference",
+                    "glycemicIndex": 49,
+                    "glycemicIndexStatus": "heuristic_low_confidence"
+                  }
+                ],
+                "totals": {
+                  "amount": 75,
+                  "count": 1,
+                  "carbs": 14.925,
+                  "protein": 2.55,
+                  "fat": 0.45,
+                  "kcal": 69
+                },
+                "containsEstimatedValues": true
+              },
+              "doseIntent": null,
+              "injectionIds": [],
+              "startedAt": "2026-11-20T10:49:17.260Z",
+              "completedAt": "2026-11-20T10:49:17.292Z",
+              "actualReason": "first_confirmation"
+            }
+          },
+          {
+            "id": "op-8885ad9d-d89a-4b57-ae9b-9d78cf3d3f30",
+            "sessionId": "meal-mwouwwti-2qlrkzy0",
+            "action": "record_actual_plate",
+            "actor": "actionWriter",
+            "at": "2026-11-20T10:49:17.518Z",
+            "revision": 7,
+            "before": {
+              "id": "meal-mwouwwti-2qlrkzy0",
+              "version": 5,
+              "status": "completed",
+              "createdAt": "2026-11-20T10:49:17.095Z",
+              "lastChangedAt": "2026-11-20T10:49:17.292Z",
+              "plannedPlate": {
+                "schema": "GFPlate.v1",
+                "source": "GFFoodOnly",
+                "createdAt": "2026-11-20T10:49:17.093Z",
+                "items": [
+                  {
+                    "kind": "catalog",
+                    "foodId": "legacy:0001",
+                    "name": "\u0413\u0440\u0435\u0447\u043a\u0430 \u0432\u0430\u0440\u0451\u043d\u0430\u044f",
+                    "amount": 100,
+                    "unit": "\u0433",
+                    "carbs": 19.9,
+                    "protein": 3.4,
+                    "fat": 0.6,
+                    "kcal": 92,
+                    "note": "\u0418\u0437 \u0441\u0442\u0430\u0440\u043e\u0439 \u0432\u0435\u0440\u0441\u0438\u0438 \u0413\u043b\u044e\u043a\u043e\u041f\u0430\u043f\u044b, \u0441\u043e\u0441\u0442\u0430\u0432 \u0442\u0440\u0435\u0431\u0443\u0435\u0442 \u043f\u0440\u043e\u0432\u0435\u0440\u043a\u0438; \u043d\u0435 \u043e\u0444\u0438\u0446\u0438\u0430\u043b\u044c\u043d\u0430\u044f \u044d\u0442\u0438\u043a\u0435\u0442\u043a\u0430",
+                    "nutritionStatus": "legacy_reference",
+                    "glycemicIndex": 49,
+                    "glycemicIndexStatus": "heuristic_low_confidence"
+                  }
+                ],
+                "totals": {
+                  "protein": 3.4,
+                  "fat": 0.6,
+                  "carbs": 19.9,
+                  "kcal": 92,
+                  "amount": 100,
+                  "count": 1
+                },
+                "containsEstimatedValues": true
+              },
+              "actualPlate": {
+                "schema": "GFPlate.v1",
+                "source": "GFFoodOnly",
+                "createdAt": "2026-11-20T10:49:17.276Z",
+                "items": [
+                  {
+                    "kind": "catalog",
+                    "foodId": "legacy:0001",
+                    "name": "\u0413\u0440\u0435\u0447\u043a\u0430 \u0432\u0430\u0440\u0451\u043d\u0430\u044f",
+                    "amount": 75,
+                    "unit": "\u0433",
+                    "carbs": 14.925,
+                    "protein": 2.55,
+                    "fat": 0.45,
+                    "kcal": 69,
+                    "note": "\u0418\u0437 \u0441\u0442\u0430\u0440\u043e\u0439 \u0432\u0435\u0440\u0441\u0438\u0438 \u0413\u043b\u044e\u043a\u043e\u041f\u0430\u043f\u044b, \u0441\u043e\u0441\u0442\u0430\u0432 \u0442\u0440\u0435\u0431\u0443\u0435\u0442 \u043f\u0440\u043e\u0432\u0435\u0440\u043a\u0438; \u043d\u0435 \u043e\u0444\u0438\u0446\u0438\u0430\u043b\u044c\u043d\u0430\u044f \u044d\u0442\u0438\u043a\u0435\u0442\u043a\u0430",
+                    "nutritionStatus": "legacy_reference",
+                    "glycemicIndex": 49,
+                    "glycemicIndexStatus": "heuristic_low_confidence"
+                  }
+                ],
+                "totals": {
+                  "amount": 75,
+                  "count": 1,
+                  "carbs": 14.925,
+                  "protein": 2.55,
+                  "fat": 0.45,
+                  "kcal": 69
+                },
+                "containsEstimatedValues": true
+              },
+              "doseIntent": null,
+              "injectionIds": [],
+              "startedAt": "2026-11-20T10:49:17.260Z",
+              "completedAt": "2026-11-20T10:49:17.292Z",
+              "actualReason": "first_confirmation"
+            },
+            "after": {
+              "id": "meal-mwouwwti-2qlrkzy0",
+              "version": 6,
+              "status": "completed",
+              "createdAt": "2026-11-20T10:49:17.095Z",
+              "lastChangedAt": "2026-11-20T10:49:17.518Z",
+              "plannedPlate": {
+                "schema": "GFPlate.v1",
+                "source": "GFFoodOnly",
+                "createdAt": "2026-11-20T10:49:17.093Z",
+                "items": [
+                  {
+                    "kind": "catalog",
+                    "foodId": "legacy:0001",
+                    "name": "\u0413\u0440\u0435\u0447\u043a\u0430 \u0432\u0430\u0440\u0451\u043d\u0430\u044f",
+                    "amount": 100,
+                    "unit": "\u0433",
+                    "carbs": 19.9,
+                    "protein": 3.4,
+                    "fat": 0.6,
+                    "kcal": 92,
+                    "note": "\u0418\u0437 \u0441\u0442\u0430\u0440\u043e\u0439 \u0432\u0435\u0440\u0441\u0438\u0438 \u0413\u043b\u044e\u043a\u043e\u041f\u0430\u043f\u044b, \u0441\u043e\u0441\u0442\u0430\u0432 \u0442\u0440\u0435\u0431\u0443\u0435\u0442 \u043f\u0440\u043e\u0432\u0435\u0440\u043a\u0438; \u043d\u0435 \u043e\u0444\u0438\u0446\u0438\u0430\u043b\u044c\u043d\u0430\u044f \u044d\u0442\u0438\u043a\u0435\u0442\u043a\u0430",
+                    "nutritionStatus": "legacy_reference",
+                    "glycemicIndex": 49,
+                    "glycemicIndexStatus": "heuristic_low_confidence"
+                  }
+                ],
+                "totals": {
+                  "protein": 3.4,
+                  "fat": 0.6,
+                  "carbs": 19.9,
+                  "kcal": 92,
+                  "amount": 100,
+                  "count": 1
+                },
+                "containsEstimatedValues": true
+              },
+              "actualPlate": {
+                "schema": "GFPlate.v1",
+                "source": "GFFoodOnly",
+                "createdAt": "2026-11-20T10:49:17.518Z",
+                "items": [
+                  {
+                    "kind": "catalog",
+                    "foodId": "legacy:0001",
+                    "name": "\u0413\u0440\u0435\u0447\u043a\u0430 \u0432\u0430\u0440\u0451\u043d\u0430\u044f",
+                    "amount": 50,
+                    "unit": "\u0433",
+                    "carbs": 9.95,
+                    "protein": 1.7,
+                    "fat": 0.3,
+                    "kcal": 46,
+                    "note": "\u0418\u0437 \u0441\u0442\u0430\u0440\u043e\u0439 \u0432\u0435\u0440\u0441\u0438\u0438 \u0413\u043b\u044e\u043a\u043e\u041f\u0430\u043f\u044b, \u0441\u043e\u0441\u0442\u0430\u0432 \u0442\u0440\u0435\u0431\u0443\u0435\u0442 \u043f\u0440\u043e\u0432\u0435\u0440\u043a\u0438; \u043d\u0435 \u043e\u0444\u0438\u0446\u0438\u0430\u043b\u044c\u043d\u0430\u044f \u044d\u0442\u0438\u043a\u0435\u0442\u043a\u0430",
+                    "nutritionStatus": "legacy_reference",
+                    "glycemicIndex": 49,
+                    "glycemicIndexStatus": "heuristic_low_confidence"
+                  }
+                ],
+                "totals": {
+                  "amount": 50,
+                  "count": 1,
+                  "carbs": 9.95,
+                  "protein": 1.7,
+                  "fat": 0.3,
+                  "kcal": 46
+                },
+                "containsEstimatedValues": true
+              },
+              "doseIntent": null,
+              "injectionIds": [],
+              "startedAt": "2026-11-20T10:49:17.260Z",
+              "completedAt": "2026-11-20T10:49:17.292Z",
+              "actualReason": "SYNTHETIC correction"
+            }
+          }
+        ],
+        "coverage": null,
+        "cgm": [],
+        "cgmMetadata": null,
+        "conditionPeriods": [],
+        "forecasts": [],
+        "forecastAssessments": [],
+        "syncInbox": [],
+        "results": [],
+        "proposals": [],
+        "graphPreferences": {
+          "layout": "guided",
+          "theme": "light",
+          "rangeHours": 12,
+          "showRinfast": true,
+          "showTotal": false
+        },
+        "history": [
+          {
+            "revision": 1,
+            "at": "2026-11-20T10:48:05.360Z",
+            "actor": "actionWriter",
+            "domain": "events",
+            "action": "injection",
+            "recordId": "high-37ba0228644ddd8ab985184f5c63c18b"
+          },
+          {
+            "revision": 2,
+            "at": "2026-11-20T10:49:17.095Z",
+            "actor": "food",
+            "domain": "mealSessions",
+            "action": "create_draft",
+            "recordId": "meal-mwouwwti-2qlrkzy0"
+          },
+          {
+            "revision": 3,
+            "at": "2026-11-20T10:49:17.242Z",
+            "actor": "mealFlow",
+            "domain": "mealSessions",
+            "action": "mark_ready",
+            "recordId": "meal-mwouwwti-2qlrkzy0"
+          },
+          {
+            "revision": 4,
+            "at": "2026-11-20T10:49:17.260Z",
+            "actor": "actionWriter",
+            "domain": "mealSessions",
+            "action": "confirm_meal_start",
+            "recordId": "meal-mwouwwti-2qlrkzy0"
+          },
+          {
+            "revision": 5,
+            "at": "2026-11-20T10:49:17.276Z",
+            "actor": "actionWriter",
+            "domain": "mealSessions",
+            "action": "record_actual_plate",
+            "recordId": "meal-mwouwwti-2qlrkzy0"
+          },
+          {
+            "revision": 6,
+            "at": "2026-11-20T10:49:17.292Z",
+            "actor": "actionWriter",
+            "domain": "mealSessions",
+            "action": "confirm_meal_finished",
+            "recordId": "meal-mwouwwti-2qlrkzy0"
+          },
+          {
+            "revision": 7,
+            "at": "2026-11-20T10:49:17.518Z",
+            "actor": "actionWriter",
+            "domain": "mealSessions",
+            "action": "record_actual_plate",
+            "recordId": "meal-mwouwwti-2qlrkzy0"
+          }
+        ]
+      }
+    },
+    "saf_pending_then_force_stop": true
+  }
+}

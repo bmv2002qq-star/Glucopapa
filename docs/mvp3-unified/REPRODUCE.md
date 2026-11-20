@@ -16,4 +16,4 @@ python3 qa/mvp3-full/integrity.py --apk android-mvp3/app/build/outputs/apk/debug
 
 `assembleDebug` выдаёт обычный устанавливаемый APK. `assembleFixture` предназначен для лабораторных сценариев и имеет другой package ID. Для нативной контрольной проверки обычного APK собирается отдельный `test APK` с `-PglucopapaTestTarget=debug :app:assembleDebugAndroidTest`. Нативный сценарий следует запускать на одноразовом AVD. Последовательность установки, сценариев SQLite, force-stop и сбора файлов указана в [GitHub Actions](https://github.com/bmv2002qq-star/Glucopapa/blob/c091860497d3bae24129ca392c0517be22f653b1/.github/workflows/mvp3-android-device.yml).
 
-Локальный APK и APK CI имеют разные debug-подписи. Версия кода и содержимое WebView проверяются одним списком файлов, SHA APK приводятся отдельно. Clinical, телефон и реальный xDrip+ оцениваются независимо от запуска AVD.
+Локальный APK и каждый APK CI имеют собственный SHA-256. Версия кода и содержимое WebView проверяются одним списком файлов, SHA APK приводятся отдельно. Clinical, телефон и реальный xDrip+ оцениваются независимо от запуска AVD.

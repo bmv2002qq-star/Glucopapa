@@ -1,0 +1,2074 @@
+[
+  {
+    "api": 31,
+    "smoke": "PASS",
+    "ui_driver": "ANDROID_WEBVIEW_INSTRUMENTATION",
+    "debug_apk_sha256": "c1432afd7639309b54fdd6ae4e78b34c9bccb4ae9d3695ec1a341d51762c1cc7",
+    "fixture_apk_sha256": "1a91dac49c2d42a2600834dc4c60f6c38dacd2e068820b8871a886ade0fd92ee",
+    "production-isolation": {
+      "provider": "NO_PROVIDER",
+      "sqlite": "ABSENT",
+      "status": "PASS",
+      "variant": "debug"
+    },
+    "provider-write": {
+      "checked": "CAS_AND_DEDUPLICATION",
+      "fixture": "SYNTHETIC_PROVIDER_PAYLOAD",
+      "revision": 1,
+      "status": "PASS"
+    },
+    "provider-restored": {
+      "checked": "FORCE_STOP_RELAUNCH",
+      "fixture": "SYNTHETIC_PROVIDER_PAYLOAD",
+      "revision": 1,
+      "status": "PASS"
+    },
+    "unified-save": {
+      "fixture": "SYNTHETIC",
+      "status": "PASS",
+      "step": "unified-save"
+    },
+    "unified-restored": {
+      "fixture": "SYNTHETIC",
+      "status": "PASS",
+      "step": "unified-restored"
+    },
+    "touch": {
+      "status": "PASS",
+      "input": "ANDROID_POINTER_DOWN_UP",
+      "routes": "HIGH, LOW, journal",
+      "webview_accessibility": "ENV_BLOCKED"
+    }
+  },
+  {
+    "api": 34,
+    "smoke": "PASS",
+    "ui_driver": "ADB_ACCESSIBILITY",
+    "debug_apk_sha256": "6b4d99b189191459dd0de5334d10fd440ef56c7667a26cb11515ad26029b82a1",
+    "fixture_apk_sha256": "0881c78a6141b7f5e5e6e9d770395fe18678d52765ef3b06e2da1a18a4bec0ac",
+    "production-isolation": {
+      "provider": "NO_PROVIDER",
+      "sqlite": "ABSENT",
+      "status": "PASS",
+      "variant": "debug"
+    },
+    "provider-write": {
+      "checked": "CAS_AND_DEDUPLICATION",
+      "fixture": "SYNTHETIC_PROVIDER_PAYLOAD",
+      "revision": 1,
+      "status": "PASS"
+    },
+    "provider-restored": {
+      "checked": "FORCE_STOP_RELAUNCH",
+      "fixture": "SYNTHETIC_PROVIDER_PAYLOAD",
+      "revision": 1,
+      "status": "PASS"
+    },
+    "unified-save": {
+      "fixture": "SYNTHETIC",
+      "status": "PASS",
+      "step": "unified-save"
+    },
+    "unified-restored": {
+      "fixture": "SYNTHETIC",
+      "status": "PASS",
+      "step": "unified-restored"
+    },
+    "sizing": {
+      "fixture": "SYNTHETIC",
+      "sizes": [
+        {
+          "width": 320,
+          "height": 760,
+          "density": 160,
+          "navigation_safe": true
+        },
+        {
+          "width": 390,
+          "height": 850,
+          "density": 160,
+          "navigation_safe": true
+        },
+        {
+          "width": 428,
+          "height": 900,
+          "density": 160,
+          "navigation_safe": true
+        },
+        {
+          "width": 1280,
+          "height": 850,
+          "density": 160,
+          "navigation_safe": true
+        }
+      ],
+      "soak_seconds": 86.2,
+      "pss_kb": [
+        88933,
+        89136,
+        87594,
+        88276
+      ],
+      "trim_memory_signal": {
+        "command_accepted": true,
+        "resumed": true,
+        "diagnostic": ""
+      },
+      "interruptions": {
+        "diary_open_then_force_stop": {
+          "GFV2SHELL_DATA_v1_demo": {
+            "schemaVersion": 5,
+            "revision": 7,
+            "profile": {
+              "birthDate": null,
+              "timeZone": null,
+              "displayName": null,
+              "sex": null,
+              "allergies": [],
+              "dailyNutritionReference": null,
+              "exerciseGuidance": null,
+              "exerciseGuidanceEnabled": true,
+              "hypoActivityMultipliers": null,
+              "hypoActivityEnabled": true,
+              "activityBaseLevel": "low",
+              "coefficientModes": {
+                "carb_g_per_u": "manual",
+                "isf_mmol_per_u": "manual"
+              },
+              "illnessFactor": null
+            },
+            "measurements": [],
+            "drugs": {
+              "rinfast": {
+                "id": "rinfast",
+                "name": "РинФаст",
+                "substance": "инсулин аспарт",
+                "type": "rapid"
+              },
+              "levemir": {
+                "id": "levemir",
+                "name": "Левемир",
+                "substance": "инсулин детемир",
+                "type": "basal"
+              }
+            },
+            "models": {
+              "rinfast": {
+                "drugId": "rinfast",
+                "approvedModuleVersion": "0.3.1",
+                "engineVersion": "0.3.0",
+                "model": "openaps_exponential_rapid",
+                "clinicalValidation": false,
+                "profile": {
+                  "drugId": "rinfast",
+                  "drugName": "РинФаст",
+                  "substance": "инсулин аспарт",
+                  "model": "openaps_exponential_rapid",
+                  "modelVersion": "0.3.0",
+                  "diaMinutes": 300,
+                  "peakMinutes": 75,
+                  "clinicalValidation": false
+                }
+              },
+              "levemir": {
+                "drugId": "levemir",
+                "approvedModuleVersion": "0.1.2",
+                "engineVersion": "0.1.0",
+                "model": "detemir_population_time_trapezoid",
+                "clinicalValidation": false,
+                "profile": {
+                  "drugId": "levemir",
+                  "name": "Левемир",
+                  "substance": "инсулин детемир",
+                  "model": "detemir_population_time_trapezoid",
+                  "modelVersion": "0.1.0",
+                  "clinicalValidation": false,
+                  "doseResponseInChildrenValidated": false,
+                  "minimumJournalHours": 48
+                }
+              }
+            },
+            "orders": [],
+            "coefficients": [],
+            "events": [
+              {
+                "type": "insulin_injection",
+                "status": "confirmed",
+                "id": "high-d29b23b52d77cd606bc2e694e5f3772c",
+                "insulinId": "rinfast",
+                "units": 0.5,
+                "administeredAt": "2026-11-20T10:38:16.472Z",
+                "injectionSite": {
+                  "region": "abdomen"
+                }
+              }
+            ],
+            "mealSessions": [
+              {
+                "id": "meal-mwoukj8b-090w39ti",
+                "version": 6,
+                "status": "completed",
+                "createdAt": "2026-11-20T10:39:39.612Z",
+                "lastChangedAt": "2026-11-20T10:39:40.121Z",
+                "plannedPlate": {
+                  "schema": "GFPlate.v1",
+                  "source": "GFFoodOnly",
+                  "createdAt": "2026-11-20T10:39:39.610Z",
+                  "items": [
+                    {
+                      "kind": "catalog",
+                      "foodId": "legacy:0001",
+                      "name": "Гречка варёная",
+                      "amount": 100,
+                      "unit": "г",
+                      "carbs": 19.9,
+                      "protein": 3.4,
+                      "fat": 0.6,
+                      "kcal": 92,
+                      "note": "Из старой версии ГлюкоПапы, состав требует проверки; не официальная этикетка",
+                      "nutritionStatus": "legacy_reference",
+                      "glycemicIndex": 49,
+                      "glycemicIndexStatus": "heuristic_low_confidence"
+                    }
+                  ],
+                  "totals": {
+                    "protein": 3.4,
+                    "fat": 0.6,
+                    "carbs": 19.9,
+                    "kcal": 92,
+                    "amount": 100,
+                    "count": 1
+                  },
+                  "containsEstimatedValues": true
+                },
+                "actualPlate": {
+                  "schema": "GFPlate.v1",
+                  "source": "GFFoodOnly",
+                  "createdAt": "2026-11-20T10:39:40.120Z",
+                  "items": [
+                    {
+                      "kind": "catalog",
+                      "foodId": "legacy:0001",
+                      "name": "Гречка варёная",
+                      "amount": 50,
+                      "unit": "г",
+                      "carbs": 9.95,
+                      "protein": 1.7,
+                      "fat": 0.3,
+                      "kcal": 46,
+                      "note": "Из старой версии ГлюкоПапы, состав требует проверки; не официальная этикетка",
+                      "nutritionStatus": "legacy_reference",
+                      "glycemicIndex": 49,
+                      "glycemicIndexStatus": "heuristic_low_confidence"
+                    }
+                  ],
+                  "totals": {
+                    "amount": 50,
+                    "count": 1,
+                    "carbs": 9.95,
+                    "protein": 1.7,
+                    "fat": 0.3,
+                    "kcal": 46
+                  },
+                  "containsEstimatedValues": true
+                },
+                "doseIntent": null,
+                "injectionIds": [],
+                "startedAt": "2026-11-20T10:39:39.793Z",
+                "completedAt": "2026-11-20T10:39:39.894Z",
+                "actualReason": "SYNTHETIC correction"
+              }
+            ],
+            "workflowLog": [
+              {
+                "id": "new:meal-mwoukj8b-090w39ti",
+                "sessionId": "meal-mwoukj8b-090w39ti",
+                "action": "create_draft",
+                "actor": "food",
+                "at": "2026-11-20T10:39:39.612Z",
+                "revision": 2,
+                "before": null,
+                "after": {
+                  "id": "meal-mwoukj8b-090w39ti",
+                  "version": 1,
+                  "status": "draft",
+                  "createdAt": "2026-11-20T10:39:39.612Z",
+                  "lastChangedAt": "2026-11-20T10:39:39.612Z",
+                  "plannedPlate": {
+                    "schema": "GFPlate.v1",
+                    "source": "GFFoodOnly",
+                    "createdAt": "2026-11-20T10:39:39.610Z",
+                    "items": [
+                      {
+                        "kind": "catalog",
+                        "foodId": "legacy:0001",
+                        "name": "Гречка варёная",
+                        "amount": 100,
+                        "unit": "г",
+                        "carbs": 19.9,
+                        "protein": 3.4,
+                        "fat": 0.6,
+                        "kcal": 92,
+                        "note": "Из старой версии ГлюкоПапы, состав требует проверки; не официальная этикетка",
+                        "nutritionStatus": "legacy_reference",
+                        "glycemicIndex": 49,
+                        "glycemicIndexStatus": "heuristic_low_confidence"
+                      }
+                    ],
+                    "totals": {
+                      "protein": 3.4,
+                      "fat": 0.6,
+                      "carbs": 19.9,
+                      "kcal": 92,
+                      "amount": 100,
+                      "count": 1
+                    },
+                    "containsEstimatedValues": true
+                  },
+                  "actualPlate": null,
+                  "doseIntent": null,
+                  "injectionIds": [],
+                  "startedAt": null,
+                  "completedAt": null
+                }
+              },
+              {
+                "id": "op-57ca97a8-e0d2-4d03-ac5d-0040e27da5ca",
+                "sessionId": "meal-mwoukj8b-090w39ti",
+                "action": "mark_ready",
+                "actor": "mealFlow",
+                "at": "2026-11-20T10:39:39.762Z",
+                "revision": 3,
+                "before": {
+                  "id": "meal-mwoukj8b-090w39ti",
+                  "version": 1,
+                  "status": "draft",
+                  "createdAt": "2026-11-20T10:39:39.612Z",
+                  "lastChangedAt": "2026-11-20T10:39:39.612Z",
+                  "plannedPlate": {
+                    "schema": "GFPlate.v1",
+                    "source": "GFFoodOnly",
+                    "createdAt": "2026-11-20T10:39:39.610Z",
+                    "items": [
+                      {
+                        "kind": "catalog",
+                        "foodId": "legacy:0001",
+                        "name": "Гречка варёная",
+                        "amount": 100,
+                        "unit": "г",
+                        "carbs": 19.9,
+                        "protein": 3.4,
+                        "fat": 0.6,
+                        "kcal": 92,
+                        "note": "Из старой версии ГлюкоПапы, состав требует проверки; не официальная этикетка",
+                        "nutritionStatus": "legacy_reference",
+                        "glycemicIndex": 49,
+                        "glycemicIndexStatus": "heuristic_low_confidence"
+                      }
+                    ],
+                    "totals": {
+                      "protein": 3.4,
+                      "fat": 0.6,
+                      "carbs": 19.9,
+                      "kcal": 92,
+                      "amount": 100,
+                      "count": 1
+                    },
+                    "containsEstimatedValues": true
+                  },
+                  "actualPlate": null,
+                  "doseIntent": null,
+                  "injectionIds": [],
+                  "startedAt": null,
+                  "completedAt": null
+                },
+                "after": {
+                  "id": "meal-mwoukj8b-090w39ti",
+                  "version": 2,
+                  "status": "planned",
+                  "createdAt": "2026-11-20T10:39:39.612Z",
+                  "lastChangedAt": "2026-11-20T10:39:39.762Z",
+                  "plannedPlate": {
+                    "schema": "GFPlate.v1",
+                    "source": "GFFoodOnly",
+                    "createdAt": "2026-11-20T10:39:39.610Z",
+                    "items": [
+                      {
+                        "kind": "catalog",
+                        "foodId": "legacy:0001",
+                        "name": "Гречка варёная",
+                        "amount": 100,
+                        "unit": "г",
+                        "carbs": 19.9,
+                        "protein": 3.4,
+                        "fat": 0.6,
+                        "kcal": 92,
+                        "note": "Из старой версии ГлюкоПапы, состав требует проверки; не официальная этикетка",
+                        "nutritionStatus": "legacy_reference",
+                        "glycemicIndex": 49,
+                        "glycemicIndexStatus": "heuristic_low_confidence"
+                      }
+                    ],
+                    "totals": {
+                      "protein": 3.4,
+                      "fat": 0.6,
+                      "carbs": 19.9,
+                      "kcal": 92,
+                      "amount": 100,
+                      "count": 1
+                    },
+                    "containsEstimatedValues": true
+                  },
+                  "actualPlate": null,
+                  "doseIntent": null,
+                  "injectionIds": [],
+                  "startedAt": null,
+                  "completedAt": null
+                }
+              },
+              {
+                "id": "op-2b056595-2456-4ba7-af76-84f71448da4f",
+                "sessionId": "meal-mwoukj8b-090w39ti",
+                "action": "confirm_meal_start",
+                "actor": "actionWriter",
+                "at": "2026-11-20T10:39:39.793Z",
+                "revision": 4,
+                "before": {
+                  "id": "meal-mwoukj8b-090w39ti",
+                  "version": 2,
+                  "status": "planned",
+                  "createdAt": "2026-11-20T10:39:39.612Z",
+                  "lastChangedAt": "2026-11-20T10:39:39.762Z",
+                  "plannedPlate": {
+                    "schema": "GFPlate.v1",
+                    "source": "GFFoodOnly",
+                    "createdAt": "2026-11-20T10:39:39.610Z",
+                    "items": [
+                      {
+                        "kind": "catalog",
+                        "foodId": "legacy:0001",
+                        "name": "Гречка варёная",
+                        "amount": 100,
+                        "unit": "г",
+                        "carbs": 19.9,
+                        "protein": 3.4,
+                        "fat": 0.6,
+                        "kcal": 92,
+                        "note": "Из старой версии ГлюкоПапы, состав требует проверки; не официальная этикетка",
+                        "nutritionStatus": "legacy_reference",
+                        "glycemicIndex": 49,
+                        "glycemicIndexStatus": "heuristic_low_confidence"
+                      }
+                    ],
+                    "totals": {
+                      "protein": 3.4,
+                      "fat": 0.6,
+                      "carbs": 19.9,
+                      "kcal": 92,
+                      "amount": 100,
+                      "count": 1
+                    },
+                    "containsEstimatedValues": true
+                  },
+                  "actualPlate": null,
+                  "doseIntent": null,
+                  "injectionIds": [],
+                  "startedAt": null,
+                  "completedAt": null
+                },
+                "after": {
+                  "id": "meal-mwoukj8b-090w39ti",
+                  "version": 3,
+                  "status": "started",
+                  "createdAt": "2026-11-20T10:39:39.612Z",
+                  "lastChangedAt": "2026-11-20T10:39:39.793Z",
+                  "plannedPlate": {
+                    "schema": "GFPlate.v1",
+                    "source": "GFFoodOnly",
+                    "createdAt": "2026-11-20T10:39:39.610Z",
+                    "items": [
+                      {
+                        "kind": "catalog",
+                        "foodId": "legacy:0001",
+                        "name": "Гречка варёная",
+                        "amount": 100,
+                        "unit": "г",
+                        "carbs": 19.9,
+                        "protein": 3.4,
+                        "fat": 0.6,
+                        "kcal": 92,
+                        "note": "Из старой версии ГлюкоПапы, состав требует проверки; не официальная этикетка",
+                        "nutritionStatus": "legacy_reference",
+                        "glycemicIndex": 49,
+                        "glycemicIndexStatus": "heuristic_low_confidence"
+                      }
+                    ],
+                    "totals": {
+                      "protein": 3.4,
+                      "fat": 0.6,
+                      "carbs": 19.9,
+                      "kcal": 92,
+                      "amount": 100,
+                      "count": 1
+                    },
+                    "containsEstimatedValues": true
+                  },
+                  "actualPlate": null,
+                  "doseIntent": null,
+                  "injectionIds": [],
+                  "startedAt": "2026-11-20T10:39:39.793Z",
+                  "completedAt": null
+                }
+              },
+              {
+                "id": "op-b1ac50fa-83a3-4e83-8fb9-eaabbb0bbf6a",
+                "sessionId": "meal-mwoukj8b-090w39ti",
+                "action": "record_actual_plate",
+                "actor": "actionWriter",
+                "at": "2026-11-20T10:39:39.856Z",
+                "revision": 5,
+                "before": {
+                  "id": "meal-mwoukj8b-090w39ti",
+                  "version": 3,
+                  "status": "started",
+                  "createdAt": "2026-11-20T10:39:39.612Z",
+                  "lastChangedAt": "2026-11-20T10:39:39.793Z",
+                  "plannedPlate": {
+                    "schema": "GFPlate.v1",
+                    "source": "GFFoodOnly",
+                    "createdAt": "2026-11-20T10:39:39.610Z",
+                    "items": [
+                      {
+                        "kind": "catalog",
+                        "foodId": "legacy:0001",
+                        "name": "Гречка варёная",
+                        "amount": 100,
+                        "unit": "г",
+                        "carbs": 19.9,
+                        "protein": 3.4,
+                        "fat": 0.6,
+                        "kcal": 92,
+                        "note": "Из старой версии ГлюкоПапы, состав требует проверки; не официальная этикетка",
+                        "nutritionStatus": "legacy_reference",
+                        "glycemicIndex": 49,
+                        "glycemicIndexStatus": "heuristic_low_confidence"
+                      }
+                    ],
+                    "totals": {
+                      "protein": 3.4,
+                      "fat": 0.6,
+                      "carbs": 19.9,
+                      "kcal": 92,
+                      "amount": 100,
+                      "count": 1
+                    },
+                    "containsEstimatedValues": true
+                  },
+                  "actualPlate": null,
+                  "doseIntent": null,
+                  "injectionIds": [],
+                  "startedAt": "2026-11-20T10:39:39.793Z",
+                  "completedAt": null
+                },
+                "after": {
+                  "id": "meal-mwoukj8b-090w39ti",
+                  "version": 4,
+                  "status": "started",
+                  "createdAt": "2026-11-20T10:39:39.612Z",
+                  "lastChangedAt": "2026-11-20T10:39:39.856Z",
+                  "plannedPlate": {
+                    "schema": "GFPlate.v1",
+                    "source": "GFFoodOnly",
+                    "createdAt": "2026-11-20T10:39:39.610Z",
+                    "items": [
+                      {
+                        "kind": "catalog",
+                        "foodId": "legacy:0001",
+                        "name": "Гречка варёная",
+                        "amount": 100,
+                        "unit": "г",
+                        "carbs": 19.9,
+                        "protein": 3.4,
+                        "fat": 0.6,
+                        "kcal": 92,
+                        "note": "Из старой версии ГлюкоПапы, состав требует проверки; не официальная этикетка",
+                        "nutritionStatus": "legacy_reference",
+                        "glycemicIndex": 49,
+                        "glycemicIndexStatus": "heuristic_low_confidence"
+                      }
+                    ],
+                    "totals": {
+                      "protein": 3.4,
+                      "fat": 0.6,
+                      "carbs": 19.9,
+                      "kcal": 92,
+                      "amount": 100,
+                      "count": 1
+                    },
+                    "containsEstimatedValues": true
+                  },
+                  "actualPlate": {
+                    "schema": "GFPlate.v1",
+                    "source": "GFFoodOnly",
+                    "createdAt": "2026-11-20T10:39:39.855Z",
+                    "items": [
+                      {
+                        "kind": "catalog",
+                        "foodId": "legacy:0001",
+                        "name": "Гречка варёная",
+                        "amount": 75,
+                        "unit": "г",
+                        "carbs": 14.925,
+                        "protein": 2.55,
+                        "fat": 0.45,
+                        "kcal": 69,
+                        "note": "Из старой версии ГлюкоПапы, состав требует проверки; не официальная этикетка",
+                        "nutritionStatus": "legacy_reference",
+                        "glycemicIndex": 49,
+                        "glycemicIndexStatus": "heuristic_low_confidence"
+                      }
+                    ],
+                    "totals": {
+                      "amount": 75,
+                      "count": 1,
+                      "carbs": 14.925,
+                      "protein": 2.55,
+                      "fat": 0.45,
+                      "kcal": 69
+                    },
+                    "containsEstimatedValues": true
+                  },
+                  "doseIntent": null,
+                  "injectionIds": [],
+                  "startedAt": "2026-11-20T10:39:39.793Z",
+                  "completedAt": null,
+                  "actualReason": "first_confirmation"
+                }
+              },
+              {
+                "id": "op-ef49aa44-a053-4070-935a-2fc94036eb5f",
+                "sessionId": "meal-mwoukj8b-090w39ti",
+                "action": "confirm_meal_finished",
+                "actor": "actionWriter",
+                "at": "2026-11-20T10:39:39.894Z",
+                "revision": 6,
+                "before": {
+                  "id": "meal-mwoukj8b-090w39ti",
+                  "version": 4,
+                  "status": "started",
+                  "createdAt": "2026-11-20T10:39:39.612Z",
+                  "lastChangedAt": "2026-11-20T10:39:39.856Z",
+                  "plannedPlate": {
+                    "schema": "GFPlate.v1",
+                    "source": "GFFoodOnly",
+                    "createdAt": "2026-11-20T10:39:39.610Z",
+                    "items": [
+                      {
+                        "kind": "catalog",
+                        "foodId": "legacy:0001",
+                        "name": "Гречка варёная",
+                        "amount": 100,
+                        "unit": "г",
+                        "carbs": 19.9,
+                        "protein": 3.4,
+                        "fat": 0.6,
+                        "kcal": 92,
+                        "note": "Из старой версии ГлюкоПапы, состав требует проверки; не официальная этикетка",
+                        "nutritionStatus": "legacy_reference",
+                        "glycemicIndex": 49,
+                        "glycemicIndexStatus": "heuristic_low_confidence"
+                      }
+                    ],
+                    "totals": {
+                      "protein": 3.4,
+                      "fat": 0.6,
+                      "carbs": 19.9,
+                      "kcal": 92,
+                      "amount": 100,
+                      "count": 1
+                    },
+                    "containsEstimatedValues": true
+                  },
+                  "actualPlate": {
+                    "schema": "GFPlate.v1",
+                    "source": "GFFoodOnly",
+                    "createdAt": "2026-11-20T10:39:39.855Z",
+                    "items": [
+                      {
+                        "kind": "catalog",
+                        "foodId": "legacy:0001",
+                        "name": "Гречка варёная",
+                        "amount": 75,
+                        "unit": "г",
+                        "carbs": 14.925,
+                        "protein": 2.55,
+                        "fat": 0.45,
+                        "kcal": 69,
+                        "note": "Из старой версии ГлюкоПапы, состав требует проверки; не официальная этикетка",
+                        "nutritionStatus": "legacy_reference",
+                        "glycemicIndex": 49,
+                        "glycemicIndexStatus": "heuristic_low_confidence"
+                      }
+                    ],
+                    "totals": {
+                      "amount": 75,
+                      "count": 1,
+                      "carbs": 14.925,
+                      "protein": 2.55,
+                      "fat": 0.45,
+                      "kcal": 69
+                    },
+                    "containsEstimatedValues": true
+                  },
+                  "doseIntent": null,
+                  "injectionIds": [],
+                  "startedAt": "2026-11-20T10:39:39.793Z",
+                  "completedAt": null,
+                  "actualReason": "first_confirmation"
+                },
+                "after": {
+                  "id": "meal-mwoukj8b-090w39ti",
+                  "version": 5,
+                  "status": "completed",
+                  "createdAt": "2026-11-20T10:39:39.612Z",
+                  "lastChangedAt": "2026-11-20T10:39:39.894Z",
+                  "plannedPlate": {
+                    "schema": "GFPlate.v1",
+                    "source": "GFFoodOnly",
+                    "createdAt": "2026-11-20T10:39:39.610Z",
+                    "items": [
+                      {
+                        "kind": "catalog",
+                        "foodId": "legacy:0001",
+                        "name": "Гречка варёная",
+                        "amount": 100,
+                        "unit": "г",
+                        "carbs": 19.9,
+                        "protein": 3.4,
+                        "fat": 0.6,
+                        "kcal": 92,
+                        "note": "Из старой версии ГлюкоПапы, состав требует проверки; не официальная этикетка",
+                        "nutritionStatus": "legacy_reference",
+                        "glycemicIndex": 49,
+                        "glycemicIndexStatus": "heuristic_low_confidence"
+                      }
+                    ],
+                    "totals": {
+                      "protein": 3.4,
+                      "fat": 0.6,
+                      "carbs": 19.9,
+                      "kcal": 92,
+                      "amount": 100,
+                      "count": 1
+                    },
+                    "containsEstimatedValues": true
+                  },
+                  "actualPlate": {
+                    "schema": "GFPlate.v1",
+                    "source": "GFFoodOnly",
+                    "createdAt": "2026-11-20T10:39:39.855Z",
+                    "items": [
+                      {
+                        "kind": "catalog",
+                        "foodId": "legacy:0001",
+                        "name": "Гречка варёная",
+                        "amount": 75,
+                        "unit": "г",
+                        "carbs": 14.925,
+                        "protein": 2.55,
+                        "fat": 0.45,
+                        "kcal": 69,
+                        "note": "Из старой версии ГлюкоПапы, состав требует проверки; не официальная этикетка",
+                        "nutritionStatus": "legacy_reference",
+                        "glycemicIndex": 49,
+                        "glycemicIndexStatus": "heuristic_low_confidence"
+                      }
+                    ],
+                    "totals": {
+                      "amount": 75,
+                      "count": 1,
+                      "carbs": 14.925,
+                      "protein": 2.55,
+                      "fat": 0.45,
+                      "kcal": 69
+                    },
+                    "containsEstimatedValues": true
+                  },
+                  "doseIntent": null,
+                  "injectionIds": [],
+                  "startedAt": "2026-11-20T10:39:39.793Z",
+                  "completedAt": "2026-11-20T10:39:39.894Z",
+                  "actualReason": "first_confirmation"
+                }
+              },
+              {
+                "id": "op-9a695e6b-224c-42ea-9cb5-28927c7fd632",
+                "sessionId": "meal-mwoukj8b-090w39ti",
+                "action": "record_actual_plate",
+                "actor": "actionWriter",
+                "at": "2026-11-20T10:39:40.121Z",
+                "revision": 7,
+                "before": {
+                  "id": "meal-mwoukj8b-090w39ti",
+                  "version": 5,
+                  "status": "completed",
+                  "createdAt": "2026-11-20T10:39:39.612Z",
+                  "lastChangedAt": "2026-11-20T10:39:39.894Z",
+                  "plannedPlate": {
+                    "schema": "GFPlate.v1",
+                    "source": "GFFoodOnly",
+                    "createdAt": "2026-11-20T10:39:39.610Z",
+                    "items": [
+                      {
+                        "kind": "catalog",
+                        "foodId": "legacy:0001",
+                        "name": "Гречка варёная",
+                        "amount": 100,
+                        "unit": "г",
+                        "carbs": 19.9,
+                        "protein": 3.4,
+                        "fat": 0.6,
+                        "kcal": 92,
+                        "note": "Из старой версии ГлюкоПапы, состав требует проверки; не официальная этикетка",
+                        "nutritionStatus": "legacy_reference",
+                        "glycemicIndex": 49,
+                        "glycemicIndexStatus": "heuristic_low_confidence"
+                      }
+                    ],
+                    "totals": {
+                      "protein": 3.4,
+                      "fat": 0.6,
+                      "carbs": 19.9,
+                      "kcal": 92,
+                      "amount": 100,
+                      "count": 1
+                    },
+                    "containsEstimatedValues": true
+                  },
+                  "actualPlate": {
+                    "schema": "GFPlate.v1",
+                    "source": "GFFoodOnly",
+                    "createdAt": "2026-11-20T10:39:39.855Z",
+                    "items": [
+                      {
+                        "kind": "catalog",
+                        "foodId": "legacy:0001",
+                        "name": "Гречка варёная",
+                        "amount": 75,
+                        "unit": "г",
+                        "carbs": 14.925,
+                        "protein": 2.55,
+                        "fat": 0.45,
+                        "kcal": 69,
+                        "note": "Из старой версии ГлюкоПапы, состав требует проверки; не официальная этикетка",
+                        "nutritionStatus": "legacy_reference",
+                        "glycemicIndex": 49,
+                        "glycemicIndexStatus": "heuristic_low_confidence"
+                      }
+                    ],
+                    "totals": {
+                      "amount": 75,
+                      "count": 1,
+                      "carbs": 14.925,
+                      "protein": 2.55,
+                      "fat": 0.45,
+                      "kcal": 69
+                    },
+                    "containsEstimatedValues": true
+                  },
+                  "doseIntent": null,
+                  "injectionIds": [],
+                  "startedAt": "2026-11-20T10:39:39.793Z",
+                  "completedAt": "2026-11-20T10:39:39.894Z",
+                  "actualReason": "first_confirmation"
+                },
+                "after": {
+                  "id": "meal-mwoukj8b-090w39ti",
+                  "version": 6,
+                  "status": "completed",
+                  "createdAt": "2026-11-20T10:39:39.612Z",
+                  "lastChangedAt": "2026-11-20T10:39:40.121Z",
+                  "plannedPlate": {
+                    "schema": "GFPlate.v1",
+                    "source": "GFFoodOnly",
+                    "createdAt": "2026-11-20T10:39:39.610Z",
+                    "items": [
+                      {
+                        "kind": "catalog",
+                        "foodId": "legacy:0001",
+                        "name": "Гречка варёная",
+                        "amount": 100,
+                        "unit": "г",
+                        "carbs": 19.9,
+                        "protein": 3.4,
+                        "fat": 0.6,
+                        "kcal": 92,
+                        "note": "Из старой версии ГлюкоПапы, состав требует проверки; не официальная этикетка",
+                        "nutritionStatus": "legacy_reference",
+                        "glycemicIndex": 49,
+                        "glycemicIndexStatus": "heuristic_low_confidence"
+                      }
+                    ],
+                    "totals": {
+                      "protein": 3.4,
+                      "fat": 0.6,
+                      "carbs": 19.9,
+                      "kcal": 92,
+                      "amount": 100,
+                      "count": 1
+                    },
+                    "containsEstimatedValues": true
+                  },
+                  "actualPlate": {
+                    "schema": "GFPlate.v1",
+                    "source": "GFFoodOnly",
+                    "createdAt": "2026-11-20T10:39:40.120Z",
+                    "items": [
+                      {
+                        "kind": "catalog",
+                        "foodId": "legacy:0001",
+                        "name": "Гречка варёная",
+                        "amount": 50,
+                        "unit": "г",
+                        "carbs": 9.95,
+                        "protein": 1.7,
+                        "fat": 0.3,
+                        "kcal": 46,
+                        "note": "Из старой версии ГлюкоПапы, состав требует проверки; не официальная этикетка",
+                        "nutritionStatus": "legacy_reference",
+                        "glycemicIndex": 49,
+                        "glycemicIndexStatus": "heuristic_low_confidence"
+                      }
+                    ],
+                    "totals": {
+                      "amount": 50,
+                      "count": 1,
+                      "carbs": 9.95,
+                      "protein": 1.7,
+                      "fat": 0.3,
+                      "kcal": 46
+                    },
+                    "containsEstimatedValues": true
+                  },
+                  "doseIntent": null,
+                  "injectionIds": [],
+                  "startedAt": "2026-11-20T10:39:39.793Z",
+                  "completedAt": "2026-11-20T10:39:39.894Z",
+                  "actualReason": "SYNTHETIC correction"
+                }
+              }
+            ],
+            "coverage": null,
+            "cgm": [],
+            "cgmMetadata": null,
+            "conditionPeriods": [],
+            "forecasts": [],
+            "forecastAssessments": [],
+            "syncInbox": [],
+            "results": [],
+            "proposals": [],
+            "graphPreferences": {
+              "layout": "guided",
+              "theme": "light",
+              "rangeHours": 12,
+              "showRinfast": true,
+              "showTotal": false
+            },
+            "history": [
+              {
+                "revision": 1,
+                "at": "2026-11-20T10:38:18.805Z",
+                "actor": "actionWriter",
+                "domain": "events",
+                "action": "injection",
+                "recordId": "high-d29b23b52d77cd606bc2e694e5f3772c"
+              },
+              {
+                "revision": 2,
+                "at": "2026-11-20T10:39:39.612Z",
+                "actor": "food",
+                "domain": "mealSessions",
+                "action": "create_draft",
+                "recordId": "meal-mwoukj8b-090w39ti"
+              },
+              {
+                "revision": 3,
+                "at": "2026-11-20T10:39:39.762Z",
+                "actor": "mealFlow",
+                "domain": "mealSessions",
+                "action": "mark_ready",
+                "recordId": "meal-mwoukj8b-090w39ti"
+              },
+              {
+                "revision": 4,
+                "at": "2026-11-20T10:39:39.793Z",
+                "actor": "actionWriter",
+                "domain": "mealSessions",
+                "action": "confirm_meal_start",
+                "recordId": "meal-mwoukj8b-090w39ti"
+              },
+              {
+                "revision": 5,
+                "at": "2026-11-20T10:39:39.856Z",
+                "actor": "actionWriter",
+                "domain": "mealSessions",
+                "action": "record_actual_plate",
+                "recordId": "meal-mwoukj8b-090w39ti"
+              },
+              {
+                "revision": 6,
+                "at": "2026-11-20T10:39:39.894Z",
+                "actor": "actionWriter",
+                "domain": "mealSessions",
+                "action": "confirm_meal_finished",
+                "recordId": "meal-mwoukj8b-090w39ti"
+              },
+              {
+                "revision": 7,
+                "at": "2026-11-20T10:39:40.121Z",
+                "actor": "actionWriter",
+                "domain": "mealSessions",
+                "action": "record_actual_plate",
+                "recordId": "meal-mwoukj8b-090w39ti"
+              }
+            ]
+          }
+        },
+        "saf_pending_then_force_stop": true
+      }
+    }
+  },
+  {
+    "api": 35,
+    "smoke": "PASS",
+    "ui_driver": "ADB_ACCESSIBILITY",
+    "debug_apk_sha256": "b57fc6d96bd22805b449ad0a40458c6ce4e3924d8ca3e131826e2d8b68ba76cc",
+    "fixture_apk_sha256": "f550faf09e5811c1f4fe13f557b7a7742209006870f4799bd4692489acdf33f5",
+    "production-isolation": {
+      "provider": "NO_PROVIDER",
+      "sqlite": "ABSENT",
+      "status": "PASS",
+      "variant": "debug"
+    },
+    "provider-write": {
+      "checked": "CAS_AND_DEDUPLICATION",
+      "fixture": "SYNTHETIC_PROVIDER_PAYLOAD",
+      "revision": 1,
+      "status": "PASS"
+    },
+    "provider-restored": {
+      "checked": "FORCE_STOP_RELAUNCH",
+      "fixture": "SYNTHETIC_PROVIDER_PAYLOAD",
+      "revision": 1,
+      "status": "PASS"
+    },
+    "unified-save": {
+      "fixture": "SYNTHETIC",
+      "status": "PASS",
+      "step": "unified-save"
+    },
+    "unified-restored": {
+      "fixture": "SYNTHETIC",
+      "status": "PASS",
+      "step": "unified-restored"
+    }
+  },
+  {
+    "api": 36,
+    "smoke": "PASS",
+    "ui_driver": "ADB_ACCESSIBILITY",
+    "debug_apk_sha256": "5bcda79ce9e9880ec971a8cce971f36f841c3e6d0b63f5b23873d42a170b2f27",
+    "fixture_apk_sha256": "73efddbf0fea558c1777504a428a984a13187b542b24c83420d5b352b3862fbd",
+    "production-isolation": {
+      "provider": "NO_PROVIDER",
+      "sqlite": "ABSENT",
+      "status": "PASS",
+      "variant": "debug"
+    },
+    "provider-write": {
+      "checked": "CAS_AND_DEDUPLICATION",
+      "fixture": "SYNTHETIC_PROVIDER_PAYLOAD",
+      "revision": 1,
+      "status": "PASS"
+    },
+    "provider-restored": {
+      "checked": "FORCE_STOP_RELAUNCH",
+      "fixture": "SYNTHETIC_PROVIDER_PAYLOAD",
+      "revision": 1,
+      "status": "PASS"
+    },
+    "unified-save": {
+      "fixture": "SYNTHETIC",
+      "status": "PASS",
+      "step": "unified-save"
+    },
+    "unified-restored": {
+      "fixture": "SYNTHETIC",
+      "status": "PASS",
+      "step": "unified-restored"
+    },
+    "sizing": {
+      "fixture": "SYNTHETIC",
+      "sizes": [
+        {
+          "width": 320,
+          "height": 760,
+          "density": 160,
+          "navigation_safe": true
+        },
+        {
+          "width": 390,
+          "height": 850,
+          "density": 160,
+          "navigation_safe": true
+        },
+        {
+          "width": 428,
+          "height": 900,
+          "density": 160,
+          "navigation_safe": true
+        },
+        {
+          "width": 1280,
+          "height": 850,
+          "density": 160,
+          "navigation_safe": true
+        }
+      ],
+      "soak_seconds": 85.4,
+      "pss_kb": [
+        111487,
+        111227,
+        110803,
+        110947
+      ],
+      "trim_memory_signal": {
+        "command_accepted": true,
+        "resumed": true,
+        "diagnostic": ""
+      },
+      "interruptions": {
+        "diary_open_then_force_stop": {
+          "GFV2SHELL_DATA_v1_demo": {
+            "schemaVersion": 5,
+            "revision": 7,
+            "profile": {
+              "birthDate": null,
+              "timeZone": null,
+              "displayName": null,
+              "sex": null,
+              "allergies": [],
+              "dailyNutritionReference": null,
+              "exerciseGuidance": null,
+              "exerciseGuidanceEnabled": true,
+              "hypoActivityMultipliers": null,
+              "hypoActivityEnabled": true,
+              "activityBaseLevel": "low",
+              "coefficientModes": {
+                "carb_g_per_u": "manual",
+                "isf_mmol_per_u": "manual"
+              },
+              "illnessFactor": null
+            },
+            "measurements": [],
+            "drugs": {
+              "rinfast": {
+                "id": "rinfast",
+                "name": "РинФаст",
+                "substance": "инсулин аспарт",
+                "type": "rapid"
+              },
+              "levemir": {
+                "id": "levemir",
+                "name": "Левемир",
+                "substance": "инсулин детемир",
+                "type": "basal"
+              }
+            },
+            "models": {
+              "rinfast": {
+                "drugId": "rinfast",
+                "approvedModuleVersion": "0.3.1",
+                "engineVersion": "0.3.0",
+                "model": "openaps_exponential_rapid",
+                "clinicalValidation": false,
+                "profile": {
+                  "drugId": "rinfast",
+                  "drugName": "РинФаст",
+                  "substance": "инсулин аспарт",
+                  "model": "openaps_exponential_rapid",
+                  "modelVersion": "0.3.0",
+                  "diaMinutes": 300,
+                  "peakMinutes": 75,
+                  "clinicalValidation": false
+                }
+              },
+              "levemir": {
+                "drugId": "levemir",
+                "approvedModuleVersion": "0.1.2",
+                "engineVersion": "0.1.0",
+                "model": "detemir_population_time_trapezoid",
+                "clinicalValidation": false,
+                "profile": {
+                  "drugId": "levemir",
+                  "name": "Левемир",
+                  "substance": "инсулин детемир",
+                  "model": "detemir_population_time_trapezoid",
+                  "modelVersion": "0.1.0",
+                  "clinicalValidation": false,
+                  "doseResponseInChildrenValidated": false,
+                  "minimumJournalHours": 48
+                }
+              }
+            },
+            "orders": [],
+            "coefficients": [],
+            "events": [
+              {
+                "type": "insulin_injection",
+                "status": "confirmed",
+                "id": "high-4f88900c759b97368e5be2bb7c7fdf56",
+                "insulinId": "rinfast",
+                "units": 0.5,
+                "administeredAt": "2026-11-20T10:38:51.486Z",
+                "injectionSite": {
+                  "region": "abdomen"
+                }
+              }
+            ],
+            "mealSessions": [
+              {
+                "id": "meal-mwoukut0-x6inh8bx",
+                "version": 6,
+                "status": "completed",
+                "createdAt": "2026-11-20T10:39:54.615Z",
+                "lastChangedAt": "2026-11-20T10:39:55.117Z",
+                "plannedPlate": {
+                  "schema": "GFPlate.v1",
+                  "source": "GFFoodOnly",
+                  "createdAt": "2026-11-20T10:39:54.611Z",
+                  "items": [
+                    {
+                      "kind": "catalog",
+                      "foodId": "legacy:0001",
+                      "name": "Гречка варёная",
+                      "amount": 100,
+                      "unit": "г",
+                      "carbs": 19.9,
+                      "protein": 3.4,
+                      "fat": 0.6,
+                      "kcal": 92,
+                      "note": "Из старой версии ГлюкоПапы, состав требует проверки; не официальная этикетка",
+                      "nutritionStatus": "legacy_reference",
+                      "glycemicIndex": 49,
+                      "glycemicIndexStatus": "heuristic_low_confidence"
+                    }
+                  ],
+                  "totals": {
+                    "protein": 3.4,
+                    "fat": 0.6,
+                    "carbs": 19.9,
+                    "kcal": 92,
+                    "amount": 100,
+                    "count": 1
+                  },
+                  "containsEstimatedValues": true
+                },
+                "actualPlate": {
+                  "schema": "GFPlate.v1",
+                  "source": "GFFoodOnly",
+                  "createdAt": "2026-11-20T10:39:55.117Z",
+                  "items": [
+                    {
+                      "kind": "catalog",
+                      "foodId": "legacy:0001",
+                      "name": "Гречка варёная",
+                      "amount": 50,
+                      "unit": "г",
+                      "carbs": 9.95,
+                      "protein": 1.7,
+                      "fat": 0.3,
+                      "kcal": 46,
+                      "note": "Из старой версии ГлюкоПапы, состав требует проверки; не официальная этикетка",
+                      "nutritionStatus": "legacy_reference",
+                      "glycemicIndex": 49,
+                      "glycemicIndexStatus": "heuristic_low_confidence"
+                    }
+                  ],
+                  "totals": {
+                    "amount": 50,
+                    "count": 1,
+                    "carbs": 9.95,
+                    "protein": 1.7,
+                    "fat": 0.3,
+                    "kcal": 46
+                  },
+                  "containsEstimatedValues": true
+                },
+                "doseIntent": null,
+                "injectionIds": [],
+                "startedAt": "2026-11-20T10:39:54.820Z",
+                "completedAt": "2026-11-20T10:39:54.904Z",
+                "actualReason": "SYNTHETIC correction"
+              }
+            ],
+            "workflowLog": [
+              {
+                "id": "new:meal-mwoukut0-x6inh8bx",
+                "sessionId": "meal-mwoukut0-x6inh8bx",
+                "action": "create_draft",
+                "actor": "food",
+                "at": "2026-11-20T10:39:54.615Z",
+                "revision": 2,
+                "before": null,
+                "after": {
+                  "id": "meal-mwoukut0-x6inh8bx",
+                  "version": 1,
+                  "status": "draft",
+                  "createdAt": "2026-11-20T10:39:54.615Z",
+                  "lastChangedAt": "2026-11-20T10:39:54.615Z",
+                  "plannedPlate": {
+                    "schema": "GFPlate.v1",
+                    "source": "GFFoodOnly",
+                    "createdAt": "2026-11-20T10:39:54.611Z",
+                    "items": [
+                      {
+                        "kind": "catalog",
+                        "foodId": "legacy:0001",
+                        "name": "Гречка варёная",
+                        "amount": 100,
+                        "unit": "г",
+                        "carbs": 19.9,
+                        "protein": 3.4,
+                        "fat": 0.6,
+                        "kcal": 92,
+                        "note": "Из старой версии ГлюкоПапы, состав требует проверки; не официальная этикетка",
+                        "nutritionStatus": "legacy_reference",
+                        "glycemicIndex": 49,
+                        "glycemicIndexStatus": "heuristic_low_confidence"
+                      }
+                    ],
+                    "totals": {
+                      "protein": 3.4,
+                      "fat": 0.6,
+                      "carbs": 19.9,
+                      "kcal": 92,
+                      "amount": 100,
+                      "count": 1
+                    },
+                    "containsEstimatedValues": true
+                  },
+                  "actualPlate": null,
+                  "doseIntent": null,
+                  "injectionIds": [],
+                  "startedAt": null,
+                  "completedAt": null
+                }
+              },
+              {
+                "id": "op-e597ba16-6c6e-4ffc-b02b-06adb8b3e53e",
+                "sessionId": "meal-mwoukut0-x6inh8bx",
+                "action": "mark_ready",
+                "actor": "mealFlow",
+                "at": "2026-11-20T10:39:54.768Z",
+                "revision": 3,
+                "before": {
+                  "id": "meal-mwoukut0-x6inh8bx",
+                  "version": 1,
+                  "status": "draft",
+                  "createdAt": "2026-11-20T10:39:54.615Z",
+                  "lastChangedAt": "2026-11-20T10:39:54.615Z",
+                  "plannedPlate": {
+                    "schema": "GFPlate.v1",
+                    "source": "GFFoodOnly",
+                    "createdAt": "2026-11-20T10:39:54.611Z",
+                    "items": [
+                      {
+                        "kind": "catalog",
+                        "foodId": "legacy:0001",
+                        "name": "Гречка варёная",
+                        "amount": 100,
+                        "unit": "г",
+                        "carbs": 19.9,
+                        "protein": 3.4,
+                        "fat": 0.6,
+                        "kcal": 92,
+                        "note": "Из старой версии ГлюкоПапы, состав требует проверки; не официальная этикетка",
+                        "nutritionStatus": "legacy_reference",
+                        "glycemicIndex": 49,
+                        "glycemicIndexStatus": "heuristic_low_confidence"
+                      }
+                    ],
+                    "totals": {
+                      "protein": 3.4,
+                      "fat": 0.6,
+                      "carbs": 19.9,
+                      "kcal": 92,
+                      "amount": 100,
+                      "count": 1
+                    },
+                    "containsEstimatedValues": true
+                  },
+                  "actualPlate": null,
+                  "doseIntent": null,
+                  "injectionIds": [],
+                  "startedAt": null,
+                  "completedAt": null
+                },
+                "after": {
+                  "id": "meal-mwoukut0-x6inh8bx",
+                  "version": 2,
+                  "status": "planned",
+                  "createdAt": "2026-11-20T10:39:54.615Z",
+                  "lastChangedAt": "2026-11-20T10:39:54.768Z",
+                  "plannedPlate": {
+                    "schema": "GFPlate.v1",
+                    "source": "GFFoodOnly",
+                    "createdAt": "2026-11-20T10:39:54.611Z",
+                    "items": [
+                      {
+                        "kind": "catalog",
+                        "foodId": "legacy:0001",
+                        "name": "Гречка варёная",
+                        "amount": 100,
+                        "unit": "г",
+                        "carbs": 19.9,
+                        "protein": 3.4,
+                        "fat": 0.6,
+                        "kcal": 92,
+                        "note": "Из старой версии ГлюкоПапы, состав требует проверки; не официальная этикетка",
+                        "nutritionStatus": "legacy_reference",
+                        "glycemicIndex": 49,
+                        "glycemicIndexStatus": "heuristic_low_confidence"
+                      }
+                    ],
+                    "totals": {
+                      "protein": 3.4,
+                      "fat": 0.6,
+                      "carbs": 19.9,
+                      "kcal": 92,
+                      "amount": 100,
+                      "count": 1
+                    },
+                    "containsEstimatedValues": true
+                  },
+                  "actualPlate": null,
+                  "doseIntent": null,
+                  "injectionIds": [],
+                  "startedAt": null,
+                  "completedAt": null
+                }
+              },
+              {
+                "id": "op-8e1bdf71-4bc0-471b-8f73-b492858de32b",
+                "sessionId": "meal-mwoukut0-x6inh8bx",
+                "action": "confirm_meal_start",
+                "actor": "actionWriter",
+                "at": "2026-11-20T10:39:54.825Z",
+                "revision": 4,
+                "before": {
+                  "id": "meal-mwoukut0-x6inh8bx",
+                  "version": 2,
+                  "status": "planned",
+                  "createdAt": "2026-11-20T10:39:54.615Z",
+                  "lastChangedAt": "2026-11-20T10:39:54.768Z",
+                  "plannedPlate": {
+                    "schema": "GFPlate.v1",
+                    "source": "GFFoodOnly",
+                    "createdAt": "2026-11-20T10:39:54.611Z",
+                    "items": [
+                      {
+                        "kind": "catalog",
+                        "foodId": "legacy:0001",
+                        "name": "Гречка варёная",
+                        "amount": 100,
+                        "unit": "г",
+                        "carbs": 19.9,
+                        "protein": 3.4,
+                        "fat": 0.6,
+                        "kcal": 92,
+                        "note": "Из старой версии ГлюкоПапы, состав требует проверки; не официальная этикетка",
+                        "nutritionStatus": "legacy_reference",
+                        "glycemicIndex": 49,
+                        "glycemicIndexStatus": "heuristic_low_confidence"
+                      }
+                    ],
+                    "totals": {
+                      "protein": 3.4,
+                      "fat": 0.6,
+                      "carbs": 19.9,
+                      "kcal": 92,
+                      "amount": 100,
+                      "count": 1
+                    },
+                    "containsEstimatedValues": true
+                  },
+                  "actualPlate": null,
+                  "doseIntent": null,
+                  "injectionIds": [],
+                  "startedAt": null,
+                  "completedAt": null
+                },
+                "after": {
+                  "id": "meal-mwoukut0-x6inh8bx",
+                  "version": 3,
+                  "status": "started",
+                  "createdAt": "2026-11-20T10:39:54.615Z",
+                  "lastChangedAt": "2026-11-20T10:39:54.825Z",
+                  "plannedPlate": {
+                    "schema": "GFPlate.v1",
+                    "source": "GFFoodOnly",
+                    "createdAt": "2026-11-20T10:39:54.611Z",
+                    "items": [
+                      {
+                        "kind": "catalog",
+                        "foodId": "legacy:0001",
+                        "name": "Гречка варёная",
+                        "amount": 100,
+                        "unit": "г",
+                        "carbs": 19.9,
+                        "protein": 3.4,
+                        "fat": 0.6,
+                        "kcal": 92,
+                        "note": "Из старой версии ГлюкоПапы, состав требует проверки; не официальная этикетка",
+                        "nutritionStatus": "legacy_reference",
+                        "glycemicIndex": 49,
+                        "glycemicIndexStatus": "heuristic_low_confidence"
+                      }
+                    ],
+                    "totals": {
+                      "protein": 3.4,
+                      "fat": 0.6,
+                      "carbs": 19.9,
+                      "kcal": 92,
+                      "amount": 100,
+                      "count": 1
+                    },
+                    "containsEstimatedValues": true
+                  },
+                  "actualPlate": null,
+                  "doseIntent": null,
+                  "injectionIds": [],
+                  "startedAt": "2026-11-20T10:39:54.820Z",
+                  "completedAt": null
+                }
+              },
+              {
+                "id": "op-5f5d7581-74fe-4ae3-a968-2f1896ccde8f",
+                "sessionId": "meal-mwoukut0-x6inh8bx",
+                "action": "record_actual_plate",
+                "actor": "actionWriter",
+                "at": "2026-11-20T10:39:54.870Z",
+                "revision": 5,
+                "before": {
+                  "id": "meal-mwoukut0-x6inh8bx",
+                  "version": 3,
+                  "status": "started",
+                  "createdAt": "2026-11-20T10:39:54.615Z",
+                  "lastChangedAt": "2026-11-20T10:39:54.825Z",
+                  "plannedPlate": {
+                    "schema": "GFPlate.v1",
+                    "source": "GFFoodOnly",
+                    "createdAt": "2026-11-20T10:39:54.611Z",
+                    "items": [
+                      {
+                        "kind": "catalog",
+                        "foodId": "legacy:0001",
+                        "name": "Гречка варёная",
+                        "amount": 100,
+                        "unit": "г",
+                        "carbs": 19.9,
+                        "protein": 3.4,
+                        "fat": 0.6,
+                        "kcal": 92,
+                        "note": "Из старой версии ГлюкоПапы, состав требует проверки; не официальная этикетка",
+                        "nutritionStatus": "legacy_reference",
+                        "glycemicIndex": 49,
+                        "glycemicIndexStatus": "heuristic_low_confidence"
+                      }
+                    ],
+                    "totals": {
+                      "protein": 3.4,
+                      "fat": 0.6,
+                      "carbs": 19.9,
+                      "kcal": 92,
+                      "amount": 100,
+                      "count": 1
+                    },
+                    "containsEstimatedValues": true
+                  },
+                  "actualPlate": null,
+                  "doseIntent": null,
+                  "injectionIds": [],
+                  "startedAt": "2026-11-20T10:39:54.820Z",
+                  "completedAt": null
+                },
+                "after": {
+                  "id": "meal-mwoukut0-x6inh8bx",
+                  "version": 4,
+                  "status": "started",
+                  "createdAt": "2026-11-20T10:39:54.615Z",
+                  "lastChangedAt": "2026-11-20T10:39:54.870Z",
+                  "plannedPlate": {
+                    "schema": "GFPlate.v1",
+                    "source": "GFFoodOnly",
+                    "createdAt": "2026-11-20T10:39:54.611Z",
+                    "items": [
+                      {
+                        "kind": "catalog",
+                        "foodId": "legacy:0001",
+                        "name": "Гречка варёная",
+                        "amount": 100,
+                        "unit": "г",
+                        "carbs": 19.9,
+                        "protein": 3.4,
+                        "fat": 0.6,
+                        "kcal": 92,
+                        "note": "Из старой версии ГлюкоПапы, состав требует проверки; не официальная этикетка",
+                        "nutritionStatus": "legacy_reference",
+                        "glycemicIndex": 49,
+                        "glycemicIndexStatus": "heuristic_low_confidence"
+                      }
+                    ],
+                    "totals": {
+                      "protein": 3.4,
+                      "fat": 0.6,
+                      "carbs": 19.9,
+                      "kcal": 92,
+                      "amount": 100,
+                      "count": 1
+                    },
+                    "containsEstimatedValues": true
+                  },
+                  "actualPlate": {
+                    "schema": "GFPlate.v1",
+                    "source": "GFFoodOnly",
+                    "createdAt": "2026-11-20T10:39:54.869Z",
+                    "items": [
+                      {
+                        "kind": "catalog",
+                        "foodId": "legacy:0001",
+                        "name": "Гречка варёная",
+                        "amount": 75,
+                        "unit": "г",
+                        "carbs": 14.925,
+                        "protein": 2.55,
+                        "fat": 0.45,
+                        "kcal": 69,
+                        "note": "Из старой версии ГлюкоПапы, состав требует проверки; не официальная этикетка",
+                        "nutritionStatus": "legacy_reference",
+                        "glycemicIndex": 49,
+                        "glycemicIndexStatus": "heuristic_low_confidence"
+                      }
+                    ],
+                    "totals": {
+                      "amount": 75,
+                      "count": 1,
+                      "carbs": 14.925,
+                      "protein": 2.55,
+                      "fat": 0.45,
+                      "kcal": 69
+                    },
+                    "containsEstimatedValues": true
+                  },
+                  "doseIntent": null,
+                  "injectionIds": [],
+                  "startedAt": "2026-11-20T10:39:54.820Z",
+                  "completedAt": null,
+                  "actualReason": "first_confirmation"
+                }
+              },
+              {
+                "id": "op-1f7c2366-f9fe-46cb-a6d3-8a905e86f919",
+                "sessionId": "meal-mwoukut0-x6inh8bx",
+                "action": "confirm_meal_finished",
+                "actor": "actionWriter",
+                "at": "2026-11-20T10:39:54.907Z",
+                "revision": 6,
+                "before": {
+                  "id": "meal-mwoukut0-x6inh8bx",
+                  "version": 4,
+                  "status": "started",
+                  "createdAt": "2026-11-20T10:39:54.615Z",
+                  "lastChangedAt": "2026-11-20T10:39:54.870Z",
+                  "plannedPlate": {
+                    "schema": "GFPlate.v1",
+                    "source": "GFFoodOnly",
+                    "createdAt": "2026-11-20T10:39:54.611Z",
+                    "items": [
+                      {
+                        "kind": "catalog",
+                        "foodId": "legacy:0001",
+                        "name": "Гречка варёная",
+                        "amount": 100,
+                        "unit": "г",
+                        "carbs": 19.9,
+                        "protein": 3.4,
+                        "fat": 0.6,
+                        "kcal": 92,
+                        "note": "Из старой версии ГлюкоПапы, состав требует проверки; не официальная этикетка",
+                        "nutritionStatus": "legacy_reference",
+                        "glycemicIndex": 49,
+                        "glycemicIndexStatus": "heuristic_low_confidence"
+                      }
+                    ],
+                    "totals": {
+                      "protein": 3.4,
+                      "fat": 0.6,
+                      "carbs": 19.9,
+                      "kcal": 92,
+                      "amount": 100,
+                      "count": 1
+                    },
+                    "containsEstimatedValues": true
+                  },
+                  "actualPlate": {
+                    "schema": "GFPlate.v1",
+                    "source": "GFFoodOnly",
+                    "createdAt": "2026-11-20T10:39:54.869Z",
+                    "items": [
+                      {
+                        "kind": "catalog",
+                        "foodId": "legacy:0001",
+                        "name": "Гречка варёная",
+                        "amount": 75,
+                        "unit": "г",
+                        "carbs": 14.925,
+                        "protein": 2.55,
+                        "fat": 0.45,
+                        "kcal": 69,
+                        "note": "Из старой версии ГлюкоПапы, состав требует проверки; не официальная этикетка",
+                        "nutritionStatus": "legacy_reference",
+                        "glycemicIndex": 49,
+                        "glycemicIndexStatus": "heuristic_low_confidence"
+                      }
+                    ],
+                    "totals": {
+                      "amount": 75,
+                      "count": 1,
+                      "carbs": 14.925,
+                      "protein": 2.55,
+                      "fat": 0.45,
+                      "kcal": 69
+                    },
+                    "containsEstimatedValues": true
+                  },
+                  "doseIntent": null,
+                  "injectionIds": [],
+                  "startedAt": "2026-11-20T10:39:54.820Z",
+                  "completedAt": null,
+                  "actualReason": "first_confirmation"
+                },
+                "after": {
+                  "id": "meal-mwoukut0-x6inh8bx",
+                  "version": 5,
+                  "status": "completed",
+                  "createdAt": "2026-11-20T10:39:54.615Z",
+                  "lastChangedAt": "2026-11-20T10:39:54.907Z",
+                  "plannedPlate": {
+                    "schema": "GFPlate.v1",
+                    "source": "GFFoodOnly",
+                    "createdAt": "2026-11-20T10:39:54.611Z",
+                    "items": [
+                      {
+                        "kind": "catalog",
+                        "foodId": "legacy:0001",
+                        "name": "Гречка варёная",
+                        "amount": 100,
+                        "unit": "г",
+                        "carbs": 19.9,
+                        "protein": 3.4,
+                        "fat": 0.6,
+                        "kcal": 92,
+                        "note": "Из старой версии ГлюкоПапы, состав требует проверки; не официальная этикетка",
+                        "nutritionStatus": "legacy_reference",
+                        "glycemicIndex": 49,
+                        "glycemicIndexStatus": "heuristic_low_confidence"
+                      }
+                    ],
+                    "totals": {
+                      "protein": 3.4,
+                      "fat": 0.6,
+                      "carbs": 19.9,
+                      "kcal": 92,
+                      "amount": 100,
+                      "count": 1
+                    },
+                    "containsEstimatedValues": true
+                  },
+                  "actualPlate": {
+                    "schema": "GFPlate.v1",
+                    "source": "GFFoodOnly",
+                    "createdAt": "2026-11-20T10:39:54.869Z",
+                    "items": [
+                      {
+                        "kind": "catalog",
+                        "foodId": "legacy:0001",
+                        "name": "Гречка варёная",
+                        "amount": 75,
+                        "unit": "г",
+                        "carbs": 14.925,
+                        "protein": 2.55,
+                        "fat": 0.45,
+                        "kcal": 69,
+                        "note": "Из старой версии ГлюкоПапы, состав требует проверки; не официальная этикетка",
+                        "nutritionStatus": "legacy_reference",
+                        "glycemicIndex": 49,
+                        "glycemicIndexStatus": "heuristic_low_confidence"
+                      }
+                    ],
+                    "totals": {
+                      "amount": 75,
+                      "count": 1,
+                      "carbs": 14.925,
+                      "protein": 2.55,
+                      "fat": 0.45,
+                      "kcal": 69
+                    },
+                    "containsEstimatedValues": true
+                  },
+                  "doseIntent": null,
+                  "injectionIds": [],
+                  "startedAt": "2026-11-20T10:39:54.820Z",
+                  "completedAt": "2026-11-20T10:39:54.904Z",
+                  "actualReason": "first_confirmation"
+                }
+              },
+              {
+                "id": "op-7adf69c3-477f-464c-ad15-d7e184807ab8",
+                "sessionId": "meal-mwoukut0-x6inh8bx",
+                "action": "record_actual_plate",
+                "actor": "actionWriter",
+                "at": "2026-11-20T10:39:55.117Z",
+                "revision": 7,
+                "before": {
+                  "id": "meal-mwoukut0-x6inh8bx",
+                  "version": 5,
+                  "status": "completed",
+                  "createdAt": "2026-11-20T10:39:54.615Z",
+                  "lastChangedAt": "2026-11-20T10:39:54.907Z",
+                  "plannedPlate": {
+                    "schema": "GFPlate.v1",
+                    "source": "GFFoodOnly",
+                    "createdAt": "2026-11-20T10:39:54.611Z",
+                    "items": [
+                      {
+                        "kind": "catalog",
+                        "foodId": "legacy:0001",
+                        "name": "Гречка варёная",
+                        "amount": 100,
+                        "unit": "г",
+                        "carbs": 19.9,
+                        "protein": 3.4,
+                        "fat": 0.6,
+                        "kcal": 92,
+                        "note": "Из старой версии ГлюкоПапы, состав требует проверки; не официальная этикетка",
+                        "nutritionStatus": "legacy_reference",
+                        "glycemicIndex": 49,
+                        "glycemicIndexStatus": "heuristic_low_confidence"
+                      }
+                    ],
+                    "totals": {
+                      "protein": 3.4,
+                      "fat": 0.6,
+                      "carbs": 19.9,
+                      "kcal": 92,
+                      "amount": 100,
+                      "count": 1
+                    },
+                    "containsEstimatedValues": true
+                  },
+                  "actualPlate": {
+                    "schema": "GFPlate.v1",
+                    "source": "GFFoodOnly",
+                    "createdAt": "2026-11-20T10:39:54.869Z",
+                    "items": [
+                      {
+                        "kind": "catalog",
+                        "foodId": "legacy:0001",
+                        "name": "Гречка варёная",
+                        "amount": 75,
+                        "unit": "г",
+                        "carbs": 14.925,
+                        "protein": 2.55,
+                        "fat": 0.45,
+                        "kcal": 69,
+                        "note": "Из старой версии ГлюкоПапы, состав требует проверки; не официальная этикетка",
+                        "nutritionStatus": "legacy_reference",
+                        "glycemicIndex": 49,
+                        "glycemicIndexStatus": "heuristic_low_confidence"
+                      }
+                    ],
+                    "totals": {
+                      "amount": 75,
+                      "count": 1,
+                      "carbs": 14.925,
+                      "protein": 2.55,
+                      "fat": 0.45,
+                      "kcal": 69
+                    },
+                    "containsEstimatedValues": true
+                  },
+                  "doseIntent": null,
+                  "injectionIds": [],
+                  "startedAt": "2026-11-20T10:39:54.820Z",
+                  "completedAt": "2026-11-20T10:39:54.904Z",
+                  "actualReason": "first_confirmation"
+                },
+                "after": {
+                  "id": "meal-mwoukut0-x6inh8bx",
+                  "version": 6,
+                  "status": "completed",
+                  "createdAt": "2026-11-20T10:39:54.615Z",
+                  "lastChangedAt": "2026-11-20T10:39:55.117Z",
+                  "plannedPlate": {
+                    "schema": "GFPlate.v1",
+                    "source": "GFFoodOnly",
+                    "createdAt": "2026-11-20T10:39:54.611Z",
+                    "items": [
+                      {
+                        "kind": "catalog",
+                        "foodId": "legacy:0001",
+                        "name": "Гречка варёная",
+                        "amount": 100,
+                        "unit": "г",
+                        "carbs": 19.9,
+                        "protein": 3.4,
+                        "fat": 0.6,
+                        "kcal": 92,
+                        "note": "Из старой версии ГлюкоПапы, состав требует проверки; не официальная этикетка",
+                        "nutritionStatus": "legacy_reference",
+                        "glycemicIndex": 49,
+                        "glycemicIndexStatus": "heuristic_low_confidence"
+                      }
+                    ],
+                    "totals": {
+                      "protein": 3.4,
+                      "fat": 0.6,
+                      "carbs": 19.9,
+                      "kcal": 92,
+                      "amount": 100,
+                      "count": 1
+                    },
+                    "containsEstimatedValues": true
+                  },
+                  "actualPlate": {
+                    "schema": "GFPlate.v1",
+                    "source": "GFFoodOnly",
+                    "createdAt": "2026-11-20T10:39:55.117Z",
+                    "items": [
+                      {
+                        "kind": "catalog",
+                        "foodId": "legacy:0001",
+                        "name": "Гречка варёная",
+                        "amount": 50,
+                        "unit": "г",
+                        "carbs": 9.95,
+                        "protein": 1.7,
+                        "fat": 0.3,
+                        "kcal": 46,
+                        "note": "Из старой версии ГлюкоПапы, состав требует проверки; не официальная этикетка",
+                        "nutritionStatus": "legacy_reference",
+                        "glycemicIndex": 49,
+                        "glycemicIndexStatus": "heuristic_low_confidence"
+                      }
+                    ],
+                    "totals": {
+                      "amount": 50,
+                      "count": 1,
+                      "carbs": 9.95,
+                      "protein": 1.7,
+                      "fat": 0.3,
+                      "kcal": 46
+                    },
+                    "containsEstimatedValues": true
+                  },
+                  "doseIntent": null,
+                  "injectionIds": [],
+                  "startedAt": "2026-11-20T10:39:54.820Z",
+                  "completedAt": "2026-11-20T10:39:54.904Z",
+                  "actualReason": "SYNTHETIC correction"
+                }
+              }
+            ],
+            "coverage": null,
+            "cgm": [],
+            "cgmMetadata": null,
+            "conditionPeriods": [],
+            "forecasts": [],
+            "forecastAssessments": [],
+            "syncInbox": [],
+            "results": [],
+            "proposals": [],
+            "graphPreferences": {
+              "layout": "guided",
+              "theme": "light",
+              "rangeHours": 12,
+              "showRinfast": true,
+              "showTotal": false
+            },
+            "history": [
+              {
+                "revision": 1,
+                "at": "2026-11-20T10:38:53.998Z",
+                "actor": "actionWriter",
+                "domain": "events",
+                "action": "injection",
+                "recordId": "high-4f88900c759b97368e5be2bb7c7fdf56"
+              },
+              {
+                "revision": 2,
+                "at": "2026-11-20T10:39:54.615Z",
+                "actor": "food",
+                "domain": "mealSessions",
+                "action": "create_draft",
+                "recordId": "meal-mwoukut0-x6inh8bx"
+              },
+              {
+                "revision": 3,
+                "at": "2026-11-20T10:39:54.768Z",
+                "actor": "mealFlow",
+                "domain": "mealSessions",
+                "action": "mark_ready",
+                "recordId": "meal-mwoukut0-x6inh8bx"
+              },
+              {
+                "revision": 4,
+                "at": "2026-11-20T10:39:54.825Z",
+                "actor": "actionWriter",
+                "domain": "mealSessions",
+                "action": "confirm_meal_start",
+                "recordId": "meal-mwoukut0-x6inh8bx"
+              },
+              {
+                "revision": 5,
+                "at": "2026-11-20T10:39:54.870Z",
+                "actor": "actionWriter",
+                "domain": "mealSessions",
+                "action": "record_actual_plate",
+                "recordId": "meal-mwoukut0-x6inh8bx"
+              },
+              {
+                "revision": 6,
+                "at": "2026-11-20T10:39:54.907Z",
+                "actor": "actionWriter",
+                "domain": "mealSessions",
+                "action": "confirm_meal_finished",
+                "recordId": "meal-mwoukut0-x6inh8bx"
+              },
+              {
+                "revision": 7,
+                "at": "2026-11-20T10:39:55.117Z",
+                "actor": "actionWriter",
+                "domain": "mealSessions",
+                "action": "record_actual_plate",
+                "recordId": "meal-mwoukut0-x6inh8bx"
+              }
+            ]
+          }
+        },
+        "saf_pending_then_force_stop": true
+      }
+    }
+  }
+]

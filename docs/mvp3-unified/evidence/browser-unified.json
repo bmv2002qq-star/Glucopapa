@@ -1,0 +1,15 @@
+{
+  "status": "PASS",
+  "synthetic_only": true,
+  "widths": [
+    320,
+    390,
+    428,
+    1280
+  ],
+  "forecast_masks": 16,
+  "gesture_x_y_pan": true,
+  "real_provider": false,
+  "sport_reload": true,
+  "fixtures_absent": true
+}

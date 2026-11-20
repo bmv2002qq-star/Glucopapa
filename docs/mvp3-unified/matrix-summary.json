@@ -1,0 +1,12 @@
+{
+  "baseline_criteria": 123,
+  "current_archive_criteria": 40,
+  "historical_recheck": {
+    "REPLAYED_SCOPED": 31,
+    "REPLAYED_CODE": 26,
+    "SEE_ANDROID": 14,
+    "BLOCKED": 37,
+    "SEE_NEW_TESTS": 1,
+    "NOT_RUN": 14
+  }
+}
