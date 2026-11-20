@@ -55,6 +55,8 @@ if [[ $api == 31 ]]; then
     "$adb" -s "$serial" shell wm size 720x1560
     "$adb" -s "$serial" shell wm density 360
 fi
+# Let the initial boot broadcasts and WebView provider settle.
+sleep 10
 
 # Check the exact ordinary APK before installing the separately named fixture.
 ordinary_apk=android-mvp3/app/build/outputs/apk/debug/app-debug.apk
@@ -66,8 +68,18 @@ installed_apk=${installed_apk#package:}
 sha256sum "$ordinary_apk" > "$evidence/production-apk.sha256"
 test "$(cut -d ' ' -f 1 "$evidence/installed-apk.sha256")" = "$(cut -d ' ' -f 1 "$evidence/production-apk.sha256")"
 "$adb" -s "$serial" install -t android-mvp3/app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
-"$adb" -s "$serial" shell am instrument -w -r -e fixture SYNTHETIC -e phase production \
-    com.glucopapa.shell.test/com.glucopapa.shell.qa.StorageInstrumentation | tee "$evidence/production-isolation.log"
+ordinary_runner=com.glucopapa.shell.test/com.glucopapa.shell.qa.StorageInstrumentation
+production_isolation() {
+    "$adb" -s "$serial" shell am instrument -w -r -e fixture SYNTHETIC -e phase production "$ordinary_runner"
+}
+production_isolation | tee "$evidence/production-isolation.log"
+if grep -Fq 'WebView startup timed out: null' "$evidence/production-isolation.log"; then
+    mv "$evidence/production-isolation.log" "$evidence/production-startup-attempt1.log"
+    "$adb" -s "$serial" shell am force-stop com.glucopapa.shell
+    "$adb" -s "$serial" shell am start -W -n com.glucopapa.shell/.MainActivity > "$evidence/production-warmup.log"
+    "$adb" -s "$serial" shell am force-stop com.glucopapa.shell
+    production_isolation | tee "$evidence/production-isolation.log"
+fi
 grep -F 'QA_PASS production' "$evidence/production-isolation.log"
 "$adb" -s "$serial" shell am force-stop com.glucopapa.shell
 for step in provider-write provider-restored history-write history-restored web-write web-restored profile-write profile-restored; do

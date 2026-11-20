@@ -84,14 +84,12 @@ jobs:
       publish-pilot-apk: ${{ github.ref == 'refs/heads/qa/mvp3-phone-feedback-20261120' }}
 
   android-15-extended:
-    needs: android-15
     uses: ./.github/workflows/mvp3-android-device.yml
     with:
       api: 35
       extended: true
 
   compatibility:
-    needs: android-15
     strategy:
       fail-fast: false
       matrix:

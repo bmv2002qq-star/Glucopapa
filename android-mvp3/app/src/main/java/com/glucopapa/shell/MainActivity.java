@@ -128,7 +128,7 @@ public class MainActivity extends Activity {
         diagnostics = new DiagnosticRing(getFilesDir().toPath().resolve("diagnostics"));
         diagnosticWriter = new DiagnosticWriter(diagnostics);
         view.addJavascriptInterface(diagnosticWriter, "AndroidDiagnostics");
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && getResources().getBoolean(R.bool.gf_predictive_back)) {
             systemBack = this::navigateBack;
             getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
                 OnBackInvokedDispatcher.PRIORITY_DEFAULT, systemBack);

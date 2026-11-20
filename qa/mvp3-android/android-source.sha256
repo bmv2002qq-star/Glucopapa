@@ -12,7 +12,7 @@ ed7dc4d9c0474c08d2c83d2b61abbaac255dc3ae02ef2004ec93a21830d0ada5  android-mvp3/a
 eb84178b272b5beeaa8d695faa45b340bc9bc66963ca34c42ddde43a85d83d8f  android-mvp3/app/src/androidTest/java/com/glucopapa/shell/qa/StorageInstrumentation.java
 f5a0e327afceb185b569ec5b1947f33254efc3b635f6b7c8bb2ea0772586430a  android-mvp3/app/src/androidTest/java/com/glucopapa/shell/qa/WebViewChecks.java
 8b8a40ceddf4d042e18531c57c18c62c1f8be576d5f9215dc1a05b0b45e404ad  android-mvp3/app/src/fixture/assets/www/qa-shell.js
-0efeeb9153b0c7538c4ff3f4b6e6acff919b5556f71e0f61626a292a57b187fd  android-mvp3/app/src/main/AndroidManifest.xml
+d7777f44ec2186ec3e1251cd14687b110bb6fa2b06cea50d7504f9d9bc79350a  android-mvp3/app/src/main/AndroidManifest.xml
 b9a7a5a0fb1138973db86e7e20602d4cf36349847a0658a8ec8ee0edc23587c9  android-mvp3/app/src/main/assets/www/app.js
 0abc9b584922377403d2edca6de42f9aea5f31e152415bcda186b6c9f35dc84b  android-mvp3/app/src/main/assets/www/approved-library/CGM_Chart_v0.2A.html
 d78a8ef8d236fc89ecb4776ff5e086fb0202b5b4f522c6290421d6d7ff1ac6a2  android-mvp3/app/src/main/assets/www/approved-library/GFAPSEnhancer_v0.1.1.html
@@ -162,7 +162,9 @@ d4231c58ecf7327a7f0bb4d6dd8474b5002534b1b3ab73aac915282db371d7e0  android-mvp3/a
 c1896b516d5ed1356436ec2ed6c3cdf21b2480e8958724ebc3b335979c3e854d  android-mvp3/app/src/main/java/com/glucopapa/shell/GFNativeStorage.java
 c7668b857163c3adf427d1bb85a8adc1e9f903ddf50cd1c33e5f77d0a7a4e655  android-mvp3/app/src/main/java/com/glucopapa/shell/GFNativeXDrip.java
 282f5823d1a708e6b81b6b8ec883a8e4b59471176f4accec49c74ff03c098d83  android-mvp3/app/src/main/java/com/glucopapa/shell/GFNativeXDripHistory.java
-701cf462697a18a3fbd3279e963d21ce68f7d13988bd864d43b5d3518406b343  android-mvp3/app/src/main/java/com/glucopapa/shell/MainActivity.java
+aa44a1d0d3fb0e6f18bbedf1514f5a22595d36db2d9618d6c8ef57148473126e  android-mvp3/app/src/main/java/com/glucopapa/shell/MainActivity.java
+a098a22731de600389afc0913e3ae9d1be632cd00356ce2f2f7ab8a7f2f7ac80  android-mvp3/app/src/main/res/values-v36/gf_back.xml
+5a70d3a925ca1a3d0fdc78b7313ffd7412b1aaaa31da4394835f34e765039eff  android-mvp3/app/src/main/res/values/gf_back.xml
 355040bde7e74f93c4ab0adbf8208ac331ae84f6448beb494a977217672f8a13  android-mvp3/app/src/main/res/xml/gf_loopback_network.xml
 d1bd47ceb68955ed5d99760e0b50e0b0fc48077a8c3370651fc4c2ac12a5de66  android-mvp3/build.gradle
 f9d9433a4345de54bfe367a178cac2af3ddad424291353aa0bb6d0bf2576322c  android-mvp3/build_windows.bat
