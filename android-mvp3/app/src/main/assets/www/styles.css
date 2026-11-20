@@ -70,3 +70,9 @@ body[data-active-screen="approved-nutrition"].plate-modal-open #iframeApprovedNu
 
 .gf-calc-trace{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit}
 .gf-calc-error{color:#9b1c24}
+
+/* GFConsensus v0.1.2 QA candidate: four read-only forecast visibility toggles. */
+.forecast-home-controls{display:flex;flex-wrap:wrap;gap:6px 10px;margin:9px 0 2px}
+.forecast-home-controls label{display:inline-flex;align-items:center;gap:4px;color:#3c6470;font-size:11px;min-height:30px;white-space:nowrap}
+.forecast-home-controls input{width:16px;height:16px;accent-color:var(--teal)}
+#forecastHomeLegend{margin:3px 0 8px;font-size:10px}
