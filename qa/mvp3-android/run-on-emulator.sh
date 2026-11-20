@@ -46,12 +46,23 @@ printf 'AVD %s on %s booted with hardware acceleration\n' "$avd" "$serial" > "$e
 "$adb" -s "$serial" shell input keyevent KEYCODE_WAKEUP
 "$adb" -s "$serial" shell wm dismiss-keyguard
 
-smoke_options=(--automated --fixture-test-apk android-mvp3/app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk)
+# Check the exact ordinary APK before installing the separately named fixture.
+"$adb" -s "$serial" install android-mvp3/app/build/outputs/apk/debug/app-debug.apk
+"$adb" -s "$serial" install -t android-mvp3/app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+"$adb" -s "$serial" shell am instrument -w -r -e fixture SYNTHETIC -e phase production \
+    com.glucopapa.shell.test/com.glucopapa.shell.qa.StorageInstrumentation | tee "$evidence/production-isolation.log"
+grep -F 'QA_PASS production' "$evidence/production-isolation.log"
+"$adb" -s "$serial" shell am force-stop com.glucopapa.shell
+sha256sum android-mvp3/app/build/outputs/apk/debug/app-debug.apk > "$evidence/production-apk.sha256"
+
+# The tested fixture has its own package and app-private directory.
+export GLUCOPAPA_QA_PACKAGE=com.glucopapa.shell.fixture
+smoke_options=(--automated --fixture-test-apk android-mvp3/app/build/outputs/apk/androidTest/fixture/app-fixture-androidTest.apk)
 if [[ $api == 31 ]]; then
     smoke_options+=(--stock-webview)
 fi
 python3 qa/mvp3-android/sqlite_smoke.py "${smoke_options[@]}" --adb "$adb" --serial "$serial" \
-  --avd "$avd" --apk android-mvp3/app/build/outputs/apk/debug/app-debug.apk --output "$evidence/checks" \
+  --avd "$avd" --apk android-mvp3/app/build/outputs/apk/fixture/app-fixture.apk --output "$evidence/checks" \
   2>&1 | tee "$evidence/smoke.log"
 
 test "$("$adb" -s "$serial" shell getprop ro.build.version.sdk | tr -d '\r')" = "$api"
@@ -64,13 +75,13 @@ if [[ ${ANDROID_QA_EXTENDED:-false} == true && $api != 31 ]]; then
 fi
 
 # Exercise the real settings panel against production GFStorage and its native SQLite driver.
-runner=com.glucopapa.shell.test/com.glucopapa.shell.qa.StorageInstrumentation
+runner="$GLUCOPAPA_QA_PACKAGE.test/com.glucopapa.shell.qa.StorageInstrumentation"
 for step in meal-model-save meal-model-restored high-settings-save high-settings-restored; do
     "$adb" -s "$serial" shell am instrument -w -r -e fixture SYNTHETIC -e phase stock -e step "$step" "$runner" \
       | tee "$evidence/$step.log"
     grep -F 'QA_PASS stock' "$evidence/$step.log"
     if [[ $step == *-save ]]; then
-        "$adb" -s "$serial" shell am force-stop com.glucopapa.shell
+        "$adb" -s "$serial" shell am force-stop "$GLUCOPAPA_QA_PACKAGE"
     fi
 done
 
@@ -83,7 +94,7 @@ if [[ ${ANDROID_QA_EXTENDED:-false} == true ]]; then
           | tee "$evidence/$step.log"
         grep -F 'QA_PASS stock' "$evidence/$step.log"
         if [[ $step == low-fact-write ]]; then
-            "$adb" -s "$serial" shell am force-stop com.glucopapa.shell
+            "$adb" -s "$serial" shell am force-stop "$GLUCOPAPA_QA_PACKAGE"
         fi
     done
 fi

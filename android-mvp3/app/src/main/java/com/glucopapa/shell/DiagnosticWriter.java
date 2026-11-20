@@ -22,7 +22,7 @@ final class DiagnosticWriter {
     }
 
     @JavascriptInterface public void record(String mode, String json) {
-        if (!("local".equals(mode) || "demo".equals(mode)) || json == null || json.length() > 16_384) return;
+        if (!GFNativeStorage.acceptsMode(mode) || json == null || json.length() > 16_384) return;
         long at = System.currentTimeMillis();
         try {
             JSONObject event = new JSONObject(json);

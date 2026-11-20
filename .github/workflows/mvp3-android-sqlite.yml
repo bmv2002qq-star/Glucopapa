@@ -11,6 +11,7 @@ on:
       - qa/mvp3-cl042-formula-recovery-20261119
       - qa/mvp3-high-analytics-20261120
       - qa/mvp3-low-20261120
+      - qa/mvp3-unified-20261120
 
 permissions:
   contents: read

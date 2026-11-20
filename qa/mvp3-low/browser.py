@@ -18,6 +18,7 @@ def run(browser, origin, output):
     page = browser.new_page(viewport={'width': 390, 'height': 900}, locale='ru-RU')
     errors = []
     page.on('pageerror', lambda error: errors.append(str(error)))
+    page.add_init_script(path=Path(__file__).resolve().parents[2] / 'android-mvp3/app/src/fixture/assets/www/qa-shell.js')
     page.goto(origin + '/index.html')
     page.wait_for_function('window.GPApp?.getStorage() && window.GFLOWView')
     state = lambda: page.evaluate('GPApp.getStorage().exportState()')

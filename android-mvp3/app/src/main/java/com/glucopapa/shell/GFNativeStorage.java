@@ -39,7 +39,7 @@ public final class GFNativeStorage extends SQLiteOpenHelper {
                 null, null, null, null, null)) {
             while (keys.moveToNext()) {
                 String key = keys.getString(0);
-                checkKey(key);
+                checkHistoricalKey(key);
                 String payload = readChunks(db, key, keys.getInt(2));
                 try {
                     if (checked(payload).getInt("revision") != keys.getInt(1)) {
@@ -57,9 +57,32 @@ public final class GFNativeStorage extends SQLiteOpenHelper {
         }
     }
 
-    private static void checkKey(String key) {
-        if (!"GFV2SHELL_DATA_v1_demo".equals(key) && !"GFV2SHELL_DATA_v1_local".equals(key))
+    private static final String LOCAL_KEY = "GFV2SHELL_DATA_v1_local";
+    private static final String FIXTURE_KEY = "GFV2SHELL_DATA_v1_demo";
+
+    static boolean acceptsMode(String mode) {
+        return "local".equals(mode) || (BuildConfig.FIXTURE_JOURNAL && "demo".equals(mode));
+    }
+    private static void checkHistoricalKey(String key) {
+        if (!LOCAL_KEY.equals(key) && !FIXTURE_KEY.equals(key))
             throw new IllegalArgumentException("DENIED_MODE_KEY");
+    }
+    private static void checkKey(String key) {
+        if (!LOCAL_KEY.equals(key) && !(BuildConfig.FIXTURE_JOURNAL && FIXTURE_KEY.equals(key)))
+            throw new IllegalArgumentException("DENIED_MODE_KEY");
+    }
+    private static void checkProvenance(String key, JSONObject snapshot) {
+        if (!LOCAL_KEY.equals(key)) return;
+        JSONObject metadata = snapshot.optJSONObject("cgmMetadata");
+        if (metadata != null && "synthetic".equals(metadata.optString("sourceType")))
+            throw new IllegalArgumentException("DENIED_SYNTHETIC_SOURCE");
+        org.json.JSONArray rows = snapshot.optJSONArray("cgm");
+        if (rows == null) return;
+        for (int i = 0; i < rows.length(); i++) {
+            JSONObject row = rows.optJSONObject(i);
+            if (row != null && "synthetic".equals(row.optString("source")))
+                throw new IllegalArgumentException("DENIED_SYNTHETIC_ROW");
+        }
     }
     private static JSONObject checked(String json) throws Exception {
         if (json == null || json.length() < 20 || json.length() > MAX_JSON_CHARS)
@@ -142,6 +165,7 @@ public final class GFNativeStorage extends SQLiteOpenHelper {
         try {
             checkKey(key);
             JSONObject value=checked(json);
+            checkProvenance(key,value);
             int incoming=value.getInt("revision");
             SQLiteDatabase db=getWritableDatabase();
             db.beginTransaction();
@@ -159,6 +183,7 @@ public final class GFNativeStorage extends SQLiteOpenHelper {
         try {
             checkKey(key);
             JSONObject obj=checked(json);
+            checkProvenance(key,obj);
             if(expectedRevision<0||obj.getInt("revision")!=expectedRevision+1)
                 return reply(false,"INVALID_REVISION_TRANSITION",null,-1);
             SQLiteDatabase db=getWritableDatabase();

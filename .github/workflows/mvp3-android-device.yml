@@ -62,11 +62,12 @@ jobs:
         shell: bash
         run: |
           mkdir -p "$EVIDENCE"
-          assemble=(gradle --no-daemon --console=plain -Pandroid.builder.sdkDownload=false :app:assembleDebug :app:assembleDebugAndroidTest)
+          assemble=(gradle --no-daemon --console=plain -Pandroid.builder.sdkDownload=false :app:assembleDebug :app:assembleFixture :app:assembleFixtureAndroidTest)
           if ! "${assemble[@]}" 2>&1 | tee "$EVIDENCE/build.log"; then
             grep -F 'Could not resolve all artifacts for configuration' "$EVIDENCE/build.log"
             "${assemble[@]}" --refresh-dependencies 2>&1 | tee -a "$EVIDENCE/build.log"
           fi
+          gradle --no-daemon --console=plain -Pandroid.builder.sdkDownload=false -PglucopapaTestTarget=debug :app:assembleDebugAndroidTest
           python3 ../qa/mvp3-full/integrity.py --apk app/build/outputs/apk/debug/app-debug.apk | tee "$EVIDENCE/assets.json"
           "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose app/build/outputs/apk/debug/app-debug.apk | tee "$EVIDENCE/signature.log"
       - name: Check installed WebView and SQLite
@@ -80,6 +81,7 @@ jobs:
           path: |
             ${{ runner.temp }}/glucopapa-android-qa/*.log
             ${{ runner.temp }}/glucopapa-android-qa/*.json
+            ${{ runner.temp }}/glucopapa-android-qa/*.sha256
             ${{ runner.temp }}/glucopapa-android-qa/*.png
             ${{ runner.temp }}/glucopapa-android-qa/checks/result.json
             ${{ runner.temp }}/glucopapa-android-qa/checks/webview.txt

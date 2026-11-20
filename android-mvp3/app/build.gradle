@@ -10,9 +10,21 @@ android {
         versionCode 9
         versionName '0.3.14-prototype'
     }
+    buildFeatures { buildConfig true }
     buildTypes {
-        release { minifyEnabled false }
+        debug { buildConfigField 'boolean', 'FIXTURE_JOURNAL', 'false' }
+        release {
+            minifyEnabled false
+            buildConfigField 'boolean', 'FIXTURE_JOURNAL', 'false'
+        }
+        fixture {
+            initWith debug
+            applicationIdSuffix '.fixture'
+            matchingFallbacks = ['debug']
+            buildConfigField 'boolean', 'FIXTURE_JOURNAL', 'true'
+        }
     }
+    testBuildType = providers.gradleProperty('glucopapaTestTarget').getOrElse('fixture')
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
@@ -20,4 +32,47 @@ android {
 }
 dependencies {
     implementation 'androidx.webkit:webkit:1.18.0'
+}
+
+// Archived HTML and older kernels stay in the repository. Only runtime assets are installed.
+def web = file('src/main/assets/www')
+def listFiles = ['runtime/LOAD_ORDER.txt', 'runtime/APK_FILES.txt'].collect { new File(web, it) }
+def webPaths = listFiles.collectMany { file ->
+    file.readLines('UTF-8').collect { it.trim() }.findAll { it && !it.startsWith('#') }
+}
+if (webPaths.toSet().size() != webPaths.size() ||
+        webPaths.any { it.contains('..') || it.startsWith('/') || !new File(web, it).isFile() }) {
+    throw new GradleException('Invalid WebView asset inventory')
+}
+def runtimeAssets = layout.buildDirectory.dir('generated/runtimeAssets')
+def stageRuntimeAssets = tasks.register('stageRuntimeAssets', Sync) {
+    inputs.files(listFiles)
+    from(web) {
+        include(webPaths)
+        into('www')
+    }
+    into(runtimeAssets)
+}
+android.sourceSets.main.assets.setSrcDirs([runtimeAssets])
+
+def fixtureAssets = layout.buildDirectory.dir('generated/fixtureEntrypoint')
+def stageFixtureEntrypoint = tasks.register('stageFixtureEntrypoint', Copy) {
+    from(new File(web, 'index.html')) {
+        rename { 'fixture-index.html' }
+        filter { line ->
+            line.replace('<script src="app.js"></script>',
+                '<script src="qa-shell.js"></script><script src="app.js"></script>')
+        }
+    }
+    into(fixtureAssets.map { it.dir('www') })
+    filteringCharset = 'UTF-8'
+}
+android.sourceSets.fixture.assets.srcDir(fixtureAssets)
+tasks.configureEach {
+    if (name in ['mergeDebugAssets', 'mergeReleaseAssets', 'mergeFixtureAssets']) {
+        dependsOn(stageRuntimeAssets)
+    }
+    if (name == 'mergeFixtureAssets') {
+        dependsOn(stageFixtureEntrypoint)
+    }
 }

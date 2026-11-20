@@ -30,6 +30,7 @@ def layout_and_fact(browser, origin, output):
     page = browser.new_page(viewport={'width':390,'height':900},locale='ru-RU',timezone_id='UTC')
     errors=[]
     page.on('pageerror',lambda error:errors.append(str(error)))
+    page.add_init_script(path=Path(__file__).resolve().parents[2] / 'android-mvp3/app/src/fixture/assets/www/qa-shell.js')
     page.goto(origin+'/index.html')
     page.wait_for_function('window.GPApp?.getStorage()')
     ui=open_high(page)
@@ -98,6 +99,7 @@ def layout_and_fact(browser, origin, output):
 def synthetic_preview(browser,origin,output):
     page=browser.new_page(viewport={'width':390,'height':900})
     page.clock.set_fixed_time(datetime(2026,11,19,12,0,tzinfo=timezone.utc))
+    page.add_init_script(path=Path(__file__).resolve().parents[2] / 'android-mvp3/app/src/fixture/assets/www/qa-shell.js')
     page.goto(origin+'/index.html')
     page.wait_for_function('window.GPApp?.getStorage()')
     page.once('dialog',lambda dialog:dialog.accept())
@@ -139,6 +141,7 @@ def synthetic_preview(browser,origin,output):
 def timing_panel(browser,origin,output):
     page=browser.new_page(viewport={'width':390,'height':900})
     page.clock.set_fixed_time(datetime(2026,11,19,12,0,tzinfo=timezone.utc))
+    page.add_init_script(path=Path(__file__).resolve().parents[2] / 'android-mvp3/app/src/fixture/assets/www/qa-shell.js')
     page.goto(origin+'/index.html')
     page.wait_for_function('window.GPApp?.getStorage()')
     page.evaluate("""()=>{
@@ -172,6 +175,7 @@ def timing_panel(browser,origin,output):
 
 def positive_history(browser, origin, output):
     page = browser.new_page(viewport={'width': 390, 'height': 900})
+    page.add_init_script(path=Path(__file__).resolve().parents[2] / 'android-mvp3/app/src/fixture/assets/www/qa-shell.js')
     page.goto(origin + '/index.html')
     page.wait_for_function('window.GPApp?.getStorage()')
     source = Path(__file__).resolve().parents[2] / 'android-mvp3/app/src/androidTest/assets/timing-history-qa.js'

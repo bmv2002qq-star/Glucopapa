@@ -1,0 +1,10 @@
+{
+  "archive_sha256": "d857a7a96eea6df2868b55a636b7dd60ed031e633b47e8a0be14479f852264b4",
+  "archives": {},
+  "base": "7f3082c5cc6c256ddce90a0f5f4873a4dc5bd47a",
+  "consensus": "dec598852378756870d60fc92eea7c2c5e7e49a4",
+  "merge_base": "6224d9454b708fee642fd27a007ce9e5e251a72f",
+  "main_readonly": "2151fbbf2b40ac6eca4f5b02c2ba355c4e9a75f8",
+  "schema": 5,
+  "archive_verification": "OUTER_PASS; CONSENSUS_MANIFEST_SELF_ENTRY_MISMATCH"
+}

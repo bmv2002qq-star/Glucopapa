@@ -3,6 +3,7 @@ import argparse
 from contextlib import closing
 import hashlib
 import json
+import os
 from pathlib import Path
 import re
 import sqlite3
@@ -11,8 +12,10 @@ import sys
 import time
 
 
-PACKAGE = 'com.glucopapa.shell'
-ACTIVITY = f'{PACKAGE}/.MainActivity'
+NAMESPACE = 'com.glucopapa.shell'
+PACKAGE = os.environ.get('GLUCOPAPA_QA_PACKAGE', NAMESPACE)
+ACTIVITY = f'{PACKAGE}/{NAMESPACE}.MainActivity'
+RUNNER = f'{PACKAGE}.test/{NAMESPACE}.qa.StorageInstrumentation'
 DB_NAME = 'gfstorage_v5.db'
 DEMO_KEY = 'GFV2SHELL_DATA_v1_demo'
 

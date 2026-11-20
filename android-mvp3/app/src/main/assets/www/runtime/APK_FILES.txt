@@ -1,0 +1,12 @@
+# Additional WebView resources. Script paths come from LOAD_ORDER.txt.
+index.html
+styles.css
+runtime/LOAD_ORDER.txt
+runtime/APK_FILES.txt
+approved/GFNutrition_v0.4.6_LIVE.html
+approved/GFJournal_v0.1.2_3COL_CANDIDATE.html
+approved/GFSettings_v0.1.4_LIVE.html
+integration/approved_routes/LOW_v0.2_VIEW.html
+integration/approved_routes/GFHighTarget_v0.1.3_VIEW.html
+modules/GFPhysio_v0.1.2/LICENSE_GluPredKit_MIT.txt
+modules/GFPhysio_v0.1.2/LICENSE_Simglucose_MIT.txt

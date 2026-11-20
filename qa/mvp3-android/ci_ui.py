@@ -5,7 +5,7 @@ import subprocess
 import time
 import xml.etree.ElementTree as ET
 
-from sqlite_smoke import require
+from sqlite_smoke import RUNNER, require
 
 UI_PATH = '/data/local/tmp/glucopapa-mvp3-qa.xml'
 BOUNDS = re.compile(r'\[(\d+),(\d+)\]\[(\d+),(\d+)\]')
@@ -145,7 +145,7 @@ class StockWebViewUI:
         result = self.emulator.text(
             'shell', 'am', 'instrument', '-w', '-r', '-e', 'fixture', 'SYNTHETIC',
             '-e', 'phase', 'stock', '-e', 'step', action,
-            'com.glucopapa.shell.test/com.glucopapa.shell.qa.StorageInstrumentation', timeout=110)
+            RUNNER, timeout=110)
         print(result, flush=True)
         require('QA_PASS stock' in result, f'Installed stock WebView failed {action}')
 

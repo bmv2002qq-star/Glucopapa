@@ -22,6 +22,7 @@ def run(browser, origin, output, legacy=False):
     urls = []
     page.on('pageerror', lambda error: errors.append(str(error)))
     page.on('request', lambda request: urls.append(request.url))
+    page.add_init_script(path=Path(__file__).resolve().parents[2] / 'android-mvp3/app/src/fixture/assets/www/qa-shell.js')
     page.goto(origin + '/index.html')
     page.wait_for_function('globalThis.GPApp && globalThis.GPModuleDirectory')
     assert page.evaluate('GPApp.mode()') == 'local'

@@ -8,7 +8,7 @@ import tempfile
 import time
 
 from ci_ui import BOUNDS, CandidateUI, screen_navigation
-from sqlite_smoke import Emulator, PACKAGE, require
+from sqlite_smoke import Emulator, PACKAGE, RUNNER, require
 
 
 def bounds(node):
@@ -42,7 +42,7 @@ def interrupted_views(emulator, ui, output):
 
         export = emulator.prefix + [
             'shell', 'am', 'instrument', '-w', '-r', '-e', 'fixture', 'SYNTHETIC', '-e', 'phase', 'stock',
-            '-e', 'step', 'export', 'com.glucopapa.shell.test/com.glucopapa.shell.qa.StorageInstrumentation',
+            '-e', 'step', 'export', RUNNER,
         ]
         with (output / 'saf-instrumentation.log').open('wb') as trace:
             runner = subprocess.Popen(export, stdout=trace, stderr=subprocess.STDOUT)

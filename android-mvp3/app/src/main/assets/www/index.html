@@ -5,7 +5,6 @@
  <header class="app-header"><div><div class="brand-title">Глюко<span>папа</span></div><div class="sub">Семейный дневник диабета · V2<br>Единая база и подключаемые модули</div></div><div class="toptools"><span id="modeBadge" class="chip local">Локальный журнал</span><span id="revBadge" class="badge-small">База #0</span></div></header>
  <main class="main">
   <div class="sr-only" id="pageTitle" aria-live="polite">Главная</div>
-  <div id="banner" class="alert" hidden></div>
   <div id="notice" class="notice" role="status" aria-live="polite"></div>
   <section id="screen-home" class="screen active">
    <div class="home-top"><div class="h1">Здравствуйте 👋</div><span class="chip">Сегодня</span></div>
@@ -51,7 +50,6 @@
     </div>
     <button class="btn secondary full" type="button" data-screen="home">← Вернуться к графику</button>
    </article>
-   <article id="syntheticCgmTools" class="card" hidden><h3>Проверка CGM</h3><button id="seedDemo" class="btn secondary full">Загрузить 24 вымышленных измерения</button></article>
   </section>
   <section id="screen-injections" class="screen"><div class="section-header"><button type="button" class="inline-link" data-screen="home">← На главную</button><h2>Запись выполненной инъекции</h2><p>Единственная точка регистрации факта — <code>GFStorage.actionWriter</code>.</p></div><p class="basal-entry-context" id="basalEntryContext" hidden>Выбран длинный инсулин. Укажите фактически введённое количество и подтвердите укол; запись будет одна — в общем дневнике.</p><div class="cols"><article class="panel"><form id="injectionForm" class="fields"><label>Препарат<select id="injectionDrug"><option value="rinfast">РинФаст</option><option value="levemir">Левемир</option></select></label><label>Фактически введено, ЕД<input id="injectionUnits" type="number" min="0.5" max="200" step="0.5" required placeholder="Например: 0,5"></label><label>Когда выполнено<input id="injectionTime" type="datetime-local" step="60" required></label><label>Место укола<select id="injectionRegion"><option value="">Не указано</option><option value="abdomen">Живот</option><option value="arm">Плечо</option><option value="thigh">Бедро</option><option value="buttock">Ягодица</option></select></label><label>Сторона<select id="injectionSide"><option value="">Не указана</option><option value="left">Левая</option><option value="right">Правая</option></select></label><label class="check"><input type="checkbox" id="injectionConfirm" required> Я подтверждаю: инъекция действительно выполнена</label><button class="btn primary" type="submit">Сохранить фактический укол</button></form><p class="hint">Повтор с другой записью в близкое время будет отклонён как возможный дубль. Программа не предлагает дозу.</p></article><article class="panel"><h3>Последние подтверждённые инъекции</h3><div id="injectionList" class="empty">Нет записей</div></article></div></section>
   <section id="screen-meals" class="screen"><div class="section-header"><button type="button" class="inline-link" data-screen="approved-nutrition">← Моя тарелка v0.4.6</button><h2>План / фактически съедено</h2><p>Продукты выбираются только в утверждённой «Моей тарелке» v0.4.6. Здесь подтверждаются начало, фактическая порция и завершение через один GFStorage.</p></div><article class="panel"><h3>Текущий приём пищи</h3><div id="mealCurrent" class="empty">Создайте план в «Моей тарелке»</div><div class="actions"><button id="mealReady" class="btn secondary">Подготовлен</button><button id="mealStart" class="btn secondary">Фактически начал(а) есть</button><button id="mealFinish" class="btn secondary">Завершить приём</button></div><p class="hint">План не равен фактически съеденному. Отдельный ввод граммовки факта доступен ниже.</p></article>
@@ -88,10 +86,6 @@
    <button class="more-option" data-screen="reports"><span class="opt-main"><span class="opt-icon">▤</span><span><strong>Отчёты и экспорт</strong><small>GFAuditExport · единая история из GFStorage</small></span></span><span class="chevron">›</span></button>
    <button class="more-option" data-screen="sync"><span class="opt-main"><span class="opt-icon">◌</span><span><strong>Синхронизация и xDrip+</strong><small>Проверка статуса подключения источников</small></span></span><span class="chevron">›</span></button>
    </article>
-   <article class="panel"><h3>Режим данных</h3><div class="mode-buttons">
-     <button class="btn primary" id="modeLocal">Локальный журнал</button>
-     <button class="btn secondary" id="modeDemo">Тестовый журнал</button>
-   </div><p class="hint">Тестовые события сохраняются отдельно от локального журнала.</p></article>
    <article class="panel"><h3>Состав сборки</h3><div id="moduleTable"></div></article>
    <article class="panel"><h3>Хранилище</h3><div id="storageInfo" class="soft">—</div>
      <div id="aiExportControls" hidden>
@@ -102,8 +96,7 @@
        <button type="button" id="saveAiExport" class="btn secondary">Экспортировать данные для анализа ИИ</button>
        <p id="aiExportStatus" class="hint" role="status">Файл создаётся локально в выбранной папке.</p>
      </div>
-     <div class="actions"><button id="exportState" class="btn secondary">Экспорт аналитического JSON</button>
-       <button id="resetDemo" class="btn danger" hidden>Очистить тестовый журнал в браузере</button></div>
+     <div class="actions"><button id="exportState" class="btn secondary">Экспорт аналитического JSON</button></div>
      <div id="backupControls" hidden>
        <h4>Резервная копия журнала</h4>
        <p class="hint">Копия содержит полный журнал выбранного режима и может содержать медицинские данные. Выберите закрытую папку. Восстановление доступно в пустой журнал того же режима.</p>

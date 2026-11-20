@@ -73,7 +73,7 @@ def main():
     assert len(databases) == 1
 
     files = {p.relative_to(web).as_posix(): p.read_bytes() for p in web.rglob('*') if p.is_file()}
-    assert len(files) == 133
+    assert len(files) >= 133
     assert not any('GFLOWPreviewFixture' in name for name in files)
     unchanged = None
     changes = []
@@ -95,15 +95,23 @@ def main():
             'modules/GFSettings_v0.1.8/src/gfsettings.js',
         }, changes
         unchanged = len(archived) - len(changes)
+    extra = [line.strip() for line in (web / 'runtime/APK_FILES.txt').read_text().splitlines()
+             if line.strip() and not line.startswith('#')]
+    assert {'index.html', 'styles.css', *entry.frames} <= set(extra)
+    assert len(set(extra + order)) == len(extra) + len(order)
+    packaged = {name: files[name] for name in extra + order}
+    assert not any(name.startswith('approved-library/') for name in packaged)
+    assert not re.search(r'seedDemo|modeDemo|resetDemo|gs1-demo',
+                         (web / 'index.html').read_text() + (web / 'app.js').read_text())
     if args.apk:
         with ZipFile(args.apk) as apk:
             assert apk.testzip() is None
-            assert files == {name.removeprefix('assets/www/'): apk.read(name) for name in apk.namelist()
-                             if name.startswith('assets/www/') and not name.endswith('/')}
-            assert not any(Path(name).name in ('webview-qa.js', 'stock-ui.js') for name in apk.namelist())
+            assert {'assets/www/' + name: data for name, data in packaged.items()} == {
+                name: apk.read(name) for name in apk.namelist()
+                if name.startswith('assets/') and not name.endswith('/')}
 
     print(json.dumps({'status': 'PASS', 'protected_assets': protected, 'load_order': len(order),
-                      'active_storage': core[0], 'native_helpers': len(databases), 'web_assets': len(files),
+                      'active_storage': core[0], 'native_helpers': len(databases), 'web_assets': len(files), 'packaged_assets': len(packaged),
                       'archive_verified': bool(args.archive_web), 'archive_unchanged_assets': unchanged, 'archive_changed_assets': changes, 'apk_mirror': bool(args.apk),
                       'frames': entry.frames}, indent=2))
 

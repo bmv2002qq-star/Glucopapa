@@ -13,10 +13,9 @@ import time
 from zoneinfo import ZoneInfo
 
 from ci_ui import BOUNDS, CandidateUI, label
-from sqlite_smoke import DEMO_KEY, Emulator, require
+from sqlite_smoke import DEMO_KEY, Emulator, RUNNER, require
 
 AVD = 'GlucoPapaMvp3CiQa'
-RUNNER = 'com.glucopapa.shell.test/com.glucopapa.shell.qa.StorageInstrumentation'
 PERIODS = ('1d', '2d', '5d', '1m', '3m', '6m')
 BASE_NAME = 'Glucopapa_AI_Export'
 

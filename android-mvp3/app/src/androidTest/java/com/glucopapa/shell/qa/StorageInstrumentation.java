@@ -42,6 +42,9 @@ public final class StorageInstrumentation extends Instrumentation {
             String phase = arguments.getString("phase", "exercise");
             try (GFNativeStorage store = new GFNativeStorage(testContext)) {
                 switch (phase) {
+                    case "production":
+                        output.putString("webview", new WebViewChecks(this).exercise("production-qa.js", "").toString());
+                        break;
                     case "exercise":
                         exercise(store, directory, getTargetContext());
                         checkMigration(getTargetContext(), directory);

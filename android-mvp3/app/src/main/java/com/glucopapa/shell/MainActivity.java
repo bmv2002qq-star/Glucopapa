@@ -116,7 +116,7 @@ public class MainActivity extends Activity {
         diagnostics = new DiagnosticRing(getFilesDir().toPath().resolve("diagnostics"));
         diagnosticWriter = new DiagnosticWriter(diagnostics);
         view.addJavascriptInterface(diagnosticWriter, "AndroidDiagnostics");
-        view.loadUrl(BASE + "index.html");
+        view.loadUrl(BASE + (BuildConfig.FIXTURE_JOURNAL ? "fixture-index.html" : "index.html"));
     }
 
     private void attachWebView() {
@@ -158,7 +158,8 @@ public class MainActivity extends Activity {
         }
 
         @JavascriptInterface public boolean write(String key, String value) {
-            if ("GFV2SHELL_MODE_v1".equals(key) && ("demo".equals(value) || "local".equals(value)) ||
+            if (BuildConfig.FIXTURE_JOURNAL && "GFV2SHELL_MODE_v1".equals(key) &&
+                    ("demo".equals(value) || "local".equals(value)) ||
                 "GFV2SHELL_XDRIP_LOCAL_v1".equals(key) && ("on".equals(value) || "off".equals(value))) {
                 return preferences.edit().putString(key, value).commit();
             }
@@ -166,7 +167,8 @@ public class MainActivity extends Activity {
         }
 
         private boolean supported(String key) {
-            return "GFV2SHELL_MODE_v1".equals(key) || "GFV2SHELL_XDRIP_LOCAL_v1".equals(key);
+            return (BuildConfig.FIXTURE_JOURNAL && "GFV2SHELL_MODE_v1".equals(key)) ||
+                "GFV2SHELL_XDRIP_LOCAL_v1".equals(key);
         }
     }
 
@@ -184,7 +186,7 @@ public class MainActivity extends Activity {
         }
 
         @JavascriptInterface public void saveAiExport(String mode, String period) {
-            if (!("local".equals(mode) || "demo".equals(mode)) || !AiJsonlExport.supports(period)) return;
+            if (!GFNativeStorage.acceptsMode(mode) || !AiJsonlExport.supports(period)) return;
             chooseFile(CREATE_AI_EXPORT, mode + ":" + period, AiJsonlExport.FILE_NAME);
         }
 
