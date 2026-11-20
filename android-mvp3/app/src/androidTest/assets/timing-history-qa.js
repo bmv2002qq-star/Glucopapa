@@ -101,6 +101,20 @@
             result.sourceRevision === state.revision, 'Retrospective result has the wrong scope or revision');
         check(JSON.stringify(host.exportState()) === before && (!native || native.readSnapshot(key) === disk),
             'Analysis changed the journal');
+        if (native) {
+            const confirm = window.confirm;
+            try {
+                window.confirm = message => {
+                    check(message.startsWith('Открыть отдельный тестовый журнал?'), 'Wrong mode confirmation');
+                    return true;
+                };
+                by('modeDemo').click();
+            } finally { window.confirm = confirm; }
+            check(GPApp.mode() === 'demo' && control.options.length === 1 &&
+                by('timingHistoryResult').textContent === '' && by('timingHistoryRun').disabled,
+                'Local history is visible in the synthetic journal');
+            check(native.readSnapshot(key) === disk, 'Changing journals modified the local history');
+        }
         return {status: 'PASS', fixture: 'SYNTHETIC_ISOLATED', result: result.status,
             matchedCases: result.matchedCases, snapshot_unchanged: true, sqlite: Boolean(native)};
     })().then(result => { window.__glucopapaQA = result; }, error => {

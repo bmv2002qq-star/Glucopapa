@@ -142,6 +142,7 @@ function boot(selectedMode=mode){
  clearResearchReviews();
  render();
  globalThis.GFCOBStudyPanel?.render?.();
+ globalThis.GFInjectionTimingPanel?.refresh();
  setTimeout(broadcastApproved,0);
  requestXDrip();
 }

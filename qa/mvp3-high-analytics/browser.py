@@ -190,8 +190,20 @@ def positive_history(browser, origin, output):
     assert selected['status'] == result['result'] and selected['matchedCases'] == result['matchedCases']
     assert persisted(page) == before
     page.screenshot(path=output / 'timing-history-positive.png', full_page=True)
+    page.evaluate("GPApp.open('system')")
+    page.once('dialog', lambda dialog: dialog.accept())
+    page.locator('#modeDemo').click()
+    assert page.evaluate('GPApp.mode()') == 'demo'
+    page.evaluate("GPApp.open('injection-sites')")
+    assert select.locator('option').count() == 1 and select.input_value() == ''
+    assert page.locator('#timingHistoryResult').text_content() == ''
+    assert page.locator('#timingHistoryRun').is_disabled()
+    page.evaluate("GPApp.open('system')")
+    page.locator('#modeLocal').click()
+    assert page.evaluate('GPApp.mode()') == 'local'
+    assert select.locator('option').count() == 6 and persisted(page) == before
     page.close()
-    return result
+    return {**result, 'mode_switch_clears_history': True}
 
 
 def main():
