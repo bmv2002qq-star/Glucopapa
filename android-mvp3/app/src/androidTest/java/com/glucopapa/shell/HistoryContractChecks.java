@@ -94,8 +94,40 @@ public final class HistoryContractChecks {
         return live.toString();
     }
 
+    public static String runWindow() throws Exception {
+        long now = System.currentTimeMillis();
+        long latest = now - 60_000;
+        long future = now + 120_000;
+        JSONObject last = reading(latest / 1000, 154).put("type", "sgv").put("device", "Follower")
+            .put("dateString", Instant.ofEpochMilli(latest).atOffset(ZoneOffset.ofHours(3)).toString())
+            .put("units_hint", "mmol").put("direction", "Flat").put("delta", -1.001);
+        JSONObject older = reading(latest - 300_000, 120);
+        JSONArray input = new JSONArray().put(reading(future, 170)).put(older).put(last).put(older)
+            .put(reading(latest - 600_000, 27)).put(reading(now - 25 * 3600_000L, 105));
+        JSONObject result = exchange(null, "200 OK", "application/json", "", input.toString(), true);
+        assertStatus("WEB_WINDOW_READY", result);
+        JSONObject point = result.getJSONObject("latest");
+        check(point.getLong("measuredAtMs") == latest && point.getInt("mgdl") == 154
+            && result.getInt("futureCount") == 1 && result.getInt("invalidCount") == 1
+            && result.getLong("futureMeasuredAtMs") == future && result.getJSONArray("items").length() == 1
+            && result.getJSONArray("items").getJSONObject(0).getLong("measuredAtMs") == latest - 300_000,
+            "Bounded Web Service window changed or admitted bad timestamps");
+        JSONObject futureOnly = new JSONObject(GFNativeXDripHistory.parseWindow(
+            new JSONArray().put(reading(future, 170)).toString(), now));
+        assertStatus("WEB_FUTURE_MEASUREMENT", futureOnly);
+        check(futureOnly.getLong("receivedAtMs") == now && !futureOnly.has("mgdl"), "A future point escaped diagnostics");
+        assertStatus("HISTORY_CONFLICT", new JSONObject(GFNativeXDripHistory.parseWindow(input
+            .put(reading(latest, 151)).toString(), now)));
+        return result.toString();
+    }
+
     private static JSONObject exchange(JSONObject anchor, String status, String type, String headers, String body)
         throws Exception {
+        return exchange(anchor, status, type, headers, body, false);
+    }
+
+    private static JSONObject exchange(JSONObject anchor, String status, String type, String headers, String body,
+                                       boolean window) throws Exception {
         ExecutorService serverWorker = Executors.newSingleThreadExecutor();
         ScheduledExecutorService timer = Executors.newSingleThreadScheduledExecutor();
         try (ServerSocket server = new ServerSocket()) {
@@ -107,7 +139,7 @@ public final class HistoryContractChecks {
                     client.setSoTimeout(3000);
                     BufferedReader reader = new BufferedReader(new InputStreamReader(
                         client.getInputStream(), StandardCharsets.US_ASCII));
-                    String query = anchor == null ? "1" : "288";
+                    String query = anchor == null && !window ? "1" : "288";
                     check(("GET /sgv.json?count=" + query + " HTTP/1.1").equals(reader.readLine()), "Unexpected HTTP request");
                     for (String line; (line = reader.readLine()) != null && !line.isEmpty();) { /* Skip headers. */ }
                     byte[] data = body.getBytes(StandardCharsets.UTF_8);
@@ -120,8 +152,8 @@ public final class HistoryContractChecks {
                 }
                 return null;
             });
-            JSONObject result = new JSONObject(anchor == null
-                ? GFNativeXDripHistory.fetchLatest(timer) : GFNativeXDripHistory.fetch(anchor, timer));
+            JSONObject result = new JSONObject(window ? GFNativeXDripHistory.fetchWindow(timer)
+                : anchor == null ? GFNativeXDripHistory.fetchLatest(timer) : GFNativeXDripHistory.fetch(anchor, timer));
             response.get(5, TimeUnit.SECONDS);
             return result;
         } finally {

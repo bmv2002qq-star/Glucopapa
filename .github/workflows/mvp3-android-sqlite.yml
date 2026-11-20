@@ -12,6 +12,7 @@ on:
       - qa/mvp3-high-analytics-20261120
       - qa/mvp3-low-20261120
       - qa/mvp3-phone-feedback-20261120
+      - qa/mvp3-unified-feedback-20261120
 
 permissions:
   contents: read
@@ -81,9 +82,12 @@ jobs:
     with:
       api: 35
       artifact-suffix: '-core'
-      publish-pilot-apk: ${{ github.ref == 'refs/heads/qa/mvp3-phone-feedback-20261120' }}
+      publish-pilot-apk: ${{ github.ref == 'refs/heads/qa/mvp3-phone-feedback-20261120' || (github.ref == 'refs/heads/qa/mvp3-unified-feedback-20261120' && contains(github.event.head_commit.message, '[qa-apk]')) }}
+      apk-version: ${{ github.ref == 'refs/heads/qa/mvp3-unified-feedback-20261120' && '0.3.18-qa' || '0.3.17-qa' }}
+      apk-code: ${{ github.ref == 'refs/heads/qa/mvp3-unified-feedback-20261120' && 13 || 12 }}
 
   android-15-extended:
+    if: github.ref != 'refs/heads/qa/mvp3-unified-feedback-20261120' || contains(github.event.head_commit.message, '[qa-apk]')
     uses: ./.github/workflows/mvp3-android-device.yml
     with:
       api: 35
@@ -93,7 +97,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        api: [31, 34, 36]
+        api: ${{ fromJSON(github.ref == 'refs/heads/qa/mvp3-unified-feedback-20261120' && !contains(github.event.head_commit.message, '[qa-apk]') && '[36]' || '[31,34,36]') }}
     uses: ./.github/workflows/mvp3-android-device.yml
     with:
       api: ${{ matrix.api }}

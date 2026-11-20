@@ -54,6 +54,7 @@ public final class StorageInstrumentation extends Instrumentation {
                                     : HistoryContractChecks.run(cgm.getJSONObject(0)));
                             }
                         }
+                        if ("window-write".equals(productionStep)) productionStep += ":" + HistoryContractChecks.runWindow();
                         output.putString("webview", new WebViewChecks(this).exercise("production-qa.js", productionStep).toString());
                         break;
                     case "exercise":

@@ -12,7 +12,7 @@
         android:allowBackup="false" android:fullBackupContent="false"
         android:supportsRtl="true">
         <activity android:name=".MainActivity" android:exported="true"
-            android:enableOnBackInvokedCallback="@bool/gf_predictive_back">
+            android:enableOnBackInvokedCallback="false">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>

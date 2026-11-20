@@ -56,3 +56,30 @@ test('stale Web Service observations do not become current; conflicting timestam
     assert.throws(()=>Provider.ingest(host,'local',{...sample,measuredAtMs:now+1},now),/TIMESTAMP/);
     assert.equal(host.diagnostics().revision,1);
 });
+
+test('the local window can restore history without ContentProvider while retaining one trusted receipt per point', () => {
+    const {host, open} = make();
+    const packet = {status:'WEB_WINDOW_READY',latest:sample,items:[
+        {measuredAtMs:sample.measuredAtMs-300000,mgdl:145,direction:'Flat'},
+    ]};
+    assert.equal(Provider.ingestWindow(host,'local',packet,now).historyAdded,1);
+    assert.equal(Provider.ingestWindow(host,'local',packet,now).historyAdded,0);
+    assert.equal(open().exportState().revision,1);
+    assert.equal(open().exportState().cgm[0].transport,'xdrip_loopback_history');
+    assert.equal(open().connect('calculator').read('cgm').length,1);
+    assert.equal(Provider.ingest(host,'local',direct(150.7),now).revision,2);
+    assert.equal(Provider.ingestWindow(host,'local',packet,now).revision,2);
+    assert.equal(open().exportState().cgm.length,2);
+    assert.equal(open().exportState().cgm.at(-1).mgdl,150.7);
+});
+
+test('a contradictory or future point cannot leave a partial Web Service window in GFStorage', () => {
+    const {host, open} = make();
+    const point = {measuredAtMs:sample.measuredAtMs-300000,mgdl:145,direction:'Flat'};
+    const packet = {status:'WEB_WINDOW_READY',latest:sample,items:[point]};
+    const future = {...sample, measuredAtMs:now+1};
+    assert.throws(()=>Provider.ingestWindow(host,'local',{...packet,latest:future},now),/TIMESTAMP/);
+    assert.throws(()=>Provider.ingestWindow(host,'local',{...packet,items:[point,{...point,mgdl:146}]},now),/CONFLICT/);
+    assert.equal(open().exportState().revision,0);
+    assert.deepEqual(open().exportState().cgm,[]);
+});

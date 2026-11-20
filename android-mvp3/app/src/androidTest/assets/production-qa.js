@@ -57,6 +57,22 @@
             assert(read(localKey).data===JSON.stringify(state),'Profile missing in SQLite');
             return {status:'PASS',fixture:'SYNTHETIC_PROFILE',step:action,weight:20,height:120};
         }
+        assert(JSON.parse(GFNativeXDripHistory.requestWindow()).status==='HISTORY_DISABLED', 'Window bypassed opt-in');
+        if(action.startsWith('window-')){
+            const host=GPApp.getStorage();
+            if(action.startsWith('window-write:')){
+                const packet=JSON.parse(action.slice('window-write:'.length));
+                assert(GFProviderCgm.ingestWindow(host,'local',packet).historyAdded===1,'Window was not saved');
+                assert(GFProviderCgm.ingestWindow(host,'local',packet).historyAdded===0,'Window duplicate was saved');
+            }
+            const state=host.exportState(), latest=state.cgm.at(-1);
+            assert(state.revision===4&&state.cgm.length===6&&latest.mgdl===154&&latest.direction==='Flat'&&
+                state.cgm.some(point=>point.mgdl===120&&point.transport==='xdrip_loopback_history')&&
+                !state.cgm.some(point=>point.mgdl===170),'Window or future row changed');
+            assert(byId('homeGlucose').textContent==='8,5','Latest valid observation absent from home screen');
+            assert(read(localKey).data===JSON.stringify(state),'Window missing in SQLite');
+            return {status:'PASS',fixture:'SYNTHETIC_XDRIP_WINDOW',step:action.split(':')[0],points:6,revision:4};
+        }
         if(action.startsWith('web-')){
             const host=GPApp.getStorage();
             if(action.startsWith('web-write:')){

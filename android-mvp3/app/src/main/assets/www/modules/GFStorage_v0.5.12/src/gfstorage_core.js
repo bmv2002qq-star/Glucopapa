@@ -311,6 +311,50 @@
     if(!Number.isInteger(mgdl))fail('CGM_XDRIP_HISTORY_FORMAT');
     return {...xdripObservation({ts,mgdl,receivedAt,direction,staleAtReceipt:null}),transport:XDRIP_HISTORY};
   }
+  function upsertXDrip(d,row){
+    const index=d.cgm.findIndex(x=>x.sourceDeviceId===XDRIP_ID&&x.ts===row.ts);
+    if(index===-1){
+      d.cgm.push(row);
+      d.cgm.sort((a,b)=>a.ts-b.ts);
+      return true;
+    }
+    const previous=d.cgm[index];
+    if(isXDripHistory(previous)){
+      d.cgm[index]=row;
+      return true;
+    }
+    if((previous.transport===XDRIP_WEB)!==(row.transport===XDRIP_WEB)){
+      if(Math.trunc(previous.mgdl)!==Math.trunc(row.mgdl))fail('CGM_XDRIP_CONFLICT');
+      if(row.transport===XDRIP_WEB)return false;
+      d.cgm[index]=row; // ContentProvider preserves the upstream fractional value.
+      return true;
+    }
+    if(previous.mgdl!==row.mgdl)fail('CGM_XDRIP_CONFLICT');
+    return false;
+  }
+  function insertXDripHistory(d,anchorTs,receivedAt,items){
+    const receipt=Date.parse(receivedAt);
+    const known=new Map(d.cgm.filter(row=>row.sourceDeviceId===XDRIP_ID).map(row=>[row.ts,row]));
+    const legacy=new Set(d.cgm.filter(row=>row.sourceDeviceId===undefined).map(row=>row.ts));
+    const incoming=new Map();
+    for(const item of items){
+      requireFields(item,['ts','mgdl','direction'],['ts','mgdl','direction']);
+      const row=xdripHistoricalObservation({...item,receivedAt});
+      if(row.ts>=anchorTs||row.ts<receipt-XDRIP_HISTORY_WINDOW)fail('CGM_XDRIP_HISTORY_TIME');
+      const prior=incoming.get(row.ts);
+      if(prior&&(prior.mgdl!==row.mgdl||prior.direction!==row.direction))fail('CGM_XDRIP_HISTORY_CONFLICT');
+      const existing=known.get(row.ts);
+      if(existing&&(Math.trunc(existing.mgdl)!==row.mgdl||
+          (isXDripHistory(existing)&&existing.direction&&row.direction&&existing.direction!==row.direction)))
+        fail('CGM_XDRIP_HISTORY_CONFLICT');
+      if(!existing&&!legacy.has(row.ts))incoming.set(row.ts,row);
+    }
+    if(incoming.size){
+      d.cgm.push(...incoming.values());
+      d.cgm.sort((a,b)=>a.ts-b.ts);
+    }
+    return incoming.size;
+  }
   function emptyState(){return {schemaVersion:SCHEMA_VERSION,revision:0,profile:{birthDate:null,timeZone:null,displayName:null,sex:null,allergies:[],dailyNutritionReference:null,exerciseGuidance:null,exerciseGuidanceEnabled:true,hypoActivityMultipliers:null,hypoActivityEnabled:true,activityBaseLevel:'low',coefficientModes:{carb_g_per_u:'manual',isf_mmol_per_u:'manual'},illnessFactor:null},measurements:[],drugs:clone(DRUGS),models:clone(MODELS),orders:[],coefficients:[],events:[],mealSessions:[],workflowLog:[],coverage:null,cgm:[],cgmMetadata:null,conditionPeriods:[],forecasts:[],forecastAssessments:[],syncInbox:[],results:[],proposals:[],graphPreferences:{layout:'guided',theme:'light',rangeHours:12,showRinfast:true,showTotal:false},history:[]};}
   function validateStored(s){
     if(!object(s)||s.schemaVersion!==SCHEMA_VERSION||!Number.isSafeInteger(s.revision)||s.revision<0)fail('Несовместимая версия базы');
@@ -799,25 +843,19 @@
           if(Date.parse(row.receivedAt)>Date.parse(now))fail('CGM_XDRIP_FUTURE_RECEIPT');
           if(d.cgmMetadata&&d.cgmMetadata.sourceType!==XDRIP_TYPE)fail('CGM_SOURCE_CONFLICT');
           d.cgmMetadata={sourceDeviceId:XDRIP_ID,sourceType:XDRIP_TYPE,samplingMinutes:null,qualityScore:null};
-          const index=d.cgm.findIndex(x=>x.sourceDeviceId===XDRIP_ID&&x.ts===row.ts);
-          if(index!==-1){
-            const old=d.cgm[index];
-            if(isXDripHistory(old)){
-              d.cgm[index]=row; // Direct observations take precedence over retrospective data.
-              return XDRIP_ID+':'+row.ts;
-            }
-            if((old.transport===XDRIP_WEB)!==(row.transport===XDRIP_WEB)){
-              if(Math.trunc(old.mgdl)!==Math.trunc(row.mgdl))fail('CGM_XDRIP_CONFLICT');
-              if(row.transport===XDRIP_WEB)return null;
-              d.cgm[index]=row;
-              return XDRIP_ID+':'+row.ts;
-            }
-            if(old.mgdl!==row.mgdl)fail('CGM_XDRIP_CONFLICT');
-            return null; // Preserve the first direct receipt.
-          }
-          d.cgm.push(row);
-          d.cgm.sort((a,b)=>a.ts-b.ts);
-          return XDRIP_ID+':'+row.ts;
+          return upsertXDrip(d,row)?XDRIP_ID+':'+row.ts:null;
+        },rev);
+        port.ingestXDripWindow=(batch,rev)=>commit(role,'cgm','ingest_xdrip_window',(d,now)=>{
+          requireFields(batch,['latest','items'],['latest','items']);
+          const row=xdripObservation(batch.latest);
+          const receipt=Date.parse(row.receivedAt);
+          if(row.transport!==XDRIP_WEB||receipt>Date.parse(now)||row.ts<receipt-XDRIP_HISTORY_WINDOW||
+              !Array.isArray(batch.items)||batch.items.length>287)fail('CGM_XDRIP_HISTORY_FORMAT');
+          if(d.cgmMetadata&&d.cgmMetadata.sourceType!==XDRIP_TYPE)fail('CGM_SOURCE_CONFLICT');
+          d.cgmMetadata={sourceDeviceId:XDRIP_ID,sourceType:XDRIP_TYPE,samplingMinutes:null,qualityScore:null};
+          const liveChanged=upsertXDrip(d,row);
+          const added=insertXDripHistory(d,row.ts,row.receivedAt,batch.items);
+          return liveChanged||added?'window:'+added:null;
         },rev);
         port.ingestXDripHistory=(batch,rev)=>commit(role,'cgm','import_xdrip_history',(d,now)=>{
           const fields=['anchorTs','anchorSgv','receivedAt','items'];
@@ -828,28 +866,11 @@
           const receipt=Date.parse(validReceipt(receivedAt,anchorTs));
           if(receipt>Date.parse(now)||anchorTs<receipt-XDRIP_HISTORY_WINDOW)fail('CGM_XDRIP_HISTORY_TIME');
           if(d.cgmMetadata?.sourceType!==XDRIP_TYPE)fail('CGM_XDRIP_HISTORY_ANCHOR');
-          const known=new Map(d.cgm.filter(row=>row.sourceDeviceId===XDRIP_ID).map(row=>[row.ts,row]));
-          const legacy=new Set(d.cgm.filter(row=>row.sourceDeviceId===undefined).map(row=>row.ts));
-          const anchor=known.get(anchorTs);
+          const anchor=d.cgm.find(row=>row.sourceDeviceId===XDRIP_ID&&row.ts===anchorTs);
           if(!anchor||anchor.transport!==undefined||Math.trunc(anchor.mgdl)!==anchorSgv||
               Date.parse(anchor.receivedAt)>receipt)fail('CGM_XDRIP_HISTORY_ANCHOR');
-          const incoming=new Map();
-          for(const item of items){
-            requireFields(item,['ts','mgdl','direction'],['ts','mgdl','direction']);
-            const row=xdripHistoricalObservation({...item,receivedAt});
-            if(row.ts>=anchorTs||row.ts<receipt-XDRIP_HISTORY_WINDOW)fail('CGM_XDRIP_HISTORY_TIME');
-            const prior=incoming.get(row.ts);
-            if(prior&&(prior.mgdl!==row.mgdl||prior.direction!==row.direction))fail('CGM_XDRIP_HISTORY_CONFLICT');
-            const existing=known.get(row.ts);
-            if(existing&&(Math.trunc(existing.mgdl)!==row.mgdl||
-                (isXDripHistory(existing)&&existing.direction&&row.direction&&existing.direction!==row.direction)))
-              fail('CGM_XDRIP_HISTORY_CONFLICT');
-            if(!existing&&!legacy.has(row.ts))incoming.set(row.ts,row);
-          }
-          if(!incoming.size)return null;
-          d.cgm.push(...incoming.values());
-          d.cgm.sort((a,b)=>a.ts-b.ts);
-          return 'history:'+incoming.size;
+          const added=insertXDripHistory(d,anchorTs,receivedAt,items);
+          return added?'history:'+added:null;
         },rev);
         port.setSourceMetadata=(meta,rev)=>commit(role,'cgmMetadata','set_provenance',d=>{
           const m=validateCgmMetadata(meta);

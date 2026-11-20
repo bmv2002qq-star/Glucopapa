@@ -13,7 +13,7 @@ const nowISO=()=>new Date().toISOString();
 const localInputTime=(d=new Date())=>new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,16);
 const testJournal=globalThis.GFTestJournal;
 let mode='local',host=null,unsub=null,controller=null,bridge=null,settingsService=null,activeMeal=null,lastSafety=null,noticeTimer=null,sportMenuOpen=false;
-let fileOperation=null,xdripStatus='',xdripRequest=null,xdripHistoryRequest=null;
+let fileOperation=null,xdripStatus='',xdripRequest=null,xdripHistoryRequest=null,nextXDripWindow=0;
 const routes=[],foodRoutes=[];
 let returningInsideFood=false, mealDoseContext=false, captureForInjection=false;
 let approvedQuickFoodSource;
@@ -496,6 +496,7 @@ const XDRIP_STATUS=Object.freeze({
  FRESHNESS_UNKNOWN:'Источник не указал свежесть показания',PROVIDER_TIMEOUT:'xDrip+ не ответил вовремя',
  INVALID_MEASUREMENT:'xDrip+ вернул некорректное показание или время',
  UNEXPECTED_PROVIDER:'Пакет источника отличается от xDrip+',PROVIDER_READ_FAILED:'Ошибка чтения xDrip+',
+ PROVIDER_ACCESS_DENIED:'Доступ к ContentProvider отклонён настройками или разрешениями xDrip+',
  UNAVAILABLE:'Нет доступа к локальному источнику'
 });
 function acceptXDrip(reply){
@@ -511,9 +512,17 @@ const WEB_STATUS=Object.freeze({
  HISTORY_BUSY:'Web Service занят другим запросом',
  WEB_FUTURE_MEASUREMENT:'Время показания Web Service находится в будущем',
 });
-function requestXDrip(){
+function xdripClockError(reply){
+ if(!Number.isSafeInteger(reply?.measuredAtMs)||!Number.isSafeInteger(reply?.receivedAtMs))return '';
+ const ahead=Math.ceil((reply.measuredAtMs-reply.receivedAtMs)/1000);
+ if(ahead<=0)return '';
+ const measured=new Date(reply.measuredAtMs).toLocaleString('ru-RU');
+ const received=new Date(reply.receivedAtMs).toLocaleString('ru-RU');
+ return ' · измерено '+measured+' · получено '+received+' · опережение '+ahead+' с';
+}
+function requestXDrip(forceWindow=false){
  const provider=globalThis.GFNativeXDrip, web=globalThis.GFNativeXDripHistory;
- if(!host||!provider||!xdripEnabled()||document.hidden||xdripRequest||xdripHistoryRequest)return;
+ if(!host||!xdripEnabled()||document.hidden||xdripRequest||xdripHistoryRequest||(!provider&&!web))return;
  const sourceMode=xdripSourceMode(), request={host};
  xdripRequest=request;
  xdripStatus='Получаем показание xDrip+…';
@@ -525,18 +534,21 @@ function requestXDrip(){
    xdripStatus=message;
    renderXdripStatus();
  }
- function save(packet,channel){
-   try{
-     const outcome=acceptXDrip(packet);
-     const value=fmt(packet.mgdl/18.01559), measured=new Date(packet.measuredAtMs).toLocaleString('ru-RU');
-     const received=new Date(packet.receivedAtMs).toLocaleTimeString('ru-RU');
-     const state={OBSERVED:'Показание',STALE:'Устаревшее показание',FRESHNESS_UNKNOWN:'Свежесть не подтверждена'}[outcome.status];
-     end(channel+' · '+state+' '+value+' ммоль/л · измерено '+measured+' · получено '+received);
-   }catch(error){end(channel+' · '+(error.message==='CGM_XDRIP_CONFLICT'?
+ function formatObservation(packet,outcome,channel){
+   const value=fmt(packet.mgdl/18.01559), measured=new Date(packet.measuredAtMs).toLocaleString('ru-RU');
+   const received=new Date(packet.receivedAtMs).toLocaleTimeString('ru-RU');
+   const state={OBSERVED:'Показание',STALE:'Устаревшее показание',FRESHNESS_UNKNOWN:'Свежесть не подтверждена'}[outcome.status];
+   return channel+' · '+state+' '+value+' ммоль/л · измерено '+measured+' · получено '+received;
+ }
+ function save(packet,channel,reason=''){
+   try{end(formatObservation(packet,acceptXDrip(packet),channel)+(reason?' · '+reason:''));}
+   catch(error){end(channel+' · '+(error.message==='CGM_XDRIP_CONFLICT'?
      'Значение расходится с сохранённым измерением. Новая запись отклонена.':'Не удалось сохранить показание в журнале.'));}
  }
  function fromProvider(reason=''){
-   xdripStatus=(reason?reason+' · ':'')+'Запрос ContentProvider…';
+   const prefix=reason?reason+' · ':'';
+   if(!provider){end(prefix+'ContentProvider недоступен');return;}
+   xdripStatus=prefix+'Запрос ContentProvider…';
    renderXdripStatus();
    const until=performance.now()+5400;
    provider.pollLatest();
@@ -544,37 +556,61 @@ function requestXDrip(){
      if(!current())return;
      const reply=JSON.parse(provider.peekLatest());
      if(reply.status==='READING'&&performance.now()<until){setTimeout(poll,250);return;}
-     if(reply.status==='MEASUREMENT'){save(reply,'ContentProvider');return;}
-     end((reason?reason+' · ':'')+(XDRIP_STATUS[reply.status==='READING'?'PROVIDER_TIMEOUT':reply.status]||
-       'ContentProvider не вернул показание.'));
+     if(reply.status==='MEASUREMENT'){save(reply,'ContentProvider',reason);return;}
+     end(prefix+(XDRIP_STATUS[reply.status==='READING'?'PROVIDER_TIMEOUT':reply.status]||
+       'ContentProvider не вернул показание.')+xdripClockError(reply));
    }
    setTimeout(poll,250);
  }
- function failedWeb(code){
-   const reason=WEB_STATUS[code]||'Локальный Web Service недоступен';
+ function failedWeb(reply,window){
+   const reason=(WEB_STATUS[reply.status]||HISTORY_STATUS[reply.status]||'Локальный Web Service недоступен')+xdripClockError(reply);
+   if(window)$('xdripHistoryStatus').textContent=reason;
    if(sourceMode==='auto')fromProvider(reason);
    else end(reason);
  }
- if(sourceMode==='provider'){fromProvider();return;}
- if(!web?.requestLatest){failedWeb('HISTORY_UNAVAILABLE');return;}
- const start=JSON.parse(web.requestLatest());
- if(start.status!=='HISTORY_FETCHING'){failedWeb(start.status);return;}
- const until=performance.now()+5400;
- function pollWeb(){
-   if(!current())return;
-   const raw=web.takeLatest();
-   if(!raw){
-     if(performance.now()<until)setTimeout(pollWeb,250);
-     else failedWeb('HISTORY_TIMEOUT');
-     return;
+ function saveWindow(reply){
+   try{
+     const outcome=GFProviderCgm.ingestWindow(host,mode,reply);
+     const skipped=reply.futureCount?' · пропущено будущих: '+reply.futureCount+
+       xdripClockError({measuredAtMs:reply.futureMeasuredAtMs,receivedAtMs:reply.latest.receivedAtMs}):'';
+     $('xdripHistoryStatus').textContent='Точек истории добавлено: '+outcome.historyAdded+skipped;
+     if(reply.latest.stale&&sourceMode==='auto')fromProvider('Последнее допустимое показание Web Service устарело'+skipped);
+     else end(formatObservation(reply.latest,outcome,'Локальный Web Service')+skipped);
+   }catch(error){
+     failedWeb({status:HISTORY_STATUS[error.message]?error.message:'HISTORY_WRITE_FAILED'},true);
    }
-   const reply=JSON.parse(raw);
-   if(reply.status==='MEASUREMENT'){
-     if(reply.stale&&sourceMode==='auto')fromProvider('Показание Web Service устарело');
-     else save(reply,'Локальный Web Service');
-   }else failedWeb(reply.status);
  }
- setTimeout(pollWeb,250);
+ function fromWeb(window){
+   if(!web?.requestLatest){failedWeb({status:'HISTORY_UNAVAILABLE'},window);return;}
+   if(window)nextXDripWindow=performance.now()+60000;
+   const start=JSON.parse(window?web.requestWindow():web.requestLatest());
+   if(start.status!=='HISTORY_FETCHING'){failedWeb(start,window);return;}
+   const until=performance.now()+5400;
+   function pollWeb(){
+     if(!current())return;
+     const raw=window?web.take():web.takeLatest();
+     if(!raw){
+       if(performance.now()<until)setTimeout(pollWeb,250);
+       else failedWeb({status:'HISTORY_TIMEOUT'},window);
+       return;
+     }
+     const reply=JSON.parse(raw);
+     if(reply.status==='WEB_WINDOW_READY'&&window){saveWindow(reply);return;}
+     if(reply.status==='MEASUREMENT'){
+       if(reply.stale&&sourceMode==='auto')fromProvider('Показание Web Service устарело');
+       else save(reply,'Локальный Web Service');
+       return;
+     }
+     if(reply.status==='WEB_FUTURE_MEASUREMENT'&&!window&&web.requestWindow&&performance.now()+45000>=nextXDripWindow){
+       fromWeb(true);
+       return;
+     }
+     failedWeb(reply,window);
+   }
+   setTimeout(pollWeb,250);
+ }
+ if(sourceMode==='provider')fromProvider();
+ else fromWeb(!!web?.requestWindow&&(forceWindow===true||performance.now()>=nextXDripWindow));
 }
 const HISTORY_STATUS=Object.freeze({
  HISTORY_NEEDS_PROVIDER:'Сначала получите показание через ContentProvider xDrip+.',
@@ -590,6 +626,7 @@ const HISTORY_STATUS=Object.freeze({
  HISTORY_CONFLICT:'В истории Web Service есть противоречащие точки.',
  CGM_XDRIP_HISTORY_ANCHOR:'Контрольное показание изменилось. Обновите источник и повторите.',
  CGM_XDRIP_HISTORY_CONFLICT:'История расходится с сохранёнными показаниями.',
+ HISTORY_WRITE_FAILED:'История CGM не сохранена. Проверьте доступность журнала.',
 });
 function finishXDripHistory(text) {
  xdripHistoryRequest=null;
@@ -598,7 +635,9 @@ function finishXDripHistory(text) {
 }
 function restoreXDripHistory(){
  const source=globalThis.GFNativeXDripHistory, provider=globalThis.GFNativeXDrip;
- if(!source||!provider||!host||!xdripEnabled()||document.hidden||xdripHistoryRequest||xdripRequest)return;
+ if(!source||!host||!xdripEnabled()||document.hidden||xdripHistoryRequest||xdripRequest)return;
+ if(xdripSourceMode()!=='provider'&&source.requestWindow){requestXDrip(true);return;}
+ if(!provider)return;
  const request={host,deadline:performance.now()+5500};
  xdripHistoryRequest=request;
  $('xdripHistoryStatus').textContent='Получаем контрольное показание ContentProvider…';
@@ -729,6 +768,7 @@ function setupLocalFilesAndSource(){
  $('xdripEnabled').addEventListener('change',wrap(e=>{
    if(mode!=='local')return;
    savePreference(XDRIP_KEY,e.target.checked?'on':'off');
+   nextXDripWindow=0;
    xdripRequest=null;
    if(!e.target.checked&&xdripHistoryRequest)finishXDripHistory('Импорт истории прерван.');
    xdripStatus='';
@@ -737,6 +777,7 @@ function setupLocalFilesAndSource(){
  }));
  $('xdripSourceMode').addEventListener('change',wrap(e=>{
    savePreference(XDRIP_SOURCE_KEY,e.target.value);
+   nextXDripWindow=0;
    xdripRequest=null;
    requestXDrip();
  }));
@@ -747,6 +788,7 @@ function setupLocalFilesAndSource(){
  $('openBackup').addEventListener('click',wrap(openBackup));
  document.addEventListener('visibilitychange',wrap(()=>{
    if(document.hidden){
+     nextXDripWindow=0;
      xdripRequest=null;
      if(xdripHistoryRequest)finishXDripHistory('Импорт истории прерван.');
    }

@@ -79,6 +79,8 @@ public final class GFNativeXDrip implements AutoCloseable {
                     return readMeasurement(cursor, System.currentTimeMillis());
                 }
             }
+        } catch (SecurityException denied) {
+            return response("PROVIDER_ACCESS_DENIED");
         } catch (Exception error) {
             return response("PROVIDER_READ_FAILED");
         }

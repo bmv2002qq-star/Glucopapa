@@ -95,7 +95,7 @@ if grep -Fq 'WebView startup timed out: null' "$evidence/production-isolation.lo
 fi
 grep -F 'QA_PASS production' "$evidence/production-isolation.log"
 "$adb" -s "$serial" shell am force-stop com.glucopapa.shell
-for step in provider-write provider-restored history-write history-restored web-write web-restored profile-write profile-restored; do
+for step in provider-write provider-restored history-write history-restored web-write web-restored window-write window-restored profile-write profile-restored; do
     "$adb" -s "$serial" shell am instrument -w -r -e fixture SYNTHETIC -e phase production -e step "$step" \
         com.glucopapa.shell.test/com.glucopapa.shell.qa.StorageInstrumentation | tee "$evidence/$step.log"
     grep -F 'QA_PASS production' "$evidence/$step.log"

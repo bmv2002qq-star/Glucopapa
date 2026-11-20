@@ -18,8 +18,6 @@ import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.window.OnBackInvokedCallback;
-import android.window.OnBackInvokedDispatcher;
 import android.widget.FrameLayout;
 import androidx.webkit.WebViewAssetLoader;
 import java.io.ByteArrayOutputStream;
@@ -61,7 +59,6 @@ public class MainActivity extends Activity {
     private GFNativeXDripHistory nativeXDripHistory;
     private volatile boolean foreground;
     private boolean backInFlight;
-    private OnBackInvokedCallback systemBack;
     private DiagnosticRing diagnostics;
     private DiagnosticWriter diagnosticWriter;
 
@@ -128,11 +125,6 @@ public class MainActivity extends Activity {
         diagnostics = new DiagnosticRing(getFilesDir().toPath().resolve("diagnostics"));
         diagnosticWriter = new DiagnosticWriter(diagnostics);
         view.addJavascriptInterface(diagnosticWriter, "AndroidDiagnostics");
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && getResources().getBoolean(R.bool.gf_predictive_back)) {
-            systemBack = this::navigateBack;
-            getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
-                OnBackInvokedDispatcher.PRIORITY_DEFAULT, systemBack);
-        }
         view.loadUrl(BASE + (BuildConfig.FIXTURE_JOURNAL ? "fixture-index.html" : "index.html"));
     }
 
@@ -362,9 +354,6 @@ public class MainActivity extends Activity {
     }
 
     @Override protected void onDestroy() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && systemBack != null) {
-            getOnBackInvokedDispatcher().unregisterOnBackInvokedCallback(systemBack);
-        }
         if (view != null) {
             view.loadUrl("about:blank");
             view.removeJavascriptInterface("AndroidExporter");

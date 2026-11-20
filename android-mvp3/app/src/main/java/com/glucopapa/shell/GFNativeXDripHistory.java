@@ -36,6 +36,8 @@ public final class GFNativeXDripHistory implements AutoCloseable {
     private static final int DEADLINE_MS = 4500;
     private static final long HISTORY_MS = TimeUnit.HOURS.toMillis(24);
     private static final long ANCHOR_RECEIPT_MS = TimeUnit.MINUTES.toMillis(1);
+    private enum Query { LATEST, WINDOW, ANCHORED_HISTORY }
+
     private final GFNativeXDrip provider;
     private final BooleanSupplier enabled;
     private final ExecutorService worker = Executors.newSingleThreadExecutor();
@@ -58,35 +60,45 @@ public final class GFNativeXDripHistory implements AutoCloseable {
         try {
             JSONObject anchor = new JSONObject(provider.peekLatest());
             if (!validAnchor(anchor, System.currentTimeMillis())) return status("HISTORY_NEEDS_PROVIDER");
-            active = true;
-            int requested = generation;
-            worker.execute(() -> complete(anchor, requested, false));
-            return status("HISTORY_FETCHING");
+            return start(anchor, Query.ANCHORED_HISTORY);
         } catch (JSONException invalid) {
             return status("HISTORY_NEEDS_PROVIDER");
         }
     }
 
     @JavascriptInterface public synchronized String requestLatest() {
+        return start(null, Query.LATEST);
+    }
+
+    @JavascriptInterface public synchronized String requestWindow() {
+        return start(null, Query.WINDOW);
+    }
+
+    private String start(JSONObject anchor, Query query) {
         if (closed || !enabled.getAsBoolean()) return status("HISTORY_DISABLED");
         if (active) return status("HISTORY_BUSY");
-        latestResult = null;
+        if (query == Query.LATEST) latestResult = null;
+        else result = null;
         active = true;
         int requested = generation;
-        worker.execute(() -> complete(null, requested, true));
+        worker.execute(() -> complete(anchor, requested, query));
         return status("HISTORY_FETCHING");
     }
 
-    private void complete(JSONObject anchor, int requested, boolean latest) {
+    private void complete(JSONObject anchor, int requested, Query query) {
         String payload = status("HISTORY_UNAVAILABLE");
         try {
-            payload = latest ? fetchLatest(timer) : fetch(anchor, timer);
+            switch (query) {
+                case LATEST: payload = fetchLatest(timer); break;
+                case WINDOW: payload = fetchWindow(timer); break;
+                case ANCHORED_HISTORY: payload = fetch(anchor, timer); break;
+            }
         } catch (RejectedExecutionException closing) {
             // The Activity closed before the connection timer was scheduled.
         } finally {
             synchronized (this) {
                 if (!closed && generation == requested && enabled.getAsBoolean()) {
-                    if (latest) latestResult = payload;
+                    if (query == Query.LATEST) latestResult = payload;
                     else result = payload;
                 }
                 active = false;
@@ -139,14 +151,20 @@ public final class GFNativeXDripHistory implements AutoCloseable {
     // Package-private so the instrumentation can assert the exact production transport.
     static String fetch(JSONObject anchor, ScheduledExecutorService timer) {
         if (!validAnchor(anchor, System.currentTimeMillis())) return status("HISTORY_NEEDS_PROVIDER");
-        return fetch(ENDPOINT, anchor, timer);
+        return fetch(ENDPOINT, anchor, timer, Query.ANCHORED_HISTORY);
     }
 
     static String fetchLatest(ScheduledExecutorService timer) {
-        return fetch(LATEST_ENDPOINT, null, timer);
+        return fetch(LATEST_ENDPOINT, null, timer, Query.LATEST);
     }
 
-    private static String fetch(String endpoint, JSONObject anchor, ScheduledExecutorService timer) {
+    static String fetchWindow(ScheduledExecutorService timer) {
+        return fetch(ENDPOINT, null, timer, Query.WINDOW);
+    }
+
+    private static String fetch(
+        String endpoint, JSONObject anchor, ScheduledExecutorService timer, Query query
+    ) {
         HttpURLConnection connection = null;
         ScheduledFuture<?> timeout = null;
         long deadline = SystemClock.elapsedRealtime() + DEADLINE_MS;
@@ -178,7 +196,11 @@ public final class GFNativeXDripHistory implements AutoCloseable {
                 if (SystemClock.elapsedRealtime() >= deadline) return status("HISTORY_TIMEOUT");
                 String json = bytes.toString(StandardCharsets.UTF_8.name());
                 long now = System.currentTimeMillis();
-                return anchor == null ? parseLatest(json, now) : parse(json, anchor, now);
+                switch (query) {
+                    case LATEST: return parseLatest(json, now);
+                    case WINDOW: return parseWindow(json, now);
+                    default: return parse(json, anchor, now);
+                }
             }
         } catch (SocketTimeoutException timeoutError) {
             return status("HISTORY_TIMEOUT");
@@ -190,49 +212,121 @@ public final class GFNativeXDripHistory implements AutoCloseable {
         }
     }
 
+    private static JSONArray entries(String text) throws JSONException {
+        JSONTokener json = new JSONTokener(text);
+        Object rows = json.nextValue();
+        if (!(rows instanceof JSONArray) || json.nextClean() != 0)
+            throw new JSONException("Expected one JSON array");
+        return (JSONArray) rows;
+    }
+
     static String parseLatest(String text, long now) {
         try {
-            JSONTokener json = new JSONTokener(text);
-            Object value = json.nextValue();
-            if (!(value instanceof JSONArray) || json.nextClean() != 0) return status("HISTORY_INVALID");
-            JSONArray rows = (JSONArray) value;
+            JSONArray rows = entries(text);
             if (rows.length() == 0) return status("HISTORY_EMPTY");
             if (rows.length() != 1) return status("HISTORY_INVALID");
-            JSONObject row = rows.getJSONObject(0);
-            if (row.has("type") && !"sgv".equals(row.getString("type"))) return status("HISTORY_INVALID");
-            // xDrip+ emits integer mg/dL independently of its glucose-display units.
-            Object glucose = row.get("sgv");
-            if (!(glucose instanceof Integer) || (Integer) glucose < 28 || (Integer) glucose > 540)
-                return status("HISTORY_INVALID");
-            long measured = observationTime(row);
-            if (measured < 946684800000L) return status("HISTORY_INVALID");
-            if (measured > now) return status("WEB_FUTURE_MEASUREMENT");
-            String direction = row.optString("direction", "");
-            String device = row.optString("device", "");
-            double delta = row.optDouble("delta", Double.NaN);
-            return new JSONObject().put("status", "MEASUREMENT").put("transport", "xdrip_loopback_live")
-                .put("measuredAtMs", measured).put("receivedAtMs", now).put("mgdl", glucose)
-                .put("stale", now - measured > TimeUnit.MINUTES.toMillis(15))
-                .put("direction", GFNativeXDrip.knownDirection(direction) ? direction : JSONObject.NULL)
-                .put("device", "Follower".equalsIgnoreCase(device) ? "Follower" : "xDrip+")
-                .put("deltaMgdl", Double.isFinite(delta) ? delta : JSONObject.NULL).toString();
+            JSONObject row = observation(rows.getJSONObject(0), now);
+            long measured = row.getLong("measuredAtMs");
+            return measured > now ? future(measured, now, 1).toString() : row.toString();
         } catch (JSONException | DateTimeParseException invalid) {
             return status("HISTORY_INVALID");
         }
     }
 
+    static String parseWindow(String text, long now) {
+        try {
+            JSONArray rows = entries(text);
+            if (rows.length() == 0) return status("HISTORY_EMPTY");
+            if (rows.length() > MAX_ROWS) return status("HISTORY_INVALID");
+            TreeMap<Long, JSONObject> received = new TreeMap<>();
+            long newestFuture = -1;
+            int futureCount = 0;
+            int invalidCount = 0;
+            for (int i = 0; i < rows.length(); i++) {
+                JSONObject row;
+                try {
+                    row = observation(rows.getJSONObject(i), now);
+                } catch (JSONException | DateTimeParseException invalid) {
+                    invalidCount++;
+                    continue;
+                }
+                long measured = row.getLong("measuredAtMs");
+                if (measured > now) {
+                    newestFuture = Math.max(newestFuture, measured);
+                    futureCount++;
+                    continue;
+                }
+                if (measured < now - HISTORY_MS) continue;
+                JSONObject sameTime = received.putIfAbsent(measured, row);
+                if (sameTime != null && !sameTime.toString().equals(row.toString()))
+                    return status("HISTORY_CONFLICT");
+            }
+            if (received.isEmpty()) {
+                if (futureCount > 0) return future(newestFuture, now, futureCount).toString();
+                return status(invalidCount > 0 ? "HISTORY_INVALID" : "HISTORY_EMPTY");
+            }
+            JSONObject latest = received.pollLastEntry().getValue();
+            JSONArray older = new JSONArray();
+            for (JSONObject point : received.values()) {
+                older.put(new JSONObject().put("measuredAtMs", point.getLong("measuredAtMs"))
+                    .put("mgdl", point.getInt("mgdl")).put("direction", point.get("direction")));
+            }
+            return new JSONObject().put("status", "WEB_WINDOW_READY").put("latest", latest)
+                .put("items", older).put("futureCount", futureCount).put("invalidCount", invalidCount)
+                .put("futureMeasuredAtMs", futureCount > 0 ? newestFuture : JSONObject.NULL).toString();
+        } catch (JSONException invalid) {
+            return status("HISTORY_INVALID");
+        }
+    }
+
+    private static JSONObject observation(JSONObject row, long now) throws JSONException {
+        if (row.has("type") && !"sgv".equals(row.getString("type")))
+            throw new JSONException("The row is not an SGV");
+        // Display units are independent of the integer mg/dL field.
+        Object glucose = row.get("sgv");
+        if (!(glucose instanceof Integer) || (Integer) glucose < 28 || (Integer) glucose > 540)
+            throw new JSONException("Invalid mg/dL observation");
+        long measured = observationTime(row);
+        String direction = row.optString("direction", "");
+        double delta = row.optDouble("delta", Double.NaN);
+        return new JSONObject().put("status", "MEASUREMENT").put("transport", "xdrip_loopback_live")
+            .put("measuredAtMs", measured).put("receivedAtMs", now).put("mgdl", glucose)
+            .put("stale", now - measured > TimeUnit.MINUTES.toMillis(15))
+            .put("direction", GFNativeXDrip.knownDirection(direction) ? direction : JSONObject.NULL)
+            .put("device", "Follower".equalsIgnoreCase(row.optString("device")) ? "Follower" : "xDrip+")
+            .put("deltaMgdl", Double.isFinite(delta) ? delta : JSONObject.NULL);
+    }
+
+    private static JSONObject future(long measured, long received, int count) throws JSONException {
+        return new JSONObject().put("status", "WEB_FUTURE_MEASUREMENT")
+            .put("measuredAtMs", measured).put("receivedAtMs", received).put("futureCount", count);
+    }
+
     private static long observationTime(JSONObject row) throws JSONException {
-        Object epoch = row.opt("date");
-        if (epoch != null && epoch != JSONObject.NULL && !(epoch instanceof Long))
-            throw new JSONException("Invalid measurement time");
+        long minimum = 946684800000L; // 2000-01-01 UTC
+        long maximum = 4102444800000L; // 2100-01-01 UTC
+        long epoch = -1;
+        boolean seconds = false;
+        if (!row.isNull("date")) {
+            Object numeric = row.get("date");
+            if (!(numeric instanceof Integer) && !(numeric instanceof Long))
+                throw new JSONException("Invalid measurement time");
+            epoch = ((Number) numeric).longValue();
+            seconds = epoch >= minimum / 1000 && epoch <= maximum / 1000;
+            if (seconds) epoch *= 1000;
+            if (epoch < minimum || epoch > maximum) throw new JSONException("Invalid measurement epoch");
+        }
         if (!row.isNull("dateString")) {
             String iso = row.getString("dateString").replaceFirst("([+-]\\d{2})(\\d{2})$", "$1:$2");
-            long parsed = OffsetDateTime.parse(iso).toInstant().toEpochMilli();
-            if (epoch instanceof Long && (Long) epoch != parsed)
+            OffsetDateTime dateTime = OffsetDateTime.parse(iso);
+            long parsed = dateTime.toInstant().toEpochMilli();
+            if (parsed < minimum || parsed > maximum) throw new JSONException("Invalid ISO measurement epoch");
+            // A precision difference may account for the fractional part of the same second.
+            if (epoch != -1 && epoch != parsed && !((seconds || !iso.contains(".")) && epoch / 1000 == parsed / 1000))
                 throw new JSONException("Conflicting measurement times");
-            return parsed;
+            return epoch == -1 || seconds ? parsed : epoch;
         }
-        if (epoch instanceof Long) return (Long) epoch;
+        if (epoch != -1) return epoch;
         throw new JSONException("Missing measurement time");
     }
 
