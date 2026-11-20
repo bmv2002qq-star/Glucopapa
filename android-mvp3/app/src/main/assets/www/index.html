@@ -13,6 +13,13 @@
    <article class="card glucose-card"><div class="glucose-top"><div class="glucose-title">Глюкоза</div><span class="chip">CGM · график A</span></div>
     <div class="value"><strong id="homeGlucose">—</strong></div><div class="muted" id="homeCgmInfo">Ожидаем данные xDrip+ Follower</div>
     <div class="chart-wrap" id="cgmChart"><div class="empty">Здесь появится график глюкозы<br>после подключения xDrip+</div></div>
+     <div class="forecast-home-controls" aria-label="Линии прогнозов">
+       <label><input type="checkbox" data-model-visibility="GFConsensus" checked> Средняя</label>
+       <label><input type="checkbox" data-model-visibility="GFForecast" checked> GFForecast</label>
+       <label><input type="checkbox" data-model-visibility="GFxDrip" checked> GFxDrip</label>
+       <label><input type="checkbox" data-model-visibility="GFAPSEnhancer" checked> GFAPS</label>
+     </div>
+     <p id="forecastHomeLegend" class="hint" role="status">Нет сохранённых прогнозов.</p>
     <div class="glucose-actions"><button id="openLow" class="low-btn" type="button">↓ Низкий сахар</button><button id="openHigh" class="high-btn" type="button">↑ Высокий сахар</button></div>
     <button class="basal-quick-shell" id="openBasalQuick" type="button"><span class="basal-icon">💉</span><span><strong>Ввести длинный инсулин</strong><small>Записать фактически выполненный укол</small></span><span aria-hidden="true">›</span></button>
     <div class="target-note"><b>●</b> Тревоги остаются в xDrip+. Экран анализа и ссылки на единую запись действий доступны без повторных форм.</div>
@@ -36,10 +43,11 @@
    <article class="card"><div id="cgmDetailChart" class="chart-wrap"></div><div class="chart-options"><label><input id="showRinfast" type="checkbox" checked> Кривые РинФаста</label><button class="inline-link" type="button" data-screen="analytics">Исследовательский расчёт прогноза</button></div></article>
    <article class="card">
     <details id="forecastGraphOptions"><summary>Исследовательские прогнозы</summary>
+      <label class="check"><input type="checkbox" data-model-visibility="GFConsensus" checked> Средняя (арифметическая)</label>
       <label class="check"><input type="checkbox" data-model-visibility="GFForecast" checked> GFForecast</label>
       <label class="check"><input type="checkbox" data-model-visibility="GFAPSEnhancer" checked> GFAPSEnhancer</label>
       <label class="check"><input type="checkbox" data-model-visibility="GFxDrip" checked> GFxDrip (источник не подключён)</label>
-      <label class="check"><input id="forecastAutoConsensus" type="checkbox" checked> Объединять при достаточной истории</label>
+      <label class="check"><input id="forecastAutoConsensus" type="checkbox" checked> Автоматически анализировать лидера (при достаточной истории)</label>
       <p id="forecastGraphLegend" class="hint" role="status"></p>
     </details>
     <div class="between"><h3>Источник данных</h3><span id="cgmSource" class="chip">Не подключён</span></div>
@@ -271,6 +279,8 @@
 <script src="integration/GFConsensusReview_v0.1.0.js"></script>
 <script src="integration/GFResearchForecastRun_v0.1.0.js"></script>
 <script src="integration/GFResearchForecastGraph_v0.1.0.js"></script>
+<script src="integration/GFConsensusAutoSelection_v0.1.2.js"></script>
+<script src="integration/GFGraphFourLines_v0.1.0.js"></script>
 <script src="integration/GFLevemirReview_v0.1.0.js"></script>
 <script src="app.js"></script>
 <script src="integration/GFModuleUI_v0.2.1.js"></script><script src="integration/GFModuleDirectory_v0.1.0.js"></script><script src="integration/GFSettingsPanel_v0.1.0.js"></script><script src="integration/GFMealActualPanel_v0.1.0.js"></script>
