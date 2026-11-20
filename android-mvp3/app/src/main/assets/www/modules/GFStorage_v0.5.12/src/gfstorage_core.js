@@ -16,6 +16,8 @@
   if(!TimeGrid)throw Error('GFTimeGrid dependency required');
   const XDRIP_ID='xdrip-local-provider', XDRIP_TYPE='xdrip_local';
   const XDRIP_HISTORY='xdrip_loopback_history', XDRIP_HISTORY_WINDOW=24*60*60*1000;
+  const XDRIP_WEB='xdrip_loopback_live';
+  const QUICK_FOOD_IDS=Object.freeze(['gf:00444','legacy:0075','legacy:0022','legacy:0145','legacy:0038','legacy:0040']);
   const isXDripHistory=row=>row.transport===XDRIP_HISTORY;
   // xDrip+ Constants.MMOLL_TO_MGDL. Store both the upstream value and the converted observation.
   const XDRIP_MGDL_PER_MMOL=18.01559;
@@ -289,14 +291,20 @@
     iso(x);const t=Date.parse(x);if(t<ts)fail('CGM получен раньше измерения');return x;
   }
   function xdripObservation(x){
-    requireFields(x,['ts','mgdl','receivedAt','direction','staleAtReceipt'],['ts','mgdl','receivedAt','direction','staleAtReceipt']);
+    const fields=['ts','mgdl','receivedAt','direction','staleAtReceipt'];
+    requireFields(x,[...fields,'transport','device','deltaMgdl'],fields);
     if(!Number.isSafeInteger(x.ts)||x.ts<946684800000||x.ts>4102444800000)fail('CGM_XDRIP_TIMESTAMP');
     validReceipt(x.receivedAt,x.ts);
     const mmol=range(x.mgdl,1.5*XDRIP_MGDL_PER_MMOL,30*XDRIP_MGDL_PER_MMOL)/XDRIP_MGDL_PER_MMOL;
     if(x.direction!==null&&!DIRECTIONS.includes(x.direction))fail('CGM_XDRIP_TREND');
     if(x.staleAtReceipt!==null&&typeof x.staleAtReceipt!=='boolean')fail('CGM_XDRIP_FRESHNESS');
-    return {ts:x.ts,mmol,source:XDRIP_TYPE,kind:'observed',sourceDeviceId:XDRIP_ID,
+    const result={ts:x.ts,mmol,source:XDRIP_TYPE,kind:'observed',sourceDeviceId:XDRIP_ID,
       mgdl:x.mgdl,receivedAt:x.receivedAt,direction:x.direction,staleAtReceipt:x.staleAtReceipt};
+    if(x.transport===undefined&&!Object.hasOwn(x,'device')&&!Object.hasOwn(x,'deltaMgdl'))return result;
+    if(x.transport!==XDRIP_WEB||!Number.isInteger(x.mgdl)||!['Follower','xDrip+'].includes(x.device)||
+      (x.deltaMgdl!==null&&!Number.isFinite(x.deltaMgdl))||
+      x.staleAtReceipt!==(Date.parse(x.receivedAt)-x.ts>15*60000))fail('CGM_XDRIP_WEB_FORMAT');
+    return {...result,transport:XDRIP_WEB,device:x.device,deltaMgdl:x.deltaMgdl};
   }
   function xdripHistoricalObservation({ts,mgdl,receivedAt,direction}){
     if(!Number.isInteger(mgdl))fail('CGM_XDRIP_HISTORY_FORMAT');
@@ -341,8 +349,9 @@
         for(const x of s.cgm.filter(r=>r.sourceDeviceId!==undefined)){
           const {ts,mgdl,receivedAt,direction,staleAtReceipt}=x;
           const historical=isXDripHistory(x);
+          const web=x.transport===XDRIP_WEB?{transport:x.transport,device:x.device,deltaMgdl:x.deltaMgdl}:{};
           const reading=historical?xdripHistoricalObservation({ts,mgdl,receivedAt,direction}):
-            xdripObservation({ts,mgdl,receivedAt,direction,staleAtReceipt});
+            xdripObservation({ts,mgdl,receivedAt,direction,staleAtReceipt,...web});
           if(historical)latestHistory=Math.max(latestHistory,ts);
           else latestProvider=Math.max(latestProvider,ts);
           if(times.has(ts)||Object.keys(x).length!==Object.keys(reading).length||
@@ -430,6 +439,20 @@
     return saved;
   }
   function createHost({driver=null,clock=()=>new Date().toISOString()}={}){
+    let approvedQuickFoods=[];
+    function bindApprovedQuickFoods(raw){
+      if(!Array.isArray(raw))fail('Нет утверждённого каталога продуктов');
+      approvedQuickFoods=QUICK_FOOD_IDS.map(foodId=>{
+        const item=raw.find(row=>row?.id===foodId&&row.venueId===null);
+        if(!item||!['г','мл'].includes(item.unit))fail('Продукт отсутствует в каталоге: '+foodId);
+        const {name,unit,nutritionStatus,glycemicIndex,glycemicIndexStatus,carbs,protein,fat,kcal}=item;
+        const plateItem={kind:'catalog',foodId,name,amount:100,unit,nutritionStatus,
+          glycemicIndex:glycemicIndex??null,glycemicIndexStatus:glycemicIndexStatus||'unknown',carbs,protein,fat,kcal};
+        validData(plateItem);
+        for(const key of ['carbs','protein','fat','kcal'])range(plateItem[key],0,100000);
+        return plateItem;
+      });
+    }
     if(driver && (typeof driver.load!=='function'||typeof driver.save!=='function'))fail('Драйвер должен иметь load/save');
     const loaded=driver?driver.load():null;
     let state=loaded===null||loaded===undefined?emptyState():validateStored(migrateStored(loaded));
@@ -605,6 +628,7 @@
           });
         };
       }
+      if(role==='lowReview')port.getApprovedQuickFoods=()=>frozen(approvedQuickFoods);
       if(role==='settings'){
         port.setHighSettings=(patch,rev)=>commit(role,'profile','set_high_settings',(d,now)=>{
           requireFields(patch,['targetMmol','activity']);
@@ -760,7 +784,8 @@
         },rev);
       }
       if(role==='cgmAdapter'){
-        port.ingestXDripObservation=(observation,rev)=>commit(role,'cgm','ingest_xdrip_provider', (d,now)=>{
+        port.ingestXDripObservation=(observation,rev)=>commit(role,'cgm',
+          observation?.transport===XDRIP_WEB?'ingest_xdrip_web':'ingest_xdrip_provider', (d,now)=>{
           const row=xdripObservation(observation);
           if(Date.parse(row.receivedAt)>Date.parse(now))fail('CGM_XDRIP_FUTURE_RECEIPT');
           if(d.cgmMetadata&&d.cgmMetadata.sourceType!==XDRIP_TYPE)fail('CGM_SOURCE_CONFLICT');
@@ -770,6 +795,12 @@
             const old=d.cgm[index];
             if(isXDripHistory(old)){
               d.cgm[index]=row; // Direct observations take precedence over retrospective data.
+              return XDRIP_ID+':'+row.ts;
+            }
+            if((old.transport===XDRIP_WEB)!==(row.transport===XDRIP_WEB)){
+              if(Math.trunc(old.mgdl)!==Math.trunc(row.mgdl))fail('CGM_XDRIP_CONFLICT');
+              if(row.transport===XDRIP_WEB)return null;
+              d.cgm[index]=row;
               return XDRIP_ID+':'+row.ts;
             }
             if(old.mgdl!==row.mgdl)fail('CGM_XDRIP_CONFLICT');
@@ -791,7 +822,7 @@
           const known=new Map(d.cgm.filter(row=>row.sourceDeviceId===XDRIP_ID).map(row=>[row.ts,row]));
           const legacy=new Set(d.cgm.filter(row=>row.sourceDeviceId===undefined).map(row=>row.ts));
           const anchor=known.get(anchorTs);
-          if(!anchor||isXDripHistory(anchor)||Math.trunc(anchor.mgdl)!==anchorSgv||
+          if(!anchor||anchor.transport!==undefined||Math.trunc(anchor.mgdl)!==anchorSgv||
               Date.parse(anchor.receivedAt)>receipt)fail('CGM_XDRIP_HISTORY_ANCHOR');
           const incoming=new Map();
           for(const item of items){
@@ -925,7 +956,7 @@
           id(item.injectionId);drug(item.insulinId);range(item.units,0.001,200);iso(item.administeredAt);
           if(Date.parse(item.administeredAt)>Date.parse(clock())+60000)fail('Нельзя подтверждать будущую инъекцию');
           return changeSession(role,'confirm_injection',item.sessionId,item.expectedVersion,item.opId,rev,(old,d,now)=>{
-            requireMeal(old,'planned','started','completed');
+            requireMeal(old,'draft','planned','started','completed');
             if(d.events.some(x=>x.id===item.injectionId))fail('Повтор идентификатора фактической инъекции');
             assertNoPhysicalInjectionDuplicate(d,item);
             const next=mark(old,now);next.injectionIds.push(item.injectionId);
@@ -1072,7 +1103,7 @@
       return Object.freeze(port);
     }
     return Object.freeze({
-      connect, getSchemaVersion:()=>SCHEMA_VERSION,
+      connect, getSchemaVersion:()=>SCHEMA_VERSION, bindApprovedQuickFoods,
       exportState:()=>frozen(state),
       diagnostics:()=>frozen({version:VERSION,schemaVersion:SCHEMA_VERSION,revision:state.revision,persistent:!!driver,clinicalValidation:false}),
       // Host-only import is intentionally absent: restore must be verified by a future native adapter.

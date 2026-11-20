@@ -111,7 +111,9 @@ def run(browser, origin, output):
     assert state() == empty
     page.evaluate("GPApp.open('approved-low')")
     assert frame.locator('#heroGlucose').inner_text() == '—'
-    assert frame.locator('#calcProduct option').count() == 1
+    assert frame.locator('#calcProduct option').count() == 7
+    assert 'Яблоко' in frame.locator('#calcProduct').inner_text()
+    assert 'Синтетическая гречка' not in frame.locator('#calcProduct').inner_text()
     assert not errors, errors
     return {'status': 'PASS', 'widths': [320, 390, 428, 1280], 'safe_empty_model': True,
             'synthetic_low_remains_visible_without_history': True,

@@ -4,8 +4,8 @@
  */
 (() => {
 'use strict';
-const VER='0.3.15-pilot', MODE_KEY='GFV2SHELL_MODE_v1', DATA_PREFIX='GFV2SHELL_DATA_v1_';
-const XDRIP_KEY='GFV2SHELL_XDRIP_LOCAL_v1';
+const VER='0.3.16-qa', MODE_KEY='GFV2SHELL_MODE_v1', DATA_PREFIX='GFV2SHELL_DATA_v1_';
+const XDRIP_KEY='GFV2SHELL_XDRIP_LOCAL_v1', XDRIP_SOURCE_KEY='GFV2SHELL_XDRIP_SOURCE_v1';
 const $=id=>document.getElementById(id), escape=s=>String(s===null||s===undefined?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=(n,d=1)=>Number.isFinite(n)?n.toLocaleString('ru-RU',{maximumFractionDigits:d}):'—';
 const uid=p=>p+'-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,10);
@@ -13,7 +13,10 @@ const nowISO=()=>new Date().toISOString();
 const localInputTime=(d=new Date())=>new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,16);
 const testJournal=globalThis.GFTestJournal;
 let mode='local',host=null,unsub=null,controller=null,bridge=null,settingsService=null,activeMeal=null,lastSafety=null,noticeTimer=null,sportMenuOpen=false;
-let fileOperation=null,xdripStatus='',xdripTimer,xdripHistoryRequest=null;
+let fileOperation=null,xdripStatus='',xdripRequest=null,xdripHistoryRequest=null;
+const routes=[],foodRoutes=[];
+let returningInsideFood=false, mealDoseContext=false;
+let approvedQuickFoodSource;
 const MODULES=[
  ['GFStorage v'+(globalThis.GFStorage?.VERSION||'—'),'Android SQLite CAS, спорт и журнал','on'],['GFActionWriter','Единая запись фактических действий','on'],
  ['GFMealController / GFMealCalc','Факты еды и поиск; численный расчёт дозы не подключён','limited'],['GFCoefficients v0.1.2','Исторический анализ','on'],['GFCoefficientReview v0.1.1','Единые 4×6 ч интервалы и проверка старых записей','on'],
@@ -102,6 +105,7 @@ function boot(selectedMode=mode){
  if(missing.length)throw new Error('Отсутствуют модули: '+missing.join(', '));
  // A failed load must leave the active journal, mode preference and subscribers intact.
  const nextHost=GFStorage.createHost({driver:getDriver(selectedMode)});
+ if(approvedQuickFoodSource)nextHost.bindApprovedQuickFoods(approvedQuickFoodSource);
  const nextController=GFMealController.createController(nextHost);
  const nextBridge=GFSafetyStorageBridge.connect(nextHost,GFSafety);
  const nextSettings=GFSettings.createSettingsService({settingsPort:nextHost.connect('settings')});
@@ -137,6 +141,7 @@ function boot(selectedMode=mode){
  $('xdripControls').hidden=mode!=='local'||!globalThis.GFNativeXDrip;
  $('xdripHistoryControls').hidden=!globalThis.GFNativeXDripHistory;
  $('xdripEnabled').checked=xdripEnabled();
+ $('xdripSourceMode').value=xdripSourceMode();
  $('backupControls').hidden=!globalThis.AndroidExporter?.saveBackup;
  $('aiExportControls').hidden=!globalThis.AndroidExporter?.saveAiExport;
  if(switched||!xdripEnabled())xdripStatus='';
@@ -149,7 +154,49 @@ function boot(selectedMode=mode){
 }
 function port(role){return host.connect(role);}
 function state(){return host.exportState();}
-function screen(id){if(id==='journal')id='approved-journal';document.querySelectorAll('.screen').forEach(e=>e.classList.toggle('active',e.id==='screen-'+id));const group={cgm:'home',injections:'journal',settings:'system','insulin-models':'analytics','injection-sites':'analytics',reports:'system',sync:'system',highlow:'home','approved-journal':'journal','approved-nutrition':'meals','approved-settings':'system','approved-low':'home','approved-high':'home','module-detail':'modules',research:'system'}[id]||id;document.querySelectorAll('#nav button').forEach(e=>e.classList.toggle('selected',e.dataset.screen===group));const names={home:'Главная',cgm:'Глюкоза',injections:'Инъекции',meals:'Продукты',journal:'Дневник',analytics:'Анализ',settings:'Настройки',system:'Ещё','insulin-models':'Инсулиновые модели','injection-sites':'Места инъекций',reports:'Отчёты',sync:'Синхронизация',highlow:'Высокий / низкий сахар','approved-nutrition':'Моя тарелка','approved-journal':'Дневник','approved-settings':'Настройки','approved-low':'Низкий сахар','approved-high':'Высокий сахар',modules:'Модули','module-detail':'Модуль',research:'Исследовательские модули'};$('pageTitle').textContent=names[id]||'Главная';document.body.dataset.activeScreen=id;window.scrollTo(0,0);render();globalThis.GPModuleUI?.refresh?.();setTimeout(broadcastApproved,0);}
+function screen(id,back=false){
+ if(id==='journal')id='approved-journal';
+ if(id!=='injections'&&mealDoseContext)setMealDoseContext(false);
+ if(!$('screen-'+id))return;
+ const from=document.body.dataset.activeScreen||'home';
+ if(!back&&id!==from){
+   if(routes.at(-1)?.id===id)routes.pop();
+   else routes.push({id:from,scroll:window.scrollY});
+ }document.querySelectorAll('.screen').forEach(e=>e.classList.toggle('active',e.id==='screen-'+id));const group={cgm:'home',injections:'journal',settings:'system','insulin-models':'analytics','injection-sites':'analytics',reports:'system',sync:'system',highlow:'home','approved-journal':'journal','approved-nutrition':'meals','approved-settings':'system','approved-low':'home','approved-high':'home','module-detail':'modules',research:'system'}[id]||id;document.querySelectorAll('#nav button').forEach(e=>e.classList.toggle('selected',e.dataset.screen===(group==='analytics'?'coefficients':group==='system'?'approved-settings':group)));const names={home:'Главная',cgm:'Глюкоза',injections:'Инъекции',meals:'Продукты',journal:'Дневник',analytics:'Техническая диагностика',coefficients:'Коэффициенты',settings:'Настройки',system:'Ещё','insulin-models':'Инсулиновые модели','injection-sites':'Места инъекций',reports:'Отчёты',sync:'Синхронизация',highlow:'Высокий / низкий сахар','approved-nutrition':'Моя тарелка','approved-journal':'Дневник','approved-settings':'Настройки','approved-low':'Низкий сахар','approved-high':'Высокий сахар',modules:'Модули','module-detail':'Модуль',research:'Исследовательские модули'};$('pageTitle').textContent=names[id]||'Главная';document.body.dataset.activeScreen=id;window.scrollTo(0,0);render();if(id==='coefficients')renderCoefficients();globalThis.GPModuleUI?.refresh?.();setTimeout(broadcastApproved,0);}
+function back(){
+ const active=document.body.dataset.activeScreen||'home';
+ if(active==='approved-nutrition'){
+   const peer=approvedPeer('nutrition')?.peer, frame=peer?.document;
+   if(frame?.getElementById('foodModal')?.classList.contains('on')){
+     frame.getElementById('modalClose').click(); return true;
+   }
+   const pantry=frame?.getElementById('pantryModal');
+   if(pantry?.open){pantry.close();return true;}
+   const foodRoute=foodRoutes.pop();
+   if(foodRoute&&peer?.GFFoodDemo){
+     returningInsideFood=true;
+     try{
+       peer.GFFoodDemo.setTab(foodRoute.tab);
+       if(foodRoute.tab==='restaurants'){
+         const places=[...frame.querySelectorAll('[data-venue]')];
+         if(foodRoute.venue==='*')frame.getElementById('showAllVenues').click();
+         else places.find(node=>node.dataset.venue===foodRoute.venue)?.click();
+         [...frame.querySelectorAll('[data-venuecat]')].find(node=>node.dataset.venuecat===foodRoute.category)?.click();
+         const search=frame.getElementById('restaurantSearch');
+         search.value=foodRoute.query;
+         search.dispatchEvent(new Event('input',{bubbles:true}));
+       }
+       requestAnimationFrame(()=>{peer.scrollTo(0,foodRoute.frameScroll);window.scrollTo(0,foodRoute.shellScroll);});
+     }finally{returningInsideFood=false;}
+     return true;
+   }
+ }
+ const previous=routes.pop();
+ if(!previous)return false;
+ screen(previous.id,true);
+ requestAnimationFrame(()=>window.scrollTo(0,previous.scroll));
+ return true;
+}
 function rowsMarkup(rows,mapper,max=50){if(!rows.length)return '<div class="empty">Записей пока нет</div>';return '<div class="events">'+rows.slice(-max).reverse().map(mapper).join('')+'</div>';}
 function eventMarkup(title,details,time){return '<div class="event"><div class="event-text"><b>'+escape(title)+'</b><small>'+escape(details)+'</small></div><time>'+escape(time)+'</time></div>';}
 function formatAt(v){try{return new Date(v).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});}catch{return '—';}}
@@ -171,7 +218,9 @@ function renderSport(s,all){
  $('sportControls').hidden=!sportMenuOpen;$('sportStart').hidden=!!p;$('sportFinish').hidden=!p;
  if(sportMenuOpen)showSportClock(s);
  const rows=all.rows.filter(r=>r.kind==='sport');
- $('approvedSportRows').innerHTML=rowsMarkup(rows,r=>eventMarkup(r.description,r.status==='active'?'Занятие продолжается':'Завершено · '+fmt(r.durationMinutes)+' мин',r.time),30);
+ const summary=$('approvedSportRows');
+ if(!summary)return;
+ summary.innerHTML=rowsMarkup(rows,r=>eventMarkup(r.description,r.status==='active'?'Занятие продолжается':'Завершено · '+fmt(r.durationMinutes)+' мин',r.time),30);
 }
 function chooseActivity(value){
  if(activeSport(state())){
@@ -433,9 +482,11 @@ function doMeal(method){
  render();
 }
 function xdripEnabled(){return mode==='local'&&readPreference(XDRIP_KEY)==='on';}
+function xdripSourceMode(){return readPreference(XDRIP_SOURCE_KEY)||'auto';}
 function renderXdripStatus(){
- $('refreshXdrip').disabled=!xdripEnabled();
- $('restoreXdripHistory').disabled=!xdripEnabled()||!!xdripHistoryRequest;
+ $('refreshXdrip').disabled=!xdripEnabled()||!!xdripRequest;
+ $('xdripSourceMode').disabled=!xdripEnabled();
+ $('restoreXdripHistory').disabled=!xdripEnabled()||!!xdripHistoryRequest||!!xdripRequest;
  $('xdripStatus').textContent=xdripEnabled()?xdripStatus||'Поиск локального источника':'Чтение выключено';
 }
 const XDRIP_STATUS=Object.freeze({
@@ -447,22 +498,83 @@ const XDRIP_STATUS=Object.freeze({
  UNEXPECTED_PROVIDER:'Пакет источника отличается от xDrip+',PROVIDER_READ_FAILED:'Ошибка чтения xDrip+',
  UNAVAILABLE:'Нет доступа к локальному источнику'
 });
-function acceptXDrip(raw){
- if(!xdripEnabled()||document.hidden)return;
- try{
-   const result=GFProviderCgm.ingest(host,mode,JSON.parse(raw));
-   xdripStatus=XDRIP_STATUS[result.status]||'Неизвестный ответ xDrip+';
- }catch(error){
-   xdripStatus='GFStorage отклонил наблюдение ('+String(error.message||error)+')';
- }
- renderXdripStatus();
+function acceptXDrip(reply){
+ return GFProviderCgm.ingest(host,mode,reply);
 }
+const WEB_STATUS=Object.freeze({
+ HISTORY_UNAVAILABLE:'Web Service выключен или недоступен',
+ HISTORY_EMPTY:'Web Service не вернул показаний',
+ HISTORY_INVALID:'Некорректные время, единицы или формат Web Service',
+ HISTORY_HTTP_ERROR:'Web Service отклонил запрос',
+ HISTORY_TOO_LARGE:'Ответ Web Service превышает допустимый размер',
+ HISTORY_TIMEOUT:'Web Service не ответил вовремя',
+ HISTORY_BUSY:'Web Service занят другим запросом',
+ WEB_FUTURE_MEASUREMENT:'Время показания Web Service находится в будущем',
+});
 function requestXDrip(){
- const source=globalThis.GFNativeXDrip;
- if(!host||!source||!xdripEnabled()||document.hidden)return;
- acceptXDrip(source.pollLatest());
- clearTimeout(xdripTimer);
- xdripTimer=setTimeout(()=>acceptXDrip(source.peekLatest()),1100);
+ const provider=globalThis.GFNativeXDrip, web=globalThis.GFNativeXDripHistory;
+ if(!host||!provider||!xdripEnabled()||document.hidden||xdripRequest||xdripHistoryRequest)return;
+ const sourceMode=xdripSourceMode(), request={host};
+ xdripRequest=request;
+ xdripStatus='Получаем показание xDrip+…';
+ renderXdripStatus();
+ function current(){return request===xdripRequest&&request.host===host&&xdripEnabled()&&!document.hidden;}
+ function end(message){
+   if(!current())return;
+   xdripRequest=null;
+   xdripStatus=message;
+   renderXdripStatus();
+ }
+ function save(packet,channel){
+   try{
+     const outcome=acceptXDrip(packet);
+     const value=fmt(packet.mgdl/18.01559), measured=new Date(packet.measuredAtMs).toLocaleString('ru-RU');
+     const received=new Date(packet.receivedAtMs).toLocaleTimeString('ru-RU');
+     const state={OBSERVED:'Показание',STALE:'Устаревшее показание',FRESHNESS_UNKNOWN:'Свежесть не подтверждена'}[outcome.status];
+     end(channel+' · '+state+' '+value+' ммоль/л · измерено '+measured+' · получено '+received);
+   }catch(error){end(channel+' · '+(error.message==='CGM_XDRIP_CONFLICT'?
+     'Значение расходится с сохранённым измерением. Новая запись отклонена.':'Не удалось сохранить показание в журнале.'));}
+ }
+ function fromProvider(reason=''){
+   xdripStatus=(reason?reason+' · ':'')+'Запрос ContentProvider…';
+   renderXdripStatus();
+   const until=performance.now()+5400;
+   provider.pollLatest();
+   function poll(){
+     if(!current())return;
+     const reply=JSON.parse(provider.peekLatest());
+     if(reply.status==='READING'&&performance.now()<until){setTimeout(poll,250);return;}
+     if(reply.status==='MEASUREMENT'){save(reply,'ContentProvider');return;}
+     end((reason?reason+' · ':'')+(XDRIP_STATUS[reply.status==='READING'?'PROVIDER_TIMEOUT':reply.status]||
+       'ContentProvider не вернул показание.'));
+   }
+   setTimeout(poll,250);
+ }
+ function failedWeb(code){
+   const reason=WEB_STATUS[code]||'Локальный Web Service недоступен';
+   if(sourceMode==='auto')fromProvider(reason);
+   else end(reason);
+ }
+ if(sourceMode==='provider'){fromProvider();return;}
+ if(!web?.requestLatest){failedWeb('HISTORY_UNAVAILABLE');return;}
+ const start=JSON.parse(web.requestLatest());
+ if(start.status!=='HISTORY_FETCHING'){failedWeb(start.status);return;}
+ const until=performance.now()+5400;
+ function pollWeb(){
+   if(!current())return;
+   const raw=web.takeLatest();
+   if(!raw){
+     if(performance.now()<until)setTimeout(pollWeb,250);
+     else failedWeb('HISTORY_TIMEOUT');
+     return;
+   }
+   const reply=JSON.parse(raw);
+   if(reply.status==='MEASUREMENT'){
+     if(reply.stale&&sourceMode==='auto')fromProvider('Показание Web Service устарело');
+     else save(reply,'Локальный Web Service');
+   }else failedWeb(reply.status);
+ }
+ setTimeout(pollWeb,250);
 }
 const HISTORY_STATUS=Object.freeze({
  HISTORY_NEEDS_PROVIDER:'Сначала получите показание через ContentProvider xDrip+.',
@@ -485,24 +597,20 @@ function finishXDripHistory(text) {
  renderXdripStatus();
 }
 function restoreXDripHistory(){
- const source=globalThis.GFNativeXDripHistory;
- if(!source||!host||!xdripEnabled()||document.hidden||xdripHistoryRequest)return;
- acceptXDrip(globalThis.GFNativeXDrip.peekLatest());
- const reply=JSON.parse(source.request());
- if(reply.status!=='HISTORY_FETCHING'){
-   finishXDripHistory(HISTORY_STATUS[reply.status]||'История CGM недоступна.');
-   return;
- }
- const request={host,deadline:performance.now()+7000};
+ const source=globalThis.GFNativeXDripHistory, provider=globalThis.GFNativeXDrip;
+ if(!source||!provider||!host||!xdripEnabled()||document.hidden||xdripHistoryRequest||xdripRequest)return;
+ const request={host,deadline:performance.now()+5500};
  xdripHistoryRequest=request;
- $('xdripHistoryStatus').textContent='Получаем историю CGM…';
+ $('xdripHistoryStatus').textContent='Получаем контрольное показание ContentProvider…';
  renderXdripStatus();
+ function current(){
+   if(xdripHistoryRequest!==request)return false;
+   if(request.host===host&&xdripEnabled()&&!document.hidden)return true;
+   finishXDripHistory('Импорт истории прерван.');
+   return false;
+ }
  function check(){
-   if(xdripHistoryRequest!==request)return;
-   if(request.host!==host||!xdripEnabled()||document.hidden){
-     finishXDripHistory('Импорт истории прерван.');
-     return;
-   }
+   if(!current())return;
    try{
      const raw=source.take();
      if(!raw){
@@ -518,7 +626,27 @@ function restoreXDripHistory(){
      finishXDripHistory(HISTORY_STATUS[error.message]||'История не сохранена. Проверьте доступность журнала.');
    }
  }
- setTimeout(check,250);
+ function findAnchor(){
+   if(!current())return;
+   const observation=JSON.parse(provider.peekLatest());
+   if(observation.status==='READING'&&performance.now()<request.deadline){setTimeout(findAnchor,250);return;}
+   if(observation.status!=='MEASUREMENT'){
+     finishXDripHistory(HISTORY_STATUS.HISTORY_NEEDS_PROVIDER);
+     return;
+   }
+   try{acceptXDrip(observation);}
+   catch(error){finishXDripHistory('Контрольное показание ContentProvider отклонено: '+error.message);return;}
+   const reply=JSON.parse(source.request());
+   if(reply.status!=='HISTORY_FETCHING'){
+     finishXDripHistory(HISTORY_STATUS[reply.status]||'История CGM недоступна.');
+     return;
+   }
+   request.deadline=performance.now()+7000;
+   $('xdripHistoryStatus').textContent='Получаем историю CGM…';
+   setTimeout(check,250);
+ }
+ provider.pollLatest();
+ setTimeout(findAnchor,250);
 }
 function setFileOperation(next){
  fileOperation=next;
@@ -601,9 +729,15 @@ function setupLocalFilesAndSource(){
  $('xdripEnabled').addEventListener('change',wrap(e=>{
    if(mode!=='local')return;
    savePreference(XDRIP_KEY,e.target.checked?'on':'off');
+   xdripRequest=null;
    if(!e.target.checked&&xdripHistoryRequest)finishXDripHistory('Импорт истории прерван.');
    xdripStatus='';
    renderXdripStatus();
+   requestXDrip();
+ }));
+ $('xdripSourceMode').addEventListener('change',wrap(e=>{
+   savePreference(XDRIP_SOURCE_KEY,e.target.value);
+   xdripRequest=null;
    requestXDrip();
  }));
  $('refreshXdrip').addEventListener('click',wrap(requestXDrip));
@@ -612,28 +746,110 @@ function setupLocalFilesAndSource(){
  $('saveAiExport').addEventListener('click',saveAiExport);
  $('openBackup').addEventListener('click',wrap(openBackup));
  document.addEventListener('visibilitychange',wrap(()=>{
-   if(document.hidden&&xdripHistoryRequest)finishXDripHistory('Импорт истории прерван.');
+   if(document.hidden){
+     xdripRequest=null;
+     if(xdripHistoryRequest)finishXDripHistory('Импорт истории прерван.');
+   }
    requestXDrip();
  }));
 }
 function wrap(fn){return e=>{try{fn(e);}catch(ex){console.error(ex);notify(String(ex.message||ex),true);}};}
+function setMealDoseContext(open){
+ mealDoseContext=open;
+ $('mealDoseContext').hidden=!open;
+ $('actualDoseLabel').textContent=open?'Моя доза · фактически введено, ЕД':'Фактически введено, ЕД';
+ $('saveActualInjection').textContent=open?'Сделал укол':'Сохранить фактический укол';
+ $('injectionDrug').disabled=open;
+}
+function openMealInjection(peer){
+ const plate=peer.GFFoodDemo.exportPlate();
+ registerApprovedPlate(plate);
+ const evidence=GFCalculationEvidence.inspect({host,route:'meal',activeMeal,nowMs:Date.now()});
+ $('injectionForm').reset();
+ $('injectionDrug').value='rinfast';
+ $('injectionTime').value=localInputTime();
+ $('mealModelDose').value='Недоступно';
+ $('mealDoseReason').textContent=evidence.blockers?.[0]?.message||'Нет согласованного расчёта по текущим данным.';
+ setMealDoseContext(true);
+ screen('injections');
+ $('injectionMeal').value=activeMeal;
+}
 function submitInjection(event){
  event.preventDefault();
- if(!$('injectionConfirm').checked)throw Error('Нужно подтвердить выполненную инъекцию');
  const units=numericField('injectionUnits'), time=new Date($('injectionTime').value);
  if(units<=0||Math.abs(units*2-Math.round(units*2))>1e-8)throw Error('Доза должна быть положительной и кратной 0,5 ЕД');
  if(!Number.isFinite(time.getTime()))throw Error('Неверное время');
  if(time.getTime()>Date.now()+60000)throw Error('Факт инъекции не может быть в будущем');
- const item={id:uid('inj'),insulinId:$('injectionDrug').value,units,administeredAt:time.toISOString()};
+ const item={id:uid('inj'),insulinId:mealDoseContext?'rinfast':$('injectionDrug').value,units,administeredAt:time.toISOString()};
  const region=$('injectionRegion').value,side=$('injectionSide').value;
  if(region)item.injectionSite={region,...(side?{side}:{})};
- const mealId=item.insulinId==='rinfast'?$('injectionMeal').value:null;
+ const mealId=mealDoseContext?activeMeal:item.insulinId==='rinfast'?$('injectionMeal').value:null;
  GFInjectionFact.record({host,item,mealId,confirmed:true,revision:port('actionWriter').getRevision()});
- $('injectionForm').reset();$('injectionTime').value=localInputTime();$('basalEntryContext').hidden=true;
+ $('injectionForm').reset();$('injectionTime').value=localInputTime();$('basalEntryContext').hidden=true;setMealDoseContext(false);
  notify('Фактическая инъекция записана один раз');
  render();
 }
+function renderCoefficients(){
+ const view=settingsService.getView(),kind=$('coefficientKind').value;
+ const selected=GFTimeGrid.SLOTS[Number($('coefficientWindow').value)];
+ const entries=view.coefficients.filter(row=>row.kind===kind&&row.windowLocal?.from===selected.from&&
+   row.windowLocal?.to===selected.to);
+ const current=view.coefficients.find(row=>row.kind===kind&&row.isEffectiveAt&&row.source==='manual');
+ const mode=view.coefficientModes[kind];
+ $('coefficientMode').value=mode;
+ $('coefficientEffective').textContent=mode==='auto'?'Авто: статистика истории. Применение нового значения требует подтверждения.':
+   current?'Сейчас '+fmt(current.value,4)+' · '+current.windowLocal.from+'–'+current.windowLocal.to+' · ручное значение':
+   'Для текущего интервала ручное значение не задано.';
+ $('coefficientValue').value=entries.find(row=>row.source==='manual'&&row.isLatestRevision)?.value??'';
+ $('coefficientValue').disabled=mode==='auto';
+ $('coefficientApply').disabled=mode==='auto';
+ const history=$('coefficientHistory');
+ history.replaceChildren(...entries.map(row=>{
+   const line=document.createElement('div');line.className='actions';
+   const label=document.createElement('span');
+   label.textContent=formatAt(row.effectiveFrom)+' · '+fmt(row.value,4)+' · '+row.sourceLabel;
+   line.append(label);
+   if(row.source==='manual'){
+     const reuse=document.createElement('button');reuse.type='button';reuse.className='btn secondary';
+     reuse.textContent='Выбрать значение';reuse.disabled=mode==='auto';
+     reuse.onclick=()=>{$('coefficientValue').value=String(row.value);};
+     line.append(reuse);
+   }
+   return line;
+ }));
+ if(!entries.length)history.textContent='В выбранном интервале пока нет записей.';
+ const activity={low:'Низкая',usual:'Обычная',high:'Высокая',sport:'Спорт'};
+ const sport=activeSport(state());
+ $('coefficientContext').textContent='Активность: '+(sport?'Спорт':activity[view.profile.activityBaseLevel]||'—')+
+   ' · Болезнь: '+(view.illness.active?'активна':'выключена')+' · коэффициент '+
+   (view.illness.effectiveFactor===null?'не задан':view.illness.effectiveFactor.toFixed(2).replace('.',','));
+}
+function setupCoefficients(){
+ const periods=$('coefficientWindow');
+ periods.replaceChildren(...GFTimeGrid.SLOTS.map((row,index)=>new Option(row.from+'–'+row.to,String(index))));
+ for(const id of ['coefficientKind','coefficientWindow'])$(id).addEventListener('change',wrap(renderCoefficients));
+ $('coefficientMode').addEventListener('change',wrap(e=>{
+   settingsService.setCoefficientMode($('coefficientKind').value,e.target.value,port('settings').getRevision());
+   renderCoefficients();
+ }));
+ $('coefficientForm').addEventListener('submit',wrap(e=>{
+   e.preventDefault();
+   const {from,to}=GFTimeGrid.SLOTS[Number(periods.value)];
+   settingsService.addCoefficient({kind:$('coefficientKind').value,value:numericField('coefficientValue'),
+     source:'manual',windowLocal:{from,to},sourceNote:'Ручной ввод'},port('settings').getRevision());
+   $('coefficientMessage').textContent='Значение сохранено в истории выбранного интервала.';
+   renderCoefficients();
+ }));
+ $('coefficientRecalculate').addEventListener('click',wrap(()=>{
+   const result=GFCoefficients.createService({researchPort:port('research')}).run({asOfIso:nowISO(),windowDays:7});
+   const stats=result.statistics;
+   $('coefficientMessage').textContent='Период 7 дней · '+stats.confirmedInjections+' инъекций · '+
+     stats.meals+' подтверждённых приёмов · '+stats.mealPairs+' сопоставленных пар. '+
+     (result.flags[0]||'Готовность входов проверена; пригодное значение для применения отсутствует.');
+ }));
+}
 function setupEvents(){
+ setupCoefficients();
  for(const control of document.querySelectorAll('[data-model-visibility]'))control.addEventListener('change',wrap(()=>{
    const g=port('graph'), snapshot=g.getSnapshot();
    g.setPreferences({forecastVisibility:{...snapshot.graphPreferences.forecastVisibility,
@@ -683,29 +899,172 @@ function sendApproved(role,message){
  return true;
 }
 
-let plateDialogObserver;
+let plateDialogObserver, foodDocument;
+function paintFoodReference(doc){
+ if(!settingsService)return;
+ let report=doc.getElementById('gpFoodReference');
+ if(!report){
+   report=doc.createElement('p');report.id='gpFoodReference';report.className='sub';
+   doc.querySelector('.meals-panel')?.append(report);
+ }
+ const view=settingsService.getView(),ref=view.nutritionReference;
+ report.textContent=ref?
+   'Суточный справочник · '+ref.groupLabel+': У '+ref.carbsG.join('–')+' г · Б '+ref.proteinG.join('–')+
+    ' г · Ж '+ref.fatG.join('–')+' г · '+ref.kcal.join('–')+' ккал. Распределение по приёмам не задано.':
+   !view.profile.birthDate?'Для справочного диапазона укажите дату рождения в настройках.':
+   'Для профиля нет подходящего диапазона. Проверьте возраст и пол.';
+}
+function mountFoodPresentation(doc,peer){
+ const title=doc.querySelector('.brand h1');
+ if(title)title.textContent='ГлюкоПапа Еда';
+ for(const selector of ['.brand p','.demo-controls','#tab-restaurants .titlebar .sub',
+       '#tab-restaurants .venue-section .sub','#venueDescription']){
+   for(const node of doc.querySelectorAll(selector))node.hidden=true;
+ }
+ const plateTitle=doc.querySelector('.plate-title');if(plateTitle)plateTitle.textContent='Моя тарелка';
+ const choose=doc.getElementById('mealType');
+ const placeholder=doc.createElement('option');placeholder.value='';placeholder.textContent='Выберите приём пищи';
+ choose.prepend(placeholder);
+ function refreshMealType(){
+   if(choose.dataset.manual)return;
+   const zone=host?.connect('settings').read('profile').timeZone;
+   const hour=zone?Number(new Intl.DateTimeFormat('en-GB',{timeZone:zone,hour:'2-digit',hourCycle:'h23'}).format(new Date())):new Date().getHours();
+   choose.value=hour<8?'':hour<11?'breakfast':hour<17?'lunch':'dinner';
+ }
+ refreshMealType();
+ choose.addEventListener('change',()=>{choose.dataset.manual='yes';});
+ peer.GFStorageNutritionPort.readNutrition=()=>null; // The reference is a range with no approved per-meal split.
+ const plateCalc=doc.getElementById('plateCalculate');
+ plateCalc.textContent='Рассчитать / ввести инсулин';
+ doc.addEventListener('click',e=>{
+   if(e.target.closest('#goPlate'))refreshMealType();
+   if(e.target.closest('#plateCalculate')){
+     e.preventDefault(); e.stopImmediatePropagation();
+     wrap(()=>openMealInjection(peer))();
+   }
+   if(e.target.closest('#addToPlate'))setTimeout(()=>{
+     if(!doc.getElementById('foodModal').classList.contains('on'))peer.GFFoodDemo.setTab('plate');
+   },0);
+ },true);
+ paintFoodReference(doc);
+}
 function watchPlateDialog(){
  plateDialogObserver?.disconnect();
  document.body.classList.remove('plate-modal-open');
  const peer=approvedPeer('nutrition')?.peer;
- const dialog=peer?.document.getElementById('foodModal');
+ const doc=peer?.document, dialog=doc?.getElementById('foodModal');
  if(!dialog)return;
+ if(foodDocument!==doc){
+   foodDocument=doc;
+   try{
+     approvedQuickFoodSource=JSON.parse(doc.getElementById('foodsData').textContent);
+     host?.bindApprovedQuickFoods(approvedQuickFoodSource);
+     globalThis.GFLOWView?.render();
+   }catch(error){console.warn('Не удалось прочитать утверждённый справочник LOW',error.message);}
+   foodRoutes.length=0;
+   doc.addEventListener('click',e=>{
+     const move=e.target.closest('[data-tab],[data-venue],[data-venuecat],#goPlate,#backCatalog,#backRestaurants,#showAllVenues');
+     if(!move||returningInsideFood||!peer.GFFoodDemo)return;
+     foodRoutes.push({tab:peer.GFFoodDemo.getTab(),venue:peer.GFFoodDemo.getSelectedVenue(),
+       category:doc.querySelector('[data-venuecat].active')?.dataset.venuecat,
+       query:doc.getElementById('restaurantSearch').value,frameScroll:peer.scrollY,shellScroll:window.scrollY});
+     if(foodRoutes.length>50)foodRoutes.shift();
+   },true);
+ }
  const update=()=>document.body.classList.toggle('plate-modal-open',dialog.classList.contains('on'));
  plateDialogObserver=new MutationObserver(update);
  plateDialogObserver.observe(dialog,{attributes:true,attributeFilter:['class']});
  update();
 }
 
+const approvedSettingsProfiles=new WeakMap();
+function appendSettingsRows(doc,id,rows,empty){
+ const target=doc.getElementById(id);
+ if(!target)return;
+ target.replaceChildren(...(rows.length?rows:[empty]).map(text=>{
+   const row=doc.createElement('p');
+   row.textContent=text;
+   return row;
+ }));
+}
+function renderApprovedSettings(doc,view){
+ const set=(id,text)=>{const field=doc.getElementById(id);if(field)field.textContent=text;};
+ for(const id of ['seed','reset','refresh','revisionBadge','storageWarning'])doc.getElementById(id)?.setAttribute('hidden','');
+ doc.querySelector('.foot')?.setAttribute('hidden','');
+ const heading=doc.querySelector('.brand small');
+ if(heading)heading.textContent='Настройки';
+ const age=view.ageYears===null?'—':String(view.ageYears);
+ set('ageValue',age);
+ set('summaryAge',age);
+ set('weightValue',view.vitals.weight?fmt(view.vitals.weight.value)+' кг':'—');
+ set('heightValue',view.vitals.height?fmt(view.vitals.height.value)+' см':'—');
+ const ref=view.nutritionReference;
+ set('nutritionGroup',ref?.groupLabel??'Нужны данные профиля');
+ set('nutritionSavedStatus',ref?'Справочные диапазоны, постановление Минздрава Беларуси № 180, 2012':
+   !view.profile.birthDate?'Укажите дату рождения.':!view.profile.sex?'Укажите пол для соответствующей возрастной группы.':'Для этого возраста нет справочных данных.');
+ appendSettingsRows(doc,'nutritionValues',ref?[
+   'Углеводы '+ref.carbsG.join('–')+' г', 'Белки '+ref.proteinG.join('–')+' г',
+   'Жиры '+ref.fatG.join('–')+' г', 'Энергия '+ref.kcal.join('–')+' ккал',
+ ]:[],'—');
+ appendSettingsRows(doc,'measurementsList',view.measurements.map(item=>[
+   new Date(item.measuredAt).toLocaleString('ru-RU'),
+   Number.isFinite(item.weightKg)?fmt(item.weightKg)+' кг':null,
+   Number.isFinite(item.heightCm)?fmt(item.heightCm)+' см':null,
+ ].filter(Boolean).join(' · ')), 'Измерений пока нет.');
+ const height=doc.getElementById('mHeight');
+ if(height){height.min='20';height.max='250';height.title='Рост в сантиметрах, от 20 до 250';}
+ const weight=doc.getElementById('mWeight');
+ if(weight){weight.min='0.1';weight.max='400';weight.step='0.1';}
+ const listId='profileInsulins';
+ let list=doc.getElementById(listId);
+ if(!list){list=doc.createElement('div');list.id=listId;doc.querySelector('#tab-insulins .panel')?.append(list);}
+ appendSettingsRows(doc,listId,[
+   'РинФаст · быстрый инсулин. Шаг ввода факта 0,5 ЕД.',
+   'Левемир · базальный инсулин. Плановые отметки 08:00 и 20:00; факт записывается отдельно.',
+   ...view.orders.map(row=>[row.drugId==='rinfast'?'РинФаст':'Левемир',
+     row.scheduleLocal||null, typeof row.units==='number'?fmt(row.units)+' ЕД':null,
+     row.isEffectiveAt?'Действующая запись плана':'Архивная запись плана'].filter(Boolean).join(' · ')),
+ ],'Настроек препаратов пока нет.');
+ const labels={displayName:'Имя',birthDate:'Дата рождения',timeZone:'Часовой пояс',sex:'Пол',allergies:'Ограничения',
+   illnessFactor:'Коэффициент болезни',coefficientModes:'Режимы коэффициентов'};
+ const display=value=>value==null?'—':Array.isArray(value)?value.join(', '):
+   typeof value==='object'?String(value.value??'настройки обновлены'):String(value);
+ const history=view.history.filter(row=>row.role==='settings'||row.actor==='settings').slice(0,75).map(row=>{
+   const change=Object.entries(row.changes||{}).filter(([key])=>labels[key]).map(([key,delta])=>
+     labels[key]+' '+display(delta.before)+' → '+display(delta.after)).join(', ');
+   const domain={profile:'Профиль',measurements:'Измерение',orders:'План инсулина',coefficients:'Коэффициенты'};
+   return [new Date(row.at).toLocaleString('ru-RU'),domain[row.domain]||'Настройки',change].filter(Boolean).join(' · ');
+ });
+ appendSettingsRows(doc,'historyList',history,'Изменений пока нет.');
+}
 function approvedSnapshot(role){if(!host)return null;const s=state();
  if(role==='nutrition')return {type:'gp:snapshot',role};
- if(role==='journal'){const all=GFCgmEvidencePolicy.journalView(host,GFJournal,GFJournalStorageAdapter);return {type:'gp:snapshot',role,all,revision:s.revision,timezone:all.zone,today:GFJournal.ymd(Date.now(),all.zone)};}
+ if(role==='journal'){
+   const all=GFCgmEvidencePolicy.journalView(host,GFJournal,GFJournalStorageAdapter);
+   const today=GFJournal.ymd(Date.now(),all.zone), doc=approvedPeer(role)?.peer.document;
+   if(!doc?.getElementById('tbody')||!doc?.defaultView.render)return null;
+   const presentation=GFJournalPresentation.prepare(doc,all,port('settings').getSnapshot(),today,()=>broadcastApproved('journal'));
+   return {type:'gp:snapshot',role,all:presentation,revision:s.revision,timezone:all.zone,today};
+ }
  if(role==='settings')return {type:'gp:snapshot',role,profile:s.profile,revision:s.revision};
  return null;
 }
 function broadcastApproved(role=null){
  for(const r of ['nutrition','journal','settings']){
   if(role&&r!==role)continue;
-  try{sendApproved(r,approvedSnapshot(r));}catch(e){console.warn('Frame awaiting initialization',r,e);}
+  try{
+   if(r==='nutrition'&&foodDocument)paintFoodReference(foodDocument);
+   if(r==='settings'&&host){
+     const doc=approvedPeer(r)?.peer.document;
+     if(!doc?.getElementById('profileForm'))continue;
+     const view=settingsService.getView();
+     const key=JSON.stringify(view.profile);
+     renderApprovedSettings(doc,view);
+     if(approvedSettingsProfiles.get(doc)===key)continue;
+     approvedSettingsProfiles.set(doc,key);
+   }
+   sendApproved(r,approvedSnapshot(r));
+  }catch(e){console.warn('Frame awaiting initialization',r,e);}
  }
 }
 function registerApprovedPlate(payload){const converted=GFFoodMealEntry.normalizePlate(payload);const p=converted.plate;if(!p.items.length)throw Error('Тарелка пуста');
@@ -721,11 +1080,20 @@ window.addEventListener('message',wrap(e=>{const d=e.data||{};if(!d.type?.starts
  if(d.type==='gp:error'){notify(String(d.error||'Ошибка исходного модуля'),true);return;}
  if(d.type==='gp:workflow'&&role==='nutrition'){notify('Чтобы зарегистрировать фактическое действие, используйте общий раздел «План / факт еды»; фиктивная запись в модуле питания отключена.');return;}
  if(d.type==='gp:measurement'&&role==='settings'){
- const record=d.record||{};settingsService.addMeasurement(record,port('settings').getRevision());notify('Рост/вес сохранён в едином GFStorage');broadcastApproved('settings');return;
+ const record=d.record||{}, output=approvedPeer('settings')?.peer.document.getElementById('gpApprovedSettingsNotice');
+ try{
+   settingsService.addMeasurement(record,port('settings').getRevision());
+   if(output)output.textContent='Измерение сохранено.';
+   broadcastApproved('settings');
+ }catch(error){if(output)output.textContent='Измерение не сохранено. Проверьте кг, см и дату.';throw error;}
+ return;
  }
  if(d.type==='gp:profile'&&role==='settings'){
  const patch=Object.fromEntries(Object.entries(d.patch||{}).filter(([,v])=>v!==''));
- settingsService.saveProfile(patch,port('settings').getRevision());notify('Профиль сохранён через единый GFStorage');broadcastApproved('settings');return;
+ settingsService.saveProfile(patch,port('settings').getRevision());
+ const output=approvedPeer('settings')?.peer.document.getElementById('gpApprovedSettingsNotice');
+ if(output)output.textContent='Профиль сохранён.';
+ broadcastApproved('settings');return;
  }}));
 for(const [role,route] of Object.entries(approvedFrames))$(route.id).addEventListener('load',()=>broadcastApproved(role));
 $('iframeApprovedNutrition').addEventListener('load',watchPlateDialog);
@@ -741,5 +1109,5 @@ testJournal?.setup({
   reload:()=>boot(), port, current:()=>mode, wrap, notify,
 });
 setupEvents();setupLocalFilesAndSource();watchPlateDialog();$('showRinfast').addEventListener('change',wrap(refreshClockDisplays));setInterval(wrap(()=>{refreshClockDisplays();requestXDrip();}),15000);$('injectionTime').value=localInputTime();boot(testJournal?.initialMode(readPreference(MODE_KEY))||'local');}catch(e){console.error(e);document.body.insertAdjacentHTML('afterbegin','<div class="shell-boot-error" role="alert"><h2>Не удалось открыть оболочку</h2><pre>'+escape(String(e.message||e))+'</pre><p>Данные не очищены. Сохраните исходный журнал и обратитесь к техническому отчёту.</p></div>');}
-globalThis.GPApp=Object.freeze({version:VER,getStorage:()=>host,mode:()=>mode,getModuleStatuses:()=>MODULES.map(x=>x.slice()),open:screen,consumeFileResult});
+globalThis.GPApp=Object.freeze({version:VER,getStorage:()=>host,mode:()=>mode,getModuleStatuses:()=>MODULES.map(x=>x.slice()),open:screen,back,consumeFileResult});
 })();

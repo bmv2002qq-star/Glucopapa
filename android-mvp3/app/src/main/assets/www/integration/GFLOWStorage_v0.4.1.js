@@ -22,7 +22,7 @@
     return {isf: read('isf_mmol_per_u'), uk: read('carb_g_per_u')};
   }
 
-  function catalog(snapshot) {
+  function catalog(snapshot, approvedFoods = []) {
     const items = new Map();
     for (const session of [...snapshot.mealSessions].reverse()) {
       const plate = session.actualPlate ?? session.plannedPlate;
@@ -36,6 +36,12 @@
         if (!items.has(key)) items.set(key, {key, item, from: session.id,
           reference: {...plate, items: [item], containsEstimatedValues: plate.containsEstimatedValues}});
       }
+    }
+    for (const item of approvedFoods) {
+      const key = JSON.stringify([item.foodId, item.unit]);
+      if (!items.has(key)) items.set(key, {key,item,from:'GFNutrition v0.4.6',
+        reference:{schema:'GFPlate.v1',source:'GFFoodOnly',items:[item],
+          createdAt:null,containsEstimatedValues:item.nutritionStatus!=='label_verified'}});
     }
     return [...items.values()];
   }
@@ -85,7 +91,7 @@
       time(row.start) <= nowMs && (row.end === null || nowMs < time(row.end)));
     const activity = active('sport') ? 'sport' : profile.activityBaseLevel;
     const illness = active('illness');
-    const products = catalog(snapshot);
+    const products = catalog(snapshot,port.getApprovedQuickFoods?.());
     if (cgm.revision !== revision || food.sourceRevision !== revision || port.getRevision() !== revision)
       return {code: 'REVISION_CHANGED', revision: null, products: []};
 

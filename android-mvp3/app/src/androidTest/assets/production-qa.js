@@ -18,6 +18,60 @@
         const action=window.__glucopapaQAAction;
         assert(byId('restoreXdripHistory').disabled, 'History is enabled on a clean install');
         assert(JSON.parse(GFNativeXDripHistory.request()).status==='HISTORY_DISABLED', 'Native history bypassed opt-in');
+        assert(JSON.parse(GFNativeXDripHistory.requestLatest()).status==='HISTORY_DISABLED', 'Native live Web Service bypassed opt-in');
+        if(action.startsWith('profile-')){
+            const host=GPApp.getStorage();
+            GPApp.open('approved-settings');
+            let doc;
+            for(let i=0;i<100;i++){
+                doc=byId('iframeApprovedSettings').contentDocument;
+                if(doc?.getElementById('profileInsulins'))break;
+                await sleep(50);
+            }
+            const field=id=>doc.getElementById(id);
+            assert(field('profileInsulins').textContent.includes('Левемир'),'Insulin settings remained empty');
+            if(action==='profile-write'){
+                const value=new Date(); value.setUTCFullYear(value.getUTCFullYear()-7);
+                field('pName').value='SYNTHETIC_PROFILE';
+                field('pBirth').value=value.toISOString().slice(0,10);
+                field('pSex').value='male';field('pZone').value='Europe/Minsk';
+                const submit=id=>field(id).dispatchEvent(new Event('submit',{cancelable:true,bubbles:true}));
+                submit('profileForm');
+                for(let i=0;i<80&&host.exportState().profile.displayName!=='SYNTHETIC_PROFILE';i++)await sleep(50);
+                field('mHeight').value='12';
+                assert(!field('mHeight').checkValidity(),'Invalid height accepted');
+                field('mHeight').value='120';
+                field('mWeight').value='20';
+                field('mDate').value='';
+                submit('measurementForm');
+                for(let i=0;i<80&&!host.exportState().measurements.length;i++)await sleep(50);
+            }
+            const state=host.exportState();
+            assert(state.profile.displayName==='SYNTHETIC_PROFILE'&&state.profile.sex==='male'&&state.measurements.length===1&&
+                state.measurements[0].weightKg===20&&state.measurements[0].heightCm===120,'Profile or measurements missing');
+            assert(state.profile.dailyNutritionReference.groupId==='7-10','Wrong nutrition reference');
+            assert(field('measurementsList').textContent.includes('120 см')&&field('historyList').textContent.includes('Измерение'),
+                'Saved measurements or history not visible: '+field('historyList').textContent);
+            assert(read(localKey).data===JSON.stringify(state),'Profile missing in SQLite');
+            return {status:'PASS',fixture:'SYNTHETIC_PROFILE',step:action,weight:20,height:120};
+        }
+        if(action.startsWith('web-')){
+            const host=GPApp.getStorage();
+            if(action.startsWith('web-write:')){
+                const packet=JSON.parse(action.slice('web-write:'.length));
+                assert(GFProviderCgm.ingest(host,'local',packet).status==='OBSERVED','Current observation refused');
+                assert(GFProviderCgm.ingest(host,'local',packet).idempotent,'Duplicate web observation saved');
+            }
+            const state=host.exportState(), latest=state.cgm.at(-1);
+            assert(state.revision===3&&state.cgm.length===4&&latest.mgdl===150&&latest.direction==='Flat'&&
+                latest.device==='Follower'&&latest.transport==='xdrip_loopback_live','Changed Web Service observation');
+            const evidence=GFCgmEvidencePolicy.inspect(host);
+            assert(evidence.reportedMmol===150/18.01559&&evidence.currentMmol===null,'Wrong glucose display or model gate');
+            assert(byId('homeGlucose').textContent==='8,3','Current glucose absent on home screen');
+            assert(read(localKey).data===JSON.stringify(state),'Web result missing in SQLite');
+            return {status:'PASS',fixture:'SYNTHETIC_LOCAL_WEB_SERVICE',checked:action.startsWith('web-write:')?
+                'HTTP_UNITS_DEDUPLICATION':'FORCE_STOP_RELAUNCH',revision:3,points:4};
+        }
         if(action.startsWith('history-')){
             const host=GPApp.getStorage();
             if(action.startsWith('history-write:')){

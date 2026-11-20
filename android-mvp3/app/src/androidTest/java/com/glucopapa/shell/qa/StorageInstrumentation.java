@@ -45,11 +45,13 @@ public final class StorageInstrumentation extends Instrumentation {
                 switch (phase) {
                     case "production":
                         String productionStep = arguments.getString("step", "");
-                        if ("history-write".equals(productionStep)) {
+                        if ("history-write".equals(productionStep) || "web-write".equals(productionStep)) {
                             try (GFNativeStorage nativeStore = new GFNativeStorage(getTargetContext())) {
                                 String data = checkCode(nativeStore.readSnapshot(LOCAL), "FOUND").getString("data");
-                                JSONObject anchor = new JSONObject(data).getJSONArray("cgm").getJSONObject(0);
-                                productionStep += ":" + HistoryContractChecks.run(anchor);
+                                JSONArray cgm = new JSONObject(data).getJSONArray("cgm");
+                                productionStep += ":" + ("web-write".equals(productionStep)
+                                    ? HistoryContractChecks.runLatest(cgm.getJSONObject(cgm.length() - 1))
+                                    : HistoryContractChecks.run(cgm.getJSONObject(0)));
                             }
                         }
                         output.putString("webview", new WebViewChecks(this).exercise("production-qa.js", productionStep).toString());
@@ -76,6 +78,9 @@ public final class StorageInstrumentation extends Instrumentation {
                         break;
                     case "touch":
                         output.putString("webview", new WebViewChecks(this).checkTouch().toString());
+                        break;
+                    case "back":
+                        output.putString("webview", new WebViewChecks(this).checkBack().toString());
                         break;
                     case "stock":
                         String step = arguments.getString("step", "");

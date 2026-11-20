@@ -95,7 +95,7 @@ def main():
                              'integration/GFCalculationEvidence_v0.1.0.js', 'integration/GFConsensusReview_v0.1.0.js',
                              'integration/GFLevemirReview_v0.1.0.js', 'integration/GFResearchForecastRun_v0.1.0.js', 'integration/GFResearchForecastGraph_v0.1.0.js', 'runtime/APK_FILES.txt',
                              'modules/GFStorage_v0.5.11/src/gfstorage_core.js', core[0],
-                             'integration/GFGraphFourLines_v0.1.0.js','integration/GFConsensusAutoSelection_v0.1.2.js',
+                             'integration/GFJournalPresentation_v0.1.0.js','integration/GFGraphFourLines_v0.1.0.js','integration/GFConsensusAutoSelection_v0.1.2.js',
                              'integration/GFConsensusEvidence_v0.1.0.js','integration/GFInjectionFact_v0.1.0.js',
                              'integration/GFMainScreen_v1.0.0/gfmain_core.js','integration/GFMainScreen_v1.0.0/gfmain_ui.js',
                              'integration/GFMainScreen_v1.0.0/gfmain_home_scoped.css'}
@@ -109,7 +109,7 @@ def main():
             'integration/GFModuleUI_v0.2.1.js', 'integration/GPMvp3ResearchUI_v0.1.0.js',
             'modules/GFSettings_v0.1.8/src/gfsettings.js',
             'integration/GFCalculationEvidence_v0.1.0.js', 'integration/GFResearchForecastRun_v0.1.0.js',
-            'integration/GFHighTargetView_v0.1.0.js', 'integration/GFLOWView_v0.4.1.js',
+            'integration/GFHighTargetView_v0.1.0.js', 'integration/GFLOWView_v0.4.1.js','integration/GFLOWStorage_v0.4.1.js',
             'integration/GFInjectionTimingStorage_v0.1.0.js', 'integration/GFMealAbsorption_v0.1.0.js',
             'integration/GFProviderCgm_v0.1.0.js', core[0],
             'modules/GFAuditExport_v0.1.4/src/gfaudit_export_storage_adapter.js',

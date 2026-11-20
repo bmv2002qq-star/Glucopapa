@@ -9,6 +9,9 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -65,6 +68,32 @@ public final class HistoryContractChecks {
         return new JSONObject().put("date", ts).put("sgv", mgdl);
     }
 
+    public static String runLatest(JSONObject lastStored) throws Exception {
+        long ts = lastStored.getLong("ts") + 60_000;
+        long now = System.currentTimeMillis();
+        String iso = Instant.ofEpochMilli(ts).atOffset(ZoneOffset.ofHours(3))
+            .format(DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ss.SSSZ", java.util.Locale.ROOT));
+        JSONObject row = reading(ts, 150).put("dateString", iso).put("units_hint", "mmol")
+            .put("type", "sgv").put("device", "Follower").put("direction", "Flat").put("delta", -1.002);
+        String sample = new JSONArray().put(row).toString();
+        JSONObject live = exchange(null, "200 OK", "application/json", "", sample);
+        assertStatus("MEASUREMENT", live);
+        check(live.getLong("measuredAtMs") == ts && live.getInt("mgdl") == 150 &&
+            "Follower".equals(live.getString("device")) && !live.getBoolean("stale") &&
+            live.getDouble("deltaMgdl") == -1.002 && "Flat".equals(live.getString("direction")),
+            "Current Web Service observation changed units or metadata");
+        JSONObject old = new JSONObject(GFNativeXDripHistory.parseLatest(sample, now + 30 * 60_000));
+        check(old.getBoolean("stale"), "Old Web Service value marked current");
+        assertStatus("WEB_FUTURE_MEASUREMENT", new JSONObject(GFNativeXDripHistory.parseLatest(sample, ts - 1)));
+        row.put("date", ts + 1);
+        assertStatus("HISTORY_INVALID", new JSONObject(GFNativeXDripHistory.parseLatest(
+            new JSONArray().put(row).toString(), now)));
+        row.remove("date");
+        assertStatus("MEASUREMENT", new JSONObject(GFNativeXDripHistory.parseLatest(
+            new JSONArray().put(row).toString(), now)));
+        return live.toString();
+    }
+
     private static JSONObject exchange(JSONObject anchor, String status, String type, String headers, String body)
         throws Exception {
         ExecutorService serverWorker = Executors.newSingleThreadExecutor();
@@ -78,7 +107,8 @@ public final class HistoryContractChecks {
                     client.setSoTimeout(3000);
                     BufferedReader reader = new BufferedReader(new InputStreamReader(
                         client.getInputStream(), StandardCharsets.US_ASCII));
-                    check("GET /sgv.json?count=288 HTTP/1.1".equals(reader.readLine()), "Unexpected HTTP request");
+                    String query = anchor == null ? "1" : "288";
+                    check(("GET /sgv.json?count=" + query + " HTTP/1.1").equals(reader.readLine()), "Unexpected HTTP request");
                     for (String line; (line = reader.readLine()) != null && !line.isEmpty();) { /* Skip headers. */ }
                     byte[] data = body.getBytes(StandardCharsets.UTF_8);
                     String length = headers.startsWith("Content-Length:") ? "" : "Content-Length: " + data.length + "\r\n";
@@ -90,7 +120,8 @@ public final class HistoryContractChecks {
                 }
                 return null;
             });
-            JSONObject result = new JSONObject(GFNativeXDripHistory.fetch(anchor, timer));
+            JSONObject result = new JSONObject(anchor == null
+                ? GFNativeXDripHistory.fetchLatest(timer) : GFNativeXDripHistory.fetch(anchor, timer));
             response.get(5, TimeUnit.SECONDS);
             return result;
         } finally {

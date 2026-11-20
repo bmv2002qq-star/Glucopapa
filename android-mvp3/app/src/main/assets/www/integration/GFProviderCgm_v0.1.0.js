@@ -10,14 +10,15 @@
     if (mode !== 'local') return {status: 'LOCAL_ONLY'};
     if (!payload || typeof payload.status !== 'string') throw Error('CGM_PROVIDER_RESPONSE');
     if (payload.status !== 'MEASUREMENT') return {status: payload.status};
-    const {measuredAtMs, receivedAtMs, mgdl, direction, stale} = payload;
+    const {measuredAtMs, receivedAtMs, mgdl, direction, stale, transport, device, deltaMgdl} = payload;
     if (!Number.isSafeInteger(measuredAtMs) || !Number.isSafeInteger(receivedAtMs) ||
         receivedAtMs < measuredAtMs || receivedAtMs > now) {
       throw Error('CGM_PROVIDER_TIMESTAMP');
     }
     const port = host.connect('cgmAdapter');
     const result = port.ingestXDripObservation({
-      ts: measuredAtMs, mgdl, direction, staleAtReceipt: stale, receivedAt: new Date(receivedAtMs).toISOString()
+      ts: measuredAtMs, mgdl, direction, staleAtReceipt: stale, receivedAt: new Date(receivedAtMs).toISOString(),
+      ...(transport===undefined?{}:{transport,device,deltaMgdl}),
     }, port.getRevision());
     return {status: stale === true ? 'STALE' : stale === false ? 'OBSERVED' : 'FRESHNESS_UNKNOWN',
       revision: result.revision, measuredAtMs, idempotent: result.idempotent === true};

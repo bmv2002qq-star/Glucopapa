@@ -55,6 +55,13 @@
     <div id="cgmMeta" class="soft">Нет сохранённых показаний</div>
     <div id="xdripControls" hidden>
       <label class="check"><input id="xdripEnabled" type="checkbox"> Читать показания из xDrip+ на этом устройстве</label>
+      <label>Подключение
+        <select id="xdripSourceMode">
+          <option value="auto">Авто · Web Service, затем ContentProvider</option>
+          <option value="web">Локальный Web Service</option>
+          <option value="provider">ContentProvider</option>
+        </select>
+      </label>
       <div id="xdripStatus" class="soft" role="status">Чтение выключено</div>
       <button id="refreshXdrip" class="btn secondary" type="button">Обновить источник</button>
       <div id="xdripHistoryControls" hidden>
@@ -65,7 +72,7 @@
     <button class="btn secondary full" type="button" data-screen="home">← Вернуться к графику</button>
    </article>
   </section>
-  <section id="screen-injections" class="screen"><div class="section-header"><button type="button" class="inline-link" data-screen="home">← На главную</button><h2>Запись выполненной инъекции</h2><p>Единственная точка регистрации факта — <code>GFStorage.actionWriter</code>.</p></div><p class="basal-entry-context" id="basalEntryContext" hidden>Выбран длинный инсулин. Укажите фактически введённое количество и подтвердите укол; запись будет одна — в общем дневнике.</p><div class="cols"><article class="panel"><form id="injectionForm" class="fields"><label>Препарат<select id="injectionDrug"><option value="rinfast">РинФаст</option><option value="levemir">Левемир</option></select></label><label>Фактически введено, ЕД<input id="injectionUnits" type="number" min="0.5" max="200" step="0.5" required placeholder="Например: 0,5"></label><label>Когда выполнено<input id="injectionTime" type="datetime-local" step="60" required></label><label>Место укола<select id="injectionRegion"><option value="">Не указано</option><option value="abdomen">Живот</option><option value="arm">Плечо</option><option value="thigh">Бедро</option><option value="buttock">Ягодица</option></select></label><label>Сторона<select id="injectionSide"><option value="">Не указана</option><option value="left">Левая</option><option value="right">Правая</option></select></label><label id="injectionMealField">Связь с приёмом пищи <select id="injectionMeal"><option value="">Без связи</option></select></label><label class="check"><input type="checkbox" id="injectionConfirm" required> Я подтверждаю: инъекция действительно выполнена</label><button class="btn primary" type="submit">Сохранить фактический укол</button></form><p class="hint">Повтор с другой записью в близкое время будет отклонён как возможный дубль. Программа не предлагает дозу.</p></article><article class="panel"><h3>Последние подтверждённые инъекции</h3><div id="injectionList" class="empty">Нет записей</div></article></div></section>
+  <section id="screen-injections" class="screen"><div class="section-header"><button type="button" class="inline-link" data-screen="home">← На главную</button><h2>Запись выполненной инъекции</h2><p>Единственная точка регистрации факта — <code>GFStorage.actionWriter</code>.</p></div><p class="basal-entry-context" id="basalEntryContext" hidden>Выбран длинный инсулин. Укажите фактически введённое количество и подтвердите укол; запись будет одна — в общем дневнике.</p><div class="cols"><article class="panel"><form id="injectionForm" class="fields"><label>Препарат<select id="injectionDrug"><option value="rinfast">РинФаст</option><option value="levemir">Левемир</option></select></label><label><span id="actualDoseLabel">Фактически введено, ЕД</span><input id="injectionUnits" type="number" min="0.5" max="200" step="0.5" required placeholder="Например: 0,5"></label><label>Когда выполнено<input id="injectionTime" type="datetime-local" step="60" required></label><label>Место укола<select id="injectionRegion"><option value="">Не указано</option><option value="abdomen">Живот</option><option value="arm">Плечо</option><option value="thigh">Бедро</option><option value="buttock">Ягодица</option></select></label><label>Сторона<select id="injectionSide"><option value="">Не указана</option><option value="left">Левая</option><option value="right">Правая</option></select></label><label id="injectionMealField">Связь с приёмом пищи <select id="injectionMeal"><option value="">Без связи</option></select></label><div id="mealDoseContext" hidden><label>Рассчитывает программа <input id="mealModelDose" type="text" readonly value="Недоступно"></label><p id="mealDoseReason" class="hint"></p></div><button id="saveActualInjection" class="btn primary" type="submit">Сохранить фактический укол</button></form><p class="hint">Повтор с другой записью в близкое время будет отклонён как возможный дубль. Программа не предлагает дозу.</p></article><article class="panel"><h3>Последние подтверждённые инъекции</h3><div id="injectionList" class="empty">Нет записей</div></article></div></section>
   <section id="screen-meals" class="screen"><div class="section-header"><button type="button" class="inline-link" data-screen="approved-nutrition">← Моя тарелка v0.4.6</button><h2>План / фактически съедено</h2><p>Продукты выбираются только в утверждённой «Моей тарелке» v0.4.6. Здесь подтверждаются начало, фактическая порция и завершение через один GFStorage.</p></div><article class="panel"><h3>Текущий приём пищи</h3><div id="mealCurrent" class="empty">Создайте план в «Моей тарелке»</div><div class="actions"><button id="mealReady" class="btn secondary">Подготовлен</button><button id="mealStart" class="btn secondary">Фактически начал(а) есть</button><button id="mealFinish" class="btn secondary">Завершить приём</button></div><p class="hint">План не равен фактически съеденному. Отдельный ввод граммовки факта доступен ниже.</p></article>
 <article class="panel gf-meal-actual-panel" id="gfMealActualPanel"><h3>Фактически съедено · W03b, рабочий вариант</h3>
 <p class="hint">Выберите начатый приём пищи. Отметьте фактические граммы/мл отдельно от плана. Данные с неизвестным количеством не пересчитываются автоматически.</p>
@@ -75,7 +82,26 @@
 <label class="gf-meal-checkbox"><input id="gfMealActualConfirm" type="checkbox"/> Подтверждаю, что это фактически съеденная еда, а не план</label>
 <div class="actions"><button id="gfMealActualSave" class="btn primary" type="button" disabled>Подтвердить фактически съеденное</button><button id="gfMealActualRefresh" class="btn secondary" type="button">Обновить из GFStorage</button></div>
 <p id="gfMealActualMessage" class="hint" role="status" aria-live="polite"></p><p class="hint">Интеграционная панель; утверждённый исходный экран «Моя тарелка» v0.4.6 остаётся побайтно прежним. Не рассчитывает инсулин.</p></article></section>
-<section id="screen-analytics" class="screen"><div class="section-header"><h2>Модули анализа</h2><p>Все результаты исследовательские и не могут использоваться для дозирования.</p></div><div class="cols"><article class="panel"><h3>GFSafety · диагностика входа</h3><div id="analysisSafety" class="soft">Нет проверки</div><button id="runSafety" class="btn secondary">Проверить технические данные</button></article><article class="panel"><h3>GFHighLow · эпизоды CGM</h3><div id="analysisHighLow" class="soft">Нет анализа</div><button id="runHighLow" class="btn secondary">Посмотреть эпизоды</button></article><article class="panel"><h3>GFCoefficients · статистика истории</h3><div id="analysisCoefficients" class="soft">Нет анализа</div><button id="runCoefficients" class="btn secondary">Проанализировать историю</button></article><article class="panel"><h3>GFForecast · расчёт модели</h3>
+<section id="screen-coefficients" class="screen">
+ <div class="section-header"><h2>Коэффициенты</h2></div>
+ <article class="panel">
+  <form id="coefficientForm" class="fields">
+   <label>Показатель<select id="coefficientKind"><option value="carb_g_per_u">УК · г углеводов / ЕД</option><option value="isf_mmol_per_u">ФЧИ · ммоль/л на 1 ЕД</option></select></label>
+   <label>Интервал<select id="coefficientWindow"></select></label>
+   <p id="coefficientEffective" class="hint"></p>
+   <label>Режим<select id="coefficientMode"><option value="manual">Вручную</option><option value="auto">Авто</option></select></label>
+   <label>Значение<input id="coefficientValue" type="number" min="0.0001" max="500" step="any" required></label>
+   <button id="coefficientApply" class="btn primary" type="submit">Применить</button>
+  </form>
+  <button id="coefficientRecalculate" type="button" class="btn secondary">Пересчитать по истории</button>
+  <p id="coefficientMessage" class="hint" role="status"></p>
+ </article>
+ <article class="panel"><h3>История</h3><div id="coefficientHistory"></div></article>
+ <article class="panel"><h3>Болезнь и активность</h3><div id="coefficientContext" class="hint"></div>
+  <button data-screen="settings" class="btn secondary" type="button">Открыть настройки</button>
+ </article>
+</section>
+<section id="screen-analytics" class="screen"><div class="section-header"><h2>Техническая диагностика</h2><p>Все результаты исследовательские и не могут использоваться для дозирования.</p></div><div class="cols"><article class="panel"><h3>GFSafety · диагностика входа</h3><div id="analysisSafety" class="soft">Нет проверки</div><button id="runSafety" class="btn secondary">Проверить технические данные</button></article><article class="panel"><h3>GFHighLow · эпизоды CGM</h3><div id="analysisHighLow" class="soft">Нет анализа</div><button id="runHighLow" class="btn secondary">Посмотреть эпизоды</button></article><article class="panel"><h3>GFCoefficients · статистика истории</h3><div id="analysisCoefficients" class="soft">Нет анализа</div><button id="runCoefficients" class="btn secondary">Проанализировать историю</button></article><article class="panel"><h3>GFForecast · расчёт модели</h3>
 <div id="analysisForecast" class="soft" role="status">Для запуска нужны свежие показания с подтверждённым качеством и полная история.</div>
 <button id="runForecastGate" class="btn secondary" type="button">Выполнить расчёт модели</button>
 <details id="forecastTrace" hidden><summary>Исходные данные и результат</summary><pre class="gf-evidence-text" id="forecastValues"></pre></details></article>
@@ -89,7 +115,7 @@
  <article class="panel narrow"><h3>Измерения роста и веса</h3><form id="childMeasurementForm" class="fields"><div class="two-fields">
  <label>Вес, кг<input id="childWeight" type="number" min="0.1" max="400" step="0.1" placeholder="27,0"></label><label>Рост, см<input id="childHeight" type="number" min="20" max="250" step="0.1" placeholder="127,0"></label></div>
  <button type="submit" class="btn secondary">Добавить измерение</button></form><div id="childMeasurementInfo" class="hint">Нет измерений</div></article></section>
-  <section id="screen-system" class="screen"><div class="section-header"><h2>Ещё / настройки</h2><p>Один дневник и одна база данных для всех разделов.</p></div><article class="card"><h3>Разделы программы</h3>
+  <section id="screen-system" class="screen"><div class="section-header"><h2>Техническая диагностика и файлы</h2><p>Один дневник и одна база данных для всех разделов.</p></div><article class="card"><h3>Разделы программы</h3>
    <button class="more-option" data-screen="injections"><span class="opt-main"><span class="opt-icon">💉</span><span><strong>Инъекции</strong><small>Запись фактически выполненного укола</small></span></span><span class="chevron">›</span></button>
    <button class="more-option" data-screen="cgm"><span class="opt-main"><span class="opt-icon">◉</span><span><strong>Датчик и CGM</strong><small>Источник и история измерений</small></span></span><span class="chevron">›</span></button>
    <button class="more-option" data-screen="settings"><span class="opt-main"><span class="opt-icon">⚙</span><span><strong>Настройки</strong><small>Параметры через GFSettings</small></span></span><span class="chevron">›</span></button>
@@ -168,15 +194,20 @@
    <article class="panel"><h3>Запись фактических действий</h3><div class="actions"><button class="btn secondary" data-screen="injections">Фактически выполненный укол</button><button class="btn secondary" data-screen="meals">Фактически съеденные углеводы</button></div><p class="hint">Здесь нет отдельной формы записи. Программа не рекомендует дозы или граммовки при гипогликемии.</p></article>
   </section>
 
-<section id="screen-approved-nutrition" class="screen"><div class="section-header"><h2>Еда · Моя тарелка v0.4.6</h2><p>Подлинный интерфейс из согласованного модуля. Одна тарелка сохраняется в GFStorage только по явному подтверждению.</p></div><article class="panel"><div class="approved-actions"><button class="btn" id="approvedSavePlate">Сохранить выбранную тарелку в общий дневник</button><button class="btn secondary" data-screen="meal-workflow">План / факт еды</button></div><p class="hint" id="approvedPlateStatus">Выберите продукты в исходной «Моей тарелке», затем сохраните план.</p></article><div class="plate-frame-slot"><iframe id="iframeApprovedNutrition" class="approved-frame" title="Моя тарелка v0.4.6" src="approved/GFNutrition_v0.4.6_LIVE.html"></iframe></div>
+<section id="screen-approved-nutrition" class="screen">
+ <div class="plate-frame-slot"><iframe id="iframeApprovedNutrition" class="approved-frame" title="Моя тарелка" src="approved/GFNutrition_v0.4.6_LIVE.html"></iframe></div>
+ <article class="panel"><div class="approved-actions"><button class="btn" id="approvedSavePlate">Сохранить план питания</button><button class="btn secondary" data-screen="meal-workflow">План / факт еды</button></div><p class="hint" id="approvedPlateStatus">Выберите продукты и сохраните план.</p></article>
  <article class="panel gf-calc-evidence" id="calcEvidenceMeal">
   <details><summary>Расчёт</summary><pre class="gf-calc-trace" data-calc-trace>Снимок данных недоступен.</pre></details>
   <p class="gf-calc-error" data-calc-summary>Расчёт недоступен</p><ul class="gf-calc-error" data-calc-blockers></ul>
  </article>
 </section>
-<section id="screen-approved-journal" class="screen"><article class="panel"><h3>Занятия спортом</h3><div id="approvedSportRows" class="events">Записей пока нет</div></article><div class="section-header"><h2>Дневник · кандидат 3 колонки</h2><p>Кандидат: три графы, факты из единого GFStorage. Утверждённый оригинал сохранён.</p></div><iframe id="iframeApprovedJournal" class="approved-frame" title="Кандидат дневника — три колонки" src="approved/GFJournal_v0.1.2_3COL_CANDIDATE.html"></iframe></section>
-<section id="screen-approved-settings" class="screen"><div class="section-header"><h2>Настройки · утверждённый интерфейс</h2><p>Профиль сохраняется через GFSettings и GFStorage. Дополнительные старые формы ещё на проверке.</p></div><iframe id="iframeApprovedSettings" class="approved-frame" title="Утверждённые настройки" src="approved/GFSettings_v0.1.4_LIVE.html"></iframe><article class="panel gf-context-panel" id="gfContextPanel" aria-label="Дополнительные настройки на согласование">
-<h3>Дополнительные настройки · рабочий кандидат W02b</h3>
+<section id="screen-approved-journal" class="screen"><iframe id="iframeApprovedJournal" class="approved-frame" title="Дневник событий" src="approved/GFJournal_v0.1.2_3COL_CANDIDATE.html"></iframe></section>
+<section id="screen-approved-settings" class="screen"><div class="section-header"><h2>Настройки</h2></div>
+ <div class="actions"><button class="btn secondary" data-screen="cgm">Источник CGM</button>
+  <button class="btn secondary" data-screen="coefficients">Коэффициенты</button>
+  <button class="btn secondary" data-screen="system">Техническая диагностика и файлы</button></div><iframe id="iframeApprovedSettings" class="approved-frame" title="Утверждённые настройки" src="approved/GFSettings_v0.1.4_LIVE.html"></iframe><article class="panel gf-context-panel" id="gfContextPanel" aria-label="Дополнительные настройки на согласование">
+<h3>Коэффициенты, усвоение и болезнь</h3>
 <p class="hint">Отдельная надстройка вне утверждённого экрана GFSettings v0.1.4. Новые значения сохраняются в единой GFStorage, но не используются при выборе дозы.</p>
 <div class="gf-context-grid"><label>УК · режим<select id="gfCarbMode"><option value="manual">Вручную</option><option value="auto">Авто (исследование; без применения)</option></select></label>
 <label>ФЧИ · режим<select id="gfIsfMode"><option value="manual">Вручную</option><option value="auto">Авто (исследование; без применения)</option></select></label></div>
@@ -216,9 +247,9 @@
  <button data-screen="home" class="selected" type="button"><span class="ico">⌂</span><span>Главная</span></button>
  <button data-screen="journal" type="button"><span class="ico">▤</span><span>Дневник</span></button>
  <button data-screen="meals" type="button"><span class="ico">◉</span><span>Продукты</span></button>
- <button data-screen="analytics" type="button"><span class="ico">▥</span><span>Анализ</span></button>
+ <button data-screen="coefficients" type="button"><span class="ico">▥</span><span>Коэффициенты</span></button>
  <button data-screen="modules" type="button"><span class="ico">▦</span><span>Модули</span></button>
- <button data-screen="system" type="button"><span class="ico">⚙</span><span>Ещё</span></button>
+ <button data-screen="approved-settings" type="button"><span class="ico">⚙</span><span>Настройки</span></button>
 </nav>
 </div>
 <!-- Pinned shared runtime, one copy of each engine. The load order matches V2 v3. -->
@@ -284,6 +315,7 @@
 <script src="integration/GFConsensusAutoSelection_v0.1.2.js"></script>
 <script src="integration/GFConsensusEvidence_v0.1.0.js"></script>
 <script src="integration/GFInjectionFact_v0.1.0.js"></script>
+<script src="integration/GFJournalPresentation_v0.1.0.js"></script>
 <script src="app.js"></script>
 <script src="integration/GFModuleUI_v0.2.1.js"></script><script src="integration/GFModuleDirectory_v0.1.0.js"></script><script src="integration/GFSettingsPanel_v0.1.0.js"></script><script src="integration/GFMealActualPanel_v0.1.0.js"></script>
   <script src="integration/GFCOBAutoPanel_v0.2.0.js"></script>

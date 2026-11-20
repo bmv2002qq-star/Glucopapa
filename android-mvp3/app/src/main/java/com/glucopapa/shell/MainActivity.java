@@ -47,6 +47,7 @@ public class MainActivity extends Activity {
     private static final int CREATE_AI_EXPORT = 3104;
     private static final String SETTINGS_NAME = "gf_shell_settings";
     private static final String XDRIP_KEY = "GFV2SHELL_XDRIP_LOCAL_v1";
+    private static final String XDRIP_SOURCE_KEY = "GFV2SHELL_XDRIP_SOURCE_v1";
     private static final int BACKUP_BYTES = 32_000_000;
     private final ExecutorService fileWorker = Executors.newSingleThreadExecutor();
     private final AtomicReference<String> fileResult = new AtomicReference<>();
@@ -57,6 +58,7 @@ public class MainActivity extends Activity {
     private GFNativeXDrip nativeXDrip;
     private GFNativeXDripHistory nativeXDripHistory;
     private volatile boolean foreground;
+    private boolean backInFlight;
     private DiagnosticRing diagnostics;
     private DiagnosticWriter diagnosticWriter;
 
@@ -167,7 +169,8 @@ public class MainActivity extends Activity {
         @JavascriptInterface public boolean write(String key, String value) {
             if (BuildConfig.FIXTURE_JOURNAL && "GFV2SHELL_MODE_v1".equals(key) &&
                     ("demo".equals(value) || "local".equals(value)) ||
-                XDRIP_KEY.equals(key) && ("on".equals(value) || "off".equals(value))) {
+                XDRIP_KEY.equals(key) && ("on".equals(value) || "off".equals(value)) ||
+                XDRIP_SOURCE_KEY.equals(key) && ("auto".equals(value) || "web".equals(value) || "provider".equals(value))) {
                 return preferences.edit().putString(key, value).commit();
             }
             return false;
@@ -175,7 +178,7 @@ public class MainActivity extends Activity {
 
         private boolean supported(String key) {
             return (BuildConfig.FIXTURE_JOURNAL && "GFV2SHELL_MODE_v1".equals(key)) ||
-                XDRIP_KEY.equals(key);
+                XDRIP_KEY.equals(key) || XDRIP_SOURCE_KEY.equals(key);
         }
     }
 
@@ -323,8 +326,16 @@ public class MainActivity extends Activity {
     }
 
     @Override public void onBackPressed() {
-        // Browser history is not used for module navigation; press back exits prototype.
-        super.onBackPressed();
+        if (view == null) {
+            super.onBackPressed();
+            return;
+        }
+        if (backInFlight) return;
+        backInFlight = true;
+        view.evaluateJavascript("Boolean(window.GPApp && GPApp.back())", handled -> {
+            backInFlight = false;
+            if (!isDestroyed() && !"true".equals(handled)) super.onBackPressed();
+        });
     }
 
     @Override protected void onResume() {

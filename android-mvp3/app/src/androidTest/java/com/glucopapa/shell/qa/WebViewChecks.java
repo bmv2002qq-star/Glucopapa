@@ -5,6 +5,7 @@ import android.app.Instrumentation;
 import android.content.Intent;
 import android.os.SystemClock;
 import android.graphics.Rect;
+import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.view.View;
@@ -76,6 +77,23 @@ final class WebViewChecks {
         return new JSONObject().put("status", "PASS").put("input", "ANDROID_POINTER_DOWN_UP")
             .put("routes", "HIGH, LOW, journal")
             .put("webview_accessibility", nativeTree ? "PASS" : "ENV_BLOCKED");
+    }
+
+    JSONObject checkBack() throws Exception {
+        WebView web = startWebView();
+        evaluate(web, "GPApp.open('home'); GPApp.open('approved-low'); GPApp.open('approved-nutrition'); true");
+        for (String expected : new String[]{"approved-low", "home"}) {
+            instrumentation.sendKeyDownUpSync(KeyEvent.KEYCODE_BACK);
+            long until = SystemClock.elapsedRealtime() + 5000;
+            String active = "document.body.dataset.activeScreen===" + JSONObject.quote(expected);
+            while (!"true".equals(evaluate(web, active))) {
+                if (SystemClock.elapsedRealtime() >= until)
+                    throw new IllegalStateException("Android Back did not return to " + expected);
+                SystemClock.sleep(100);
+            }
+        }
+        return new JSONObject().put("status", "PASS").put("routes", "nutrition → LOW → home")
+            .put("input", "ANDROID_KEYCODE_BACK");
     }
 
     private boolean containsJournalHeading(AccessibilityNodeInfo node) {

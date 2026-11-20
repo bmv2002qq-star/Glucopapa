@@ -57,7 +57,8 @@ def verify(page, origin, output):
     assert now_period['id'] == old_period['id'] and now_period['end']
     assert page.locator('#recentRows [data-event-id="'+now_period['id']+'"]').count() == 1
     page.get_by_role('button', name='Весь дневник').click()
-    assert page.locator('#approvedSportRows .event').count() == 1
+    assert page.locator('#approvedSportRows').count() == 0
+    page.frame_locator('#iframeApprovedJournal').locator('tr.sport-period').wait_for()
     page.evaluate("GPApp.open('home')")
 
     # The readings and forecasts are fabricated inputs in a disposable browser. They

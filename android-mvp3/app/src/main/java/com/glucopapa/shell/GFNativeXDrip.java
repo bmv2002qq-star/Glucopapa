@@ -39,6 +39,7 @@ public final class GFNativeXDrip implements AutoCloseable {
         if (closed) return response("UNAVAILABLE");
         String previous = result;
         if (active == null) {
+            result = response("READING");
             CancellationSignal request = new CancellationSignal();
             active = request;
             Runnable timeout = () -> {

@@ -95,7 +95,7 @@ def run(browser, origin, output, legacy=False):
         page.locator('#nav [data-screen="journal"]').click()
         assert page.frame_locator('#iframeApprovedJournal').locator('thead th').count() == 3
         page.screenshot(path=output / f'journal-{width}.png')
-    page.locator('#nav [data-screen="system"]').click()
+    page.evaluate("GPApp.open('system')")
     page.once('dialog', lambda dialog: dialog.accept())
     page.locator('#modeDemo').click()
     assert page.evaluate('GPApp.mode()') == 'demo' and page.locator('#banner').is_visible()

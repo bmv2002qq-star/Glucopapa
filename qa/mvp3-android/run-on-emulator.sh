@@ -14,11 +14,17 @@ export ANDROID_AVD_HOME="$evidence/avd"
 
 printf 'no\n' | avdmanager create avd --name "$avd" --package "system-images;android-$api;default;x86_64" --device pixel_5
 "$adb" start-server
-"$sdk/emulator/emulator" -avd "$avd" -port 5554 -accel on -gpu swiftshader \
+compatibility_options=()
+if [[ $api == 31 ]]; then
+    compatibility_options+=(-feature -Vulkan)
+fi
+"$sdk/emulator/emulator" -avd "$avd" -port 5554 -accel on -gpu swiftshader "${compatibility_options[@]}" \
   -no-window -no-audio -no-snapshot -no-boot-anim -no-metrics -camera-back none -camera-front none \
   > "$evidence/emulator.raw" 2>&1 &
 emulator_pid=$!
 cleanup() {
+    "$adb" -s "$serial" logcat -d -t 900 -s AndroidRuntime ActivityManager WebViewFactory chromium \
+        > "$evidence/device.log" 2>&1 || true
     tr -d '\r' < "$evidence/emulator.raw" | sed '/Sending adb public key/d; /androidboot\.qemu\.adb\.pubkey/d' > "$evidence/emulator.log"
     if kill -0 "$emulator_pid" 2>/dev/null; then
         kill "$emulator_pid" || true
@@ -45,6 +51,10 @@ test "$actual" = "$avd"
 printf 'AVD %s on %s booted with hardware acceleration\n' "$avd" "$serial" > "$evidence/boot.log"
 "$adb" -s "$serial" shell input keyevent KEYCODE_WAKEUP
 "$adb" -s "$serial" shell wm dismiss-keyguard
+if [[ $api == 31 ]]; then
+    "$adb" -s "$serial" shell wm size 720x1560
+    "$adb" -s "$serial" shell wm density 360
+fi
 
 # Check the exact ordinary APK before installing the separately named fixture.
 ordinary_apk=android-mvp3/app/build/outputs/apk/debug/app-debug.apk
@@ -60,12 +70,15 @@ test "$(cut -d ' ' -f 1 "$evidence/installed-apk.sha256")" = "$(cut -d ' ' -f 1 
     com.glucopapa.shell.test/com.glucopapa.shell.qa.StorageInstrumentation | tee "$evidence/production-isolation.log"
 grep -F 'QA_PASS production' "$evidence/production-isolation.log"
 "$adb" -s "$serial" shell am force-stop com.glucopapa.shell
-for step in provider-write provider-restored history-write history-restored; do
+for step in provider-write provider-restored history-write history-restored web-write web-restored profile-write profile-restored; do
     "$adb" -s "$serial" shell am instrument -w -r -e fixture SYNTHETIC -e phase production -e step "$step" \
         com.glucopapa.shell.test/com.glucopapa.shell.qa.StorageInstrumentation | tee "$evidence/$step.log"
     grep -F 'QA_PASS production' "$evidence/$step.log"
     "$adb" -s "$serial" shell am force-stop com.glucopapa.shell
 done
+"$adb" -s "$serial" shell am instrument -w -r -e fixture SYNTHETIC -e phase back \
+    com.glucopapa.shell.test/com.glucopapa.shell.qa.StorageInstrumentation | tee "$evidence/production-back.log"
+grep -F 'QA_PASS back' "$evidence/production-back.log"
 
 # The tested fixture has its own package and app-private directory.
 export GLUCOPAPA_QA_PACKAGE=com.glucopapa.shell.fixture

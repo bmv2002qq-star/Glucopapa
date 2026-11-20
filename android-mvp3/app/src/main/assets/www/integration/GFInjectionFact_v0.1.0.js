@@ -3,7 +3,7 @@
   'use strict';
   const ts=Date.parse;
   const contract='glucopapa.preinjection-iob/1';
-  const allowedStates=['planned','started','completed'];
+  const allowedStates=['draft','planned','started','completed'];
 
   function modelEvidence({host,atIso,revision,settings}) {
     const result=root.GFInsulinEvidenceGate.calculateFromHost(host,atIso,root.RinfastEngine);
