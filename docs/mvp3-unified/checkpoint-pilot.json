@@ -1,0 +1,37 @@
+{
+  "status": "PASS_SCOPED",
+  "date": "2026-11-20",
+  "codeCommit": "8e8ffb7faa02b3a94e02836094a5ceb317053ddc",
+  "runId": 44729988527,
+  "androidEmulator": {
+    "31": "ENV_BLOCKED_WEBVIEW_STARTUP_TWICE",
+    "34": "PASS",
+    "35": "PASS_EXTENDED",
+    "36": "PASS"
+  },
+  "androidDevice": "NOT_TESTED",
+  "realXDrip": "NOT_TESTED",
+  "clinical": "NOT_VALIDATED",
+  "android90DayReplay": [
+    {
+      "elapsedMs": 9424,
+      "fixture": "SYNTHETIC_ONLY",
+      "jsonChars": 3937188,
+      "revision": 7,
+      "samples": 25920,
+      "status": "PASS",
+      "step": "write",
+      "virtualDays": 90
+    },
+    {
+      "elapsedMs": 1509,
+      "fixture": "SYNTHETIC_ONLY",
+      "jsonChars": 3937188,
+      "revision": 7,
+      "samples": 25920,
+      "status": "PASS",
+      "step": "restored",
+      "virtualDays": 90
+    }
+  ]
+}

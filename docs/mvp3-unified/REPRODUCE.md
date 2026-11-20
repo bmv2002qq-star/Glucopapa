@@ -17,3 +17,15 @@ python3 qa/mvp3-full/integrity.py --apk android-mvp3/app/build/outputs/apk/debug
 `assembleDebug` выдаёт обычный устанавливаемый APK. `assembleFixture` предназначен для лабораторных сценариев и имеет другой package ID. Для нативной контрольной проверки обычного APK собирается отдельный `test APK` с `-PglucopapaTestTarget=debug :app:assembleDebugAndroidTest`. Нативный сценарий следует запускать на одноразовом AVD. Последовательность установки, сценариев SQLite, force-stop и сбора файлов указана в [GitHub Actions](https://github.com/bmv2002qq-star/Glucopapa/blob/c091860497d3bae24129ca392c0517be22f653b1/.github/workflows/mvp3-android-device.yml).
 
 Локальный APK и каждый APK CI имеют собственный SHA-256. Версия кода и содержимое WebView проверяются одним списком файлов, SHA APK приводятся отдельно. Clinical, телефон и реальный xDrip+ оцениваются независимо от запуска AVD.
+
+## Проверки 0.3.15-pilot
+
+```bash
+node --test qa/mvp3-pilot/backfill.test.cjs
+node qa/mvp3-pilot/replay-90d.cjs
+python3 qa/mvp3-pilot/browser-history.py --output qa-output/history
+```
+
+На Android тест `production` использует обычный APK. `history-write` поднимает синтетический сервер внутри эмулятора на 127.0.0.1:17580, вызывает нативный клиент, проверяет перенос в WebView и SQLite. `history-restored` повторяет чтение после остановки процесса. Сценарий Android 15 extended использует изолированный тестовый пакет для 90-дневных синтетических данных.
+
+[Коммит APK](https://github.com/bmv2002qq-star/Glucopapa/commit/8e8ffb7faa02b3a94e02836094a5ceb317053ddc) · [Android Actions](https://github.com/bmv2002qq-star/Glucopapa/actions/runs/44729988527) · [Контрольные суммы](evidence/pilot-apk.json)

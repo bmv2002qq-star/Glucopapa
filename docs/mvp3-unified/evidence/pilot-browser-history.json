@@ -1,0 +1,12 @@
+{
+  "status": "PASS",
+  "fixture": "SYNTHETIC_BRIDGE",
+  "browser_without_native_hidden": true,
+  "no_provider": true,
+  "opt_out_during_request": true,
+  "history_import": true,
+  "idempotent": true,
+  "backup_roundtrip": true,
+  "local_reload": true,
+  "actual_network": false
+}

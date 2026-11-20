@@ -1,0 +1,29 @@
+{
+  "status": "PASS",
+  "protected_assets": 26,
+  "load_order": 89,
+  "active_storage": "modules/GFStorage_v0.5.12/src/gfstorage_core.js",
+  "native_helpers": 1,
+  "web_assets": 142,
+  "packaged_assets": 101,
+  "archive_verified": true,
+  "archive_unchanged_assets": 134,
+  "archive_changed_assets": [
+    "app.js",
+    "index.html",
+    "integration/GFCgmEvidencePolicy_v0.1.0.js",
+    "integration/GFGraphEvidenceBridge_v0.1.0.js",
+    "integration/GFProviderCgm_v0.1.0.js",
+    "integration/GFResearchForecastRun_v0.1.0.js",
+    "modules/GFAuditExport_v0.1.4/src/gfaudit_export_storage_adapter.js",
+    "modules/GFStorage_v0.5.12/src/gfstorage_core.js"
+  ],
+  "apk_mirror": true,
+  "frames": [
+    "approved/GFNutrition_v0.4.6_LIVE.html",
+    "approved/GFJournal_v0.1.2_3COL_CANDIDATE.html",
+    "approved/GFSettings_v0.1.4_LIVE.html",
+    "integration/approved_routes/LOW_v0.2_VIEW.html",
+    "integration/approved_routes/GFHighTarget_v0.1.3_VIEW.html"
+  ]
+}
