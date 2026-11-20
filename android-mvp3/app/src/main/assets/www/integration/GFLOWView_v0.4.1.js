@@ -116,7 +116,11 @@
       item.textContent = messages[code] ?? code;
       return item;
     }));
+    const trajectory=globalThis.GFConsensusEvidence?.current(host,nowMs);
     el('lowTrace').textContent = [
+      ...(trajectory?['GFConsensus · исследовательская траектория · '+trajectory.status+
+        (trajectory.reason?' · '+trajectory.reason:''),
+        ...(trajectory.horizons??[]).map(point=>'+ '+point.horizonMin+' мин · '+fmt(point.glucoseMmol)+' ммоль/л')]:[]),
       'GFStorage · ревизия ' + (view.revision ?? '—'), 'CGM · ' + (reading?.source ?? '—') + ' · ' + (reading?.measuredAt ?? '—'),
       'УК · ' + fmt(view.rates?.uk?.value) + ' г/ЕД · ' + (view.rates?.uk?.id ?? 'неизвестно'),
       'ФЧИ · ' + fmt(view.rates?.isf?.value) + ' ммоль/л/ЕД · ' + (view.rates?.isf?.id ?? 'неизвестно'),

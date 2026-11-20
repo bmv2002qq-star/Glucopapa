@@ -115,7 +115,6 @@ class CandidateUI:
 
     def injection(self, confirmed):
         self.home()
-        self.scroll()
         self.tap('openHigh', ('Высокий сахар',), scroll=True)
         self.tap('preview', ('Или введи свою дозу',), scroll=True)
         self.emulator.execute('shell', 'input', 'text', '0.5')

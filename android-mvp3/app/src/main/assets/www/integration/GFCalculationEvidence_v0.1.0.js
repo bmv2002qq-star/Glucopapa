@@ -136,6 +136,7 @@
     }
     return {route, revision, status: 'BLOCKED', result: null, blockers, uncertainties,
       trace: {checkedAt, timeZone: settings.profile.timeZone, coefficients, plate, sportActive, illness,
+        researchTrajectory: root.GFConsensusEvidence?.readScenario({host,evidence:cgm,nowMs}) ?? null,
         activity: settings.profile.activityBaseLevel, glucose: {source: cgm.sourceStatus, code: cgm.code,
           measuredAt: cgm.latestAt, ageMinutes: cgm.ageMinutes ?? null, observedMmol: cgm.currentMmol ?? cgm.reportedMmol ?? null},
         trend, iob: {status: rapid.status, method: rapid.method, coverageStartIso: rapid.coverageStartIso,
@@ -185,8 +186,17 @@
     if (s.plate) lines.push('Тарелка · ' + (s.plate.source === 'planned' ? 'план' : 'подтверждённый факт') +
       ' · углеводы ' + quantity(s.plate.carbsG, 'г') + ' · жиры ' + quantity(s.plate.fatG, 'г') +
       ' · белки ' + quantity(s.plate.proteinG, 'г'));
+    if(s.researchTrajectory){
+      const trajectory=s.researchTrajectory;
+      lines.push('GFConsensus · исследовательская траектория · '+trajectory.status+' · '+
+        (trajectory.reason||trajectory.leader||'составной прогноз'));
+      for(const point of trajectory.horizons??[]){
+        lines.push('  +'+point.horizonMin+' мин · '+quantity(point.glucoseMmol,'ммоль/л')+
+          ' · изменение '+quantity(point.deltaMmol,'ммоль/л'));
+      }
+    }
     lines.push(...evidence.uncertainties.map(v => 'Неопределённость · ' + v.message),
-      'Итог и прогноз не вычислены.');
+      'Лечебный расчёт недоступен.');
     trace.textContent = lines.join('\n');
   }
 

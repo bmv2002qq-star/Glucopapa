@@ -15,7 +15,38 @@
         const read = key => JSON.parse(GFNativeStorage.readSnapshot(key));
         const localKey = 'GFV2SHELL_DATA_v1_local';
         assert(read('GFV2SHELL_DATA_v1_demo').ok === false, 'Test journal is accessible');
+        const action=window.__glucopapaQAAction;
+        if(action==='provider-restored'){
+            const state=GPApp.getStorage().exportState();
+            const item=state.cgm[0];
+            assert(state.revision===1&&state.cgm.length===1&&item.mgdl===108.09354&&
+                item.mmol===6&&item.direction==='FortyFiveDown'&&item.sourceDeviceId==='xdrip-local-provider'&&
+                item.staleAtReceipt===false&&Date.parse(item.receivedAt)>item.ts,'Synthetic provider point did not survive restart');
+            const stored=read(localKey);
+            assert(stored.code==='FOUND'&&stored.data===JSON.stringify(state),'SQLite and GFStorage differ');
+            return {status:'PASS',fixture:'SYNTHETIC_PROVIDER_PAYLOAD',checked:'FORCE_STOP_RELAUNCH',revision:1};
+        }
         assert(read(localKey).code === 'ABSENT', 'Fresh local SQLite contains a snapshot');
+        if(action==='provider-write'){
+            const now=Date.now(), measuredAtMs=now-300000, receivedAtMs=now-1000;
+            const host=GPApp.getStorage();
+            const payload={status:'MEASUREMENT',measuredAtMs,receivedAtMs,mgdl:108.09354,direction:'FortyFiveDown',stale:false};
+            const ingest=observation=>GFProviderCgm.ingest(host,'local',observation,now);
+            assert(ingest(payload).status==='OBSERVED','Synthetic provider packet was refused');
+            assert(ingest({...payload,receivedAtMs:now}).idempotent===true,'Duplicate provider packet created a new revision');
+            for(const bad of [{...payload,mgdl:105},{...payload,measuredAtMs:now+1,receivedAtMs:now+1}]){
+                let rejected=false;
+                try { ingest(bad); } catch { rejected=true; }
+                assert(rejected,'Conflicting or future provider packet was accepted');
+            }
+            const state=host.exportState();
+            assert(state.revision===1&&state.cgm.length===1&&state.cgm[0].receivedAt===new Date(receivedAtMs).toISOString(),
+                'Duplicate or rejected observation changed GFStorage');
+            const native=read(localKey);
+            assert(native.code==='FOUND'&&native.data===JSON.stringify(state),'Missing native SQLite receipt');
+            assert(GFMainScreenUI && byId('homeGlucose').textContent==='6','Main screen did not display observed CGM');
+            return {status:'PASS',fixture:'SYNTHETIC_PROVIDER_PAYLOAD',checked:'CAS_AND_DEDUPLICATION',revision:1};
+        }
         const host = GPApp.getStorage();
         const before = host.exportState();
         const cgm = host.connect('cgmAdapter');

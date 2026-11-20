@@ -155,11 +155,25 @@
       return {status:'UNAVAILABLE',code:'REVISION_CHANGED',engines:[unavailable]};
     }
     if (!rows.length) return {status:'UNAVAILABLE',code:'NO_COMPARABLE_CURVE',sourceRevision:frame.sourceRevision,engines};
+    let consensus=null;
+    if(root.GFConsensusEvidence){
+      const graph=options.host.connect('graph').getSnapshot();
+      try{
+        if(graph.revision!==frame.sourceRevision)return {status:'UNAVAILABLE',code:'REVISION_CHANGED',engines:[unavailable]};
+        const selection=root.GFConsensusEvidence.assess({issued:graph.forecasts,actual:graph.cgm,current:rows,
+          asOf:Date.parse(frame.forecastAt),enabled:graph.graphPreferences.autoConsensus!==false});
+        const {row,...report}=selection;
+        if(row)rows.push(row);
+        consensus=report;
+      }catch{
+        consensus={status:'BLOCKED',reason:'CONSENSUS_FAILED',clinicalUse:false};
+      }
+    }
     try {
       const receipt = writer.appendResearchEvents({schema:'gfforecast.research-events/1',
         writerRequired:true,forecasts:rows,assessments:[]},frame.sourceRevision);
       return {status:'ARCHIVED',sourceRevision:frame.sourceRevision,archiveRevision:receipt.revision,
-        inputDigest,mealModel:frame.mealModel,coefficients:capture.coefficients,engines};
+        inputDigest,mealModel:frame.mealModel,coefficients:capture.coefficients,engines,consensus};
     } catch {
       return {status:'UNAVAILABLE',code:'FORECAST_ARCHIVE_FAILED',sourceRevision:frame.sourceRevision,engines:[unavailable]};
     }

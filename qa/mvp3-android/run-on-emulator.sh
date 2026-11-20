@@ -53,6 +53,12 @@ printf 'AVD %s on %s booted with hardware acceleration\n' "$avd" "$serial" > "$e
     com.glucopapa.shell.test/com.glucopapa.shell.qa.StorageInstrumentation | tee "$evidence/production-isolation.log"
 grep -F 'QA_PASS production' "$evidence/production-isolation.log"
 "$adb" -s "$serial" shell am force-stop com.glucopapa.shell
+for step in provider-write provider-restored; do
+    "$adb" -s "$serial" shell am instrument -w -r -e fixture SYNTHETIC -e phase production -e step "$step" \
+        com.glucopapa.shell.test/com.glucopapa.shell.qa.StorageInstrumentation | tee "$evidence/$step.log"
+    grep -F 'QA_PASS production' "$evidence/$step.log"
+    "$adb" -s "$serial" shell am force-stop com.glucopapa.shell
+done
 sha256sum android-mvp3/app/build/outputs/apk/debug/app-debug.apk > "$evidence/production-apk.sha256"
 
 # The tested fixture has its own package and app-private directory.
@@ -76,7 +82,7 @@ fi
 
 # Exercise the real settings panel against production GFStorage and its native SQLite driver.
 runner="$GLUCOPAPA_QA_PACKAGE.test/com.glucopapa.shell.qa.StorageInstrumentation"
-for step in meal-model-save meal-model-restored high-settings-save high-settings-restored; do
+for step in meal-model-save meal-model-restored high-settings-save high-settings-restored unified-save unified-restored; do
     "$adb" -s "$serial" shell am instrument -w -r -e fixture SYNTHETIC -e phase stock -e step "$step" "$runner" \
       | tee "$evidence/$step.log"
     grep -F 'QA_PASS stock' "$evidence/$step.log"

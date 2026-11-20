@@ -1,43 +1,53 @@
 <!doctype html>
-<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="color-scheme" content="light"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; frame-src 'self'; base-uri 'none'"><title>ГлюкоПапа V2</title><link rel="icon" href="data:,"><link rel="stylesheet" href="styles.css"></head>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="color-scheme" content="light"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; frame-src 'self'; base-uri 'none'"><title>ГлюкоПапа V2</title><link rel="icon" href="data:,"><link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="integration/GFMainScreen_v1.0.0/gfmain_home_scoped.css"></head>
 <body>
 <div class="app">
  <header class="app-header"><div><div class="brand-title">Глюко<span>папа</span></div><div class="sub">Семейный дневник диабета · V2<br>Единая база и подключаемые модули</div></div><div class="toptools"><span id="modeBadge" class="chip local">Локальный журнал</span><span id="revBadge" class="badge-small">База #0</span></div></header>
  <main class="main">
   <div class="sr-only" id="pageTitle" aria-live="polite">Главная</div>
   <div id="notice" class="notice" role="status" aria-live="polite"></div>
-  <section id="screen-home" class="screen active">
-   <div class="home-top"><div class="h1">Здравствуйте 👋</div><span class="chip">Сегодня</span></div>
-   <article class="card profile-card"><div class="profile-text"><strong>👤 Профиль ребёнка</strong><p>Данные профиля и измерения читаются из GFStorage.<br>Редактирование доступно в настройках.</p></div><button data-screen="settings" class="btn secondary">Изменить</button></article>
-   <article class="card glucose-card"><div class="glucose-top"><div class="glucose-title">Глюкоза</div><span class="chip">CGM · график A</span></div>
-    <div class="value"><strong id="homeGlucose">—</strong></div><div class="muted" id="homeCgmInfo">Ожидаем данные xDrip+ Follower</div>
-    <div class="chart-wrap" id="cgmChart"><div class="empty">Здесь появится график глюкозы<br>после подключения xDrip+</div></div>
-    <div class="glucose-actions"><button id="openLow" class="low-btn" type="button">↓ Низкий сахар</button><button id="openHigh" class="high-btn" type="button">↑ Высокий сахар</button></div>
-    <button class="basal-quick-shell" id="openBasalQuick" type="button"><span class="basal-icon">💉</span><span><strong>Ввести длинный инсулин</strong><small>Записать фактически выполненный укол</small></span><span aria-hidden="true">›</span></button>
-    <div class="target-note"><b>●</b> Тревоги остаются в xDrip+. Экран анализа и ссылки на единую запись действий доступны без повторных форм.</div>
-    <button type="button" class="inline-link" data-screen="cgm">Открыть подробный график</button>
-   </article>
-   <div class="stat-grid"><article class="stat"><strong id="homeCgmCount">0</strong><span>CGM точек</span></article><article class="stat"><strong id="homeInjectionCount">0</strong><span>Инъекций</span></article><article class="stat"><strong id="homeMealCount">0</strong><span>Приёмов еды</span></article></div>
-   <article class="card sport-card" id="sportHomeCard">
-     <div class="between"><h3>Физическая активность</h3><span id="sportBadge" class="chip">Нет тренировки</span></div>
-     <label class="sport-label" for="activityChoice">Уровень активности</label>
-     <select id="activityChoice" aria-label="Уровень активности"><option value="low">Низкая</option><option value="usual">Обычная</option><option value="high">Высокая</option><option value="sport">Спорт</option></select>
-     <div id="sportControls" hidden><div id="sportClock" class="soft" aria-live="polite"></div>
-       <button type="button" id="sportStart" class="btn primary full">Начало спорта</button>
-       <button type="button" id="sportFinish" class="btn secondary full" hidden>Спорт закончился</button>
-     </div>
-     <p class="hint">Занятие записывается в дневник через GFStorage. Коэффициенты лечения автоматически не изменяются.</p>
-   </article>
-   <article class="card"><div class="between"><h3>Последние события</h3><button class="inline-link" data-screen="journal">Все записи</button></div><div id="homeEvents" class="empty">Пока нет событий</div></article>
-   <article class="card"><h3>Проверка данных</h3><div id="homeSafety" class="soft">GFSafety ещё не запускался.</div><button id="homeSafetyRun" class="btn secondary">Проверить данные</button></article>
-  </section>
+<section class="screen active" id="screen-home"><div class="home-error" hidden="" id="gpMainError" role="alert"></div>
+<article aria-label="Глюкоза и прогнозы" class="card glucose-card">
+<div class="value"><strong id="homeGlucose">—</strong> <span class="unit">ммоль/л</span> <span id="homeTrend" class="trend">—</span></div><div id="homeCgmInfo" class="muted">Ожидание данных CGM</div>
+<div class="cg-toolbar"><div class="cg-caption"><span class="current-dot"></span><b>Глюкоза</b><small>CGM</small></div><div aria-label="Масштаб по времени" class="zoom-controls"><button aria-label="Уменьшить масштаб" id="zoomOut" type="button">−</button><span id="zoomLabel">6 ч</span><button aria-label="Увеличить масштаб" id="zoomIn" type="button">+</button><button aria-label="Восстановить масштаб графика" id="zoomReset" title="Вернуть исходный масштаб по обеим осям" type="button">↺</button></div></div><div class="xdrip-chart-wrap"><svg aria-label="График глюкозы. Два пальца горизонтально — время, вертикально — уровень глюкозы. Одним пальцем — перемещение." id="main-chart" role="img" viewbox="0 0 660 282"></svg></div><div aria-label="Жесты графика" class="graph-gesture-hint">↔ Время  ·  ↕ Глюкоза  ·  2 пальца — масштаб, 1 — сдвиг</div>
+<div aria-label="Прогнозные линии" class="forecast-controls" id="controls-main"><div class="forecast-options">
+<label class="forecast-option" data-line-label="GFConsensus" title="Среднее арифметическое прогнозов"><input checked="" data-model-visibility="GFConsensus" type="checkbox"/><i class="stroke mean"></i><span class="label-text">Средний</span></label>
+<label class="forecast-option" data-line-label="GFForecast" title="Прогноз GFForecast"><input checked="" data-model-visibility="GFForecast" type="checkbox"/><i class="stroke"></i><span class="label-text">Forecast</span></label>
+<label class="forecast-option" data-line-label="GFxDrip" title="Прогноз GFxDrip"><input checked="" data-model-visibility="GFxDrip" type="checkbox"/><i class="stroke"></i><span class="label-text">xDrip</span></label>
+<label class="forecast-option" data-line-label="GFAPSEnhancer" title="Прогноз GFAPSEnhancer"><input checked="" data-model-visibility="GFAPSEnhancer" type="checkbox"/><i class="stroke"></i><span class="label-text">APS</span></label></div></div>
+<p id="homeForecastLegend" class="hint" role="status"></p>
+<button type="button" class="inline-link" data-screen="cgm">Открыть подробный график</button>
+<div class="glucose-actions"><button class="low-btn" id="openLow" type="button">↓ Низкий сахар</button><button class="high-btn" id="openHigh" type="button">↑ Высокий сахар</button></div>
+<button class="basal-quick-shell" id="openBasalQuick" type="button"><span class="basal-icon">💉</span><span><strong>Ввести длинный инсулин</strong><small>Записать фактически выполненный укол</small></span><span aria-hidden="true">›</span></button>
+</article>
+<article class="card sport-mini" id="sportHomeCard"><div class="sport-top"><button aria-expanded="false" class="sport-toggle" id="sportToggle" type="button"><span aria-hidden="true">🏃</span> Спорт <span id="sportChevron">⌄</span></button><span class="sport-status" id="sportStatus"></span></div><div class="sport-menu" hidden="" id="sportMenu">
+<label class="sport-label" for="activityChoice">Уровень активности</label>
+<select id="activityChoice"><option value="low">Низкая</option><option value="usual">Обычная</option><option value="high">Высокая</option><option value="sport">Спорт</option></select>
+<div id="sportControls"><button class="btn-sport-start" id="sportStart" type="button">Начало спорта</button><button class="btn-sport-finish" hidden="" id="sportFinish" type="button">Спорт закончился</button><div aria-live="polite" class="sport-duration" id="sportClock"></div></div></div></article>
+<article aria-label="Питание за сегодня" class="card home-nutrition" id="nutritionToday">
+<div class="home-section-head"><h3>Питание за сегодня</h3><small>Б / Ж / У / ккал</small></div>
+<div class="nutri-scroll"><table aria-label="Съедено и справочная суточная норма" class="nutri-table">
+<thead><tr><th scope="col">Показатель</th><th scope="col">Съедено</th><th scope="col">Норма*</th><th scope="col">Осталось*</th></tr></thead>
+<tbody id="nutritionRows"></tbody>
+</table></div>
+<p class="home-summary-note" id="nutritionFootnote">Справочный диапазон GFSettings; «осталось» — до нижней границы, не индивидуальная цель.</p>
+</article>
+<article aria-label="Последние 10 действий дневника" class="card home-journal" id="recentJournal">
+<div class="home-section-head"><h3>Последние действия</h3><small id="recentCount">0 записей</small></div>
+<div class="journal-scroll"><table aria-label="Последние десять действий из дневника" class="recent-table">
+<thead><tr><th scope="col">Время</th><th scope="col">CGM</th><th scope="col">Событие</th></tr></thead><tbody id="recentRows"></tbody>
+</table></div>
+<div class="home-card-action"><button data-screen="journal" type="button">Весь дневник</button></div>
+</article>
+</section>
   <section id="screen-cgm" class="screen"><div class="section-header"><h2>Глюкоза (CGM)</h2><p>Показания и время измерения из GFStorage.</p></div>
    <article class="card"><div id="cgmDetailChart" class="chart-wrap"></div><div class="chart-options"><label><input id="showRinfast" type="checkbox" checked> Кривые РинФаста</label><button class="inline-link" type="button" data-screen="analytics">Исследовательский расчёт прогноза</button></div></article>
    <article class="card">
     <details id="forecastGraphOptions"><summary>Исследовательские прогнозы</summary>
+      <label class="check"><input type="checkbox" data-model-visibility="GFConsensus" checked> Средний прогноз (арифметический)</label>
       <label class="check"><input type="checkbox" data-model-visibility="GFForecast" checked> GFForecast</label>
       <label class="check"><input type="checkbox" data-model-visibility="GFAPSEnhancer" checked> GFAPSEnhancer</label>
-      <label class="check"><input type="checkbox" data-model-visibility="GFxDrip" checked> GFxDrip (источник не подключён)</label>
+      <label class="check"><input type="checkbox" data-model-visibility="GFxDrip" checked> GFxDrip (модель недоступна в этой сборке)</label>
       <label class="check"><input id="forecastAutoConsensus" type="checkbox" checked> Объединять при достаточной истории</label>
       <p id="forecastGraphLegend" class="hint" role="status"></p>
     </details>
@@ -51,7 +61,7 @@
     <button class="btn secondary full" type="button" data-screen="home">← Вернуться к графику</button>
    </article>
   </section>
-  <section id="screen-injections" class="screen"><div class="section-header"><button type="button" class="inline-link" data-screen="home">← На главную</button><h2>Запись выполненной инъекции</h2><p>Единственная точка регистрации факта — <code>GFStorage.actionWriter</code>.</p></div><p class="basal-entry-context" id="basalEntryContext" hidden>Выбран длинный инсулин. Укажите фактически введённое количество и подтвердите укол; запись будет одна — в общем дневнике.</p><div class="cols"><article class="panel"><form id="injectionForm" class="fields"><label>Препарат<select id="injectionDrug"><option value="rinfast">РинФаст</option><option value="levemir">Левемир</option></select></label><label>Фактически введено, ЕД<input id="injectionUnits" type="number" min="0.5" max="200" step="0.5" required placeholder="Например: 0,5"></label><label>Когда выполнено<input id="injectionTime" type="datetime-local" step="60" required></label><label>Место укола<select id="injectionRegion"><option value="">Не указано</option><option value="abdomen">Живот</option><option value="arm">Плечо</option><option value="thigh">Бедро</option><option value="buttock">Ягодица</option></select></label><label>Сторона<select id="injectionSide"><option value="">Не указана</option><option value="left">Левая</option><option value="right">Правая</option></select></label><label class="check"><input type="checkbox" id="injectionConfirm" required> Я подтверждаю: инъекция действительно выполнена</label><button class="btn primary" type="submit">Сохранить фактический укол</button></form><p class="hint">Повтор с другой записью в близкое время будет отклонён как возможный дубль. Программа не предлагает дозу.</p></article><article class="panel"><h3>Последние подтверждённые инъекции</h3><div id="injectionList" class="empty">Нет записей</div></article></div></section>
+  <section id="screen-injections" class="screen"><div class="section-header"><button type="button" class="inline-link" data-screen="home">← На главную</button><h2>Запись выполненной инъекции</h2><p>Единственная точка регистрации факта — <code>GFStorage.actionWriter</code>.</p></div><p class="basal-entry-context" id="basalEntryContext" hidden>Выбран длинный инсулин. Укажите фактически введённое количество и подтвердите укол; запись будет одна — в общем дневнике.</p><div class="cols"><article class="panel"><form id="injectionForm" class="fields"><label>Препарат<select id="injectionDrug"><option value="rinfast">РинФаст</option><option value="levemir">Левемир</option></select></label><label>Фактически введено, ЕД<input id="injectionUnits" type="number" min="0.5" max="200" step="0.5" required placeholder="Например: 0,5"></label><label>Когда выполнено<input id="injectionTime" type="datetime-local" step="60" required></label><label>Место укола<select id="injectionRegion"><option value="">Не указано</option><option value="abdomen">Живот</option><option value="arm">Плечо</option><option value="thigh">Бедро</option><option value="buttock">Ягодица</option></select></label><label>Сторона<select id="injectionSide"><option value="">Не указана</option><option value="left">Левая</option><option value="right">Правая</option></select></label><label id="injectionMealField">Связь с приёмом пищи <select id="injectionMeal"><option value="">Без связи</option></select></label><label class="check"><input type="checkbox" id="injectionConfirm" required> Я подтверждаю: инъекция действительно выполнена</label><button class="btn primary" type="submit">Сохранить фактический укол</button></form><p class="hint">Повтор с другой записью в близкое время будет отклонён как возможный дубль. Программа не предлагает дозу.</p></article><article class="panel"><h3>Последние подтверждённые инъекции</h3><div id="injectionList" class="empty">Нет записей</div></article></div></section>
   <section id="screen-meals" class="screen"><div class="section-header"><button type="button" class="inline-link" data-screen="approved-nutrition">← Моя тарелка v0.4.6</button><h2>План / фактически съедено</h2><p>Продукты выбираются только в утверждённой «Моей тарелке» v0.4.6. Здесь подтверждаются начало, фактическая порция и завершение через один GFStorage.</p></div><article class="panel"><h3>Текущий приём пищи</h3><div id="mealCurrent" class="empty">Создайте план в «Моей тарелке»</div><div class="actions"><button id="mealReady" class="btn secondary">Подготовлен</button><button id="mealStart" class="btn secondary">Фактически начал(а) есть</button><button id="mealFinish" class="btn secondary">Завершить приём</button></div><p class="hint">План не равен фактически съеденному. Отдельный ввод граммовки факта доступен ниже.</p></article>
 <article class="panel gf-meal-actual-panel" id="gfMealActualPanel"><h3>Фактически съедено · W03b, рабочий вариант</h3>
 <p class="hint">Выберите начатый приём пищи. Отметьте фактические граммы/мл отдельно от плана. Данные с неизвестным количеством не пересчитываются автоматически.</p>
@@ -211,7 +221,7 @@
 <script src="runtime/webview-compat.js"></script>
 <script src="shared/GFNormalizedFacts_v0.1.0.js"></script>
 <script src="shared/GFTimeGrid_v0.1.0.js"></script>
-<script src="modules/GFStorage_v0.5.11/src/gfstorage_core.js"></script>
+<script src="modules/GFStorage_v0.5.12/src/gfstorage_core.js"></script>
 <script src="modules/GFSettings_v0.1.8/shared/gfnutrition_reference.js"></script>
 <script src="modules/GFSettings_v0.1.8/shared/gfgrowth_reference.js"></script>
 <script src="modules/GFSettings_v0.1.8/src/gfsettings.js"></script>
@@ -264,6 +274,12 @@
 <script src="integration/GFResearchForecastRun_v0.1.0.js"></script>
 <script src="integration/GFResearchForecastGraph_v0.1.0.js"></script>
 <script src="integration/GFLevemirReview_v0.1.0.js"></script>
+<script src="integration/GFGraphFourLines_v0.1.0.js"></script>
+<script src="integration/GFMainScreen_v1.0.0/gfmain_core.js"></script>
+<script src="integration/GFMainScreen_v1.0.0/gfmain_ui.js"></script>
+<script src="integration/GFConsensusAutoSelection_v0.1.2.js"></script>
+<script src="integration/GFConsensusEvidence_v0.1.0.js"></script>
+<script src="integration/GFInjectionFact_v0.1.0.js"></script>
 <script src="app.js"></script>
 <script src="integration/GFModuleUI_v0.2.1.js"></script><script src="integration/GFModuleDirectory_v0.1.0.js"></script><script src="integration/GFSettingsPanel_v0.1.0.js"></script><script src="integration/GFMealActualPanel_v0.1.0.js"></script>
   <script src="integration/GFCOBAutoPanel_v0.2.0.js"></script>

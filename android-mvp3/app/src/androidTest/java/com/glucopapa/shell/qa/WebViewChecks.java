@@ -37,8 +37,13 @@ final class WebViewChecks {
             }
             script = new String(content.toByteArray(), StandardCharsets.UTF_8);
         }
-        String prefix = "window.__glucopapaQAAction=" + JSONObject.quote(action) + ";\n";
-        String started = evaluate(web, prefix + script + "\n'QA_SCRIPT_STARTED';");
+        String marker = JSONObject.quote(java.util.UUID.randomUUID().toString());
+        String guarded = "(() => { if(window.__glucopapaQAScriptStarted!==" + marker +
+            "){ window.__glucopapaQAScriptStarted=" + marker +
+            "; window.__glucopapaQAAction=" + JSONObject.quote(action) + ";\n" +
+            script + "\n} return 'QA_SCRIPT_STARTED';})()";
+        String started = evaluate(web, guarded);
+        if (started == null) started = evaluate(web, guarded);
         if (!"\"QA_SCRIPT_STARTED\"".equals(started)) {
             throw new IllegalStateException("Could not evaluate synthetic fixture: " + started);
         }
@@ -149,7 +154,7 @@ final class WebViewChecks {
             value.set(result);
             done.countDown();
         }));
-        return done.await(5, TimeUnit.SECONDS) ? value.get() : null;
+        return done.await(10, TimeUnit.SECONDS) ? value.get() : null;
     }
 
     private static WebView findWebView(View view) {

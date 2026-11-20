@@ -10,3 +10,4 @@ integration/approved_routes/LOW_v0.2_VIEW.html
 integration/approved_routes/GFHighTarget_v0.1.3_VIEW.html
 modules/GFPhysio_v0.1.2/LICENSE_GluPredKit_MIT.txt
 modules/GFPhysio_v0.1.2/LICENSE_Simglucose_MIT.txt
+integration/GFMainScreen_v1.0.0/gfmain_home_scoped.css

@@ -56,6 +56,9 @@ jobs:
             node --test --test-reporter=tap qa/mvp3-low/*.test.cjs > qa-evidence/low.tap
             node qa/mvp3-low/replay.cjs > qa-evidence/low-replay.json
           fi
+          if [[ -d qa/mvp3-unified ]]; then
+            node --test --test-reporter=tap qa/mvp3-unified/*.test.cjs > qa-evidence/unified.tap
+          fi
           node qa/mvp3-calculators/stress.cjs qa-evidence > qa-evidence/stress.log
           node qa/mvp3-calculators/physio-stress.cjs qa-evidence > qa-evidence/physio.log
           gzip -n qa-evidence/*-cases.jsonl
@@ -73,12 +76,14 @@ jobs:
       artifact-suffix: '-core'
 
   android-15-extended:
+    needs: android-15
     uses: ./.github/workflows/mvp3-android-device.yml
     with:
       api: 35
       extended: true
 
   compatibility:
+    needs: android-15
     strategy:
       fail-fast: false
       matrix:

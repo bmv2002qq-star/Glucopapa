@@ -7,7 +7,7 @@ const {runInNewContext} = require('node:vm');
 
 const web = path.resolve(__dirname, '../../android-mvp3/app/src/main/assets/www');
 const fromWeb = (name) => require(path.join(web, name));
-const Storage = fromWeb('modules/GFStorage_v0.5.11/src/gfstorage_core.js');
+const Storage = fromWeb('modules/GFStorage_v0.5.12/src/gfstorage_core.js');
 const MealCalc = fromWeb('modules/GFMealCalc_v0.1.4/src/gf_meal_calc.js');
 const Controller = fromWeb('modules/GFMealCalc_v0.1.2/adapters/gfmeal_controller.js');
 const Settings = fromWeb('modules/GFSettings_v0.1.8/src/gfsettings.js');

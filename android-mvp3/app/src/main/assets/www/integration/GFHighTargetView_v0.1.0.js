@@ -112,7 +112,8 @@
       if(result.manualPreview)curves.push({id:'preview',points:result.points,color:'#168c78',width:3.3});
     }
     axis(el('chart'),curves,prefs.target?.valueMmol);
-    el('details').textContent=JSON.stringify({status:result.status,code:result.code,version:result.version??bridge.VERSION,
+    const researchTrajectory=globalThis.GFConsensusEvidence?.current(host);
+    el('details').textContent=JSON.stringify({researchTrajectory,status:result.status,code:result.code,version:result.version??bridge.VERSION,
       revision:result.sourceRevision,observations:result.observations,source:v,model:result.meta,trace:result.trace},null,2);
     el('record').disabled=busy||!bridge.boundedHalf(num(el('preview')),synthetic?6:200)||!el('site').value;
     size();

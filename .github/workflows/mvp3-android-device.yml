@@ -41,6 +41,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.13'
+          cache-read-only: false
       - name: Add Android command-line tools to PATH
         uses: android-actions/setup-android@v3
         with:
@@ -64,7 +65,8 @@ jobs:
           mkdir -p "$EVIDENCE"
           assemble=(gradle --no-daemon --console=plain -Pandroid.builder.sdkDownload=false :app:assembleDebug :app:assembleFixture :app:assembleFixtureAndroidTest)
           if ! "${assemble[@]}" 2>&1 | tee "$EVIDENCE/build.log"; then
-            grep -F 'Could not resolve all artifacts for configuration' "$EVIDENCE/build.log"
+            grep -E 'Could not (resolve all artifacts|find|GET|HEAD)' "$EVIDENCE/build.log"
+            sleep "$((20 + ANDROID_QA_API % 17))"
             "${assemble[@]}" --refresh-dependencies 2>&1 | tee -a "$EVIDENCE/build.log"
           fi
           gradle --no-daemon --console=plain -Pandroid.builder.sdkDownload=false -PglucopapaTestTarget=debug :app:assembleDebugAndroidTest

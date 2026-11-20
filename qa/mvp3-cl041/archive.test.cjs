@@ -5,7 +5,7 @@ const {runInNewContext} = require('node:vm');
 const {resolve} = require('node:path');
 const {test} = require('node:test');
 const {at,minute,iso,web,fromWeb,mutate,testJournal} = require('../mvp3-calculators/fixture.cjs');
-const Storage = fromWeb('modules/GFStorage_v0.5.11/src/gfstorage_core.js');
+const Storage = fromWeb('modules/GFStorage_v0.5.12/src/gfstorage_core.js');
 fromWeb('modules/GFForecast_v0.1.3/src/gfforecast.js');
 fromWeb('modules/GFForecast_v0.1.3/src/gfforecast_storage_adapter.js');
 fromWeb('integration/GFForecastReadout_v0.1.0.js');

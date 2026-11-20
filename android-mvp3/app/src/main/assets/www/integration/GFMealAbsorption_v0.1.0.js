@@ -2,7 +2,7 @@
 (function (root) {
   'use strict';
   const isNode = typeof module === 'object' && module.exports;
-  const storage = isNode ? require('../modules/GFStorage_v0.5.11/src/gfstorage_core.js') : root.GFStorage;
+  const storage = isNode ? require('../modules/GFStorage_v0.5.12/src/gfstorage_core.js') : root.GFStorage;
   const coverage = isNode ? require('./GFMealCoverageStudy_v0.1.1.js') : root.GFMealCoverageStudy;
   const linear = isNode ? require('./GFCOBResearch_v0.1.1.js') : root.GFCOBResearch;
   const smoothWindowMs = 6 * 3600_000;

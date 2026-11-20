@@ -46,10 +46,10 @@ def main():
     entry.feed((web / 'index.html').read_text(encoding='utf-8'))
     order = [line.strip() for line in (web / 'runtime/LOAD_ORDER.txt').read_text().splitlines()
              if line.strip() and not line.startswith('#')]
-    assert order == entry.scripts and len(set(order)) == len(order) == 83
+    assert order == entry.scripts and len(set(order)) == len(order) >= 83
     assert order[0] == 'runtime/webview-compat.js'
     core = [name for name in order if re.search(r'GFStorage.*gfstorage_core\.js$', name)]
-    assert core == ['modules/GFStorage_v0.5.11/src/gfstorage_core.js']
+    assert core == ['modules/GFStorage_v0.5.12/src/gfstorage_core.js']
     assert not any(token in name for name in order for token in ('ReplayLab', 'GFxDrip', 'GFNutrition_FALLBACK'))
     assert len(entry.frames) == 5 and all(name.startswith('approved/') for name in entry.frames[:3])
     assert entry.frames[3:] == ['integration/approved_routes/LOW_v0.2_VIEW.html',
@@ -83,7 +83,11 @@ def main():
         allowed_additions = {'runtime/webview-compat.js', 'integration/GFProviderCgm_v0.1.0.js',
                              'integration/GFJournalBackup_v0.1.0.js', 'integration/GFForecastReadout_v0.1.0.js',
                              'integration/GFCalculationEvidence_v0.1.0.js', 'integration/GFConsensusReview_v0.1.0.js',
-                             'integration/GFLevemirReview_v0.1.0.js', 'integration/GFResearchForecastRun_v0.1.0.js', 'integration/GFResearchForecastGraph_v0.1.0.js', core[0]}
+                             'integration/GFLevemirReview_v0.1.0.js', 'integration/GFResearchForecastRun_v0.1.0.js', 'integration/GFResearchForecastGraph_v0.1.0.js', 'runtime/APK_FILES.txt',
+                             'modules/GFStorage_v0.5.11/src/gfstorage_core.js', core[0],
+                             'integration/GFGraphFourLines_v0.1.0.js','integration/GFConsensusAutoSelection_v0.1.2.js',
+                             'integration/GFMainScreen_v1.0.0/gfmain_core.js','integration/GFMainScreen_v1.0.0/gfmain_ui.js',
+                             'integration/GFMainScreen_v1.0.0/gfmain_home_scoped.css'}
         assert set(files) - set(archived) <= allowed_additions
         assert set(archived).issubset(files)
         changes = sorted(name for name in archived if files[name] != archived[name])

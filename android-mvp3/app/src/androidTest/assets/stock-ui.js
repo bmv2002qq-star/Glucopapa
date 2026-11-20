@@ -75,6 +75,28 @@
             } else {
                 assert(state.revision===revision&&!state.events.length, 'Cancelled action modified the journal');
             }
+        } else if (action === 'unified-save' || action === 'unified-restored') {
+            GPApp.open('home');
+            const flag = document.querySelector('#screen-home [data-model-visibility=GFConsensus]');
+            if (action === 'unified-save') {
+                click('sportToggle');
+                click('sportStart');
+                assert(snapshot().conditionPeriods.filter(row=>row.kind==='sport'&&row.end===null).length===1,
+                    'Sport start was not saved');
+                if(flag.checked)flag.click();
+                assert(snapshot().graphPreferences.forecastVisibility.GFConsensus===false, 'Mean flag was not stored');
+            } else {
+                assert(!flag.checked && !by('sportFinish').hidden, 'Restored state differs');
+                const original=snapshot().conditionPeriods.filter(row=>row.kind==='sport');
+                assert(original.length===1 && original[0].end===null, 'Open sport period was lost');
+                const ask=window.confirm;
+                try { window.confirm=()=>true; click('sportFinish'); }
+                finally { window.confirm=ask; }
+                const completed=snapshot().conditionPeriods.filter(row=>row.kind==='sport');
+                assert(completed.length===1&&completed[0].id===original[0].id&&completed[0].end,
+                    'Finish duplicated or lost the sport record');
+                assert(document.querySelectorAll('#recentRows [data-kind=sport]').length===1, 'Home journal diverged');
+            }
         } else if (action.startsWith('ai-export:')) {
             const [, period, outcome] = action.split(':');
             const before = JSON.stringify(snapshot());

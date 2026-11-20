@@ -1,0 +1,206 @@
+#screen-home{--teal:#148e88;--deep:#16313f;--muted:#74878e;--bg:#f4f8f8;--border:#e1eaea;--orange:#fff2de;--yellow:#ad6a22;--red:#cc5353;--surface:#fff;--accent:#148e88;--line:#e1eaea;--medium:#243548;--forecast:#2541a0;--xd:#26705e;--aps:#96428a;font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif;font-size:15px;color:var(--deep);background:var(--bg)}
+#screen-home *{box-sizing:border-box}
+#screen-home{margin:0;color:var(--deep);background:var(--bg);-webkit-tap-highlight-color:transparent}
+#screen-home button, #screen-home input, #screen-home select{font:inherit}
+#screen-home button{cursor:pointer}
+#screen-home button:focus-visible, #screen-home input:focus-visible, #screen-home select:focus-visible{outline:3px solid #9ee1d7;outline-offset:2px}
+#screen-home .app{width:100%;max-width:570px;min-height:100dvh;margin:0 auto;background:var(--bg);padding-bottom:94px;box-shadow:0 0 24px #092a3206}
+#screen-home .main{padding:0 16px 28px}
+#screen-home .app-header{padding:24px 19px 10px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+#screen-home .brand-title{font-size:24px;font-weight:800;letter-spacing:-.7px;line-height:1.15}
+#screen-home .brand-title span{color:var(--teal)}
+#screen-home .sub{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.35}
+#screen-home .chip{display:inline-flex;gap:5px;align-items:center;border-radius:18px;padding:7px 10px;font-weight:700;font-size:11px;background:#e9f4f2;color:#237b75}
+#screen-home .chip.demo{background:#fff2de;color:#99692b}
+#screen-home .badge-small{font-size:10px;color:var(--muted);text-align:right}
+#screen-home .toptools{display:flex;gap:6px;align-items:center;justify-content:flex-end;flex-wrap:wrap}
+#screen-home .preview-band{padding:10px 12px;border-radius:12px;background:#e6f0f7;border:1px solid #d1e3ef;color:#31566e;font-size:11px;line-height:1.5;margin:8px 0 13px}
+#screen-home .preview-band strong{display:block;font-size:12px}
+#screen-home .h1{font-size:21px;font-weight:800;letter-spacing:-.3px;margin:10px 0 13px}
+#screen-home .card{background:#fff;border:1px solid #e8eeee;border-radius:22px;padding:18px;margin-bottom:13px;box-shadow:0 4px 20px #183e4e08;min-width:0}
+#screen-home .card h3{font-size:16px;margin:0 0 13px;font-weight:800}
+#screen-home .profile-card{display:flex;justify-content:space-between;align-items:center;gap:12px}
+#screen-home .profile-text strong{font-size:14px;display:block;margin-bottom:5px}
+#screen-home .profile-text p{font-size:11px;color:var(--muted);margin:0;line-height:1.45}
+#screen-home .inline-link{background:none;color:var(--teal);border:0;font-size:12px;font-weight:750;padding:6px}
+#screen-home .profile-card button{flex:none}
+#screen-home .btn.secondary{border:1px solid var(--border);background:#fff;color:var(--deep);border-radius:12px;min-height:37px;padding:9px 12px;font-size:12px;font-weight:720}
+#screen-home .between, #screen-home .glucose-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+#screen-home .glucose-title{font-size:16px;font-weight:800}
+#screen-home .value{font-size:49px;letter-spacing:-2px;font-weight:850;line-height:1.13;margin:12px 0 4px}
+#screen-home .unit{font-size:12px;letter-spacing:0;font-weight:600;color:#668187}
+#screen-home .muted{color:var(--muted);font-size:12px;line-height:1.5}
+#screen-home .chart-wrap{width:100%;border:1px solid #edf2f3;border-radius:12px;background:linear-gradient(#fff,#f8fcfc);padding:8px 4px 4px;overflow:hidden;margin-top:13px}
+#screen-home .chart-wrap svg{display:block;width:100%;height:auto;max-height:275px}
+#screen-home .chart-caption{font-size:11px;color:#8a989f;margin:2px 8px 4px;line-height:1.4}
+#screen-home .glucose-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:13px}
+#screen-home .glucose-actions button{border-radius:13px;min-height:47px;padding:9px 5px;font-size:12px;font-weight:780;border:1px solid transparent}
+#screen-home .low-btn{color:#b63b4b;background:#fff0f1;border-color:#f2a4ac!important}
+#screen-home .high-btn{color:#9f6016;background:#fff3e4;border-color:#f4c181!important}
+#screen-home .basal-quick-shell{display:flex;align-items:center;gap:11px;width:100%;text-align:left;background:#e7f5f1;color:#106f68;border:1px solid #b9e0d6;border-radius:13px;padding:12px 14px;margin:10px 0 4px;min-height:58px}
+#screen-home .basal-quick-shell>span:nth-child(2){flex:1}
+#screen-home .basal-quick-shell strong{display:block;font-size:14px;line-height:1.35}
+#screen-home .basal-quick-shell small{display:block;font-size:11px;color:#628c83;margin-top:3px}
+#screen-home .target-note{font-size:11px;color:#5b7880;line-height:1.4;margin:11px 0 0}
+#screen-home .target-note b{color:var(--teal)}
+#screen-home .forecast-controls{margin:12px 0 0;border:1px solid #dfe8eb;background:#fafeff;border-radius:15px;padding:11px 10px 9px}
+#screen-home .forecast-head{display:flex;justify-content:space-between;gap:8px;align-items:center;margin:0 2px 8px}
+#screen-home .forecast-head strong{font-size:12px;letter-spacing:-.1px}
+#screen-home .forecast-head span{color:#80949a;font-size:10px}
+#screen-home .forecast-options{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+#screen-home .forecast-option{display:flex;align-items:center;gap:6px;min-height:42px;background:white;border:1px solid #e6edef;border-radius:10px;padding:7px 8px;cursor:pointer;font-size:11px;font-weight:680;color:#354b55;min-width:0}
+#screen-home .forecast-option input{margin:0;flex:none;accent-color:var(--teal);width:15px;height:15px}
+#screen-home .forecast-option:has(input:focus-visible){outline:2px solid #64d0bb}
+#screen-home .forecast-option .stroke{width:20px;height:0;border-top:3px dashed var(--stroke);border-radius:2px;flex:none}
+#screen-home .forecast-option .stroke.mean{border-top-width:4px;border-top-style:dashed}
+#screen-home .forecast-option .label-text{min-width:0}
+#screen-home .forecast-option.unavailable .label-text{color:#75878d}
+#screen-home .forecast-option.unavailable::after{content:"○";font-size:10px;color:#a5b5b8;margin-left:auto}
+#screen-home .forecast-status{color:#5c767f;font-size:11px;line-height:1.42;margin:9px 2px 0;min-height:16px}
+#screen-home .stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:15px 0 13px}
+#screen-home .stat{padding:12px 5px;border-radius:14px;background:#f2f7f7;text-align:center;min-width:0;display:flex;flex-direction:column;align-items:center;gap:3px}
+#screen-home .stat strong{font-size:20px}
+#screen-home .stat span{font-size:11px;color:var(--muted)}
+#screen-home .between h3{margin-bottom:12px}
+#screen-home .soft{color:#4a6972;background:#eff6f8;border-radius:13px;padding:13px;font-size:12px;line-height:1.55;margin:8px 0}
+#screen-home .hint{font-size:11px;color:#83989c;line-height:1.5;margin:9px 0 0}
+#screen-home .demo-config{border:1px solid #d7e5e3;border-radius:15px;padding:10px 12px;margin:0 0 13px;background:#f9fcfc}
+#screen-home .demo-config summary{font-size:12px;font-weight:750;color:#42706d;cursor:pointer}
+#screen-home .demo-config label{display:flex;justify-content:space-between;gap:9px;align-items:center;margin-top:12px;font-size:12px;color:#49676c}
+#screen-home .demo-config select{max-width:240px;min-height:36px;border-radius:9px;border:1px solid #c8d7d7;background:white;color:var(--deep);font-size:12px;padding:5px 8px}
+#screen-home .consensus-card{padding:14px 16px}
+#screen-home .consensus-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
+#screen-home .consensus-head strong{font-size:13px}
+#screen-home .pill{display:inline-flex;padding:4px 8px;border-radius:7px;background:#e9f4f2;color:#287b70;font-size:10px;font-weight:760}
+#screen-home .pill.wait{background:#f5f2e9;color:#93752f}
+#screen-home .horizons{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:10px}
+#screen-home .horizon{border-radius:10px;padding:10px 7px;background:#f6f9f9;border:1px solid #edf2f2}
+#screen-home .horizon .k{color:#74878e;font-size:10px}
+#screen-home .horizon .who{font-weight:750;font-size:11px;margin:6px 0 3px}
+#screen-home .horizon .metric{font-size:10px;color:#7b9095}
+#screen-home .consensus-note{font-size:10px;color:#788f95;line-height:1.42;margin:9px 1px 0}
+#screen-home .nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:570px;background:#fff;border-top:1px solid var(--border);padding:7px 4px max(10px,env(safe-area-inset-bottom));display:flex;justify-content:space-around;z-index:40;box-shadow:0 -5px 25px #09232c08}
+#screen-home .nav button{background:transparent;border:0;color:#83959a;font-size:10px;font-weight:650;display:flex;align-items:center;gap:5px;flex-direction:column;width:20%;padding:3px 2px 1px}
+#screen-home .nav button.current{color:var(--teal)}
+#screen-home .nav .ico{font-size:20px}
+#screen-home .event{padding:12px 0;border-bottom:1px solid #e7eeee;font-size:12px;display:flex;gap:10px;align-items:center}
+#screen-home .event small{font-size:10px;color:var(--muted);margin-left:auto}
+#screen-home .section-header{margin:10px 0 14px}
+#screen-home .section-header h2{font-size:18px;margin:0 0 5px}
+#screen-home .screen{display:none}
+#screen-home .screen.active{display:block}
+#screen-home .to-detail{margin-top:12px}
+#screen-home .detail-actions{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+#screen-home .details-sub{font-size:12px;color:var(--muted);line-height:1.5}
+#screen-home .detail-card .chart-wrap{margin-top:7px}
+#screen-home .detail-card .forecast-controls{margin-top:12px}
+#screen-home .sw{font-size:12px;color:#50717a}
+#screen-home .empty-screen{text-align:center;padding:35px 18px}
+#screen-home .empty-screen h3{margin:0 0 8px}
+#screen-home .empty-screen p{font-size:12px;color:var(--muted);line-height:1.6}
+#screen-home .toast{position:fixed;bottom:79px;left:50%;transform:translateX(-50%);max-width:540px;width:calc(100% - 32px);padding:12px 14px;background:#16313f;color:white;font-size:12px;line-height:1.45;border-radius:12px;z-index:50;box-shadow:0 10px 25px #0003;opacity:0;pointer-events:none;transition:opacity .15s}
+#screen-home .toast.show{opacity:1}
+@media (max-width:390px){#screen-home .app-header{padding:16px 14px 9px}
+#screen-home .main{padding:0 12px 26px}
+#screen-home .card{padding:15px}
+#screen-home .forecast-controls{padding:10px 8px}
+#screen-home .forecast-option{padding:7px 6px;font-size:10.5px}
+#screen-home .forecast-option .stroke{width:16px}
+#screen-home .horizons{gap:5px}}
+#screen-home .app-header{padding:15px 17px 9px}
+#screen-home .main{padding:0 12px 32px}
+#screen-home .brand-title{font-size:23px}
+#screen-home .app-header .sub{font-size:10px}
+#screen-home .glucose-card{padding:12px 10px 14px;margin-bottom:8px}
+#screen-home .cg-toolbar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:0}
+#screen-home .cg-caption{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:15px}
+#screen-home .cg-caption small{color:#84959d;font-size:10px;font-weight:500}
+#screen-home .current-dot{width:8px;height:8px;border-radius:50%;background:#00a5bb;display:inline-block}
+#screen-home .zoom-controls{display:flex;align-items:center;background:#f2f6f7;border:1px solid #dce6e8;border-radius:9px;overflow:hidden;white-space:nowrap}
+#screen-home .zoom-controls button{border:0;background:transparent;color:#41626e;font-weight:750;font-size:21px;min-width:31px;min-height:32px;line-height:1}
+#screen-home .zoom-controls span{font-size:10px;min-width:28px;text-align:center;color:#59747c;font-weight:650}
+#screen-home .glucose-card .value{display:flex;align-items:baseline;gap:7px;margin:9px 0 1px;line-height:1;font-size:37px}
+#screen-home .glucose-card .value strong{font-size:37px;font-weight:810}
+#screen-home .glucose-card .value .unit{font-size:12px}
+#screen-home .trend{font-size:22px;font-weight:780;color:#198a9d}
+#screen-home .glucose-card>.muted{font-size:10px}
+#screen-home .xdrip-chart-wrap{position:relative;height:260px;overflow:hidden;background:#fff;border:1px solid #dde5e7;border-radius:9px;margin-top:9px;padding:0;touch-action:none;cursor:grab;user-select:none}
+#screen-home .xdrip-chart-wrap.dragging{cursor:grabbing}
+#screen-home .xdrip-chart-wrap svg{height:100%;width:100%;display:block;touch-action:none}
+#screen-home .forecast-controls{border:0;background:transparent;padding:0;margin:8px 0 0}
+#screen-home .forecast-options{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:3px}
+#screen-home .forecast-option{padding:6px 2px;gap:3px;min-height:28px;justify-content:center;border:1px solid #edf0f2;border-radius:7px;font-size:10px;letter-spacing:-.2px;white-space:nowrap;min-width:0}
+#screen-home .forecast-option input{width:12px;height:12px;margin:0;accent-color:#148e88}
+#screen-home .forecast-option .stroke{width:9px;border-top-width:2px;flex-shrink:0}
+#screen-home .forecast-option .stroke.mean{border-top-width:3px}
+#screen-home .forecast-option .label-text{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#screen-home .forecast-option.unavailable::after{display:none}
+#screen-home .glucose-actions{margin-top:10px}
+#screen-home .sport-mini{padding:11px 14px;margin-top:10px}
+#screen-home .sport-top{display:flex;align-items:center;justify-content:space-between;gap:9px}
+#screen-home .sport-toggle{border:1px solid #c4dfda;border-radius:10px;background:#eaf6f3;padding:9px 13px;color:#156a61;font-weight:750;display:inline-flex;gap:9px;align-items:center;min-height:40px}
+#screen-home .sport-status{font-size:11px;color:#648088}
+#screen-home .sport-status.running{color:#117b68;font-weight:750}
+#screen-home .sport-menu{padding-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+#screen-home .sport-menu[hidden]{display:none}
+#screen-home .btn-sport-start, #screen-home .btn-sport-finish{border:0;border-radius:10px;color:white;background:#108d79;font-size:12px;font-weight:750;padding:11px 12px;min-height:40px}
+#screen-home .btn-sport-finish{background:#b16540}
+#screen-home .sport-duration{font-size:11px;color:#6b8087}
+#screen-home .stat-grid{margin-top:12px}
+#screen-home .stat{padding:10px 4px}
+#screen-home .stat strong{font-size:19px}
+#screen-home .stat span{font-size:10px}
+#screen-home .journal-list{text-align:left;font-size:12px}
+#screen-home .journal-list article{border-bottom:1px solid #e5eeee;padding:12px 0}
+#screen-home .journal-list .light{font-size:11px;color:#7d929b}
+#screen-home .detail-card .xdrip-chart-wrap{height:300px}
+@media (max-width:400px){#screen-home .xdrip-chart-wrap{height:230px}
+#screen-home .forecast-option{font-size:9.2px}
+#screen-home .forecast-option .stroke{display:none}
+#screen-home .glucose-card .value strong{font-size:34px}}
+#screen-home .graph-gesture-hint{font-size:10px;letter-spacing:-.05px;color:#6c8891;text-align:center;margin:5px 0 0;line-height:1.35}
+#screen-home .zoom-controls #zoomReset{font-size:17px;min-width:29px;border-left:1px solid #dae5e7;color:#4b747b}
+#screen-home .xdrip-chart-wrap{overscroll-behavior:contain;touch-action:none}
+#screen-home .xdrip-chart-wrap svg{touch-action:none;user-select:none;-webkit-user-select:none}
+@media (max-width:400px){#screen-home .graph-gesture-hint{font-size:9px}
+#screen-home .zoom-controls #zoomReset{min-width:26px}}
+#screen-home .sport-status:empty{display:none}
+#screen-home .home-nutrition, #screen-home .home-journal{padding:13px 12px 14px;margin-top:10px}
+#screen-home .home-section-head{display:flex;align-items:baseline;justify-content:space-between;gap:9px;margin-bottom:10px}
+#screen-home .home-section-head h3{margin:0;font-size:15px;color:var(--deep);font-weight:800}
+#screen-home .home-section-head small{color:var(--muted);font-size:10px;white-space:nowrap}
+#screen-home .home-summary-note{color:#6e8086;font-size:10px;line-height:1.45;margin:9px 0 0}
+#screen-home .nutri-scroll, #screen-home .journal-scroll{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+#screen-home .nutri-table, #screen-home .recent-table{width:100%;border-collapse:collapse;table-layout:fixed}
+#screen-home .nutri-table{font-size:11.3px}
+#screen-home .nutri-table th, #screen-home .nutri-table td{padding:8px 4px;vertical-align:middle;border-bottom:1px solid #edf2f2;text-align:right;font-variant-numeric:tabular-nums}
+#screen-home .nutri-table th{font-size:10px;color:#6e848b;font-weight:700;white-space:nowrap}
+#screen-home .nutri-table td:first-child, #screen-home .nutri-table th:first-child{text-align:left;width:28%}
+#screen-home .nutri-table th:nth-child(2){width:19%}
+#screen-home .nutri-table th:nth-child(3){width:30%}
+#screen-home .nutri-table th:nth-child(4){width:23%}
+#screen-home .nutri-table td:first-child{font-weight:760;color:#23434c}
+#screen-home .nutri-table td:nth-child(2){font-weight:780}
+#screen-home .nutri-table td:nth-child(4){color:#256c68;font-weight:740}
+#screen-home .nutri-table td.over{color:#9b672c}
+#screen-home .nutri-table tr:last-child td{border-bottom:0}
+#screen-home .recent-table{font-size:10.8px;line-height:1.35}
+#screen-home .recent-table th{color:#708791;text-align:left;font-weight:720;font-size:10px;border-bottom:1px solid #e4eded;padding:8px 4px}
+#screen-home .recent-table td{padding:9px 4px;border-bottom:1px solid #edf1f2;vertical-align:top}
+#screen-home .recent-table tr:last-child td{border-bottom:0}
+#screen-home .recent-table th:nth-child(1), #screen-home .recent-table td:nth-child(1){width:47px;white-space:nowrap;font-variant-numeric:tabular-nums}
+#screen-home .recent-table th:nth-child(2), #screen-home .recent-table td:nth-child(2){width:56px;white-space:nowrap;font-variant-numeric:tabular-nums}
+#screen-home .recent-table td:nth-child(2){font-weight:710}
+#screen-home .recent-entry-type{display:block;color:#244750;font-weight:760;font-size:11px}
+#screen-home .recent-entry-sub{display:block;margin-top:3px;color:#788990;font-size:10px;line-height:1.4}
+#screen-home .diary-empty{padding:12px 0;color:var(--muted);font-size:12px}
+#screen-home .home-card-action{margin:10px 0 0;text-align:right}
+#screen-home .home-card-action button{padding:5px 0;color:var(--teal);font-size:11px;font-weight:730;border:0;background:transparent}
+@media (max-width:380px){#screen-home .home-nutrition, #screen-home .home-journal{padding:12px 9px}
+#screen-home .nutri-table{font-size:10.3px}
+#screen-home .nutri-table th{font-size:9px}
+#screen-home .recent-table{font-size:10.2px}
+#screen-home .recent-table th:nth-child(1), #screen-home .recent-table td:nth-child(1){width:42px}
+#screen-home .recent-table th:nth-child(2), #screen-home .recent-table td:nth-child(2){width:50px}}
+#screen-home .home-error{font-size:12px;color:#b34045;background:#fff0f0;border:1px solid #f2c3c3;border-radius:10px;padding:9px;margin-bottom:8px}
+#screen-home .home-error[hidden]{display:none}

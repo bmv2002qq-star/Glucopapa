@@ -13,6 +13,14 @@
     return port.getRevision()===state.revision?sessions.map(s=>({id:s.id,startedAt:s.startedAt})):[];
   }
 
+  function contextOf(event){
+    if(event.injectionContext)return event.injectionContext;
+    const evidence=event.iobEvidence;
+    if(evidence?.contract!=='glucopapa.preinjection-iob/1'||evidence.clinicalUse!==false||evidence.atIso!==event.administeredAt)
+      return null;
+    return {iobU:evidence.modelUnits,activity:evidence.activity,settingRevision:evidence.settingKey,mealGroup:'with_meal'};
+  }
+
   function inspect({host,sessionId,nowMs=Date.now(),mode='local'}={}) {
     if(host?.getSchemaVersion?.()!==5)return noData('GFSTORAGE_SCHEMA');
     if(mode!=='local')return noData('SYNTHETIC_HISTORY_EXCLUDED');
@@ -28,7 +36,7 @@
     if(linked.length!==1||
        !Number.isFinite(at(linked[0].administeredAt))||at(linked[0].administeredAt)>cutoff)
       return noData('CONFIRMED_MEAL_INJECTION_REQUIRED',revision);
-    const shot=linked[0], context=shot.injectionContext;
+    const shot=linked[0], context=contextOf(shot);
     if(!Number.isFinite(context?.iobU)||context.iobU<0)return noData('HISTORICAL_IOB_UNKNOWN',revision);
     if(context.mealGroup!=='with_meal')return noData('CONFIRMED_MEAL_INJECTION_REQUIRED',revision);
 
@@ -41,7 +49,7 @@
     const earlier=state.mealSessions.filter(s=>s.id!==target.id&&complete(s,cutoff)&&at(s.lastChangedAt)<=cutoff);
     const idsInAnyMeal=new Set(state.mealSessions.flatMap(s=>s.injectionIds));
     const priorEvents=actualShots.filter(e=>at(e.administeredAt)<cutoff).map(e=>{
-      const c=e.injectionContext;
+      const c=contextOf(e);
       if(!c)return e;
       // Linked but ineligible events still exclude contaminated glucose windows.
       // Preserve those events, without allowing them to become a correction example by projection.
