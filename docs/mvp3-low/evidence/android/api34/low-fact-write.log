@@ -1,0 +1,5 @@
+INSTRUMENTATION_RESULT: stream=
+QA_PASS stock
+
+INSTRUMENTATION_RESULT: webview={"amount":25,"carbs":4.975,"fixture":"SYNTHETIC","gi":49,"id":"low-aa7978189bb1189de83a2aca20cd77ee","revision":13,"sqlite":true,"status":"PASS","step":"low-fact-write"}
+INSTRUMENTATION_CODE: -1

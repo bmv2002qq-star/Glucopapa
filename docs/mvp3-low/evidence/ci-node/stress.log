@@ -1,0 +1,1 @@
+{"seed":539365657,"count":10000,"completed":10000,"checks":{"low":{"pass":4000,"expectedBlocked":706},"high":{"pass":4000,"expectedBlocked":707},"meal":{"pass":2000,"expectedBlocked":0}},"failures":[],"clinical":"NOT_VALIDATED","mode":"SYNTHETIC_ONLY","timingRecommendation":"FORMULA_SPEC_GAP","wallClockMs":31866,"heapUsedBytes":23449456,"rssBytes":755048448}

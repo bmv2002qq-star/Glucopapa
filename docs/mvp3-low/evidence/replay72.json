@@ -1,0 +1,233 @@
+{
+  "status": "PASS",
+  "mode": "SYNTHETIC_RESEARCH_ONLY",
+  "clinical": "NOT_VALIDATED",
+  "validation": "Measured and receipt timestamps are filtered before each forecast. Future samples are used only as outcomes.",
+  "cases": [
+    {
+      "case": "steady",
+      "hours": 72,
+      "sampleMinutes": 5,
+      "observations": 865,
+      "LOW": {
+        "horizons": [
+          {
+            "horizon": 15,
+            "pairs": 833,
+            "mae": 0,
+            "rmse": 0,
+            "bias": 0
+          },
+          {
+            "horizon": 30,
+            "pairs": 833,
+            "mae": 0,
+            "rmse": 0,
+            "bias": 0
+          },
+          {
+            "horizon": 60,
+            "pairs": 833,
+            "mae": 0,
+            "rmse": 0,
+            "bias": 0
+          },
+          {
+            "horizon": 120,
+            "pairs": 833,
+            "mae": 0,
+            "rmse": 0,
+            "bias": 0
+          }
+        ],
+        "tp": 0,
+        "fp": 0,
+        "tn": 833,
+        "fn": 0,
+        "sensitivity": null,
+        "falseAlertRate": 0,
+        "unavailable": 0
+      },
+      "CGM_only": {
+        "horizons": [
+          {
+            "horizon": 15,
+            "pairs": 816,
+            "mae": 0,
+            "rmse": 0,
+            "bias": 0
+          },
+          {
+            "horizon": 30,
+            "pairs": 816,
+            "mae": 0,
+            "rmse": 0,
+            "bias": 0
+          }
+        ],
+        "tp": 0,
+        "fp": 0,
+        "tn": 816,
+        "fn": 0,
+        "sensitivity": null,
+        "falseAlertRate": 0,
+        "unavailable": 17
+      },
+      "sameInputs": {
+        "bothEligible": 833,
+        "maxMmolDifference": 0,
+        "globalLowBlocked": 0
+      }
+    },
+    {
+      "case": "oscillating",
+      "hours": 72,
+      "sampleMinutes": 5,
+      "observations": 865,
+      "LOW": {
+        "horizons": [
+          {
+            "horizon": 15,
+            "pairs": 833,
+            "mae": 0.1171,
+            "rmse": 0.1304,
+            "bias": 0.0028
+          },
+          {
+            "horizon": 30,
+            "pairs": 833,
+            "mae": 0.3222,
+            "rmse": 0.3579,
+            "bias": 0.0071
+          },
+          {
+            "horizon": 60,
+            "pairs": 833,
+            "mae": 0.883,
+            "rmse": 0.9802,
+            "bias": 0.0214
+          },
+          {
+            "horizon": 120,
+            "pairs": 833,
+            "mae": 2.063,
+            "rmse": 2.2867,
+            "bias": 0.0618
+          }
+        ],
+        "tp": 55,
+        "fp": 0,
+        "tn": 547,
+        "fn": 11,
+        "sensitivity": 0.8333,
+        "falseAlertRate": 0,
+        "unavailable": 0
+      },
+      "CGM_only": {
+        "horizons": [
+          {
+            "horizon": 15,
+            "pairs": 816,
+            "mae": 0.1282,
+            "rmse": 0.1478,
+            "bias": 0.0226
+          },
+          {
+            "horizon": 30,
+            "pairs": 816,
+            "mae": 0.3123,
+            "rmse": 0.3534,
+            "bias": 0.0566
+          }
+        ],
+        "tp": 64,
+        "fp": 11,
+        "tn": 526,
+        "fn": 0,
+        "sensitivity": 1,
+        "falseAlertRate": 0.0205,
+        "unavailable": 17
+      },
+      "sameInputs": {
+        "bothEligible": 613,
+        "maxMmolDifference": 0,
+        "globalLowBlocked": 220
+      }
+    },
+    {
+      "case": "factual_food_and_shot",
+      "hours": 72,
+      "sampleMinutes": 5,
+      "observations": 865,
+      "LOW": {
+        "horizons": [
+          {
+            "horizon": 15,
+            "pairs": 818,
+            "mae": 0.0642,
+            "rmse": 0.0944,
+            "bias": 0.0071
+          },
+          {
+            "horizon": 30,
+            "pairs": 818,
+            "mae": 0.1927,
+            "rmse": 0.2394,
+            "bias": 0.0225
+          },
+          {
+            "horizon": 60,
+            "pairs": 818,
+            "mae": 0.5279,
+            "rmse": 0.5997,
+            "bias": 0.0498
+          },
+          {
+            "horizon": 120,
+            "pairs": 818,
+            "mae": 1.2088,
+            "rmse": 1.3274,
+            "bias": 0.0541
+          }
+        ],
+        "tp": 23,
+        "fp": 0,
+        "tn": 659,
+        "fn": 12,
+        "sensitivity": 0.6571,
+        "falseAlertRate": 0,
+        "unavailable": 15
+      },
+      "CGM_only": {
+        "horizons": [
+          {
+            "horizon": 15,
+            "pairs": 802,
+            "mae": 0.0307,
+            "rmse": 0.0961,
+            "bias": -0.0019
+          },
+          {
+            "horizon": 30,
+            "pairs": 802,
+            "mae": 0.071,
+            "rmse": 0.2024,
+            "bias": -0.0058
+          }
+        ],
+        "tp": 35,
+        "fp": 0,
+        "tn": 644,
+        "fn": 0,
+        "sensitivity": 1,
+        "falseAlertRate": 0,
+        "unavailable": 31
+      },
+      "sameInputs": {
+        "bothEligible": 694,
+        "maxMmolDifference": 0.8200000000000003,
+        "globalLowBlocked": 124
+      }
+    }
+  ]
+}

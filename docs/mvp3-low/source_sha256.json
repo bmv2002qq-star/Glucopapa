@@ -1,0 +1,11 @@
+{
+  "source_commit": "575efb5940295c2ef3ea45731a8ce1504e1d83e6",
+  "baseline": "620d5ed9253a0f05a5b903d956bba606699c4d56",
+  "archive_low": "d9ba11db1ca08b553e817d2d6440538e3a609a035353050fe6d68462bfd9bd28",
+  "source_zip": "97fb8f4cb3ff2cef5bffa908deae6582d5407f891ad08e0d28238aba3a439a58",
+  "source_diff": "d0ad0a5691a28ee5b31bd8c520fd2182e672f3adaf4c4f219ff75791ea85597e",
+  "apk": "dc25899cf0f41d978c04b3a5f0bd66c48aaa098e6de3d645caa565ccb5f52a48",
+  "approved_LOW": "b48cab570dce046ffa87fd87fa2546efe64850ea6f5b4ece32f9a205a43c1633",
+  "integrated_LOW": "99df6d45c0aead758351d3dc601beba589257d60eb02d67feea348aa1ea66889",
+  "android_source_lock": "0c82dc4f8d051176b29fc8099c27ce0e3fbf6d8d39e41aed274c776458f2e383"
+}

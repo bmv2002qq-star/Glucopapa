@@ -1,0 +1,5 @@
+INSTRUMENTATION_RESULT: stream=
+QA_PASS timing-history
+
+INSTRUMENTATION_RESULT: webview={"fixture":"SYNTHETIC_ISOLATED","matchedCases":4,"result":"HISTORICAL_ESTIMATE","snapshot_unchanged":true,"sqlite":true,"status":"PASS"}
+INSTRUMENTATION_CODE: -1

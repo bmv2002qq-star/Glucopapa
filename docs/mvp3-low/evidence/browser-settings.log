@@ -1,0 +1,17 @@
+{
+  "status": "PASS",
+  "origin": "LOOPBACK_HTTP",
+  "all_inputs_synthetic": true,
+  "criteria": [
+    "CGM-05",
+    "FOOD-06"
+  ],
+  "preserved_manual_fields": [
+    "0.5 units",
+    "75 g"
+  ],
+  "no_unconfirmed_fact": true,
+  "old_current_path_removed": true,
+  "archive_bytes_preserved": true,
+  "selector_persisted": true
+}

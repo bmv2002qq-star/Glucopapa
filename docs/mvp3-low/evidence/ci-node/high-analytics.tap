@@ -1,0 +1,76 @@
+TAP version 13
+# Subtest: HIGH-QA-004/005/009 persists explicit target and HIGH-only activity, preserving legacy activity, metadata and revision
+ok 1 - HIGH-QA-004/005/009 persists explicit target and HIGH-only activity, preserving legacy activity, metadata and revision
+  ---
+  duration_ms: 23.056001
+  type: 'test'
+  ...
+# Subtest: HIGH only uses the separately dated target, never a TIR midpoint
+ok 2 - HIGH only uses the separately dated target, never a TIR midpoint
+  ---
+  duration_ms: 12.588634
+  type: 'test'
+  ...
+# Subtest: HIGH: absent or untrusted CGM, delays and missing history are never numeric suggestions
+ok 3 - HIGH: absent or untrusted CGM, delays and missing history are never numeric suggestions
+  ---
+  duration_ms: 25.750592
+  type: 'test'
+  ...
+# Subtest: HIGH one current meal model, two declared cases, no GFForecast tau invented and no second COB
+ok 4 - HIGH one current meal model, two declared cases, no GFForecast tau invented and no second COB
+  ---
+  duration_ms: 14.145507
+  type: 'test'
+  ...
+# Subtest: HIGH Levemir does not affect baseline and one confirmed rapid event contributes once
+ok 5 - HIGH Levemir does not affect baseline and one confirmed rapid event contributes once
+  ---
+  duration_ms: 9.975552
+  type: 'test'
+  ...
+# Subtest: HIGH real activity and illness fail closed, a confirmed sport session overrides only while active
+ok 6 - HIGH real activity and illness fail closed, a confirmed sport session overrides only while active
+  ---
+  duration_ms: 9.639832
+  type: 'test'
+  ...
+# Subtest: HIGH synthetic preview and 0/no-solution are distinct, with the exact original activity effect applied once
+ok 7 - HIGH synthetic preview and 0/no-solution are distinct, with the exact original activity effect applied once
+  ---
+  duration_ms: 22.658282
+  type: 'test'
+  ...
+# Subtest: HIGH-QA-007 accepts facts only with nonnegative BJU and preserves original research mathematics otherwise
+ok 8 - HIGH-QA-007 accepts facts only with nonnegative BJU and preserves original research mathematics otherwise
+  ---
+  duration_ms: 1.144781
+  type: 'test'
+  ...
+# Subtest: HIGH-QA-003 all injection sites durably recorded once only after confirmation and stable retry ID
+ok 9 - HIGH-QA-003 all injection sites durably recorded once only after confirmation and stable retry ID
+  ---
+  duration_ms: 1.914092
+  type: 'test'
+  ...
+# Subtest: CL047 uses original analytics in a read-only GFStorage projection, preserves site analyzer and ignores any illness flags bit-for-bit
+ok 10 - CL047 uses original analytics in a read-only GFStorage projection, preserves site analyzer and ignores any illness flags bit-for-bit
+  ---
+  duration_ms: 47.777947
+  type: 'test'
+  ...
+# Subtest: Both adapters fail closed on revision races, and timing returns null without stored IOB
+ok 11 - Both adapters fail closed on revision races, and timing returns null without stored IOB
+  ---
+  duration_ms: 37.426589
+  type: 'test'
+  ...
+1..11
+# tests 11
+# suites 0
+# pass 11
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 262.412888

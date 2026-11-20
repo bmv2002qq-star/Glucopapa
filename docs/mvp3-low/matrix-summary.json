@@ -1,0 +1,18 @@
+{
+  "source_sha": "575efb5940295c2ef3ea45731a8ce1504e1d83e6",
+  "CL040": {
+    "PASS": 76,
+    "BLOCKED": 35,
+    "NOT_RUN": 10,
+    "PARTIAL": 2
+  },
+  "total": 123,
+  "LOW": {
+    "PASS": 16,
+    "PASS_RESEARCH": 5,
+    "PARTIAL": 5,
+    "PASS_SCOPED": 2,
+    "NOT_TESTED": 1,
+    "NOT_VALIDATED": 1
+  }
+}

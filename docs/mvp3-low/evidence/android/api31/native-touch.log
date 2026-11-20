@@ -1,0 +1,5 @@
+INSTRUMENTATION_RESULT: stream=
+QA_PASS touch
+
+INSTRUMENTATION_RESULT: webview={"status":"PASS","input":"ANDROID_POINTER_DOWN_UP","routes":"HIGH, LOW, journal","webview_accessibility":"ENV_BLOCKED"}
+INSTRUMENTATION_CODE: -1

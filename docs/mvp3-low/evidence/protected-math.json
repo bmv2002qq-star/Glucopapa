@@ -1,0 +1,11 @@
+{
+  "status": "PASS",
+  "css_equal": true,
+  "sha256": {
+    "GFLOWCore_v0.4.0.js": "625d0c98f06bce22f47897948d1000c7781226cb7ea137523e9b6d70a0d3930a",
+    "GFHypoScenario_v0.3.2.js": "faab699b9c053365c18658ce7ec844ed44eb7b5f2c3cf2e94156009c7a44f2c7",
+    "GFForecastHypo_v0.3.0.js": "ffe808ff1fb9eae828a792fa4b2c1048bf1ea18f2b91a915acb43ceb8efdf8c3",
+    "GFXDripLowAlert_v0.1.0.js": "5953fb61b7a0fd5e8ca44a1616a934b095164ff1c38579ecc0ef7ac03b4282ef",
+    "RinfastEngine": "9bdc65e84c1ff3930afe554779bd6c7537bac1b04b71fc5095b654d617d5d30f"
+  }
+}

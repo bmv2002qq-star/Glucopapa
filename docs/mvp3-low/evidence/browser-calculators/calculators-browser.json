@@ -1,0 +1,34 @@
+{
+  "status": "PASS",
+  "checks": [
+    {
+      "route": "approved-nutrition",
+      "width": 320,
+      "revision": 0,
+      "warnings_outside_details": "PASS"
+    },
+    {
+      "route": "approved-nutrition",
+      "width": 390,
+      "revision": 0,
+      "warnings_outside_details": "PASS"
+    },
+    {
+      "route": "approved-nutrition",
+      "width": 428,
+      "revision": 0,
+      "warnings_outside_details": "PASS"
+    },
+    {
+      "route": "approved-nutrition",
+      "width": 1280,
+      "revision": 0,
+      "warnings_outside_details": "PASS"
+    },
+    {
+      "route": "approved-nutrition",
+      "meal_plan_revision": "PASS",
+      "confirmed_food_created": false
+    }
+  ]
+}

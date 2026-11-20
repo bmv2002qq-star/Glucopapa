@@ -1,0 +1,31 @@
+﻿id,source_sha,environment,check,status,actual,evidence
+01,575efb5940295c2ef3ea45731a8ce1504e1d83e6,CODE,Изолированная масса/CGM и ветка обычного профиля,PASS,Численный ориентир проверен в синтетическом контуре. Обычный профиль показывает наблюдение.,evidence/ci-node/low.tap
+02,575efb5940295c2ef3ea45731a8ce1504e1d83e6,CODE,"Граница 3,9",PASS,"3,9 относится к оранжевой зоне, ниже 3,9 получен красный статус.",evidence/ci-node/low.tap
+03,575efb5940295c2ef3ea45731a8ce1504e1d83e6,CODE,"Показание 2,9 и сильное снижение",PASS,Красное наблюдение выводится независимо от 120-минутной модели.,evidence/ci-node/low.tap
+04,575efb5940295c2ef3ea45731a8ce1504e1d83e6,CODE,Ровное снижение в независимом CGM-only JS,PASS_RESEARCH,Архивная проверка времени до низкого уровня повторена.,evidence/archive-run.log
+05,575efb5940295c2ef3ea45731a8ce1504e1d83e6,CODE,Резкое и медленное снижение,PARTIAL,"Проверены защитные пороги, шум, пропуски и 10 000 прогонов. Исходные скорости сравниваются в отдельном replay.",evidence/replay72.json
+06,575efb5940295c2ef3ea45731a8ce1504e1d83e6,CODE,Устаревший CGM 13/15/30 минут,PASS,Значение не отображается как текущее. Давность сохранена.,evidence/ci-node/low.tap
+07,575efb5940295c2ef3ea45731a8ce1504e1d83e6,CODE,Отсутствует время приёма из legacy записи,PASS,CGM_RECEIPT_MISSING и отсутствие текущего значения.,evidence/ci-node/low.tap
+08,575efb5940295c2ef3ea45731a8ce1504e1d83e6,CODE,"Конфликт ID, timestamp и источника",PASS,"Контракт источника, противоречия и дубли повторены в Node.",evidence/archive-run.log / evidence/node-final.tap
+09,575efb5940295c2ef3ea45731a8ce1504e1d83e6,CODE,Автономный synthetic golden для 57 мл,PASS_RESEARCH,Исходная модель и один независимый эталон повторены.,evidence/archive-run.log / evidence/ci-node/low.tap
+10,575efb5940295c2ef3ea45731a8ce1504e1d83e6,CODE,Автономный synthetic golden для 97 мл,PASS_RESEARCH,Отдельный синтетический результат повторён на исходных формулах.,evidence/archive-run.log / evidence/ci-node/low.tap
+11,575efb5940295c2ef3ea45731a8ce1504e1d83e6,CODE,Нулевое добавление продукта в исследовательский сценарий,PASS_RESEARCH,Нулевая порция совпадает с базовой траекторией на семи контрольных точках.,evidence/ci-node/low.tap
+12,575efb5940295c2ef3ea45731a8ce1504e1d83e6,CODE,План и реальный укол,PASS,"План остаётся планом, учитываются только подтверждённые инъекции.",evidence/archive-run.log / evidence/node-final.tap
+13,575efb5940295c2ef3ea45731a8ce1504e1d83e6,CODE,Кривая РинФаста и независимая квадратура,PASS_RESEARCH,Тот же исходный RinfastEngine. Учитываются подтверждённые взносы один раз.,evidence/supplemental.tap
+14,575efb5940295c2ef3ea45731a8ce1504e1d83e6,CODE,Фактическая гречка и COB,PARTIAL,"Один факт, ГИ известен. Численный вклад в прогноз блокируется без профиля.",evidence/ci-node/low.tap / evidence/browser-final/report.json
+15,575efb5940295c2ef3ea45731a8ce1504e1d83e6,CODE,Неполная тарелка и неизвестное усвоение,PASS,Исходный архив блокирует частичный приём. Интеграция показывает MEAL_PARTIAL.,evidence/archive-run.log / evidence/ci-node/low.tap
+16,575efb5940295c2ef3ea45731a8ce1504e1d83e6,CODE,Выбран GFCOB,PASS,"GFCOB_PORT_UNAVAILABLE, численная порция недоступна. Выбор модели сохранён.",evidence/ci-node/low.tap / evidence/browser-settings/browser-cl042.json
+17,575efb5940295c2ef3ea45731a8ce1504e1d83e6,CODE,Спорт и болезнь,PARTIAL,Наблюдение CGM независимо от модели. Отдельные эффекты остаются неподтверждёнными.,evidence/browser-context/context-browser.json / evidence/archive-run.log
+18,575efb5940295c2ef3ea45731a8ce1504e1d83e6,CODE,Нет полноты 360 минут,PASS,История не подменяется пустым списком с нулём.,evidence/ci-node/low.tap
+19,575efb5940295c2ef3ea45731a8ce1504e1d83e6,CODE,CAS-конфликт или отказ драйвера,PASS,Не образуется частичный факт. Повтор работает на актуальной ревизии.,evidence/ci-node/low.tap
+20,575efb5940295c2ef3ea45731a8ce1504e1d83e6,BROWSER_MULTI_FILE,Разделение локального и синтетического источника,PASS_SCOPED,Два изолированных журнала. Реальные профили семьи не использованы.,evidence/browser-final/report.json
+21,575efb5940295c2ef3ea45731a8ce1504e1d83e6,CODE,"Полночь, DST и четыре окна коэффициентов",PASS,GFTimeGrid и эталоны часового пояса повторены.,evidence/supplemental.tap / evidence/node-final.tap
+22,575efb5940295c2ef3ea45731a8ce1504e1d83e6,ANDROID_EMULATOR,Офлайн после restart и 24 часа фактической работы,PARTIAL,После restart проверены факты. 24-часовой soak не выполнялся.,ANDROID_QA.md
+23,575efb5940295c2ef3ea45731a8ce1504e1d83e6,ANDROID_EMULATOR,Повтор «Дал еду»,PASS,"Одна ревизия, один факт и согласованный экспорт.",ANDROID_QA.md / evidence/ci-node/low.tap
+24,575efb5940295c2ef3ea45731a8ce1504e1d83e6,BROWSER_MULTI_FILE,Расчёт и отмена без факта,PASS,"Снимок не изменился, пока не подтверждено действие.",evidence/browser-final/report.json
+25,575efb5940295c2ef3ea45731a8ce1504e1d83e6,BROWSER_MULTI_FILE,Ширины 320/390/428/1280,PASS_SCOPED,"Один маршрут, три блока, сохранённый CSS. Статусы и данные связаны с приложением.",evidence/browser-final/report.json / evidence/protected-math.json
+26,575efb5940295c2ef3ea45731a8ce1504e1d83e6,BROWSER_SINGLE_FILE,Автономный документ без GFStorage,PASS,Не раскрывает CGM и численную порцию.,evidence/archive-run.log
+27,575efb5940295c2ef3ea45731a8ce1504e1d83e6,REAL_XDRIP,Сравнение настоящих показаний Follower,NOT_TESTED,Использованы синтетические и изолированные источники.,ANDROID_QA.md
+28,575efb5940295c2ef3ea45731a8ce1504e1d83e6,ANDROID_EMULATOR,"Установленный APK, WebView, восстановление",PASS,"API 31 PASS, API 34 PASS, API 35 PASS, API 36 PASS",ANDROID_QA.md
+29,575efb5940295c2ef3ea45731a8ce1504e1d83e6,CODE,Повтор доступных проверок по 123 критериям,PARTIAL,Рабочие доказательства привязаны к этому SHA. Открытые критерии учтены.,CL040_RECHECK.csv
+30,575efb5940295c2ef3ea45731a8ce1504e1d83e6,CLINICAL,Тяжёлые симптомы,NOT_VALIDATED,Интеграция отображает фактическое низкое значение и индивидуальный план. Реальные сценарии не испытывались.,LOW_REPORT.md

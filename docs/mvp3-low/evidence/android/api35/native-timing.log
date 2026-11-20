@@ -1,0 +1,2 @@
+11-20 00:52:30.861  3786  3801 I GlucoPapaQA: 1000 SQLite CAS commits took 12065 ms; isolated backup reopens
+11-20 00:52:33.381  3786  3801 I GlucoPapaQA: SQLite v1 to v2 migration, rollback, large Unicode and corruption detection passed

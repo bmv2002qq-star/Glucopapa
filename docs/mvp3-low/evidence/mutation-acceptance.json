@@ -1,0 +1,13 @@
+{
+  "id": "E2E-09",
+  "status": "PASS",
+  "scope": "isolated-source-mutations",
+  "detected": [
+    "WRONG_SIGN",
+    "TIMELINE_SHIFT",
+    "DOUBLE_COB",
+    "DOUBLE_IOB",
+    "DROPPED_EVENT",
+    "MGDL_UNIT"
+  ]
+}

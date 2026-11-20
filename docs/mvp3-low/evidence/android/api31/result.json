@@ -1,0 +1,41 @@
+{
+  "status": "PASS",
+  "fixture": "SYNTHETIC_ONLY",
+  "apk_sha256": "76c47f557ed9d09121de83100ec3b9b2ac71440a0d11da2597a89a9de443140b",
+  "serial": "emulator-5554",
+  "avd": "GlucoPapaMvp3CiQa",
+  "checks": [
+    {
+      "fresh_local_empty_and_demo_opt_in": true
+    },
+    {
+      "initial_empty_store": true,
+      "stopped_pid": "2527"
+    },
+    {
+      "unconfirmed_injection_no_write": true,
+      "stopped_pid": "2815"
+    },
+    {
+      "confirmed_injection_sqlite": {
+        "eventId": "high-729f6b0aaf0a906c55f30e14d46bb222",
+        "administeredAt": "2026-11-20T01:01:27.962Z",
+        "revision": 1
+      },
+      "stopped_pid": "3101"
+    },
+    {
+      "force_stop_relaunch_same_snapshot": true,
+      "start": "Starting: Intent { cmp=com.glucopapa.shell/.MainActivity }\nStatus: ok\nLaunchState: COLD\nActivity: com.glucopapa.shell/.MainActivity\nTotalTime: 819\nWaitTime: 840\nComplete",
+      "stopped_pid": "3487"
+    },
+    {
+      "confirmed_injection_visible_in_journal": true
+    }
+  ],
+  "android_device": "NOT_TESTED",
+  "real_xdrip": "NOT_TESTED",
+  "clinical": "NOT_VALIDATED",
+  "android_api": "31",
+  "ui_driver": "ANDROID_WEBVIEW_INSTRUMENTATION"
+}

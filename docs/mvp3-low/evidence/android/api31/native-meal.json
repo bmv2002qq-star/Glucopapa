@@ -1,0 +1,18 @@
+{
+  "status": "PASS",
+  "fixture": "SYNTHETIC",
+  "database": "gfstorage_v5.db",
+  "same_after_restart": true,
+  "meal_count": 1,
+  "revision": 7,
+  "actual": {
+    "amount": 75,
+    "carbs": 14.925,
+    "revision": 6
+  },
+  "corrected": {
+    "amount": 50,
+    "carbs": 9.95,
+    "revision": 7
+  }
+}

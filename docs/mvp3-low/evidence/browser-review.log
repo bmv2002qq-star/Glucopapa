@@ -1,0 +1,2 @@
+{"origin": "LOOPBACK_HTTP", "basal_manual_only": true, "basal_periods": [3, 7, 14], "consensus_real_empty_state": "NO_LEADER", "source_unchanged": true, "page_errors": 0, "viewport_widths": [320, 390, 428, 1280], "android_saf": "NOT_TESTED"}
+{"six_period_controls": "PASS", "cancel_feedback": "PASS", "bridge": "STUB_FOR_UI_ONLY"}

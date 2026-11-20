@@ -1,0 +1,106 @@
+PASS version and nonclinical
+PASS ISPAD 3.0 -> 6g at 20kg
+PASS ISPAD level2 <3.0
+PASS ISPAD threshold 3.9 not hypo
+PASS ISPAD missing weight
+PASS ISPAD no grams above threshold
+PASS model baseline 3
+PASS model 57 ml ~4.76
+PASS model 97 ml ~6
+PASS inverse predicts 96.9 ml
+PASS target time 60 uses exact scenario grid
+PASS manual 0 juice keeps baseline
+PASS zero solver does not mean no data
+PASS no write methods
+PASS readSnapshot explicit typed port
+PASS readSnapshot rejects absent port
+PASS readSnapshot does not write
+PASS readSnapshot catches errors
+PASS missing snapshot
+PASS schema fails closed
+PASS revision missing
+PASS missing now
+PASS missing CGM
+PASS missing full insulin history
+PASS missing full meal history
+PASS missing full CGM history
+PASS missing injections array
+PASS missing meals array
+PASS missing settings is not zero
+PASS missing weight
+PASS invalid nutrition profile
+PASS unavailable selected product
+PASS input amount negative
+PASS target below 3.9
+PASS horizon 15 is unsupported in legacy solver and fails rather than lie
+PASS clinicalUse never true even on model ready
+PASS GFCOB unimplemented => no inverse amount
+PASS activity unmodeled => no inverse amount
+PASS illness unmodeled => no inverse amount
+PASS unverified food profile => no inverse
+PASS unverified coefficients => no inverse
+PASS duplicate injection IDs
+PASS planned injection cannot enter future calculation
+PASS planned meal cannot enter future calculation
+PASS injection affects forecast once, no independent subtract IOB
+PASS existing meal affects forecast once
+PASS same snapshot deterministic
+PASS preview label not contamination: no dose property
+PASS stale cgm cannot yield model amount
+PASS conflicting cgm fail closed
+PASS xdrip alert independent from meal/insulin
+CORE_TESTS_PASS 51
+PASS projection normalized
+PASS actual GFStorage v5 research role used
+PASS end to end from real port projection
+PASS invalid schema
+PASS coverage absent
+PASS coverage declared incomplete
+PASS coverage shorter than 360m
+PASS coverage ends before now
+PASS missing time
+PASS missing coefficient resolver
+PASS mismatched coefficient revision
+PASS mismatched catalog revision
+PASS missing weight
+PASS missing receipt no assumption
+PASS unconfirmed injection rejected
+PASS confirmed injection normalized
+PASS partial meal rejected
+PASS planned meal ignored as not eaten
+PASS completed meal with verified profile
+PASS completed meal without profile blocked
+PASS active sport interval marks unmodelled activity
+PASS GFStorage unavailable role fails closed
+PASS no mutation methods exposed by bridge
+STORAGE_BRIDGE_PASS 23
+REAL_GFSTORAGE_0.5.10_HOST PASS, revision 5 MODEL 4.76 mM, events 0 meals 0
+STRESS_CORE 2000 / 2000 MODEL 1657 BLOCKED 343 CRASH 0
+PASS version
+PASS slow linear from 7.4 crosses threshold around 30 min
+PASS linear fall predicts low 24-25 min
+PASS stable no alert
+PASS measured low independently of forecast
+PASS very fast fall requires verification
+PASS stale CGM blocked
+PASS insufficient measurements blocked
+PASS gap detected
+PASS unknown source blocked
+PASS conflict by timestamp blocked
+PASS nonobserved synthetic predictions never treated as observed
+PASS timestamp validation
+PASS threshold settings default and custom
+PASS cannot give dosing amount
+PASS different amount of IOB does not silently change CGM-only time to low
+PASS reversing CGM list does not change estimate
+PASS invalid warning window rejected
+TOTAL_PASS 18
+STRESS_PASS 10000 / 10000 failures 0
+Scenario UK10 tests passed 22
+UI_320: PASS: hero, ISPAD, solver, apply, live what-if, no overflow
+UI_390: PASS: hero, ISPAD, solver, apply, live what-if, no overflow
+UI_428: PASS: hero, ISPAD, solver, apply, live what-if, no overflow
+UI_1280: PASS: hero, ISPAD, solver, apply, live what-if, no overflow
+UI_PRODUCTION_NO_STORAGE: PASS: fail closed, no demo
+
+ALL_AVAILABLE_TEST_SCRIPTS_PASS (not Android/clinical)

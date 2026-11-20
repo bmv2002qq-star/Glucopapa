@@ -1,0 +1,170 @@
+{
+  "source_sha": "575efb5940295c2ef3ea45731a8ce1504e1d83e6",
+  "run_id": 44648671533,
+  "run_attempt": 2,
+  "workflow_conclusion": "success",
+  "url": "https://github.com/bmv2002qq-star/Glucopapa/actions/runs/44648671533",
+  "matrix": [
+    {
+      "key": "api31",
+      "api": 31,
+      "job": 136002505754,
+      "job_url": "https://github.com/bmv2002qq-star/Glucopapa/actions/runs/44648671533/job/136002505754",
+      "conclusion": "success",
+      "failed_steps": [],
+      "status": "PASS",
+      "summary": "Один подтверждённый укол в SQLite и дневнике. Отмена оставляет журнал без изменений. После прерывания восстановлены 1 000 записей. Цель и активность HIGH восстановились.",
+      "log": "evidence/android/api31/result.json",
+      "extended": true,
+      "timing": "PASS",
+      "timingSummary": "GFInjectionAnalytics нашёл четыре аналога. GFStorage и SQLite не изменились. Смена журнала очистила выбор.",
+      "timingLog": "evidence/android/api31/injection-timing-history.log",
+      "details": {
+        "smoke": "PASS",
+        "apk_sha256": "76c47f557ed9d09121de83100ec3b9b2ac71440a0d11da2597a89a9de443140b",
+        "ui_driver": "ANDROID_WEBVIEW_INSTRUMENTATION",
+        "sqlite_stress_and_rollback": "PASS",
+        "high_settings_sqlite_restart": "PASS",
+        "low_fact": {
+          "amount": 25,
+          "carbs": 4.975,
+          "fixture": "SYNTHETIC",
+          "gi": 49,
+          "id": "low-114c1565ec22d66493694e6a0ea6e3cb",
+          "revision": 13,
+          "sqlite": true,
+          "status": "PASS",
+          "step": "low-fact-restored"
+        },
+        "low_status": "PASS",
+        "native_touch": "PASS",
+        "webview_accessibility": "ENV_BLOCKED"
+      }
+    },
+    {
+      "key": "api34",
+      "api": 34,
+      "job": 136002567861,
+      "job_url": "https://github.com/bmv2002qq-star/Glucopapa/actions/runs/44648671533/job/136002567861",
+      "conclusion": "success",
+      "failed_steps": [],
+      "status": "PASS",
+      "summary": "Один подтверждённый укол в SQLite и дневнике. Отмена оставляет журнал без изменений. После прерывания восстановлены 1 000 записей. Цель и активность HIGH восстановились.",
+      "log": "evidence/android/api34/result.json",
+      "extended": true,
+      "timing": "PASS",
+      "timingSummary": "GFInjectionAnalytics нашёл четыре аналога. GFStorage и SQLite не изменились. Смена журнала очистила выбор.",
+      "timingLog": "evidence/android/api34/injection-timing-history.log",
+      "details": {
+        "smoke": "PASS",
+        "apk_sha256": "afdd38ae25cf360454b7f05677aebc310cdebf58a294f61c6f864aa98195f080",
+        "ui_driver": "ADB_ACCESSIBILITY",
+        "sqlite_stress_and_rollback": "PASS",
+        "high_settings_sqlite_restart": "PASS",
+        "low_fact": {
+          "amount": 25,
+          "carbs": 4.975,
+          "fixture": "SYNTHETIC",
+          "gi": 49,
+          "id": "low-aa7978189bb1189de83a2aca20cd77ee",
+          "revision": 13,
+          "sqlite": true,
+          "status": "PASS",
+          "step": "low-fact-restored"
+        },
+        "low_status": "PASS"
+      }
+    },
+    {
+      "key": "api35-core",
+      "api": 35,
+      "job": 136002508164,
+      "job_url": "https://github.com/bmv2002qq-star/Glucopapa/actions/runs/44648671533/job/136002508164",
+      "conclusion": "success",
+      "failed_steps": [],
+      "status": "PASS",
+      "summary": "Один подтверждённый укол в SQLite и дневнике. Отмена оставляет журнал без изменений. После прерывания восстановлены 1 000 записей. Цель и активность HIGH восстановились.",
+      "log": "evidence/android/api35-core/result.json",
+      "extended": false,
+      "timing": "NOT_TESTED",
+      "timingSummary": "Отдельный положительный сценарий не подтверждён.",
+      "timingLog": "ANDROID_QA.md",
+      "details": {
+        "smoke": "PASS",
+        "apk_sha256": "7f741885d361fef87709a5cda421d8c262a7905a69b125d8ccab768cc9392aee",
+        "ui_driver": "ADB_ACCESSIBILITY",
+        "sqlite_stress_and_rollback": "PASS",
+        "high_settings_sqlite_restart": "PASS",
+        "low_status": "NOT_TESTED"
+      }
+    },
+    {
+      "key": "api35",
+      "api": 35,
+      "job": 136002561683,
+      "job_url": "https://github.com/bmv2002qq-star/Glucopapa/actions/runs/44648671533/job/136002561683",
+      "conclusion": "success",
+      "failed_steps": [],
+      "status": "PASS",
+      "summary": "Один подтверждённый укол в SQLite и дневнике. Отмена оставляет журнал без изменений. После прерывания восстановлены 1 000 записей. Цель и активность HIGH восстановились.",
+      "log": "evidence/android/api35/result.json",
+      "extended": true,
+      "timing": "PASS",
+      "timingSummary": "GFInjectionAnalytics нашёл четыре аналога. GFStorage и SQLite не изменились. Смена журнала очистила выбор.",
+      "timingLog": "evidence/android/api35/injection-timing-history.log",
+      "details": {
+        "smoke": "PASS",
+        "apk_sha256": "4b8d9d7e7960fac02273c17d8ecfa5beff9de9e33f638a6751e8518d68869d14",
+        "ui_driver": "ADB_ACCESSIBILITY",
+        "sqlite_stress_and_rollback": "PASS",
+        "high_settings_sqlite_restart": "PASS",
+        "low_fact": {
+          "amount": 25,
+          "carbs": 4.975,
+          "fixture": "SYNTHETIC",
+          "gi": 49,
+          "id": "low-4a81c0e8df4a20da491777d8fa00db0b",
+          "revision": 13,
+          "sqlite": true,
+          "status": "PASS",
+          "step": "low-fact-restored"
+        },
+        "low_status": "PASS"
+      }
+    },
+    {
+      "key": "api36",
+      "api": 36,
+      "job": 136002507918,
+      "job_url": "https://github.com/bmv2002qq-star/Glucopapa/actions/runs/44648671533/job/136002507918",
+      "conclusion": "success",
+      "failed_steps": [],
+      "status": "PASS",
+      "summary": "Один подтверждённый укол в SQLite и дневнике. Отмена оставляет журнал без изменений. После прерывания восстановлены 1 000 записей. Цель и активность HIGH восстановились.",
+      "log": "evidence/android/api36/result.json",
+      "extended": true,
+      "timing": "PASS",
+      "timingSummary": "GFInjectionAnalytics нашёл четыре аналога. GFStorage и SQLite не изменились. Смена журнала очистила выбор.",
+      "timingLog": "evidence/android/api36/injection-timing-history.log",
+      "details": {
+        "smoke": "PASS",
+        "apk_sha256": "4fddddff6a4b349abc988335742baeed3c0ad978027fd20ddb078c68cb538847",
+        "ui_driver": "ADB_ACCESSIBILITY",
+        "sqlite_stress_and_rollback": "PASS",
+        "high_settings_sqlite_restart": "PASS",
+        "low_fact": {
+          "amount": 25,
+          "carbs": 4.975,
+          "fixture": "SYNTHETIC",
+          "gi": 49,
+          "id": "low-bc10263eac3b70ab6fcca0d61aafe355",
+          "revision": 13,
+          "sqlite": true,
+          "status": "PASS",
+          "step": "low-fact-restored"
+        },
+        "low_status": "PASS"
+      }
+    }
+  ]
+}

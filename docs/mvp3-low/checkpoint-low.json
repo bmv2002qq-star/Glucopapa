@@ -1,0 +1,35 @@
+{
+  "date": "2026-11-20",
+  "timezone": "Europe/Minsk",
+  "branch": "qa/mvp3-low-20261120",
+  "source_sha": "575efb5940295c2ef3ea45731a8ce1504e1d83e6",
+  "baseline": "620d5ed9253a0f05a5b903d956bba606699c4d56",
+  "ci": "https://github.com/bmv2002qq-star/Glucopapa/actions/runs/44648671533",
+  "cli_attempt": 2,
+  "CL040": {
+    "PASS": 76,
+    "BLOCKED": 35,
+    "NOT_RUN": 10,
+    "PARTIAL": 2
+  },
+  "CODE": "PASS_WITH_GAPS",
+  "BROWSER_SINGLE_FILE": "PASS",
+  "BROWSER_MULTI_FILE": "PASS",
+  "ANDROID_EMULATOR": {
+    "api31": "PASS",
+    "api34": "PASS",
+    "api35": "PASS",
+    "api36": "PASS"
+  },
+  "ANDROID_DEVICE": "NOT_TESTED",
+  "REAL_XDRIP": "NOT_TESTED",
+  "CLINICAL": "NOT_VALIDATED",
+  "blockers": [
+    "LOW-ABSORPTION-001",
+    "LOW-PARITY-001",
+    "LOW-GFCOB-001",
+    "LOW-CONTEXT-001"
+  ],
+  "delivery_to_library": "READY_NOT_UPLOADED",
+  "continuation": "NEXT_STEPS.md"
+}

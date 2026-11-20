@@ -1,0 +1,38 @@
+{
+  "status": "PASS",
+  "high": {
+    "widths": [
+      320,
+      390,
+      428,
+      1280
+    ],
+    "no_hypothetical_fact": true,
+    "confirmed_only": true,
+    "revision": 5,
+    "reloaded_settings_and_site": true,
+    "protected_markup_order": true
+  },
+  "synthetic_preview": {
+    "preview_recomputed": true,
+    "mode": "SYNTHETIC",
+    "no_injection_record": true
+  },
+  "timing": {
+    "statuses": [
+      "NO_DATA"
+    ],
+    "draft_excluded": true,
+    "read_only": true,
+    "legacy_sites_available": true
+  },
+  "timing_positive": {
+    "status": "PASS",
+    "fixture": "SYNTHETIC_ISOLATED",
+    "result": "HISTORICAL_ESTIMATE",
+    "matchedCases": 4,
+    "snapshot_unchanged": true,
+    "sqlite": false,
+    "mode_switch_clears_history": true
+  }
+}

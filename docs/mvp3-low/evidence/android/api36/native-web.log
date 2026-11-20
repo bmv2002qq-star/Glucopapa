@@ -1,0 +1,5 @@
+INSTRUMENTATION_RESULT: stream=
+QA_PASS web
+
+INSTRUMENTATION_RESULT: webview={"actual":{"amount":75,"carbs":14.925,"revision":6},"corrected":{"amount":50,"carbs":9.95,"revision":7},"fixture":"SYNTHETIC","status":"PASS","synthetic_confirmations":2}
+INSTRUMENTATION_CODE: -1

@@ -1,0 +1,15 @@
+{
+  "status": "PASS",
+  "fixture": "SYNTHETIC_STORED_CURVES",
+  "visible_combinations": 8,
+  "persisted_visibility": true,
+  "past_measurements": 4,
+  "rinfast_overlay_preserved": true,
+  "forecasts_unchanged": true,
+  "xdrip_engine_executed": false,
+  "synthetic_ranking": {
+    "leader": true,
+    "tie": true,
+    "composite": true
+  }
+}

@@ -1,0 +1,19 @@
+INSTRUMENTATION_RESULT: stream=
+QA_PASS stock
+
+INSTRUMENTATION_RESULT: webview={"fixture":"SYNTHETIC","fresh_local":true,"status":"PASS","step":"select-demo"}
+INSTRUMENTATION_CODE: -1
+Tap openHigh at (768, 1370)
+Tap preview at (340, 1117)
+Tap site at (540, 737)
+Tap ('Живот',) at (540, 903)
+Tap record at (540, 897)
+Tap ('Отмена',) at (515, 1252)
+Tap openHigh at (768, 1266)
+Tap preview at (340, 1051)
+Tap site at (540, 803)
+Tap ('Живот',) at (540, 903)
+Tap record at (540, 963)
+Tap ('Подтвердить',) at (802, 1252)
+Tap ('Дневник',) at (276, 2118)
+PASS Android emulator UI and native SQLite smoke

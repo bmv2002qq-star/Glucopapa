@@ -1,0 +1,20 @@
+{
+  "status": "PASS",
+  "widths": [
+    320,
+    390,
+    428,
+    1280
+  ],
+  "safe_empty_model": true,
+  "synthetic_low_remains_visible_without_history": true,
+  "cancelled": true,
+  "fact": {
+    "id": "low-84d98c513a3f1676b7fbc0a5fdace63d",
+    "grams": 75,
+    "carbs": 14.925,
+    "gi": 49
+  },
+  "reload": true,
+  "separate_mode": true
+}

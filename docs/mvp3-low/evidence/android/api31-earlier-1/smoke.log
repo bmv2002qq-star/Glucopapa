@@ -1,0 +1,9 @@
+INSTRUMENTATION_RESULT: stream=
+QA_FAIL java.lang.IllegalStateException: WebView fixture timed out at null
+	at com.glucopapa.shell.qa.WebViewChecks.exercise(WebViewChecks.java:58)
+	at com.glucopapa.shell.qa.StorageInstrumentation.onStart(StorageInstrumentation.java:66)
+	at android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2248)
+
+
+INSTRUMENTATION_CODE: 0
+FAIL: Installed stock WebView failed select-demo

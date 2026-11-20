@@ -1,0 +1,58 @@
+TAP version 13
+# Subtest: LOW stops at missing evidence and offers no writer through the scoped read port
+ok 1 - LOW stops at missing evidence and offers no writer through the scoped read port
+  ---
+  duration_ms: 3.860424
+  type: 'test'
+  ...
+# Subtest: Fresh low observation is independent of history, 3.9 is outside red and old readings keep age
+ok 2 - Fresh low observation is independent of history, 3.9 is outside red and old readings keep age
+  ---
+  duration_ms: 37.01329
+  type: 'test'
+  ...
+# Subtest: Only the separate synthetic journal can expose the ISPAD arithmetic on confirmed synthetic input
+ok 3 - Only the separate synthetic journal can expose the ISPAD arithmetic on confirmed synthetic input
+  ---
+  duration_ms: 3.95969
+  type: 'test'
+  ...
+# Subtest: Missing receipt timestamps and a changed revision cannot supply an observed or model value
+ok 4 - Missing receipt timestamps and a changed revision cannot supply an observed or model value
+  ---
+  duration_ms: 5.356778
+  type: 'test'
+  ...
+# Subtest: Retrospective formula uses the original LOW core, a current GFStorage v5 projection and an independent analytic value
+ok 5 - Retrospective formula uses the original LOW core, a current GFStorage v5 projection and an independent analytic value
+  ---
+  duration_ms: 6.913027
+  type: 'test'
+  ...
+# Subtest: LOW reads the global selected model and keeps missing absorption and model parity explicit
+ok 6 - LOW reads the global selected model and keeps missing absorption and model parity explicit
+  ---
+  duration_ms: 5.651106
+  type: 'test'
+  ...
+# Subtest: One manual confirmed portion creates one durable completed meal and an idempotent readback
+ok 7 - One manual confirmed portion creates one durable completed meal and an idempotent readback
+  ---
+  duration_ms: 4.074922
+  type: 'test'
+  ...
+# Subtest: A stale revision or driver failure never creates the meal or a partial audit operation
+ok 8 - A stale revision or driver failure never creates the meal or a partial audit operation
+  ---
+  duration_ms: 2.380207
+  type: 'test'
+  ...
+1..8
+# tests 8
+# suites 0
+# pass 8
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 126.511207
