@@ -84,6 +84,34 @@ test('Meal, exact arithmetic for two portions; correction is visible to journal 
         plan: plan.researchArithmetic, actual: fact.researchArithmetic, revision: fact.storageRevision});
 });
 
+test('Research C/UK arithmetic is visible for a non-fictional profile and does not record a dose', () => {
+    const host = testJournal({glucose: 6.2});
+    const port = host.connect('settings');
+    const settings = Settings.createSettingsService({settingsPort: port, clock: () => iso(at)});
+    settings.saveProfile({timeZone: 'UTC', displayName: 'Локальный исследовательский профиль'}, port.getRevision());
+    addPlate(host, {estimated: false});
+    const revision = host.diagnostics().revision;
+    const result = MealCalc.createCalculator(host, {rinfastEngine: Rinfast})
+        .inspect(sessionId, {atIso: iso(at)});
+    assert.equal(result.researchArithmetic.status, 'RESEARCH_CARB_EQUIVALENT');
+    assert.equal(result.researchArithmetic.unroundedEquivalentUnits, 2);
+    assert.equal(result.researchArithmetic.fromActualFood, false);
+    assert.equal(result.researchArithmetic.therapeuticRecommendation, false);
+    assert.equal(result.therapyRecommendation, null);
+    assert.equal(host.diagnostics().revision, revision);
+    assert.deepEqual(host.connect('journal').read('events'), []);
+});
+
+test('Research C/UK requires a unique active manual coefficient, not a fabricated zero', () => {
+    const host = testJournal({manual: false});
+    addPlate(host, {estimated: false});
+    const result = MealCalc.createCalculator(host, {rinfastEngine: Rinfast})
+        .inspect(sessionId, {atIso: iso(at)});
+    assert.equal(result.researchArithmetic.status, 'INPUT_INCOMPLETE');
+    assert.equal(result.researchArithmetic.reason, 'CARB_COEFFICIENT_MISSING');
+    assert.equal(result.researchArithmetic.unroundedEquivalentUnits, null);
+});
+
 test('All routes separate synthetic/stale/absent CGM and unsupported coefficient modes', t => {
     const host = testJournal({glucose: 6, manual: false, coverage: false});
     addPlate(host, {gi: null});
