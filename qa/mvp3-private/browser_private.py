@@ -1,11 +1,13 @@
 """Test the packaged multi-file UI with a mocked SQLite transport on loopback."""
 import argparse
+from datetime import datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 from threading import Thread
 import mimetypes
 from pathlib import Path, PurePosixPath
 from zipfile import ZipFile
+from zoneinfo import ZoneInfo
 
 from playwright.sync_api import expect, sync_playwright
 
@@ -80,6 +82,16 @@ def verify(apk, scope, browser):
             frame = page.frame_locator('#iframeApprovedJournal')
             expect(frame.locator('#date')).to_be_visible()
             if scope == 'research':
+                history = state['privateHistory']
+                if history['notes']:
+                    frame.locator('#date').fill(history['notes'][0]['day'])
+                    expect(frame.get_by_text('Со слов владельца', exact=False).first).to_be_visible()
+                    expect(frame.locator('#tbody').get_by_text('Сценарий · ', exact=False).first).to_be_visible()
+                if history['meter']:
+                    zone = ZoneInfo(history['timeZone'])
+                    dates = [datetime.fromtimestamp(row[0]/1000, zone).date().isoformat() for row in history['meter']]
+                    frame.locator('#date').fill(dates[0])
+                    expect(frame.locator('p').filter(has_text='Глюкометр')).to_have_count(dates.count(dates[0]))
                 page.evaluate("GPApp.open('system')")
                 assert page.locator('#exportState').evaluate('(node)=>node.hidden')
                 assert page.locator('#backupControls').evaluate('(node)=>node.hidden')

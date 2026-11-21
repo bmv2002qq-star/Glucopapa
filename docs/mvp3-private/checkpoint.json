@@ -1,0 +1,28 @@
+{
+  "candidate": "0.3.19-qa",
+  "branch": "qa/mvp3-private-dual-apk-20261121",
+  "appSourceCommit": "c07700ab0b2a7e2a9362e7e1f68364e40b83b9c9",
+  "mainReference": "2151fbbf2b40ac6eca4f5b02c2ba355c4e9a75f8",
+  "githubActions": "https://github.com/bmv2002qq-star/Glucopapa/actions/runs/44869173509",
+  "publication": "PRIVATE_APKS_ONLY",
+  "approvedAssets": 26,
+  "runtimeAssetsPerApk": 105,
+  "code": "PASS",
+  "browserMultiFile": "PASS",
+  "physicalAndroid": "NOT_TESTED",
+  "realXDrip": "NOT_TESTED",
+  "clinical": "NOT_VALIDATED",
+  "androidLocalApi": 31,
+  "privateInstall": "PASS",
+  "privateNativeSQLite": "PASS",
+  "rendererRecovery": "PASS_SIMULATED_CALLBACK_BOTH",
+  "privateAndroidWebView": "ENV_BLOCKED",
+  "researchObservedRendererLoss": "PASS_ACTIVITY_ALIVE",
+  "githubCi": "PASS",
+  "syntheticCiAndroidApis": [
+    31,
+    34,
+    35,
+    36
+  ]
+}
