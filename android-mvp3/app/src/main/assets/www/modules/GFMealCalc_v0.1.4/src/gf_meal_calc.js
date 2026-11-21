@@ -19,7 +19,7 @@ function periodAt(iso,zone){
 function windowHas(time,from,to){const parse=x=>Number(x.slice(0,2))*60+Number(x.slice(3,5));const s=parse(from),e=parse(to);if(s===e)return false;return s<e?(time>=s&&time<e):(time>=s||time<e);}
 function activeCoefficient(snapshot,nowIso){
  const now=timeMs(nowIso),tz=snapshot.profile?.timeZone;
- if(!tz)return null;
+ if(!tz||snapshot.profile?.coefficientModes?.carb_g_per_u!=='manual')return null;
  const fmt=new Intl.DateTimeFormat('en-GB',{timeZone:tz,hour:'2-digit',minute:'2-digit',hourCycle:'h23'}),parts=fmt.formatToParts(now),tod=Number(parts.find(x=>x.type==='hour').value)*60+Number(parts.find(x=>x.type==='minute').value);
  const records=snapshot.coefficients||[];
  if(!TIME_GRID)return null; // Missing validation dependency must not imply approval.
