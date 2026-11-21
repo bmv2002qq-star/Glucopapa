@@ -88,3 +88,21 @@ test('reopened private seed retains an edit and validated archive is idempotent'
     misleading.privateHistory.replay.appliedToProfile=true;
     assert.throws(()=>open(misleading),/PRIVATE_REPLAY_FORMAT/);
 });
+
+test('the explicit reset removes only scenario records and preserves profile, coefficients and real history',()=>{
+    let disk=research;
+    const host=Storage.createHost({clock:()=>iso(live),driver:{load:()=>disk,save(next){disk=next;}}});
+    const writer=host.connect('actionWriter');
+    writer.recordInjection({id:'confirmed-after-install',insulinId:'rinfast',units:0.5,administeredAt:iso(live)},
+        writer.getRevision());
+    const before=host.exportState(),seed=host.connect('researchSeed');
+    assert.equal(seed.clearScenario(before.revision).revision,before.revision+1);
+    const after=open(host.exportState()).exportState();
+    for(const key of ['profile','measurements','coefficients','privateHistory'])assert.deepEqual(after[key],before[key]);
+    assert.deepEqual(after.events.map(row=>row.id),['confirmed-after-install']);
+    assert.deepEqual(after.mealSessions,[]);
+    assert.deepEqual(after.conditionPeriods,[]);
+    assert.equal(seed.clearScenario(after.revision).idempotent,true);
+    const main=open(normal).connect('researchSeed');
+    assert.throws(()=>main.clearScenario(main.getRevision()),/PRIVATE_HISTORY_REQUIRED/);
+});

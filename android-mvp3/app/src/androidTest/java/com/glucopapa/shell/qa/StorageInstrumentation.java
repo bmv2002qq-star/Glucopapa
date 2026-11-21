@@ -37,12 +37,19 @@ public final class StorageInstrumentation extends Instrumentation {
         try {
             check(Build.FINGERPRINT.contains("generic") || Build.HARDWARE.startsWith("ranchu"),
                 "Expected an Android emulator");
-            check("SYNTHETIC".equals(arguments.getString("fixture")), "Expected synthetic fixture");
+            String phase = arguments.getString("phase", "exercise");
+            String fixture = arguments.getString("fixture");
+            check("SYNTHETIC".equals(fixture) || ("private-seed".equals(phase) && "PRIVATE_LOCAL".equals(fixture)),
+                "Expected an isolated QA fixture");
             File directory = getTargetContext().getDir("synthetic-qa", Context.MODE_PRIVATE);
             Context testContext = isolatedContext(getTargetContext(), directory);
-            String phase = arguments.getString("phase", "exercise");
             try (GFNativeStorage store = new GFNativeStorage(testContext)) {
                 switch (phase) {
+                    case "private-seed":
+                        check(!"none".equals(store.seedScope()), "Expected a private variant");
+                        output.putString("webview", new WebViewChecks(this).exercise(
+                            "private-seed-qa.js", arguments.getString("step", "")).toString());
+                        break;
                     case "production":
                         String productionStep = arguments.getString("step", "");
                         if ("history-write".equals(productionStep) || "web-write".equals(productionStep)) {

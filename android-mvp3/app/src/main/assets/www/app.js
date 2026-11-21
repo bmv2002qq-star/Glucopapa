@@ -365,6 +365,15 @@ function setupResearchBuild(){
    }
    $('screen-analytics').append(panel);
  }
+ const reset=document.createElement('button');
+ reset.type='button';reset.className='btn secondary';reset.textContent='Очистить сценарии журнала';
+ reset.addEventListener('click',wrap(()=>{
+   if(!confirm('Удалить вымышленные записи еды, уколов и активности? Профиль, архив CGM и фактические записи сохранятся.'))return;
+   const seed=port('researchSeed');
+   const result=seed.clearScenario(seed.getRevision());
+   notify(result.idempotent?'Вымышленных записей нет.':'Вымышленные записи удалены.');
+ }));
+ $('screen-analytics').append(reset);
  for(const id of ['exportState','backupControls','aiExportControls'])$(id).hidden=true;
 }
 function renderInjectionMeals(sessions){

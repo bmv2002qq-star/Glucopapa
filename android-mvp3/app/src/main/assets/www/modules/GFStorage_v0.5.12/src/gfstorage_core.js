@@ -782,6 +782,15 @@
           d.privateHistory.replay=clone(replay);
           return 'synthetic-replay-v1';
         },rev);
+        port.clearScenario=rev=>commit(role,'privateHistory','clear_synthetic_scenario',d=>{
+          if(!d.privateHistory)fail('PRIVATE_HISTORY_REQUIRED');
+          const domains=['events','mealSessions','conditionPeriods','workflowLog'];
+          const isScenario=(row,domain)=>(domain==='workflowLog'?row.sessionId:row.id).startsWith(PRIVATE_FIXTURE_ID);
+          if(!domains.some(domain=>d[domain].some(row=>isScenario(row,domain))))return null;
+          for(const domain of domains)d[domain]=d[domain].filter(row=>!isScenario(row,domain));
+          // The ordinary validator aborts the transaction if an actual record depends on a removed row.
+          return 'private-synthetic-scenario';
+        },rev);
       }
       if(role==='mealTiming'){
         port.readPreview=sessionId=>currentTiming?.sessionId===sessionId&&

@@ -4,6 +4,7 @@ d883e4afc8125dc3f4356efdd0ac09239bfd8259878aa332f06a50ac5b3cb37e  android-mvp3/.
 8b430e7f1b5f80871c17c4612418c50d8adb779f1c72304e27a0b1726049fcaa  android-mvp3/app/src/androidTest/assets/meal-timing-case.js
 2a27a5fe842353e2e699de98ef0f26a858efa14a45ab51e8702fff56c84ed706  android-mvp3/app/src/androidTest/assets/meal-workflow-qa.js
 c7e9fc8e0c802a63aba446c56661e579b6449f3d6e52f80c568487eebd40e25b  android-mvp3/app/src/androidTest/assets/pilot-replay-qa.js
+4442826d56b1fd8ba255a80873e179eaea4d1d1f06aef3f0185dc2b8c256d6ec  android-mvp3/app/src/androidTest/assets/private-seed-qa.js
 81c77b6e2b2de2c3b654b9751d8713fdfbebfa475adfb7d2d1ce0e8f1d7bf230  android-mvp3/app/src/androidTest/assets/production-qa.js
 f2686f381e5777fe1584334c77772b1d0bd3b36f125bf7051fd9c5a244e26ba7  android-mvp3/app/src/androidTest/assets/stock-ui.js
 b34c50a82cbb612ebe8c04f4f0707efb6dcfba3495d699de42708e7f1a8b999f  android-mvp3/app/src/androidTest/assets/timing-history-qa.js
@@ -11,11 +12,11 @@ ebde81cca8b8333262cb65b0b3024c9d308115f1dc62335548cf5e9d5f95ab2b  android-mvp3/a
 ed7dc4d9c0474c08d2c83d2b61abbaac255dc3ae02ef2004ec93a21830d0ada5  android-mvp3/app/src/androidTest/java/com/glucopapa/shell/ExportAndTraceChecks.java
 c8778da9284e5e240d4fa8461d79e2e000b970488d8f302d34b60df7702bca02  android-mvp3/app/src/androidTest/java/com/glucopapa/shell/HistoryContractChecks.java
 5b7d75572a425a31e4dd8622edef1cf074f3c38af107d5b852150b191180a1af  android-mvp3/app/src/androidTest/java/com/glucopapa/shell/ProviderContractChecks.java
-e6f089b5027c4ee24c57dd0a5fe10394d60d2e0ab1ffa6c77f5e06c964676cef  android-mvp3/app/src/androidTest/java/com/glucopapa/shell/qa/StorageInstrumentation.java
+4e7bf975801c126092c368ea3da995082dade2122df31b73793da12e25952299  android-mvp3/app/src/androidTest/java/com/glucopapa/shell/qa/StorageInstrumentation.java
 ce67669e88c14c19159e22e6361e6db6e5b44d16c8ed6acf49646f0719087e18  android-mvp3/app/src/androidTest/java/com/glucopapa/shell/qa/WebViewChecks.java
 8b8a40ceddf4d042e18531c57c18c62c1f8be576d5f9215dc1a05b0b45e404ad  android-mvp3/app/src/fixture/assets/www/qa-shell.js
 c8dc8266544dbac18613e2faa8ae44cb8b136e4e3821b6bd7371c66937d85010  android-mvp3/app/src/main/AndroidManifest.xml
-7bdbb4be8ef6ef7f6a56dc4830ed355419293dc31f83fc023b15c07666f2875d  android-mvp3/app/src/main/assets/www/app.js
+f5cfae8772e2bdd2016d8e2ca3f7808192b836709c771d58c610276d459c8020  android-mvp3/app/src/main/assets/www/app.js
 0abc9b584922377403d2edca6de42f9aea5f31e152415bcda186b6c9f35dc84b  android-mvp3/app/src/main/assets/www/approved-library/CGM_Chart_v0.2A.html
 d78a8ef8d236fc89ecb4776ff5e086fb0202b5b4f522c6290421d6d7ff1ac6a2  android-mvp3/app/src/main/assets/www/approved-library/GFAPSEnhancer_v0.1.1.html
 5cc5433d2d4b340106570360fe325b54cf2c4597c22a31e18e58ad620b016a9e  android-mvp3/app/src/main/assets/www/approved-library/GFAuditExport_v0.1.2.html
@@ -145,7 +146,7 @@ eb1416fb1d64631976f6a761538d23094fbc20b2dd887344521bc39ceba4ffac  android-mvp3/a
 78449446bc9eaebf41a168a409761fbb3d41602ef6ea0afb8272277df788142b  android-mvp3/app/src/main/assets/www/modules/GFStorage_v0.5.0/src/gfstorage_core.js
 360f298bf5ee6c717ef4053a0e8fa009b42897615c61ad584929c5a3298d165f  android-mvp3/app/src/main/assets/www/modules/GFStorage_v0.5.10/src/gfstorage_core.js
 9866bcd5b06a3f21e57708fbd7ff6f453ade72e997a2e6817c76010facbabea5  android-mvp3/app/src/main/assets/www/modules/GFStorage_v0.5.11/src/gfstorage_core.js
-e7e9df82dd75fa48af6071a646447c2f3e4360fd25f030eedc2f18e9ddd5a705  android-mvp3/app/src/main/assets/www/modules/GFStorage_v0.5.12/src/gfstorage_core.js
+a3865577dea3c2c737de7c0e6c09884786c97b358cfceff005b6c72d611bc5d3  android-mvp3/app/src/main/assets/www/modules/GFStorage_v0.5.12/src/gfstorage_core.js
 c68cb560877a33f672cad539cd1689be55cd5591058de582fb2828874f257437  android-mvp3/app/src/main/assets/www/modules/GFStorage_v0.5.5/src/gfstorage_core.js
 f5367d7417962187c5a242665c4bd6e23e3feba1ec209c559098bb2c435b6508  android-mvp3/app/src/main/assets/www/modules/GFStorage_v0.5.6/src/gfstorage_core.js
 b57053c5f5cf9c3c82505318b7927cbd89ef152b3e11130d1696932205e99e09  android-mvp3/app/src/main/assets/www/modules/GFStorage_v0.5.7/src/gfstorage_core.js

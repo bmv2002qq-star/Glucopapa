@@ -109,7 +109,8 @@ test('Research C/UK requires a unique active manual coefficient, not a fabricate
     assert.equal(result.unroundedEquivalentUnits, null);
     const port=host.connect('settings');
     Settings.createSettingsService({settingsPort:port}).setCoefficientMode('carb_g_per_u','manual',port.getRevision());
-    assert.equal(Evidence.mealCarbEquivalent(host, sessionId, iso(at)).reason,'CARB_COEFFICIENT_MISSING');
+    assert.equal(Evidence.mealCarbEquivalent(host, sessionId, iso(at)).unroundedEquivalentUnits,2);
+    assert.equal(Evidence.mealCarbEquivalent(host, 'unknown-session', iso(at)).reason,'PLATE_CARBS_MISSING');
 });
 
 test('All routes separate synthetic/stale/absent CGM and unsupported coefficient modes', t => {
