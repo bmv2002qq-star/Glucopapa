@@ -1,10 +1,609 @@
 {
-  "35": {
-    "jobId": 136652087062,
+  "31": {
+    "jobId": 136659820239,
     "result": "success",
-    "htmlUrl": "https://github.com/bmv2002qq-star/Glucopapa/actions/runs/44841899075/job/136652087062",
-    "evidenceArtifact": 14681870515,
-    "evidenceArchiveSha256": "sha256:40947144239265fc2d5bb46d4003cd173fd7cb9528329cb9b84ec5ebb1452d6e",
+    "htmlUrl": "https://github.com/bmv2002qq-star/Glucopapa/actions/runs/44844205399/job/136659820239",
+    "evidenceArtifact": 14683160546,
+    "evidenceArchiveSha256": "sha256:eb5dfac2149d6e34b5689ecc896d7d519fd933d4ac685e7b4d92fc540ee1ebf3",
+    "failedSteps": [],
+    "cases": {
+      "high-settings-restored": {
+        "fixture": "SYNTHETIC",
+        "revision": 12,
+        "sqlite": true,
+        "status": "PASS",
+        "step": "high-settings-restored"
+      },
+      "high-settings-save": {
+        "fixture": "SYNTHETIC",
+        "revision": 12,
+        "sqlite": true,
+        "status": "PASS",
+        "step": "high-settings-save"
+      },
+      "history-restored": {
+        "checked": "FORCE_STOP_RELAUNCH",
+        "fixture": "SYNTHETIC_LOOPBACK",
+        "points": 3,
+        "revision": 2,
+        "status": "PASS"
+      },
+      "history-write": {
+        "checked": "HTTP_AND_ATOMIC_IMPORT",
+        "fixture": "SYNTHETIC_LOOPBACK",
+        "points": 3,
+        "revision": 2,
+        "status": "PASS"
+      },
+      "injection-timing-history": {
+        "fixture": "SYNTHETIC_ISOLATED",
+        "matchedCases": 4,
+        "result": "HISTORICAL_ESTIMATE",
+        "snapshot_unchanged": true,
+        "sqlite": true,
+        "status": "PASS"
+      },
+      "low-fact-restored": {
+        "amount": 25,
+        "carbs": 4.975,
+        "fixture": "SYNTHETIC",
+        "gi": 49,
+        "id": "low-59c2c0534dbaecdd6514f6985698b4e4",
+        "revision": 16,
+        "sqlite": true,
+        "status": "PASS",
+        "step": "low-fact-restored"
+      },
+      "low-fact-write": {
+        "amount": 25,
+        "carbs": 4.975,
+        "fixture": "SYNTHETIC",
+        "gi": 49,
+        "id": "low-59c2c0534dbaecdd6514f6985698b4e4",
+        "revision": 16,
+        "sqlite": true,
+        "status": "PASS",
+        "step": "low-fact-write"
+      },
+      "meal-model-restored": {
+        "fixture": "SYNTHETIC",
+        "model": {
+          "id": "GFCOB",
+          "version": "0.1.1"
+        },
+        "revision": 8,
+        "sqlite": true,
+        "status": "PASS",
+        "step": "meal-model-restored"
+      },
+      "meal-model-save": {
+        "fixture": "SYNTHETIC",
+        "model": {
+          "id": "GFCOB",
+          "version": "0.1.1"
+        },
+        "revision": 8,
+        "sqlite": true,
+        "status": "PASS",
+        "step": "meal-model-save"
+      },
+      "meal-timing-restored": {
+        "confirmedWrites": 1,
+        "data": "SYNTHETIC_ONLY",
+        "estimateMinutes": 12,
+        "matchedCases": 6,
+        "phase": "restored",
+        "revision": 44,
+        "sqlite": true,
+        "status": "PASS",
+        "timer": "11:57"
+      },
+      "meal-timing-write": {
+        "confirmedWrites": 1,
+        "data": "SYNTHETIC_ONLY",
+        "estimateMinutes": 12,
+        "matchedCases": 6,
+        "phase": "write",
+        "revision": 44,
+        "sqlite": true,
+        "status": "PASS",
+        "timer": "12:00"
+      },
+      "native-exercise": {
+        "status": "PASS"
+      },
+      "native-reopen": {
+        "status": "PASS"
+      },
+      "native-timing": [
+        "11-21 00:33:33.491  5055  5070 I GlucoPapaQA: 1000 SQLite CAS commits took 3355 ms; isolated backup reopens",
+        "11-21 00:33:35.035  5055  5070 I GlucoPapaQA: SQLite v1 to v2 migration, rollback, large Unicode and corruption detection passed"
+      ],
+      "native-touch": {
+        "status": "PASS",
+        "input": "ANDROID_POINTER_DOWN_UP",
+        "routes": "HIGH, LOW, journal",
+        "webview_accessibility": "ENV_BLOCKED"
+      },
+      "native-trace-export": {
+        "fixture": "SYNTHETIC",
+        "ringSlots": 3,
+        "concurrentRows": 101,
+        "traceWriteMs": 162,
+        "periods": [
+          {
+            "period": "1d",
+            "records": 290,
+            "bytes": 61773,
+            "counts": {
+              "cgm": 288,
+              "trace": 1,
+              "event": 1,
+              "setting_change": 0,
+              "forecast": 0,
+              "forecast_assessment": 0,
+              "error": 0
+            },
+            "sha256": "98df8b40fc036a84860a7466152ac6f26d0711d20b2e8cbb226e320a2b262466"
+          },
+          {
+            "period": "2d",
+            "records": 591,
+            "bytes": 124788,
+            "counts": {
+              "cgm": 588,
+              "trace": 2,
+              "event": 1,
+              "setting_change": 0,
+              "forecast": 0,
+              "forecast_assessment": 0,
+              "error": 0
+            },
+            "sha256": "bb3a5334a47850c90cfbde5002573e814af76523c87c3b719c1ab83547691008"
+          },
+          {
+            "period": "5d",
+            "records": 1456,
+            "bytes": 306139,
+            "counts": {
+              "cgm": 1452,
+              "trace": 3,
+              "event": 1,
+              "setting_change": 0,
+              "forecast": 0,
+              "forecast_assessment": 0,
+              "error": 0
+            },
+            "sha256": "9ae096c979c7568c12881fd2747d1ca36e23ca87d84952186f3b509a4a958dee"
+          },
+          {
+            "period": "1m",
+            "records": 8944,
+            "bytes": 1878619,
+            "counts": {
+              "cgm": 8940,
+              "trace": 3,
+              "event": 1,
+              "setting_change": 0,
+              "forecast": 0,
+              "forecast_assessment": 0,
+              "error": 0
+            },
+            "sha256": "d5126dfde32f7d29d25827e8f934f2aac7d91d448bb5b0a7b74dd1c72279817b"
+          },
+          {
+            "period": "3m",
+            "records": 26512,
+            "bytes": 5584415,
+            "counts": {
+              "cgm": 26508,
+              "trace": 3,
+              "event": 1,
+              "setting_change": 0,
+              "forecast": 0,
+              "forecast_assessment": 0,
+              "error": 0
+            },
+            "sha256": "5d7256c6f4b08c746002f866bd27b06b88923bb29becd2965f84358d64a3605c"
+          },
+          {
+            "period": "6m",
+            "records": 53008,
+            "bytes": 11175071,
+            "counts": {
+              "cgm": 53004,
+              "trace": 3,
+              "event": 1,
+              "setting_change": 0,
+              "forecast": 0,
+              "forecast_assessment": 0,
+              "error": 0
+            },
+            "sha256": "9d1e0b19740604cdac09822e6d58aa0ad922b7f70efc512d3088306b78c447e4"
+          }
+        ],
+        "projectedSourceUnchanged": true,
+        "injectedStreamFailure": true
+      },
+      "native-web": {
+        "actual": {
+          "amount": 75,
+          "carbs": 14.925,
+          "revision": 6
+        },
+        "cancelledConfirmations": 1,
+        "corrected": {
+          "amount": 50,
+          "carbs": 9.95,
+          "revision": 7
+        },
+        "fixture": "SYNTHETIC",
+        "status": "PASS"
+      },
+      "production-back": {
+        "status": "PASS",
+        "routes": "nutrition → LOW → home",
+        "input": "ANDROID_KEYCODE_BACK",
+        "systemGesture": "NOT_RUN"
+      },
+      "production-isolation": {
+        "provider": "NO_PROVIDER",
+        "sqlite": "ABSENT",
+        "status": "PASS",
+        "variant": "debug"
+      },
+      "profile-restored": {
+        "fixture": "SYNTHETIC_PROFILE",
+        "height": 120,
+        "status": "PASS",
+        "step": "profile-restored",
+        "weight": 20
+      },
+      "profile-write": {
+        "fixture": "SYNTHETIC_PROFILE",
+        "height": 120,
+        "status": "PASS",
+        "step": "profile-write",
+        "weight": 20
+      },
+      "provider-restored": {
+        "checked": "FORCE_STOP_RELAUNCH",
+        "fixture": "SYNTHETIC_PROVIDER_PAYLOAD",
+        "revision": 1,
+        "status": "PASS"
+      },
+      "provider-write": {
+        "checked": "CAS_AND_DEDUPLICATION",
+        "fixture": "SYNTHETIC_PROVIDER_PAYLOAD",
+        "revision": 1,
+        "status": "PASS"
+      },
+      "smoke": {
+        "fixture": "SYNTHETIC",
+        "fresh_local": true,
+        "status": "PASS",
+        "step": "select-demo"
+      },
+      "unified-restored": {
+        "fixture": "SYNTHETIC",
+        "status": "PASS",
+        "step": "unified-restored"
+      },
+      "unified-save": {
+        "fixture": "SYNTHETIC",
+        "status": "PASS",
+        "step": "unified-save"
+      },
+      "web-restored": {
+        "checked": "FORCE_STOP_RELAUNCH",
+        "fixture": "SYNTHETIC_LOCAL_WEB_SERVICE",
+        "points": 4,
+        "revision": 3,
+        "status": "PASS"
+      },
+      "web-write": {
+        "checked": "HTTP_UNITS_DEDUPLICATION",
+        "fixture": "SYNTHETIC_LOCAL_WEB_SERVICE",
+        "points": 4,
+        "revision": 3,
+        "status": "PASS"
+      },
+      "window-restored": {
+        "fixture": "SYNTHETIC_XDRIP_WINDOW",
+        "points": 6,
+        "revision": 4,
+        "status": "PASS",
+        "step": "window-restored"
+      },
+      "window-write": {
+        "fixture": "SYNTHETIC_XDRIP_WINDOW",
+        "points": 6,
+        "revision": 4,
+        "status": "PASS",
+        "step": "window-write"
+      },
+      "native-meal.json": {
+        "status": "PASS",
+        "fixture": "SYNTHETIC",
+        "database": "gfstorage_v5.db",
+        "same_after_restart": true,
+        "meal_count": 1,
+        "revision": 7,
+        "actual": {
+          "amount": 75,
+          "carbs": 14.925,
+          "revision": 6
+        },
+        "corrected": {
+          "amount": 50,
+          "carbs": 9.95,
+          "revision": 7
+        }
+      },
+      "checks/result.json": {
+        "status": "PASS",
+        "fixture": "SYNTHETIC_ONLY",
+        "apk_sha256": "7f20ec46fbae2362f06dbb8a9eb19e1671a1fcb3dc46931824326a894e081dbd",
+        "serial": "emulator-5554",
+        "avd": "GlucoPapaMvp3CiQa",
+        "checks": [
+          {
+            "fresh_local_empty_and_demo_opt_in": true
+          },
+          {
+            "initial_empty_store": true,
+            "stopped_pid": "3786"
+          },
+          {
+            "unconfirmed_injection_no_write": true,
+            "stopped_pid": "4076"
+          },
+          {
+            "confirmed_injection_sqlite": {
+              "eventId": "high-e83cc8466c966b946c0d4a1bb59c5f9b",
+              "administeredAt": "2026-11-21T00:33:12.232Z",
+              "revision": 1
+            },
+            "stopped_pid": "4362"
+          },
+          {
+            "force_stop_relaunch_same_snapshot": true,
+            "start": "Starting: Intent { cmp=com.glucopapa.shell.fixture/com.glucopapa.shell.MainActivity }\nStatus: ok\nLaunchState: COLD\nActivity: com.glucopapa.shell.fixture/com.glucopapa.shell.MainActivity\nTotalTime: 772\nWaitTime: 774\nComplete",
+            "stopped_pid": "4741"
+          },
+          {
+            "confirmed_injection_visible_in_journal": true
+          }
+        ],
+        "android_device": "NOT_TESTED",
+        "real_xdrip": "NOT_TESTED",
+        "clinical": "NOT_VALIDATED",
+        "android_api": "31",
+        "ui_driver": "ANDROID_WEBVIEW_INSTRUMENTATION"
+      }
+    }
+  },
+  "35-core": {
+    "jobId": 136659820282,
+    "result": "success",
+    "htmlUrl": "https://github.com/bmv2002qq-star/Glucopapa/actions/runs/44844205399/job/136659820282",
+    "evidenceArtifact": 14682177146,
+    "evidenceArchiveSha256": "sha256:55680d2cebc145b835b41ba17ae5a8befb346546997833f419eaea16f5b09ba1",
+    "failedSteps": [],
+    "cases": {
+      "high-settings-restored": {
+        "fixture": "SYNTHETIC",
+        "revision": 6,
+        "sqlite": true,
+        "status": "PASS",
+        "step": "high-settings-restored"
+      },
+      "high-settings-save": {
+        "fixture": "SYNTHETIC",
+        "revision": 6,
+        "sqlite": true,
+        "status": "PASS",
+        "step": "high-settings-save"
+      },
+      "history-restored": {
+        "checked": "FORCE_STOP_RELAUNCH",
+        "fixture": "SYNTHETIC_LOOPBACK",
+        "points": 3,
+        "revision": 2,
+        "status": "PASS"
+      },
+      "history-write": {
+        "checked": "HTTP_AND_ATOMIC_IMPORT",
+        "fixture": "SYNTHETIC_LOOPBACK",
+        "points": 3,
+        "revision": 2,
+        "status": "PASS"
+      },
+      "meal-model-restored": {
+        "fixture": "SYNTHETIC",
+        "model": {
+          "id": "GFCOB",
+          "version": "0.1.1"
+        },
+        "revision": 2,
+        "sqlite": true,
+        "status": "PASS",
+        "step": "meal-model-restored"
+      },
+      "meal-model-save": {
+        "fixture": "SYNTHETIC",
+        "model": {
+          "id": "GFCOB",
+          "version": "0.1.1"
+        },
+        "revision": 2,
+        "sqlite": true,
+        "status": "PASS",
+        "step": "meal-model-save"
+      },
+      "meal-timing-restored": {
+        "confirmedWrites": 1,
+        "data": "SYNTHETIC_ONLY",
+        "estimateMinutes": 12,
+        "matchedCases": 6,
+        "phase": "restored",
+        "revision": 44,
+        "sqlite": true,
+        "status": "PASS",
+        "timer": "11:55"
+      },
+      "meal-timing-write": {
+        "confirmedWrites": 1,
+        "data": "SYNTHETIC_ONLY",
+        "estimateMinutes": 12,
+        "matchedCases": 6,
+        "phase": "write",
+        "revision": 44,
+        "sqlite": true,
+        "status": "PASS",
+        "timer": "12:00"
+      },
+      "native-exercise": {
+        "status": "PASS"
+      },
+      "native-reopen": {
+        "status": "PASS"
+      },
+      "native-timing": [
+        "11-21 00:34:19.162  5096  5109 I GlucoPapaQA: 1000 SQLite CAS commits took 8144 ms; isolated backup reopens",
+        "11-21 00:34:21.243  5096  5109 I GlucoPapaQA: SQLite v1 to v2 migration, rollback, large Unicode and corruption detection passed"
+      ],
+      "production-back": {
+        "status": "PASS",
+        "routes": "nutrition → LOW → home",
+        "input": "ANDROID_KEYCODE_BACK",
+        "systemGesture": "NOT_RUN"
+      },
+      "production-isolation": {
+        "provider": "NO_PROVIDER",
+        "sqlite": "ABSENT",
+        "status": "PASS",
+        "variant": "debug"
+      },
+      "profile-restored": {
+        "fixture": "SYNTHETIC_PROFILE",
+        "height": 120,
+        "status": "PASS",
+        "step": "profile-restored",
+        "weight": 20
+      },
+      "profile-write": {
+        "fixture": "SYNTHETIC_PROFILE",
+        "height": 120,
+        "status": "PASS",
+        "step": "profile-write",
+        "weight": 20
+      },
+      "provider-restored": {
+        "checked": "FORCE_STOP_RELAUNCH",
+        "fixture": "SYNTHETIC_PROVIDER_PAYLOAD",
+        "revision": 1,
+        "status": "PASS"
+      },
+      "provider-write": {
+        "checked": "CAS_AND_DEDUPLICATION",
+        "fixture": "SYNTHETIC_PROVIDER_PAYLOAD",
+        "revision": 1,
+        "status": "PASS"
+      },
+      "smoke": {
+        "fixture": "SYNTHETIC",
+        "fresh_local": true,
+        "status": "PASS",
+        "step": "select-demo"
+      },
+      "unified-restored": {
+        "fixture": "SYNTHETIC",
+        "status": "PASS",
+        "step": "unified-restored"
+      },
+      "unified-save": {
+        "fixture": "SYNTHETIC",
+        "status": "PASS",
+        "step": "unified-save"
+      },
+      "web-restored": {
+        "checked": "FORCE_STOP_RELAUNCH",
+        "fixture": "SYNTHETIC_LOCAL_WEB_SERVICE",
+        "points": 4,
+        "revision": 3,
+        "status": "PASS"
+      },
+      "web-write": {
+        "checked": "HTTP_UNITS_DEDUPLICATION",
+        "fixture": "SYNTHETIC_LOCAL_WEB_SERVICE",
+        "points": 4,
+        "revision": 3,
+        "status": "PASS"
+      },
+      "window-restored": {
+        "fixture": "SYNTHETIC_XDRIP_WINDOW",
+        "points": 6,
+        "revision": 4,
+        "status": "PASS",
+        "step": "window-restored"
+      },
+      "window-write": {
+        "fixture": "SYNTHETIC_XDRIP_WINDOW",
+        "points": 6,
+        "revision": 4,
+        "status": "PASS",
+        "step": "window-write"
+      },
+      "checks/result.json": {
+        "status": "PASS",
+        "fixture": "SYNTHETIC_ONLY",
+        "apk_sha256": "f3da3c7edda2795593a2ec8ca6d358ad54f62ed87fc9a704bbbd8ebbf91d3ed4",
+        "serial": "emulator-5554",
+        "avd": "GlucoPapaMvp3CiQa",
+        "checks": [
+          {
+            "fresh_local_empty_and_demo_opt_in": true
+          },
+          {
+            "initial_empty_store": true,
+            "stopped_pid": "3834"
+          },
+          {
+            "unconfirmed_injection_no_write": true,
+            "stopped_pid": "4117"
+          },
+          {
+            "confirmed_injection_sqlite": {
+              "eventId": "high-00b11e9e1b353efccaadd717e0d7df97",
+              "administeredAt": "2026-11-21T00:33:41.473Z",
+              "revision": 1
+            },
+            "stopped_pid": "4406"
+          },
+          {
+            "force_stop_relaunch_same_snapshot": true,
+            "start": "Starting: Intent { cmp=com.glucopapa.shell.fixture/com.glucopapa.shell.MainActivity }\nStatus: ok\nLaunchState: COLD\nActivity: com.glucopapa.shell.fixture/com.glucopapa.shell.MainActivity\nTotalTime: 1289\nWaitTime: 1290\nComplete",
+            "stopped_pid": "4789"
+          },
+          {
+            "confirmed_injection_visible_in_journal": true
+          }
+        ],
+        "android_device": "NOT_TESTED",
+        "real_xdrip": "NOT_TESTED",
+        "clinical": "NOT_VALIDATED",
+        "android_api": "35",
+        "ui_driver": "ANDROID_WEBVIEW_INSTRUMENTATION"
+      }
+    }
+  },
+  "35": {
+    "jobId": 136659820395,
+    "result": "success",
+    "htmlUrl": "https://github.com/bmv2002qq-star/Glucopapa/actions/runs/44844205399/job/136659820395",
+    "evidenceArtifact": 14681838278,
+    "evidenceArchiveSha256": "sha256:bdb2a8874e6998f518b737248ba0a6f4f9f3f216e8141fc1c464474e72a9713c",
     "failedSteps": [],
     "cases": {
       "ai-saf-1d-save": {
@@ -97,7 +696,7 @@
         "carbs": 4.975,
         "fixture": "SYNTHETIC",
         "gi": 49,
-        "id": "low-6dd7adcaa7ce9625c3e94b1e77ebe571",
+        "id": "low-01d87e63ad758c985241f7a928fae8bd",
         "revision": 16,
         "sqlite": true,
         "status": "PASS",
@@ -108,7 +707,7 @@
         "carbs": 4.975,
         "fixture": "SYNTHETIC",
         "gi": 49,
-        "id": "low-6dd7adcaa7ce9625c3e94b1e77ebe571",
+        "id": "low-01d87e63ad758c985241f7a928fae8bd",
         "revision": 16,
         "sqlite": true,
         "status": "PASS",
@@ -145,7 +744,7 @@
         "revision": 44,
         "sqlite": true,
         "status": "PASS",
-        "timer": "11:54"
+        "timer": "11:55"
       },
       "meal-timing-write": {
         "confirmedWrites": 1,
@@ -165,14 +764,14 @@
         "status": "PASS"
       },
       "native-timing": [
-        "11-21 00:13:58.821  5090  5103 I GlucoPapaQA: 1000 SQLite CAS commits took 6638 ms; isolated backup reopens",
-        "11-21 00:14:01.008  5090  5103 I GlucoPapaQA: SQLite v1 to v2 migration, rollback, large Unicode and corruption detection passed"
+        "11-21 00:34:19.700  5115  5127 I GlucoPapaQA: 1000 SQLite CAS commits took 6563 ms; isolated backup reopens",
+        "11-21 00:34:21.866  5115  5127 I GlucoPapaQA: SQLite v1 to v2 migration, rollback, large Unicode and corruption detection passed"
       ],
       "native-trace-export": {
         "fixture": "SYNTHETIC",
         "ringSlots": 3,
         "concurrentRows": 101,
-        "traceWriteMs": 175,
+        "traceWriteMs": 165,
         "periods": [
           {
             "period": "1d",
@@ -284,7 +883,7 @@
         "status": "PASS"
       },
       "pilot-replay-restored": {
-        "elapsedMs": 1470,
+        "elapsedMs": 1405,
         "fixture": "SYNTHETIC_ONLY",
         "jsonChars": 3937188,
         "revision": 7,
@@ -294,7 +893,7 @@
         "virtualDays": 90
       },
       "pilot-replay-write": {
-        "elapsedMs": 9945,
+        "elapsedMs": 9565,
         "fixture": "SYNTHETIC_ONLY",
         "jsonChars": 3937188,
         "revision": 7,
@@ -413,12 +1012,12 @@
             "navigation_safe": true
           }
         ],
-        "soak_seconds": 85.1,
+        "soak_seconds": 84.9,
         "pss_kb": [
-          94505,
-          94962,
-          90702,
-          92334
+          92947,
+          92663,
+          92341,
+          92075
         ],
         "trim_memory_signal": {
           "command_accepted": true,
@@ -459,62 +1058,62 @@
             "file": "Glucopapa_AI_Export.jsonl",
             "revision": 7,
             "rows": 9,
-            "sha256": "597cfe652f65b3e8151f6d4e8ee1f160072362be033a8e77350229317d7f8557",
+            "sha256": "cc8f13af5036c658f0cd883c61d01b548139d1169beb16da1d800718a8a95597",
             "bytes": 3871,
-            "from": "2026-11-20T00:14:44.557729Z",
-            "through": "2026-11-21T00:14:44.557729Z"
+            "from": "2026-11-20T00:35:05.091274Z",
+            "through": "2026-11-21T00:35:05.091274Z"
           },
           "2d": {
             "file": "Glucopapa_AI_Export.jsonl (1)",
             "revision": 7,
             "rows": 9,
-            "sha256": "fb23b79e50fa608c24cee2d3969c8b7cedeab3478a7b8f064f7449d3aa2dae02",
+            "sha256": "6a1bb835d5b677dcb790cc7c9d0852174b9e7ba69f9499d3ac12df8888929738",
             "bytes": 3871,
-            "from": "2026-11-19T00:14:55.105326Z",
-            "through": "2026-11-21T00:14:55.105326Z"
+            "from": "2026-11-19T00:35:16.277068Z",
+            "through": "2026-11-21T00:35:16.277068Z"
           },
           "5d": {
             "file": "Glucopapa_AI_Export.jsonl (2)",
             "revision": 7,
             "rows": 9,
-            "sha256": "00124aba22fda7cbd3768c313440fa38f0315f9bd7105ee0c9903baf6a46d8c2",
+            "sha256": "ce477dbf3f81a5c2d6c1e3fb48523747e09a955466c3eadc820f641d95864280",
             "bytes": 3871,
-            "from": "2026-11-16T00:15:05.563069Z",
-            "through": "2026-11-21T00:15:05.563069Z"
+            "from": "2026-11-16T00:35:26.672046Z",
+            "through": "2026-11-21T00:35:26.672046Z"
           },
           "1m": {
             "file": "Glucopapa_AI_Export.jsonl (3)",
             "revision": 7,
             "rows": 9,
-            "sha256": "d43f30ce19bdebcc1b5a2dab24ff416a662d34f0ad83c899157ab63b14c3fc62",
+            "sha256": "19c7ef9ffebb7f6f727bfbc35af5cbb284a9dddf604d36ddf2e4ceb56a8b8e41",
             "bytes": 3871,
-            "from": "2026-10-21T00:15:15.768367Z",
-            "through": "2026-11-21T00:15:15.768367Z"
+            "from": "2026-10-21T00:35:37.703474Z",
+            "through": "2026-11-21T00:35:37.703474Z"
           },
           "3m": {
             "file": "Glucopapa_AI_Export.jsonl (4)",
             "revision": 7,
             "rows": 9,
-            "sha256": "b8a6c3294dd34b03e28ea3b63752a601541ff87ccfd17a9b5763b2c994eacc18",
+            "sha256": "c139c930618ded727ede1eed8b60eaedd7f7ed822e91967058339c1896893a9e",
             "bytes": 3871,
-            "from": "2026-08-21T00:15:26.629632Z",
-            "through": "2026-11-21T00:15:26.629632Z"
+            "from": "2026-08-21T00:35:48.510596Z",
+            "through": "2026-11-21T00:35:48.510596Z"
           },
           "6m": {
             "file": "Glucopapa_AI_Export.jsonl (5)",
             "revision": 7,
             "rows": 9,
-            "sha256": "d2e01b354691908f237d38b53bf1a80147f8c64857f1ad06c038e194bd94f4a9",
+            "sha256": "b386090925f099c70046e2fa8352ea5b8c978394347958715e29c7a21e38628c",
             "bytes": 3871,
-            "from": "2026-05-21T00:15:37.425145Z",
-            "through": "2026-11-21T00:15:37.425145Z"
+            "from": "2026-05-21T00:35:59.343841Z",
+            "through": "2026-11-21T00:35:59.343841Z"
           }
         }
       },
       "checks/result.json": {
         "status": "PASS",
         "fixture": "SYNTHETIC_ONLY",
-        "apk_sha256": "a1654bd3fad75e8b46f3e53605c9c4aac09e74ac2825aad4c2443e2d5719926b",
+        "apk_sha256": "5d2b3d98f8f7f6898299734f57509aeb825ffda997c1dfc88716bfa5cab1fb30",
         "serial": "emulator-5554",
         "avd": "GlucoPapaMvp3CiQa",
         "checks": [
@@ -523,24 +1122,24 @@
           },
           {
             "initial_empty_store": true,
-            "stopped_pid": "3826"
+            "stopped_pid": "3846"
           },
           {
             "unconfirmed_injection_no_write": true,
-            "stopped_pid": "4114"
+            "stopped_pid": "4137"
           },
           {
             "confirmed_injection_sqlite": {
-              "eventId": "high-311a46d1a9fb9a3247d9cf950e82861b",
-              "administeredAt": "2026-11-21T00:13:21.916Z",
+              "eventId": "high-8b8f229d41339030ffb34792d0c682da",
+              "administeredAt": "2026-11-21T00:33:43.507Z",
               "revision": 1
             },
-            "stopped_pid": "4404"
+            "stopped_pid": "4424"
           },
           {
             "force_stop_relaunch_same_snapshot": true,
-            "start": "Starting: Intent { cmp=com.glucopapa.shell.fixture/com.glucopapa.shell.MainActivity }\nStatus: ok\nLaunchState: COLD\nActivity: com.glucopapa.shell.fixture/com.glucopapa.shell.MainActivity\nTotalTime: 1550\nWaitTime: 1566\nComplete",
-            "stopped_pid": "4781"
+            "start": "Starting: Intent { cmp=com.glucopapa.shell.fixture/com.glucopapa.shell.MainActivity }\nStatus: ok\nLaunchState: COLD\nActivity: com.glucopapa.shell.fixture/com.glucopapa.shell.MainActivity\nTotalTime: 1395\nWaitTime: 1410\nComplete",
+            "stopped_pid": "4809"
           },
           {
             "confirmed_injection_visible_in_journal": true
@@ -550,993 +1149,16 @@
         "real_xdrip": "NOT_TESTED",
         "clinical": "NOT_VALIDATED",
         "android_api": "35",
-        "ui_driver": "ANDROID_WEBVIEW_INSTRUMENTATION"
-      }
-    }
-  },
-  "35-core": {
-    "jobId": 136648127540,
-    "result": "success",
-    "htmlUrl": "https://github.com/bmv2002qq-star/Glucopapa/actions/runs/44840722877/job/136648127540",
-    "evidenceArtifact": 14681296319,
-    "evidenceArchiveSha256": "sha256:0b3c255d4db8efe6e65570ae9e23288b5df6835b31e7adf619035c3371846c0a",
-    "failedSteps": [],
-    "cases": {
-      "high-settings-restored": {
-        "fixture": "SYNTHETIC",
-        "revision": 6,
-        "sqlite": true,
-        "status": "PASS",
-        "step": "high-settings-restored"
-      },
-      "high-settings-save": {
-        "fixture": "SYNTHETIC",
-        "revision": 6,
-        "sqlite": true,
-        "status": "PASS",
-        "step": "high-settings-save"
-      },
-      "history-restored": {
-        "checked": "FORCE_STOP_RELAUNCH",
-        "fixture": "SYNTHETIC_LOOPBACK",
-        "points": 3,
-        "revision": 2,
-        "status": "PASS"
-      },
-      "history-write": {
-        "checked": "HTTP_AND_ATOMIC_IMPORT",
-        "fixture": "SYNTHETIC_LOOPBACK",
-        "points": 3,
-        "revision": 2,
-        "status": "PASS"
-      },
-      "meal-model-restored": {
-        "fixture": "SYNTHETIC",
-        "model": {
-          "id": "GFCOB",
-          "version": "0.1.1"
-        },
-        "revision": 2,
-        "sqlite": true,
-        "status": "PASS",
-        "step": "meal-model-restored"
-      },
-      "meal-model-save": {
-        "fixture": "SYNTHETIC",
-        "model": {
-          "id": "GFCOB",
-          "version": "0.1.1"
-        },
-        "revision": 2,
-        "sqlite": true,
-        "status": "PASS",
-        "step": "meal-model-save"
-      },
-      "meal-timing-restored": {
-        "confirmedWrites": 1,
-        "data": "SYNTHETIC_ONLY",
-        "estimateMinutes": 12,
-        "matchedCases": 6,
-        "phase": "restored",
-        "revision": 44,
-        "sqlite": true,
-        "status": "PASS",
-        "timer": "11:55"
-      },
-      "meal-timing-write": {
-        "confirmedWrites": 1,
-        "data": "SYNTHETIC_ONLY",
-        "estimateMinutes": 12,
-        "matchedCases": 6,
-        "phase": "write",
-        "revision": 44,
-        "sqlite": true,
-        "status": "PASS",
-        "timer": "12:00"
-      },
-      "native-exercise": {
-        "status": "PASS"
-      },
-      "native-reopen": {
-        "status": "PASS"
-      },
-      "native-timing": [
-        "11-21 00:03:49.273  5073  5086 I GlucoPapaQA: 1000 SQLite CAS commits took 7291 ms; isolated backup reopens",
-        "11-21 00:03:51.359  5073  5086 I GlucoPapaQA: SQLite v1 to v2 migration, rollback, large Unicode and corruption detection passed"
-      ],
-      "production-back": {
-        "status": "PASS",
-        "routes": "nutrition → LOW → home",
-        "input": "ANDROID_KEYCODE_BACK",
-        "systemGesture": "NOT_RUN"
-      },
-      "production-isolation": {
-        "provider": "NO_PROVIDER",
-        "sqlite": "ABSENT",
-        "status": "PASS",
-        "variant": "debug"
-      },
-      "profile-restored": {
-        "fixture": "SYNTHETIC_PROFILE",
-        "height": 120,
-        "status": "PASS",
-        "step": "profile-restored",
-        "weight": 20
-      },
-      "profile-write": {
-        "fixture": "SYNTHETIC_PROFILE",
-        "height": 120,
-        "status": "PASS",
-        "step": "profile-write",
-        "weight": 20
-      },
-      "provider-restored": {
-        "checked": "FORCE_STOP_RELAUNCH",
-        "fixture": "SYNTHETIC_PROVIDER_PAYLOAD",
-        "revision": 1,
-        "status": "PASS"
-      },
-      "provider-write": {
-        "checked": "CAS_AND_DEDUPLICATION",
-        "fixture": "SYNTHETIC_PROVIDER_PAYLOAD",
-        "revision": 1,
-        "status": "PASS"
-      },
-      "smoke": {
-        "fixture": "SYNTHETIC",
-        "fresh_local": true,
-        "status": "PASS",
-        "step": "select-demo"
-      },
-      "unified-restored": {
-        "fixture": "SYNTHETIC",
-        "status": "PASS",
-        "step": "unified-restored"
-      },
-      "unified-save": {
-        "fixture": "SYNTHETIC",
-        "status": "PASS",
-        "step": "unified-save"
-      },
-      "web-restored": {
-        "checked": "FORCE_STOP_RELAUNCH",
-        "fixture": "SYNTHETIC_LOCAL_WEB_SERVICE",
-        "points": 4,
-        "revision": 3,
-        "status": "PASS"
-      },
-      "web-write": {
-        "checked": "HTTP_UNITS_DEDUPLICATION",
-        "fixture": "SYNTHETIC_LOCAL_WEB_SERVICE",
-        "points": 4,
-        "revision": 3,
-        "status": "PASS"
-      },
-      "window-restored": {
-        "fixture": "SYNTHETIC_XDRIP_WINDOW",
-        "points": 6,
-        "revision": 4,
-        "status": "PASS",
-        "step": "window-restored"
-      },
-      "window-write": {
-        "fixture": "SYNTHETIC_XDRIP_WINDOW",
-        "points": 6,
-        "revision": 4,
-        "status": "PASS",
-        "step": "window-write"
-      },
-      "checks/result.json": {
-        "status": "PASS",
-        "fixture": "SYNTHETIC_ONLY",
-        "apk_sha256": "ec94f14941b3999a9d3c6ad6564d7a35a9f47fed5587d6880112836395e4b68c",
-        "serial": "emulator-5554",
-        "avd": "GlucoPapaMvp3CiQa",
-        "checks": [
-          {
-            "fresh_local_empty_and_demo_opt_in": true
-          },
-          {
-            "initial_empty_store": true,
-            "stopped_pid": "3795"
-          },
-          {
-            "unconfirmed_injection_no_write": true,
-            "stopped_pid": "4083"
-          },
-          {
-            "confirmed_injection_sqlite": {
-              "eventId": "high-b4c1eda4837d920bda3436d3a09e51d4",
-              "administeredAt": "2026-11-21T00:03:11.662Z",
-              "revision": 1
-            },
-            "stopped_pid": "4372"
-          },
-          {
-            "force_stop_relaunch_same_snapshot": true,
-            "start": "Starting: Intent { cmp=com.glucopapa.shell.fixture/com.glucopapa.shell.MainActivity }\nStatus: ok\nLaunchState: COLD\nActivity: com.glucopapa.shell.fixture/com.glucopapa.shell.MainActivity\nTotalTime: 1247\nWaitTime: 1252\nComplete",
-            "stopped_pid": "4759"
-          },
-          {
-            "confirmed_injection_visible_in_journal": true
-          }
-        ],
-        "android_device": "NOT_TESTED",
-        "real_xdrip": "NOT_TESTED",
-        "clinical": "NOT_VALIDATED",
-        "android_api": "35",
-        "ui_driver": "ANDROID_WEBVIEW_INSTRUMENTATION"
-      }
-    }
-  },
-  "31": {
-    "jobId": 136652087119,
-    "result": "success",
-    "htmlUrl": "https://github.com/bmv2002qq-star/Glucopapa/actions/runs/44841899075/job/136652087119",
-    "evidenceArtifact": 14680614337,
-    "evidenceArchiveSha256": "sha256:b5b5beec71090defa28df4a6ea3a72a8a01186b3e6755219afd9b781b7f0ad57",
-    "failedSteps": [],
-    "cases": {
-      "high-settings-restored": {
-        "fixture": "SYNTHETIC",
-        "revision": 12,
-        "sqlite": true,
-        "status": "PASS",
-        "step": "high-settings-restored"
-      },
-      "high-settings-save": {
-        "fixture": "SYNTHETIC",
-        "revision": 12,
-        "sqlite": true,
-        "status": "PASS",
-        "step": "high-settings-save"
-      },
-      "history-restored": {
-        "checked": "FORCE_STOP_RELAUNCH",
-        "fixture": "SYNTHETIC_LOOPBACK",
-        "points": 3,
-        "revision": 2,
-        "status": "PASS"
-      },
-      "history-write": {
-        "checked": "HTTP_AND_ATOMIC_IMPORT",
-        "fixture": "SYNTHETIC_LOOPBACK",
-        "points": 3,
-        "revision": 2,
-        "status": "PASS"
-      },
-      "injection-timing-history": {
-        "fixture": "SYNTHETIC_ISOLATED",
-        "matchedCases": 4,
-        "result": "HISTORICAL_ESTIMATE",
-        "snapshot_unchanged": true,
-        "sqlite": true,
-        "status": "PASS"
-      },
-      "low-fact-restored": {
-        "amount": 25,
-        "carbs": 4.975,
-        "fixture": "SYNTHETIC",
-        "gi": 49,
-        "id": "low-3144daac01d10090c6f5cbfaf25c7373",
-        "revision": 16,
-        "sqlite": true,
-        "status": "PASS",
-        "step": "low-fact-restored"
-      },
-      "low-fact-write": {
-        "amount": 25,
-        "carbs": 4.975,
-        "fixture": "SYNTHETIC",
-        "gi": 49,
-        "id": "low-3144daac01d10090c6f5cbfaf25c7373",
-        "revision": 16,
-        "sqlite": true,
-        "status": "PASS",
-        "step": "low-fact-write"
-      },
-      "meal-model-restored": {
-        "fixture": "SYNTHETIC",
-        "model": {
-          "id": "GFCOB",
-          "version": "0.1.1"
-        },
-        "revision": 8,
-        "sqlite": true,
-        "status": "PASS",
-        "step": "meal-model-restored"
-      },
-      "meal-model-save": {
-        "fixture": "SYNTHETIC",
-        "model": {
-          "id": "GFCOB",
-          "version": "0.1.1"
-        },
-        "revision": 8,
-        "sqlite": true,
-        "status": "PASS",
-        "step": "meal-model-save"
-      },
-      "meal-timing-restored": {
-        "confirmedWrites": 1,
-        "data": "SYNTHETIC_ONLY",
-        "estimateMinutes": 12,
-        "matchedCases": 6,
-        "phase": "restored",
-        "revision": 44,
-        "sqlite": true,
-        "status": "PASS",
-        "timer": "11:57"
-      },
-      "meal-timing-write": {
-        "confirmedWrites": 1,
-        "data": "SYNTHETIC_ONLY",
-        "estimateMinutes": 12,
-        "matchedCases": 6,
-        "phase": "write",
-        "revision": 44,
-        "sqlite": true,
-        "status": "PASS",
-        "timer": "12:00"
-      },
-      "native-exercise": {
-        "status": "PASS"
-      },
-      "native-reopen": {
-        "status": "PASS"
-      },
-      "native-timing": [
-        "11-21 00:13:19.593  5033  5048 I GlucoPapaQA: 1000 SQLite CAS commits took 3268 ms; isolated backup reopens",
-        "11-21 00:13:21.148  5033  5048 I GlucoPapaQA: SQLite v1 to v2 migration, rollback, large Unicode and corruption detection passed"
-      ],
-      "native-touch": {
-        "status": "PASS",
-        "input": "ANDROID_POINTER_DOWN_UP",
-        "routes": "HIGH, LOW, journal",
-        "webview_accessibility": "ENV_BLOCKED"
-      },
-      "native-trace-export": {
-        "fixture": "SYNTHETIC",
-        "ringSlots": 3,
-        "concurrentRows": 101,
-        "traceWriteMs": 163,
-        "periods": [
-          {
-            "period": "1d",
-            "records": 290,
-            "bytes": 61773,
-            "counts": {
-              "cgm": 288,
-              "trace": 1,
-              "event": 1,
-              "setting_change": 0,
-              "forecast": 0,
-              "forecast_assessment": 0,
-              "error": 0
-            },
-            "sha256": "98df8b40fc036a84860a7466152ac6f26d0711d20b2e8cbb226e320a2b262466"
-          },
-          {
-            "period": "2d",
-            "records": 591,
-            "bytes": 124788,
-            "counts": {
-              "cgm": 588,
-              "trace": 2,
-              "event": 1,
-              "setting_change": 0,
-              "forecast": 0,
-              "forecast_assessment": 0,
-              "error": 0
-            },
-            "sha256": "bb3a5334a47850c90cfbde5002573e814af76523c87c3b719c1ab83547691008"
-          },
-          {
-            "period": "5d",
-            "records": 1456,
-            "bytes": 306139,
-            "counts": {
-              "cgm": 1452,
-              "trace": 3,
-              "event": 1,
-              "setting_change": 0,
-              "forecast": 0,
-              "forecast_assessment": 0,
-              "error": 0
-            },
-            "sha256": "9ae096c979c7568c12881fd2747d1ca36e23ca87d84952186f3b509a4a958dee"
-          },
-          {
-            "period": "1m",
-            "records": 8944,
-            "bytes": 1878619,
-            "counts": {
-              "cgm": 8940,
-              "trace": 3,
-              "event": 1,
-              "setting_change": 0,
-              "forecast": 0,
-              "forecast_assessment": 0,
-              "error": 0
-            },
-            "sha256": "d5126dfde32f7d29d25827e8f934f2aac7d91d448bb5b0a7b74dd1c72279817b"
-          },
-          {
-            "period": "3m",
-            "records": 26512,
-            "bytes": 5584415,
-            "counts": {
-              "cgm": 26508,
-              "trace": 3,
-              "event": 1,
-              "setting_change": 0,
-              "forecast": 0,
-              "forecast_assessment": 0,
-              "error": 0
-            },
-            "sha256": "5d7256c6f4b08c746002f866bd27b06b88923bb29becd2965f84358d64a3605c"
-          },
-          {
-            "period": "6m",
-            "records": 53008,
-            "bytes": 11175071,
-            "counts": {
-              "cgm": 53004,
-              "trace": 3,
-              "event": 1,
-              "setting_change": 0,
-              "forecast": 0,
-              "forecast_assessment": 0,
-              "error": 0
-            },
-            "sha256": "9d1e0b19740604cdac09822e6d58aa0ad922b7f70efc512d3088306b78c447e4"
-          }
-        ],
-        "projectedSourceUnchanged": true,
-        "injectedStreamFailure": true
-      },
-      "native-web": {
-        "actual": {
-          "amount": 75,
-          "carbs": 14.925,
-          "revision": 6
-        },
-        "cancelledConfirmations": 1,
-        "corrected": {
-          "amount": 50,
-          "carbs": 9.95,
-          "revision": 7
-        },
-        "fixture": "SYNTHETIC",
-        "status": "PASS"
-      },
-      "production-back": {
-        "status": "PASS",
-        "routes": "nutrition → LOW → home",
-        "input": "ANDROID_KEYCODE_BACK",
-        "systemGesture": "NOT_RUN"
-      },
-      "production-isolation": {
-        "provider": "NO_PROVIDER",
-        "sqlite": "ABSENT",
-        "status": "PASS",
-        "variant": "debug"
-      },
-      "profile-restored": {
-        "fixture": "SYNTHETIC_PROFILE",
-        "height": 120,
-        "status": "PASS",
-        "step": "profile-restored",
-        "weight": 20
-      },
-      "profile-write": {
-        "fixture": "SYNTHETIC_PROFILE",
-        "height": 120,
-        "status": "PASS",
-        "step": "profile-write",
-        "weight": 20
-      },
-      "provider-restored": {
-        "checked": "FORCE_STOP_RELAUNCH",
-        "fixture": "SYNTHETIC_PROVIDER_PAYLOAD",
-        "revision": 1,
-        "status": "PASS"
-      },
-      "provider-write": {
-        "checked": "CAS_AND_DEDUPLICATION",
-        "fixture": "SYNTHETIC_PROVIDER_PAYLOAD",
-        "revision": 1,
-        "status": "PASS"
-      },
-      "smoke": {
-        "fixture": "SYNTHETIC",
-        "fresh_local": true,
-        "status": "PASS",
-        "step": "select-demo"
-      },
-      "unified-restored": {
-        "fixture": "SYNTHETIC",
-        "status": "PASS",
-        "step": "unified-restored"
-      },
-      "unified-save": {
-        "fixture": "SYNTHETIC",
-        "status": "PASS",
-        "step": "unified-save"
-      },
-      "web-restored": {
-        "checked": "FORCE_STOP_RELAUNCH",
-        "fixture": "SYNTHETIC_LOCAL_WEB_SERVICE",
-        "points": 4,
-        "revision": 3,
-        "status": "PASS"
-      },
-      "web-write": {
-        "checked": "HTTP_UNITS_DEDUPLICATION",
-        "fixture": "SYNTHETIC_LOCAL_WEB_SERVICE",
-        "points": 4,
-        "revision": 3,
-        "status": "PASS"
-      },
-      "window-restored": {
-        "fixture": "SYNTHETIC_XDRIP_WINDOW",
-        "points": 6,
-        "revision": 4,
-        "status": "PASS",
-        "step": "window-restored"
-      },
-      "window-write": {
-        "fixture": "SYNTHETIC_XDRIP_WINDOW",
-        "points": 6,
-        "revision": 4,
-        "status": "PASS",
-        "step": "window-write"
-      },
-      "native-meal.json": {
-        "status": "PASS",
-        "fixture": "SYNTHETIC",
-        "database": "gfstorage_v5.db",
-        "same_after_restart": true,
-        "meal_count": 1,
-        "revision": 7,
-        "actual": {
-          "amount": 75,
-          "carbs": 14.925,
-          "revision": 6
-        },
-        "corrected": {
-          "amount": 50,
-          "carbs": 9.95,
-          "revision": 7
-        }
-      },
-      "checks/result.json": {
-        "status": "PASS",
-        "fixture": "SYNTHETIC_ONLY",
-        "apk_sha256": "c153b1f98674a62e600a3f3f61ce1cb1708b669458eddc617532c412c6506df0",
-        "serial": "emulator-5554",
-        "avd": "GlucoPapaMvp3CiQa",
-        "checks": [
-          {
-            "fresh_local_empty_and_demo_opt_in": true
-          },
-          {
-            "initial_empty_store": true,
-            "stopped_pid": "3758"
-          },
-          {
-            "unconfirmed_injection_no_write": true,
-            "stopped_pid": "4048"
-          },
-          {
-            "confirmed_injection_sqlite": {
-              "eventId": "high-8d392a531d05011bf570a4dc07c28b2e",
-              "administeredAt": "2026-11-21T00:12:57.975Z",
-              "revision": 1
-            },
-            "stopped_pid": "4334"
-          },
-          {
-            "force_stop_relaunch_same_snapshot": true,
-            "start": "Starting: Intent { cmp=com.glucopapa.shell.fixture/com.glucopapa.shell.MainActivity }\nStatus: ok\nLaunchState: COLD\nActivity: com.glucopapa.shell.fixture/com.glucopapa.shell.MainActivity\nTotalTime: 816\nWaitTime: 816\nComplete",
-            "stopped_pid": "4719"
-          },
-          {
-            "confirmed_injection_visible_in_journal": true
-          }
-        ],
-        "android_device": "NOT_TESTED",
-        "real_xdrip": "NOT_TESTED",
-        "clinical": "NOT_VALIDATED",
-        "android_api": "31",
-        "ui_driver": "ANDROID_WEBVIEW_INSTRUMENTATION"
-      }
-    }
-  },
-  "36": {
-    "jobId": 136652087187,
-    "result": "failure",
-    "htmlUrl": "https://github.com/bmv2002qq-star/Glucopapa/actions/runs/44841899075/job/136652087187",
-    "evidenceArtifact": 14682395102,
-    "evidenceArchiveSha256": "sha256:5be7576f87234e8034e58a6ae4d9c31426ac4d2661c3a4daa15744c3cff820bc",
-    "failedSteps": [
-      "Check installed WebView and SQLite"
-    ],
-    "cases": {
-      "high-settings-restored": {
-        "fixture": "SYNTHETIC",
-        "revision": 12,
-        "sqlite": true,
-        "status": "PASS",
-        "step": "high-settings-restored"
-      },
-      "high-settings-save": {
-        "fixture": "SYNTHETIC",
-        "revision": 12,
-        "sqlite": true,
-        "status": "PASS",
-        "step": "high-settings-save"
-      },
-      "history-restored": {
-        "checked": "FORCE_STOP_RELAUNCH",
-        "fixture": "SYNTHETIC_LOOPBACK",
-        "points": 3,
-        "revision": 2,
-        "status": "PASS"
-      },
-      "history-write": {
-        "checked": "HTTP_AND_ATOMIC_IMPORT",
-        "fixture": "SYNTHETIC_LOOPBACK",
-        "points": 3,
-        "revision": 2,
-        "status": "PASS"
-      },
-      "injection-timing-history": {
-        "fixture": "SYNTHETIC_ISOLATED",
-        "matchedCases": 4,
-        "result": "HISTORICAL_ESTIMATE",
-        "snapshot_unchanged": true,
-        "sqlite": true,
-        "status": "PASS"
-      },
-      "low-fact-restored": {
-        "amount": 25,
-        "carbs": 4.975,
-        "fixture": "SYNTHETIC",
-        "gi": 49,
-        "id": "low-84b95421246163fb59c8ce4c9a00f91d",
-        "revision": 16,
-        "sqlite": true,
-        "status": "PASS",
-        "step": "low-fact-restored"
-      },
-      "low-fact-write": {
-        "amount": 25,
-        "carbs": 4.975,
-        "fixture": "SYNTHETIC",
-        "gi": 49,
-        "id": "low-84b95421246163fb59c8ce4c9a00f91d",
-        "revision": 16,
-        "sqlite": true,
-        "status": "PASS",
-        "step": "low-fact-write"
-      },
-      "meal-model-restored": {
-        "fixture": "SYNTHETIC",
-        "model": {
-          "id": "GFCOB",
-          "version": "0.1.1"
-        },
-        "revision": 8,
-        "sqlite": true,
-        "status": "PASS",
-        "step": "meal-model-restored"
-      },
-      "meal-model-save": {
-        "fixture": "SYNTHETIC",
-        "model": {
-          "id": "GFCOB",
-          "version": "0.1.1"
-        },
-        "revision": 8,
-        "sqlite": true,
-        "status": "PASS",
-        "step": "meal-model-save"
-      },
-      "meal-timing-restored": {
-        "confirmedWrites": 1,
-        "data": "SYNTHETIC_ONLY",
-        "estimateMinutes": 12,
-        "matchedCases": 6,
-        "phase": "restored",
-        "revision": 44,
-        "sqlite": true,
-        "status": "PASS",
-        "timer": "11:53"
-      },
-      "meal-timing-write": {
-        "confirmedWrites": 1,
-        "data": "SYNTHETIC_ONLY",
-        "estimateMinutes": 12,
-        "matchedCases": 6,
-        "phase": "write",
-        "revision": 44,
-        "sqlite": true,
-        "status": "PASS",
-        "timer": "12:00"
-      },
-      "native-exercise": {
-        "status": "PASS"
-      },
-      "native-reopen": {
-        "status": "PASS"
-      },
-      "native-timing": [
-        "11-21 00:17:45.995  5363  5375 I GlucoPapaQA: 1000 SQLite CAS commits took 5949 ms; isolated backup reopens",
-        "11-21 00:17:48.203  5363  5375 I GlucoPapaQA: SQLite v1 to v2 migration, rollback, large Unicode and corruption detection passed"
-      ],
-      "native-trace-export": {
-        "fixture": "SYNTHETIC",
-        "ringSlots": 3,
-        "concurrentRows": 101,
-        "traceWriteMs": 222,
-        "periods": [
-          {
-            "period": "1d",
-            "records": 290,
-            "bytes": 61773,
-            "counts": {
-              "cgm": 288,
-              "trace": 1,
-              "event": 1,
-              "setting_change": 0,
-              "forecast": 0,
-              "forecast_assessment": 0,
-              "error": 0
-            },
-            "sha256": "98df8b40fc036a84860a7466152ac6f26d0711d20b2e8cbb226e320a2b262466"
-          },
-          {
-            "period": "2d",
-            "records": 591,
-            "bytes": 124788,
-            "counts": {
-              "cgm": 588,
-              "trace": 2,
-              "event": 1,
-              "setting_change": 0,
-              "forecast": 0,
-              "forecast_assessment": 0,
-              "error": 0
-            },
-            "sha256": "bb3a5334a47850c90cfbde5002573e814af76523c87c3b719c1ab83547691008"
-          },
-          {
-            "period": "5d",
-            "records": 1456,
-            "bytes": 306139,
-            "counts": {
-              "cgm": 1452,
-              "trace": 3,
-              "event": 1,
-              "setting_change": 0,
-              "forecast": 0,
-              "forecast_assessment": 0,
-              "error": 0
-            },
-            "sha256": "9ae096c979c7568c12881fd2747d1ca36e23ca87d84952186f3b509a4a958dee"
-          },
-          {
-            "period": "1m",
-            "records": 8944,
-            "bytes": 1878619,
-            "counts": {
-              "cgm": 8940,
-              "trace": 3,
-              "event": 1,
-              "setting_change": 0,
-              "forecast": 0,
-              "forecast_assessment": 0,
-              "error": 0
-            },
-            "sha256": "d5126dfde32f7d29d25827e8f934f2aac7d91d448bb5b0a7b74dd1c72279817b"
-          },
-          {
-            "period": "3m",
-            "records": 26512,
-            "bytes": 5584415,
-            "counts": {
-              "cgm": 26508,
-              "trace": 3,
-              "event": 1,
-              "setting_change": 0,
-              "forecast": 0,
-              "forecast_assessment": 0,
-              "error": 0
-            },
-            "sha256": "5d7256c6f4b08c746002f866bd27b06b88923bb29becd2965f84358d64a3605c"
-          },
-          {
-            "period": "6m",
-            "records": 53008,
-            "bytes": 11175071,
-            "counts": {
-              "cgm": 53004,
-              "trace": 3,
-              "event": 1,
-              "setting_change": 0,
-              "forecast": 0,
-              "forecast_assessment": 0,
-              "error": 0
-            },
-            "sha256": "9d1e0b19740604cdac09822e6d58aa0ad922b7f70efc512d3088306b78c447e4"
-          }
-        ],
-        "projectedSourceUnchanged": true,
-        "injectedStreamFailure": true
-      },
-      "native-web": {
-        "actual": {
-          "amount": 75,
-          "carbs": 14.925,
-          "revision": 6
-        },
-        "cancelledConfirmations": 1,
-        "corrected": {
-          "amount": 50,
-          "carbs": 9.95,
-          "revision": 7
-        },
-        "fixture": "SYNTHETIC",
-        "status": "PASS"
-      },
-      "production-back": {
-        "status": "FAIL",
-        "cause": "QA_FAIL java.lang.IllegalStateException: Android Back requires focus in the app window"
-      },
-      "production-isolation": {
-        "provider": "NO_PROVIDER",
-        "sqlite": "ABSENT",
-        "status": "PASS",
-        "variant": "debug"
-      },
-      "profile-restored": {
-        "fixture": "SYNTHETIC_PROFILE",
-        "height": 120,
-        "status": "PASS",
-        "step": "profile-restored",
-        "weight": 20
-      },
-      "profile-write": {
-        "fixture": "SYNTHETIC_PROFILE",
-        "height": 120,
-        "status": "PASS",
-        "step": "profile-write",
-        "weight": 20
-      },
-      "provider-restored": {
-        "checked": "FORCE_STOP_RELAUNCH",
-        "fixture": "SYNTHETIC_PROVIDER_PAYLOAD",
-        "revision": 1,
-        "status": "PASS"
-      },
-      "provider-write": {
-        "checked": "CAS_AND_DEDUPLICATION",
-        "fixture": "SYNTHETIC_PROVIDER_PAYLOAD",
-        "revision": 1,
-        "status": "PASS"
-      },
-      "smoke": {
-        "fixture": "SYNTHETIC",
-        "fresh_local": true,
-        "status": "PASS",
-        "step": "select-demo"
-      },
-      "unified-restored": {
-        "fixture": "SYNTHETIC",
-        "status": "PASS",
-        "step": "unified-restored"
-      },
-      "unified-save": {
-        "fixture": "SYNTHETIC",
-        "status": "PASS",
-        "step": "unified-save"
-      },
-      "web-restored": {
-        "checked": "FORCE_STOP_RELAUNCH",
-        "fixture": "SYNTHETIC_LOCAL_WEB_SERVICE",
-        "points": 4,
-        "revision": 3,
-        "status": "PASS"
-      },
-      "web-write": {
-        "checked": "HTTP_UNITS_DEDUPLICATION",
-        "fixture": "SYNTHETIC_LOCAL_WEB_SERVICE",
-        "points": 4,
-        "revision": 3,
-        "status": "PASS"
-      },
-      "window-restored": {
-        "fixture": "SYNTHETIC_XDRIP_WINDOW",
-        "points": 6,
-        "revision": 4,
-        "status": "PASS",
-        "step": "window-restored"
-      },
-      "window-write": {
-        "fixture": "SYNTHETIC_XDRIP_WINDOW",
-        "points": 6,
-        "revision": 4,
-        "status": "PASS",
-        "step": "window-write"
-      },
-      "native-meal.json": {
-        "status": "PASS",
-        "fixture": "SYNTHETIC",
-        "database": "gfstorage_v5.db",
-        "same_after_restart": true,
-        "meal_count": 1,
-        "revision": 7,
-        "actual": {
-          "amount": 75,
-          "carbs": 14.925,
-          "revision": 6
-        },
-        "corrected": {
-          "amount": 50,
-          "carbs": 9.95,
-          "revision": 7
-        }
-      },
-      "checks/result.json": {
-        "status": "PASS",
-        "fixture": "SYNTHETIC_ONLY",
-        "apk_sha256": "a25298a46c2ffd8aa932bba27facbbb5d27bda899aaeace1dac5e4019b5bf080",
-        "serial": "emulator-5554",
-        "avd": "GlucoPapaMvp3CiQa",
-        "checks": [
-          {
-            "fresh_local_empty_and_demo_opt_in": true
-          },
-          {
-            "initial_empty_store": true,
-            "stopped_pid": "4085"
-          },
-          {
-            "unconfirmed_injection_no_write": true,
-            "stopped_pid": "4372"
-          },
-          {
-            "confirmed_injection_sqlite": {
-              "eventId": "high-718413129adb7bae28cfcc5241e83624",
-              "administeredAt": "2026-11-21T00:17:05.853Z",
-              "revision": 1
-            },
-            "stopped_pid": "4663"
-          },
-          {
-            "force_stop_relaunch_same_snapshot": true,
-            "start": "Starting: Intent { cmp=com.glucopapa.shell.fixture/com.glucopapa.shell.MainActivity }\nStatus: ok\nLaunchState: COLD\nActivity: com.glucopapa.shell.fixture/com.glucopapa.shell.MainActivity\nTotalTime: 1360\nWaitTime: 1366\nComplete",
-            "stopped_pid": "5044"
-          },
-          {
-            "confirmed_injection_visible_in_journal": true
-          }
-        ],
-        "android_device": "NOT_TESTED",
-        "real_xdrip": "NOT_TESTED",
-        "clinical": "NOT_VALIDATED",
-        "android_api": "36",
         "ui_driver": "ANDROID_WEBVIEW_INSTRUMENTATION"
       }
     }
   },
   "34": {
-    "jobId": 136652087361,
+    "jobId": 136659820531,
     "result": "success",
-    "htmlUrl": "https://github.com/bmv2002qq-star/Glucopapa/actions/runs/44841899075/job/136652087361",
-    "evidenceArtifact": 14681308614,
-    "evidenceArchiveSha256": "sha256:df0f8f5f2cdc93c8c58597ff16adf5c213520bbb6894b47cca2a91c64b4dfbf9",
+    "htmlUrl": "https://github.com/bmv2002qq-star/Glucopapa/actions/runs/44844205399/job/136659820531",
+    "evidenceArtifact": 14682916313,
+    "evidenceArchiveSha256": "sha256:bb9c3c25ab73fa55da364083c632719e67fd7b689457a3de48c937f1d6bb1345",
     "failedSteps": [],
     "cases": {
       "high-settings-restored": {
@@ -1580,7 +1202,7 @@
         "carbs": 4.975,
         "fixture": "SYNTHETIC",
         "gi": 49,
-        "id": "low-4e6d18f927fb5e8f3b936981cd45f87e",
+        "id": "low-b417c8b30a3a7d7af6e40e95ae0998f9",
         "revision": 16,
         "sqlite": true,
         "status": "PASS",
@@ -1591,7 +1213,7 @@
         "carbs": 4.975,
         "fixture": "SYNTHETIC",
         "gi": 49,
-        "id": "low-4e6d18f927fb5e8f3b936981cd45f87e",
+        "id": "low-b417c8b30a3a7d7af6e40e95ae0998f9",
         "revision": 16,
         "sqlite": true,
         "status": "PASS",
@@ -1628,7 +1250,7 @@
         "revision": 44,
         "sqlite": true,
         "status": "PASS",
-        "timer": "11:55"
+        "timer": "11:56"
       },
       "meal-timing-write": {
         "confirmedWrites": 1,
@@ -1648,14 +1270,14 @@
         "status": "PASS"
       },
       "native-timing": [
-        "11-21 00:13:50.291  5427  5447 I GlucoPapaQA: 1000 SQLite CAS commits took 9184 ms; isolated backup reopens",
-        "11-21 00:13:53.612  5427  5447 I GlucoPapaQA: SQLite v1 to v2 migration, rollback, large Unicode and corruption detection passed"
+        "11-21 00:34:01.160  5439  5458 I GlucoPapaQA: 1000 SQLite CAS commits took 8740 ms; isolated backup reopens",
+        "11-21 00:34:04.133  5439  5458 I GlucoPapaQA: SQLite v1 to v2 migration, rollback, large Unicode and corruption detection passed"
       ],
       "native-trace-export": {
         "fixture": "SYNTHETIC",
         "ringSlots": 3,
         "concurrentRows": 101,
-        "traceWriteMs": 246,
+        "traceWriteMs": 253,
         "periods": [
           {
             "period": "1d",
@@ -1876,12 +1498,12 @@
             "navigation_safe": true
           }
         ],
-        "soak_seconds": 85.9,
+        "soak_seconds": 86.3,
         "pss_kb": [
-          91304,
-          92130,
-          90962,
-          91242
+          91274,
+          92183,
+          90585,
+          90747
         ],
         "trim_memory_signal": {
           "command_accepted": true,
@@ -1914,7 +1536,7 @@
       "checks/result.json": {
         "status": "PASS",
         "fixture": "SYNTHETIC_ONLY",
-        "apk_sha256": "fe7fd879a3a0c34b1470c330f5c95dea3352475bf8d355ff5c6c85d33dcb67df",
+        "apk_sha256": "946718f7656c34285053f0636d75e06e4959ad512b03b2e15b9145d31c12eeb5",
         "serial": "emulator-5554",
         "avd": "GlucoPapaMvp3CiQa",
         "checks": [
@@ -1923,24 +1545,24 @@
           },
           {
             "initial_empty_store": true,
-            "stopped_pid": "4071"
+            "stopped_pid": "4075"
           },
           {
             "unconfirmed_injection_no_write": true,
-            "stopped_pid": "4381"
+            "stopped_pid": "4383"
           },
           {
             "confirmed_injection_sqlite": {
-              "eventId": "high-bbeb53e86869cb2fe7b45cca3ec12dd5",
-              "administeredAt": "2026-11-21T00:13:18.292Z",
+              "eventId": "high-fa46b2808fdc2fafe2041e017d4cd44f",
+              "administeredAt": "2026-11-21T00:33:29.988Z",
               "revision": 1
             },
-            "stopped_pid": "4687"
+            "stopped_pid": "4695"
           },
           {
             "force_stop_relaunch_same_snapshot": true,
-            "start": "Starting: Intent { cmp=com.glucopapa.shell.fixture/com.glucopapa.shell.MainActivity }\nStatus: ok\nLaunchState: COLD\nActivity: com.glucopapa.shell.fixture/com.glucopapa.shell.MainActivity\nTotalTime: 1092\nWaitTime: 1099\nComplete",
-            "stopped_pid": "5094"
+            "start": "Starting: Intent { cmp=com.glucopapa.shell.fixture/com.glucopapa.shell.MainActivity }\nStatus: ok\nLaunchState: COLD\nActivity: com.glucopapa.shell.fixture/com.glucopapa.shell.MainActivity\nTotalTime: 1034\nWaitTime: 1060\nComplete",
+            "stopped_pid": "5105"
           },
           {
             "confirmed_injection_visible_in_journal": true
@@ -1954,24 +1576,24 @@
       }
     }
   },
-  "35-core-repeat": {
-    "jobId": 136652087093,
+  "36": {
+    "jobId": 136659820650,
     "result": "success",
-    "htmlUrl": "https://github.com/bmv2002qq-star/Glucopapa/actions/runs/44841899075/job/136652087093",
-    "evidenceArtifact": 14681537256,
-    "evidenceArchiveSha256": "sha256:dcf7a5d4de45ece1b359cfeffffb08bafc97afa650946767bbd0b86f38a4f210",
+    "htmlUrl": "https://github.com/bmv2002qq-star/Glucopapa/actions/runs/44844205399/job/136659820650",
+    "evidenceArtifact": 14682268225,
+    "evidenceArchiveSha256": "sha256:6ad014646254c16d6fad8f1d86da332666a0c17d030c78b3599ddf3fcbcd7b15",
     "failedSteps": [],
     "cases": {
       "high-settings-restored": {
         "fixture": "SYNTHETIC",
-        "revision": 6,
+        "revision": 12,
         "sqlite": true,
         "status": "PASS",
         "step": "high-settings-restored"
       },
       "high-settings-save": {
         "fixture": "SYNTHETIC",
-        "revision": 6,
+        "revision": 12,
         "sqlite": true,
         "status": "PASS",
         "step": "high-settings-save"
@@ -1990,13 +1612,43 @@
         "revision": 2,
         "status": "PASS"
       },
+      "injection-timing-history": {
+        "fixture": "SYNTHETIC_ISOLATED",
+        "matchedCases": 4,
+        "result": "HISTORICAL_ESTIMATE",
+        "snapshot_unchanged": true,
+        "sqlite": true,
+        "status": "PASS"
+      },
+      "low-fact-restored": {
+        "amount": 25,
+        "carbs": 4.975,
+        "fixture": "SYNTHETIC",
+        "gi": 49,
+        "id": "low-dfd2e1c98df7c7fcb69d1f2ad28a8983",
+        "revision": 16,
+        "sqlite": true,
+        "status": "PASS",
+        "step": "low-fact-restored"
+      },
+      "low-fact-write": {
+        "amount": 25,
+        "carbs": 4.975,
+        "fixture": "SYNTHETIC",
+        "gi": 49,
+        "id": "low-dfd2e1c98df7c7fcb69d1f2ad28a8983",
+        "revision": 16,
+        "sqlite": true,
+        "status": "PASS",
+        "step": "low-fact-write"
+      },
       "meal-model-restored": {
         "fixture": "SYNTHETIC",
         "model": {
           "id": "GFCOB",
           "version": "0.1.1"
         },
-        "revision": 2,
+        "revision": 8,
         "sqlite": true,
         "status": "PASS",
         "step": "meal-model-restored"
@@ -2007,7 +1659,7 @@
           "id": "GFCOB",
           "version": "0.1.1"
         },
-        "revision": 2,
+        "revision": 8,
         "sqlite": true,
         "status": "PASS",
         "step": "meal-model-save"
@@ -2041,14 +1693,129 @@
         "status": "PASS"
       },
       "native-timing": [
-        "11-21 00:13:52.381  5076  5089 I GlucoPapaQA: 1000 SQLite CAS commits took 6787 ms; isolated backup reopens",
-        "11-21 00:13:54.569  5076  5089 I GlucoPapaQA: SQLite v1 to v2 migration, rollback, large Unicode and corruption detection passed"
+        "11-21 00:34:49.602  5373  5385 I GlucoPapaQA: 1000 SQLite CAS commits took 5537 ms; isolated backup reopens",
+        "11-21 00:34:51.350  5373  5385 I GlucoPapaQA: SQLite v1 to v2 migration, rollback, large Unicode and corruption detection passed"
       ],
+      "native-trace-export": {
+        "fixture": "SYNTHETIC",
+        "ringSlots": 3,
+        "concurrentRows": 101,
+        "traceWriteMs": 177,
+        "periods": [
+          {
+            "period": "1d",
+            "records": 290,
+            "bytes": 61773,
+            "counts": {
+              "cgm": 288,
+              "trace": 1,
+              "event": 1,
+              "setting_change": 0,
+              "forecast": 0,
+              "forecast_assessment": 0,
+              "error": 0
+            },
+            "sha256": "98df8b40fc036a84860a7466152ac6f26d0711d20b2e8cbb226e320a2b262466"
+          },
+          {
+            "period": "2d",
+            "records": 591,
+            "bytes": 124788,
+            "counts": {
+              "cgm": 588,
+              "trace": 2,
+              "event": 1,
+              "setting_change": 0,
+              "forecast": 0,
+              "forecast_assessment": 0,
+              "error": 0
+            },
+            "sha256": "bb3a5334a47850c90cfbde5002573e814af76523c87c3b719c1ab83547691008"
+          },
+          {
+            "period": "5d",
+            "records": 1456,
+            "bytes": 306139,
+            "counts": {
+              "cgm": 1452,
+              "trace": 3,
+              "event": 1,
+              "setting_change": 0,
+              "forecast": 0,
+              "forecast_assessment": 0,
+              "error": 0
+            },
+            "sha256": "9ae096c979c7568c12881fd2747d1ca36e23ca87d84952186f3b509a4a958dee"
+          },
+          {
+            "period": "1m",
+            "records": 8944,
+            "bytes": 1878619,
+            "counts": {
+              "cgm": 8940,
+              "trace": 3,
+              "event": 1,
+              "setting_change": 0,
+              "forecast": 0,
+              "forecast_assessment": 0,
+              "error": 0
+            },
+            "sha256": "d5126dfde32f7d29d25827e8f934f2aac7d91d448bb5b0a7b74dd1c72279817b"
+          },
+          {
+            "period": "3m",
+            "records": 26512,
+            "bytes": 5584415,
+            "counts": {
+              "cgm": 26508,
+              "trace": 3,
+              "event": 1,
+              "setting_change": 0,
+              "forecast": 0,
+              "forecast_assessment": 0,
+              "error": 0
+            },
+            "sha256": "5d7256c6f4b08c746002f866bd27b06b88923bb29becd2965f84358d64a3605c"
+          },
+          {
+            "period": "6m",
+            "records": 53008,
+            "bytes": 11175071,
+            "counts": {
+              "cgm": 53004,
+              "trace": 3,
+              "event": 1,
+              "setting_change": 0,
+              "forecast": 0,
+              "forecast_assessment": 0,
+              "error": 0
+            },
+            "sha256": "9d1e0b19740604cdac09822e6d58aa0ad922b7f70efc512d3088306b78c447e4"
+          }
+        ],
+        "projectedSourceUnchanged": true,
+        "injectedStreamFailure": true
+      },
+      "native-web": {
+        "actual": {
+          "amount": 75,
+          "carbs": 14.925,
+          "revision": 6
+        },
+        "cancelledConfirmations": 1,
+        "corrected": {
+          "amount": 50,
+          "carbs": 9.95,
+          "revision": 7
+        },
+        "fixture": "SYNTHETIC",
+        "status": "PASS"
+      },
       "production-back": {
         "status": "PASS",
         "routes": "nutrition → LOW → home",
         "input": "ANDROID_KEYCODE_BACK",
-        "systemGesture": "NOT_RUN"
+        "systemGesture": "PASS"
       },
       "production-isolation": {
         "provider": "NO_PROVIDER",
@@ -2126,10 +1893,73 @@
         "status": "PASS",
         "step": "window-write"
       },
+      "android-gui.json": {
+        "fixture": "SYNTHETIC",
+        "sizes": [
+          {
+            "width": 320,
+            "height": 760,
+            "density": 160,
+            "navigation_safe": true
+          },
+          {
+            "width": 390,
+            "height": 850,
+            "density": 160,
+            "navigation_safe": true
+          },
+          {
+            "width": 428,
+            "height": 900,
+            "density": 160,
+            "navigation_safe": true
+          },
+          {
+            "width": 1280,
+            "height": 850,
+            "density": 160,
+            "navigation_safe": true
+          }
+        ],
+        "soak_seconds": 85.3,
+        "pss_kb": [
+          114620,
+          113659,
+          113511,
+          112134
+        ],
+        "trim_memory_signal": {
+          "command_accepted": true,
+          "resumed": true,
+          "diagnostic": ""
+        },
+        "interruptions": {
+          "diary_open_then_force_stop": true,
+          "saf_pending_then_force_stop": true
+        }
+      },
+      "native-meal.json": {
+        "status": "PASS",
+        "fixture": "SYNTHETIC",
+        "database": "gfstorage_v5.db",
+        "same_after_restart": true,
+        "meal_count": 1,
+        "revision": 7,
+        "actual": {
+          "amount": 75,
+          "carbs": 14.925,
+          "revision": 6
+        },
+        "corrected": {
+          "amount": 50,
+          "carbs": 9.95,
+          "revision": 7
+        }
+      },
       "checks/result.json": {
         "status": "PASS",
         "fixture": "SYNTHETIC_ONLY",
-        "apk_sha256": "4c9bbce5de005b9ea6425b9d6f26d85208040c245851cc2db1881f4da139621f",
+        "apk_sha256": "171d240fc3093567f7fa084fcc65fbf82458fc024f699c87c4e01a76c66429e8",
         "serial": "emulator-5554",
         "avd": "GlucoPapaMvp3CiQa",
         "checks": [
@@ -2138,24 +1968,24 @@
           },
           {
             "initial_empty_store": true,
-            "stopped_pid": "3816"
+            "stopped_pid": "4089"
           },
           {
             "unconfirmed_injection_no_write": true,
-            "stopped_pid": "4104"
+            "stopped_pid": "4377"
           },
           {
             "confirmed_injection_sqlite": {
-              "eventId": "high-cac2e83198383ef68e1ad0d2a974d233",
-              "administeredAt": "2026-11-21T00:13:14.342Z",
+              "eventId": "high-8f9e617f645c981ad12cac76f092c246",
+              "administeredAt": "2026-11-21T00:34:12.283Z",
               "revision": 1
             },
-            "stopped_pid": "4390"
+            "stopped_pid": "4673"
           },
           {
             "force_stop_relaunch_same_snapshot": true,
-            "start": "Starting: Intent { cmp=com.glucopapa.shell.fixture/com.glucopapa.shell.MainActivity }\nStatus: ok\nLaunchState: COLD\nActivity: com.glucopapa.shell.fixture/com.glucopapa.shell.MainActivity\nTotalTime: 1542\nWaitTime: 1542\nComplete",
-            "stopped_pid": "4768"
+            "start": "Starting: Intent { cmp=com.glucopapa.shell.fixture/com.glucopapa.shell.MainActivity }\nStatus: ok\nLaunchState: COLD\nActivity: com.glucopapa.shell.fixture/com.glucopapa.shell.MainActivity\nTotalTime: 1445\nWaitTime: 1447\nComplete",
+            "stopped_pid": "5062"
           },
           {
             "confirmed_injection_visible_in_journal": true
@@ -2164,7 +1994,7 @@
         "android_device": "NOT_TESTED",
         "real_xdrip": "NOT_TESTED",
         "clinical": "NOT_VALIDATED",
-        "android_api": "35",
+        "android_api": "36",
         "ui_driver": "ANDROID_WEBVIEW_INSTRUMENTATION"
       }
     }

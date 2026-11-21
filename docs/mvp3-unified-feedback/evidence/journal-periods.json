@@ -12,7 +12,7 @@
     "start": "10:00",
     "end": "12:00",
     "minutesDisplayed": 120,
-    "background": "rgb(255, 243, 230)"
+    "background": "rgb(255, 232, 239)"
   },
   "persistedDurationsMinutes": {
     "sport": 30.0,

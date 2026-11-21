@@ -1,7 +1,7 @@
 {
   "baseline": "1b4fc14eb9ff358b3ba71fb174282d6351b6a923",
-  "candidate": "35f3a3cc2678faa9d7a11b91bc9e1fbbe464dff7",
-  "testHarnessCommit": "9dc4a539451cad09c3b0e98fd96c18aa2d520810",
+  "candidate": "c1bb1a29523657b6a80448323c02f51b671031bd",
+  "testHarnessCommit": "c1bb1a29523657b6a80448323c02f51b671031bd",
   "files": [
     {
       "path": ".github/workflows/mvp3-android-device.yml",
@@ -11,7 +11,7 @@
     {
       "path": ".github/workflows/mvp3-android-sqlite.yml",
       "baselineSha256": "a0971fdc05c85c9e7b38cd481f8178e406ba1170aaf98100dd80ec3ff7bb60be",
-      "candidateSha256": "2bae41d4b356465180511a74d5183b773e480d9a7d4390abe8c859408fe4a645"
+      "candidateSha256": "63f60e2bc4e4470b53e8d7d7e942f964d2d9b0951a651d25f8c4ed365b856ea0"
     },
     {
       "path": "android-mvp3/app/build.gradle",
@@ -51,7 +51,7 @@
     {
       "path": "android-mvp3/app/src/androidTest/java/com/glucopapa/shell/qa/WebViewChecks.java",
       "baselineSha256": "f5a0e327afceb185b569ec5b1947f33254efc3b635f6b7c8bb2ea0772586430a",
-      "candidateSha256": "bb09167c10422bb5302412715866c9d1faddcb2daf7088962fafee6f3e810f77"
+      "candidateSha256": "ce67669e88c14c19159e22e6361e6db6e5b44d16c8ed6acf49646f0719087e18"
     },
     {
       "path": "android-mvp3/app/src/main/AndroidManifest.xml",
@@ -76,7 +76,7 @@
     {
       "path": "android-mvp3/app/src/main/assets/www/integration/GFJournalPresentation_v0.1.0.js",
       "baselineSha256": "53a2dd86a14a4d7bcf235ffa1eccaa31e7a2d8c4fba049dee61716799f277a19",
-      "candidateSha256": "1ad7b2c319068d0dd018027b4f8b39da917011755a23fcd8c19c4fcd89ea04c2"
+      "candidateSha256": "f1b7ae8596253e2b525191dc7e9999f48716eee968e6909316c1a382ce4c4117"
     },
     {
       "path": "android-mvp3/app/src/main/assets/www/integration/GFMealTimingService_v0.1.0.js",
@@ -131,7 +131,7 @@
     {
       "path": "android-mvp3/app/src/main/assets/www/styles.css",
       "baselineSha256": "47f6de66de685729930f705ee53ac4419c0c877bb5408dec5da74a3fff2975f7",
-      "candidateSha256": "1b7acc73d79f68399f2d5361a48a8184a4c784ca7dcfbef0a09f4f346f109220"
+      "candidateSha256": "69f3695948e632daf48ea979a98f7c5fb9980569d06ed43fefbd0d71b22a8daa"
     },
     {
       "path": "android-mvp3/app/src/main/java/com/glucopapa/shell/GFNativeXDrip.java",
@@ -159,9 +159,39 @@
       "candidateSha256": null
     },
     {
+      "path": "docs/mvp3-unified-feedback/ACCEPTANCE_RESULTS.csv",
+      "baselineSha256": null,
+      "candidateSha256": "8d5464761cd2557ef634c640a2c6245ff17f9f7297de45fd892e0f15b508a2b9"
+    },
+    {
+      "path": "docs/mvp3-unified-feedback/BUGS.md",
+      "baselineSha256": null,
+      "candidateSha256": "ec12c1bee40f53a9bee468b8e3108abf91104036d38b648909fd0eb28ac5b59d"
+    },
+    {
+      "path": "docs/mvp3-unified-feedback/CL-20261121-UNIFIED-ACCEPTANCE.md",
+      "baselineSha256": null,
+      "candidateSha256": "b5b09b7588f8ba79b4b8f31771cff4d5ce4f42d0b0e92e1127798e56f7cc0d06"
+    },
+    {
+      "path": "docs/mvp3-unified-feedback/DIFF_APPROVED.md",
+      "baselineSha256": null,
+      "candidateSha256": "1f53851dcbb5916f5e6291448247e9d797f2a8a2e8390fc631f40693c5f99963"
+    },
+    {
       "path": "docs/mvp3-unified-feedback/INTAKE.md",
       "baselineSha256": null,
       "candidateSha256": "8bd63fb7db9320f6d892066486b181e000d23d1bb24cce76cf012b736dfcc464"
+    },
+    {
+      "path": "docs/mvp3-unified-feedback/INTEGRATIONS.md",
+      "baselineSha256": null,
+      "candidateSha256": "d528b3406aca345fd2d9d958523052c9aede423680e8a20b3ece7fe79d831650"
+    },
+    {
+      "path": "docs/mvp3-unified-feedback/JR-20261121-ANDROID-PILOT.md",
+      "baselineSha256": null,
+      "candidateSha256": "7001640826177c1315ea274edbbe2cfa91fdb0b9e48cf6a232bc19ffee728dec"
     },
     {
       "path": "docs/mvp3-unified-feedback/JR-20261121-GFMEAL-TIMING.md",
@@ -169,14 +199,114 @@
       "candidateSha256": "993515ae9759b2b5fe6d41c72c62e14cd72a2d4db2c34702affe34d44c0a449d"
     },
     {
+      "path": "docs/mvp3-unified-feedback/NEXT_STEPS.md",
+      "baselineSha256": null,
+      "candidateSha256": "094b6125d6e3daf9f4fd3ecaec0f674140ddc0aeafb3dbd3aa51b37615cf42e1"
+    },
+    {
+      "path": "docs/mvp3-unified-feedback/QA_REPORT.md",
+      "baselineSha256": null,
+      "candidateSha256": "6b547f3c799e311a888ad16f99563af8c9fe377849f27f1d48b3bc0f0b1b761a"
+    },
+    {
+      "path": "docs/mvp3-unified-feedback/REPRODUCE.md",
+      "baselineSha256": null,
+      "candidateSha256": "3079895c72bcb12e2d0f466c71b7a117bed6410d185756b16809efe09dcc3862"
+    },
+    {
+      "path": "docs/mvp3-unified-feedback/baseline.lock.json",
+      "baselineSha256": null,
+      "candidateSha256": "5302cbfc9c7edcc8d2833e0aa632f6c15a0f9785d07ad62c99736874ee54633a"
+    },
+    {
+      "path": "docs/mvp3-unified-feedback/checkpoint.json",
+      "baselineSha256": null,
+      "candidateSha256": "8384302eedd0db4f8a7899a7f248729eabdbcc6e4907d8a82b69b1d10d18aadd"
+    },
+    {
+      "path": "docs/mvp3-unified-feedback/evidence/android.json",
+      "baselineSha256": null,
+      "candidateSha256": "540d325dff97563ef8783712442b37f759a98b8dc97d3a2bd91830e845e81ff8"
+    },
+    {
+      "path": "docs/mvp3-unified-feedback/evidence/archive-numerics.json",
+      "baselineSha256": null,
+      "candidateSha256": "5f0be58de459172ee833b73ca3f30b1885b8a3accd0b8f5de07deed976b9860d"
+    },
+    {
+      "path": "docs/mvp3-unified-feedback/evidence/backup.json",
+      "baselineSha256": null,
+      "candidateSha256": "257e4a15a408d15d34cc4fd82c452d17958670519815eaa7357da065af11eeb0"
+    },
+    {
+      "path": "docs/mvp3-unified-feedback/evidence/browser-feedback.json",
+      "baselineSha256": null,
+      "candidateSha256": "7cc1099ff4b374295fd91713cd9057390f5bf31424c5d4c633eff78a86e8af51"
+    },
+    {
+      "path": "docs/mvp3-unified-feedback/evidence/browser-meal.json",
+      "baselineSha256": null,
+      "candidateSha256": "b76e331fca6fbf10fd37372f9f06a387709cff059351ef4d6486d71796223d5a"
+    },
+    {
+      "path": "docs/mvp3-unified-feedback/evidence/integrity.json",
+      "baselineSha256": null,
+      "candidateSha256": "4f36d79460d7d53e61043be243fad611c1cf4f9e9ec3575cd933def8cfcf1f9c"
+    },
+    {
+      "path": "docs/mvp3-unified-feedback/evidence/journal-periods.json",
+      "baselineSha256": null,
+      "candidateSha256": "86cef9a327a65c311a3d0e724b85bb72a027a2b9b8c0a994d93117d3994ee9a4"
+    },
+    {
+      "path": "docs/mvp3-unified-feedback/evidence/modules-browser.json",
+      "baselineSha256": null,
+      "candidateSha256": "2fd11ab12b34cc157af97c46416835e06ad5a56570cf7e8ae3272c53dafc9109"
+    },
+    {
+      "path": "docs/mvp3-unified-feedback/evidence/node-summary.json",
+      "baselineSha256": null,
+      "candidateSha256": "966717926800f9a32cdd8ee97d53939c17bd98293b4cf26c0f0dca79a3dd856e"
+    },
+    {
+      "path": "docs/mvp3-unified-feedback/evidence/physio-incomplete.json",
+      "baselineSha256": null,
+      "candidateSha256": "4d61f8d1557fbc264bfa8659b2448649b418365ec38016d646ed32c98e55449e"
+    },
+    {
+      "path": "docs/mvp3-unified-feedback/evidence/replay-food.json",
+      "baselineSha256": null,
+      "candidateSha256": "1e1b4b09df0235e255a5c5f4caf22eb0e8593c7dea17988ea741f480ec73c77d"
+    },
+    {
+      "path": "docs/mvp3-unified-feedback/evidence/replay.json",
+      "baselineSha256": null,
+      "candidateSha256": "28557c109c6f0fe1bccbc38d49ab8754d9cff42b5f32f686d4ee8ad7c79ae901"
+    },
+    {
       "path": "docs/mvp3-unified-feedback/originals/GFMealCalc_UI_v0.3.0_APPROVED_SOURCE.html",
       "baselineSha256": null,
       "candidateSha256": "a075d83b1fe750ae37a971ec66796b2342e2d8ca7d90e274ae362a6e332242dc"
     },
     {
+      "path": "docs/mvp3-unified-feedback/source_sha256.json",
+      "baselineSha256": null,
+      "candidateSha256": "30812856d9fa02de9bf76c2a244c1ff8bb89b1cd256cbb53da689c09813d5528"
+    },
+    {
+      "path": "docs/mvp3-unified-feedback/МАТРИЦА_29_МОДУЛЕЙ_MVP3.md",
+      "baselineSha256": null,
+      "candidateSha256": "b833c03be6bc4be4087a7a9cacba92f88ac1fec65eca1e27447479494f1a14c0"
+    },
+    {
+      "path": "docs/mvp3-unified/ЖУРНАЛ.md",
+      "baselineSha256": "16adb5fb34c627e36d99c891c7163b0dd2a34d8dc22250133f781106b75a236a",
+      "candidateSha256": "9121dd998032ce945bfb27348057bff0117d9e425bca281eced1f7501b5a57df"
+    },
+    {
       "path": "qa/mvp3-android/android-source.sha256",
       "baselineSha256": "117b3b7a9456d09650b193a6d824f35e1b3b771234a324ebfc03e76e828580c6",
-      "candidateSha256": "599e835abb7cd43fce03c77af1af917f0412b924470773605de9297775871132"
+      "candidateSha256": "a81ac06ef1a4bf9598b08fa1fcd0673ee19d8007bc2b210514bd8b616030b810"
     },
     {
       "path": "qa/mvp3-android/ci_ui.py",
@@ -184,9 +314,14 @@
       "candidateSha256": "3b4a8aa346b4be6e7c502d1db9428d518f63f4a343ef933355501e827b0d8835"
     },
     {
+      "path": "qa/mvp3-android/gui_sizing.py",
+      "baselineSha256": "13c2086f9db1c1d3232e066494baafeb1444f824ea5c53f4d219231adbdca85f",
+      "candidateSha256": "6a899412837d7ef09d02589bac773f12dffff79f636d59918e7f38b718903165"
+    },
+    {
       "path": "qa/mvp3-android/run-on-emulator.sh",
       "baselineSha256": "91ac8effb6922793dfcb2cdfb713feb20dea225d59cb030422b3eafe159b49d0",
-      "candidateSha256": "96dd6d63c7c6b74fcd1c21ed716e2970f8288de8e717c462701d1f219c0573aa"
+      "candidateSha256": "90c3208627ff711fab0949b8a0c7ec544c708017b79a58941efdba71a719181d"
     },
     {
       "path": "qa/mvp3-android/sqlite_smoke.py",
@@ -221,7 +356,7 @@
     {
       "path": "qa/mvp3-full/browser_modules.py",
       "baselineSha256": "3f98188545a23ba8f4f415bdf54209b1945f57ab36541a8ef129f856fab41719",
-      "candidateSha256": "e9c3ab0d8f2320c633a1ad29324bb961492d0420b47cbcc57fe0d0cb5d2a17ff"
+      "candidateSha256": "0006b0e0b64f492d44c0f3584a4ef6390b02814347d5ec21bae2072ab8a33d31"
     },
     {
       "path": "qa/mvp3-full/integrity.py",
@@ -242,26 +377,14 @@
       "path": "qa/mvp3-unified-feedback/meal-timing.test.cjs",
       "baselineSha256": null,
       "candidateSha256": "b9a48b5b89134689c90f73b3c8ce61d4caf4f3fdddb84d9cc81942771723c134"
-    }
-  ],
-  "testHarnessChanges": [
-    {
-      "path": ".github/workflows/mvp3-android-sqlite.yml",
-      "sha256": "63f60e2bc4e4470b53e8d7d7e942f964d2d9b0951a651d25f8c4ed365b856ea0"
-    },
-    {
-      "path": "android-mvp3/app/src/androidTest/java/com/glucopapa/shell/qa/WebViewChecks.java",
-      "sha256": "b875ad578e47bd1271ece8924ec7c941777eae6f087c87275090c24256ccb03d"
-    },
-    {
-      "path": "qa/mvp3-android/android-source.sha256",
-      "sha256": "a16e0c6e7cf2a9b8ecae0b13fe691d87af4b521b24e4553bd00aabba47835c9a"
     },
     {
       "path": "qa/mvp3-unified-feedback/physio-incomplete.cjs",
-      "sha256": "1d260f321a527a609a3fb6f2ec354765761c53f5180d4b8c31ad186643b67843"
+      "baselineSha256": null,
+      "candidateSha256": "1d260f321a527a609a3fb6f2ec354765761c53f5180d4b8c31ad186643b67843"
     }
   ],
+  "testHarnessChanges": [],
   "approved": [
     {
       "path": "docs/mvp3-unified-feedback/originals/GFMealCalc_UI_v0.3.0_APPROVED_SOURCE.html",
