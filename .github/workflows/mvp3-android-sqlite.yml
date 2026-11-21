@@ -18,7 +18,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: mvp3-android-sqlite-${{ github.ref }}
+  group: mvp3-android-sqlite-${{ github.ref }}${{ contains(github.event.head_commit.message, '[qa-matrix]') && '-matrix' || '' }}
   cancel-in-progress: true
 
 jobs:
@@ -73,6 +73,9 @@ jobs:
           fi
           node qa/mvp3-calculators/stress.cjs qa-evidence > qa-evidence/stress.log
           node qa/mvp3-calculators/physio-stress.cjs qa-evidence > qa-evidence/physio.log
+          if [[ -f qa/mvp3-unified-feedback/physio-incomplete.cjs ]]; then
+            node qa/mvp3-unified-feedback/physio-incomplete.cjs qa-evidence/physio-cases.jsonl > qa-evidence/physio-incomplete.json
+          fi
           gzip -n qa-evidence/*-cases.jsonl
       - uses: actions/upload-artifact@v4
         if: always()
@@ -91,7 +94,7 @@ jobs:
       apk-code: ${{ github.ref == 'refs/heads/qa/mvp3-unified-feedback-20261120' && 13 || 12 }}
 
   android-15-extended:
-    if: github.ref != 'refs/heads/qa/mvp3-unified-feedback-20261120' || contains(github.event.head_commit.message, '[qa-apk]')
+    if: github.ref != 'refs/heads/qa/mvp3-unified-feedback-20261120' || contains(github.event.head_commit.message, '[qa-apk]') || contains(github.event.head_commit.message, '[qa-matrix]')
     uses: ./.github/workflows/mvp3-android-device.yml
     with:
       api: 35
@@ -101,7 +104,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        api: ${{ fromJSON(github.ref == 'refs/heads/qa/mvp3-unified-feedback-20261120' && !contains(github.event.head_commit.message, '[qa-apk]') && '[36]' || '[31,34,36]') }}
+        api: ${{ fromJSON(github.ref == 'refs/heads/qa/mvp3-unified-feedback-20261120' && !contains(github.event.head_commit.message, '[qa-apk]') && !contains(github.event.head_commit.message, '[qa-matrix]') && '[36]' || '[31,34,36]') }}
     uses: ./.github/workflows/mvp3-android-device.yml
     with:
       api: ${{ matrix.api }}

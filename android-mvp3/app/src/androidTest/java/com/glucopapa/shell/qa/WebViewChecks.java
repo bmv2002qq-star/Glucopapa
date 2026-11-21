@@ -205,7 +205,8 @@ final class WebViewChecks {
         WebView web = result.get();
         if (web == null) throw new IllegalStateException("No production WebView");
         long ready = SystemClock.elapsedRealtime() + 60_000;
-        while (!"true".equals(evaluate(web, "Boolean(window.GPApp && GPApp.getStorage())"))) {
+        String readyExpression = "Boolean(document.readyState==='complete' && window.GPApp && GPApp.getStorage())";
+        while (!"true".equals(evaluate(web, readyExpression))) {
             if (SystemClock.elapsedRealtime() >= ready) {
                 String detail = evaluate(web, "JSON.stringify({state:document.readyState,"
                     + "app:typeof GPApp,storage:typeof GFStorage,error:document.querySelector('.shell-boot-error')?.textContent})");
