@@ -70,11 +70,19 @@ def verify(apk, scope, browser):
               return snapshot.revision===state.revision && snapshot.data===JSON.stringify(state);
             }''')
             assert page.evaluate('GPApp.getStorage().exportState().events.length') == len(state['events'])
+            assert page.evaluate('''expected=>{
+              const snapshot=GPApp.getStorage().exportState();
+              return ['displayName','birthDate','timeZone'].every(k=>snapshot.profile[k]===expected.profile[k]) &&
+                JSON.stringify(snapshot.measurements)===JSON.stringify(expected.measurements);
+            }''', {'profile':state['profile'],'measurements':state['measurements']})
             expect(page.locator('#homeGlucose')).to_have_text('—')
             page.evaluate("GPApp.open('approved-journal')")
             frame = page.frame_locator('#iframeApprovedJournal')
             expect(frame.locator('#date')).to_be_visible()
             if scope == 'research':
+                page.evaluate("GPApp.open('system')")
+                assert page.locator('#exportState').evaluate('(node)=>node.hidden')
+                assert page.locator('#backupControls').evaluate('(node)=>node.hidden')
                 page.evaluate("GPApp.open('analytics')")
                 expect(page.locator('#qaReplaySummary summary')).to_be_visible()
                 page.locator('#qaReplaySummary summary').click()

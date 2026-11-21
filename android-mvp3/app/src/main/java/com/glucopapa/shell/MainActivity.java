@@ -8,18 +8,25 @@ import android.graphics.Insets;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.Gravity;
+import android.view.ViewGroup;
 import android.view.WindowInsets;
 import android.view.WindowInsetsController;
 import android.view.KeyEvent;
 import android.webkit.JavascriptInterface;
 import android.webkit.JsResult;
+import android.webkit.RenderProcessGoneDetail;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.Button;
 import android.widget.FrameLayout;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.window.OnBackInvokedCallback;
 import android.window.OnBackInvokedDispatcher;
 import androidx.webkit.WebViewAssetLoader;
@@ -104,6 +111,10 @@ public class MainActivity extends Activity {
             @Override public boolean shouldOverrideUrlLoading(WebView w, WebResourceRequest r) {
                 return !r.getUrl().toString().startsWith(BASE);
             }
+            @Override public boolean onRenderProcessGone(WebView failed, RenderProcessGoneDetail detail) {
+                recoverRenderer(failed, detail.didCrash());
+                return true;
+            }
         });
         view.setWebChromeClient(new WebChromeClient() {
             @Override public boolean onJsConfirm(WebView w, String origin, String message, JsResult result) {
@@ -134,6 +145,34 @@ public class MainActivity extends Activity {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             unregisterSystemBack = SystemBack.register(this);
         }
+    }
+
+    private void recoverRenderer(WebView failed, boolean crashed) {
+        if (failed != view) return;
+        view = null;
+        backInFlight = false;
+        if (nativeXDripHistory != null) nativeXDripHistory.suspend();
+        if (failed.getParent() instanceof ViewGroup) ((ViewGroup) failed.getParent()).removeView(failed);
+        failed.destroy();
+        Log.w("GlucoPapa", crashed ? "WebView renderer crashed; retry available" :
+            "WebView renderer was stopped; retry available");
+        if (isFinishing() || isDestroyed()) return;
+
+        LinearLayout recovery = new LinearLayout(this);
+        recovery.setOrientation(LinearLayout.VERTICAL);
+        recovery.setGravity(Gravity.CENTER);
+        int padding = Math.round(24 * getResources().getDisplayMetrics().density);
+        recovery.setPadding(padding, padding, padding, padding);
+        TextView notice = new TextView(this);
+        notice.setGravity(Gravity.CENTER);
+        notice.setText("Экран приложения закрылся. Откройте его снова.");
+        recovery.addView(notice);
+        Button retry = new Button(this);
+        retry.setId(android.R.id.button1);
+        retry.setText("Открыть снова");
+        retry.setOnClickListener(button -> recreate());
+        recovery.addView(retry);
+        setContentView(recovery);
     }
 
     private void attachWebView() {
@@ -363,9 +402,10 @@ public class MainActivity extends Activity {
         }
         if (backInFlight) return;
         backInFlight = true;
-        view.evaluateJavascript("Boolean(window.GPApp && GPApp.back())", handled -> {
+        WebView current = view;
+        current.evaluateJavascript("Boolean(window.GPApp && GPApp.back())", handled -> {
             backInFlight = false;
-            if (!isDestroyed() && !"true".equals(handled)) super.onBackPressed();
+            if (view == current && !isDestroyed() && !"true".equals(handled)) super.onBackPressed();
         });
     }
 

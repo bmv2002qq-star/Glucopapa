@@ -12,7 +12,9 @@ import android.view.MotionEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.RenderProcessGoneDetail;
 import android.webkit.WebView;
+import android.widget.Button;
 import com.glucopapa.shell.MainActivity;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -196,10 +198,33 @@ final class WebViewChecks {
         }
     }
 
-    private WebView startWebView() throws Exception {
+    private Activity launchActivity() {
         Intent intent = new Intent(instrumentation.getTargetContext(), MainActivity.class)
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        Activity activity = instrumentation.startActivitySync(intent);
+        return instrumentation.startActivitySync(intent);
+    }
+
+    JSONObject checkRendererRecovery() throws Exception {
+        Activity activity = launchActivity();
+        AtomicReference<Boolean> recovered = new AtomicReference<>(false);
+        instrumentation.runOnMainSync(() -> {
+            View decor = activity.getWindow().getDecorView();
+            WebView failed = findWebView(decor);
+            if (failed == null) return;
+            boolean handled = failed.getWebViewClient().onRenderProcessGone(failed, new RenderProcessGoneDetail() {
+                @Override public boolean didCrash() { return true; }
+                @Override public int rendererPriorityAtExit() { return WebView.RENDERER_PRIORITY_BOUND; }
+            });
+            Button retry = activity.findViewById(android.R.id.button1);
+            recovered.set(handled && findWebView(decor) == null && retry != null && retry.isEnabled());
+        });
+        if (!recovered.get()) throw new IllegalStateException("Renderer recovery view unavailable");
+        return new JSONObject().put("status", "PASS").put("rendererCallback", "HANDLED")
+            .put("retryControl", "VISIBLE").put("testInput", "SIMULATED_CALLBACK");
+    }
+
+    private WebView startWebView() throws Exception {
+        Activity activity = launchActivity();
         AtomicReference<WebView> result = new AtomicReference<>();
         instrumentation.runOnMainSync(() -> result.set(findWebView(activity.getWindow().getDecorView())));
         WebView web = result.get();

@@ -39,7 +39,8 @@ public final class StorageInstrumentation extends Instrumentation {
                 "Expected an Android emulator");
             String phase = arguments.getString("phase", "exercise");
             String fixture = arguments.getString("fixture");
-            check("SYNTHETIC".equals(fixture) || ("private-seed".equals(phase) && "PRIVATE_LOCAL".equals(fixture)),
+            boolean privateQA = "private-seed".equals(phase) || "private-store".equals(phase);
+            check("SYNTHETIC".equals(fixture) || (privateQA && "PRIVATE_LOCAL".equals(fixture)),
                 "Expected an isolated QA fixture");
             File directory = getTargetContext().getDir("synthetic-qa", Context.MODE_PRIVATE);
             Context testContext = isolatedContext(getTargetContext(), directory);
@@ -49,6 +50,10 @@ public final class StorageInstrumentation extends Instrumentation {
                         check(!"none".equals(store.seedScope()), "Expected a private variant");
                         output.putString("webview", new WebViewChecks(this).exercise(
                             "private-seed-qa.js", arguments.getString("step", "")).toString());
+                        break;
+                    case "private-store":
+                        check(!"none".equals(store.seedScope()), "Expected a private variant");
+                        output.putString("sqlite", checkPrivateStore(store, arguments.getString("step", "")).toString());
                         break;
                     case "production":
                         String productionStep = arguments.getString("step", "");
@@ -95,6 +100,9 @@ public final class StorageInstrumentation extends Instrumentation {
                     case "back":
                         output.putString("webview", new WebViewChecks(this).checkBack().toString());
                         break;
+                    case "renderer-recovery":
+                        output.putString("webview", new WebViewChecks(this).checkRendererRecovery().toString());
+                        break;
                     case "stock":
                         String step = arguments.getString("step", "");
                         output.putString("webview", new WebViewChecks(this).exercise("stock-ui.js", step).toString());
@@ -109,6 +117,29 @@ public final class StorageInstrumentation extends Instrumentation {
             output.putString("stream", "\nQA_FAIL " + Log.getStackTraceString(error) + "\n");
             finish(Activity.RESULT_CANCELED, output);
         }
+    }
+
+    private static JSONObject checkPrivateStore(GFNativeStorage store, String step) throws Exception {
+        JSONObject seed = checkCode(store.readPrivateSeed(), "FOUND");
+        String data = seed.getString("data");
+        JSONObject snapshot = new JSONObject(data);
+        int revision = seed.getInt("revision");
+        boolean research = "research".equals(store.seedScope());
+        check(research == snapshot.has("privateHistory"), "Wrong private asset scope");
+        if ("first".equals(step)) {
+            checkCode(store.readSnapshot(LOCAL), "ABSENT");
+            checkCode(store.importIfAbsent(LOCAL, data), "IMPORTED");
+            checkCode(store.importIfAbsent(LOCAL, data), "EXISTS");
+        } else {
+            check("reopened".equals(step), "Unknown private store test step");
+        }
+        JSONObject persisted = checkCode(store.readSnapshot(LOCAL), "FOUND");
+        check(persisted.getInt("revision") == revision && data.equals(persisted.getString("data")),
+            "Private seed changed in native SQLite");
+        SQLiteDatabase db = store.getReadableDatabase();
+        check("ok".equals(DatabaseUtils.stringForQuery(db, "PRAGMA quick_check", null)), "Private SQLite failed quick_check");
+        return new JSONObject().put("status", "PASS").put("scope", store.seedScope()).put("step", step)
+            .put("payload", "EXACT").put("integrity", "ok").put("webview", "SEPARATE");
     }
 
     private static Context isolatedContext(Context context, File directory) {

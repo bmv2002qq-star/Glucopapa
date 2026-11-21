@@ -97,6 +97,11 @@ ordinary_runner=com.glucopapa.shell.test/com.glucopapa.shell.qa.StorageInstrumen
 production_isolation() {
     "$adb" -s "$serial" shell am instrument -w -r -e fixture SYNTHETIC -e phase production "$ordinary_runner"
 }
+if [[ "$api" == 31 ]]; then
+    "$adb" -s "$serial" shell am instrument -w -r -e fixture SYNTHETIC -e phase renderer-recovery "$ordinary_runner" \
+        | tee "$evidence/renderer-recovery.log"
+    grep -F 'QA_PASS renderer-recovery' "$evidence/renderer-recovery.log"
+fi
 production_isolation | tee "$evidence/production-isolation.log"
 if grep -Fq 'WebView startup timed out: null' "$evidence/production-isolation.log"; then
     mv "$evidence/production-isolation.log" "$evidence/production-startup-attempt1.log"
