@@ -96,12 +96,22 @@ def run(browser, origin, output, legacy=False):
         page.set_viewport_size({'width': width, 'height': 900})
         page.locator('#nav [data-screen="home"]').click()
         assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+        assert page.locator('#nav button').evaluate_all('''buttons => buttons.every(button => {
+            const label = button.lastElementChild;
+            const text = document.createRange();
+            text.selectNodeContents(label);
+            const bounds = button.getBoundingClientRect();
+            return [...text.getClientRects()].every(rect => rect.left >= bounds.left - 1 && rect.right <= bounds.right + 1);
+        })'''), f'Navigation label extends outside its button at {width}px'
         for button in ('openLow', 'openHigh'):
             page.locator('#' + button).click()
             assert not page.locator('.screen.active #calcDose, .screen.active #calcFood').count()
             page.locator('#nav [data-screen="home"]').click()
         page.locator('#nav [data-screen="journal"]').click()
-        assert page.frame_locator('#iframeApprovedJournal').locator('thead th').count() == 3
+        diary = page.frame_locator('#iframeApprovedJournal')
+        assert diary.locator('thead th').count() == 3
+        diary.locator('.top').wait_for(state='hidden')
+        assert diary.locator('#timezone').evaluate('node => node.getBoundingClientRect().top >= node.ownerDocument.querySelector(".tablewrap").getBoundingClientRect().bottom')
         page.screenshot(path=output / f'journal-{width}.png')
     page.evaluate("GPApp.open('system')")
     page.once('dialog', lambda dialog: dialog.accept())

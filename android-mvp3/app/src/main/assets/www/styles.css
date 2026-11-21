@@ -84,3 +84,14 @@ body[data-active-screen="approved-nutrition"].plate-modal-open #iframeApprovedNu
 #screen-home [data-line-label=GFxDrip] { --stroke:#26705e }
 #screen-home [data-line-label=GFAPSEnhancer] { --stroke:#96428a }
 #screen-home #sportControls:not([hidden]) { display:flex; gap:.5rem; align-items:center; flex-wrap:wrap }
+
+#nav button {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+#nav button > span:last-child {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  text-align: center;
+}

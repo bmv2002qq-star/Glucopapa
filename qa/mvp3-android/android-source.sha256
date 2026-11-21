@@ -58,7 +58,7 @@ c8dc959bc5f40582f7d028ee54470485cf832257daaa1b287e0a340685d3c430  android-mvp3/a
 1ed4b508d4e3e87ff102ebf20ef8ef7bf4871ded16319b06b753daae90ab58ab  android-mvp3/app/src/main/assets/www/integration/GFInjectionTimingStorage_v0.1.0.js
 7c1ccb9ccef6eda39487846b7dea2322222c40e3efd21e78d0dbc8df6eefa38a  android-mvp3/app/src/main/assets/www/integration/GFInsulinEvidenceGate_v0.1.0.js
 21d4fb6b4ac10850b19b2cb61a817f05d8c1752da985e8352b6cb99aaac065c3  android-mvp3/app/src/main/assets/www/integration/GFJournalBackup_v0.1.0.js
-1ad7b2c319068d0dd018027b4f8b39da917011755a23fcd8c19c4fcd89ea04c2  android-mvp3/app/src/main/assets/www/integration/GFJournalPresentation_v0.1.0.js
+f1b7ae8596253e2b525191dc7e9999f48716eee968e6909316c1a382ce4c4117  android-mvp3/app/src/main/assets/www/integration/GFJournalPresentation_v0.1.0.js
 2f09de150906159260ddce9005e1d41780a973dde592642b4fc296962b614c93  android-mvp3/app/src/main/assets/www/integration/GFLOWStorage_v0.4.1.js
 9f169aa8dfef484f3fc21ede0623591d1cdd15a160994c954688a9a50ff2ca96  android-mvp3/app/src/main/assets/www/integration/GFLOWView_v0.4.1.js
 6b2cb837c174e7dba7280cde557684962df17c55ae96fad52ddaf1727dcd81e9  android-mvp3/app/src/main/assets/www/integration/GFLevemirReview_v0.1.0.js
@@ -160,7 +160,7 @@ f632a555e7e90a9be874d99a0c6668beb3848d4fd09b27d3da8f99284cc918f8  android-mvp3/a
 f83fde0ffbacb5de2110d075a0b9c47655fbbd97f00ec20c9f2f3110ce0ec4a5  android-mvp3/app/src/main/assets/www/shared/GFNormalizedFacts_v0.1.0.js
 e8ea5f37150b2d576aa04a39fd81d3f9c0445f63e5ee5666635f981e8022eee8  android-mvp3/app/src/main/assets/www/shared/GFTimeGrid_v0.1.0.js
 9bdc65e84c1ff3930afe554779bd6c7537bac1b04b71fc5095b654d617d5d30f  android-mvp3/app/src/main/assets/www/shared/RinfastEngine_v0.3.0_UNMODIFIED.js
-1b7acc73d79f68399f2d5361a48a8184a4c784ca7dcfbef0a09f4f346f109220  android-mvp3/app/src/main/assets/www/styles.css
+69f3695948e632daf48ea979a98f7c5fb9980569d06ed43fefbd0d71b22a8daa  android-mvp3/app/src/main/assets/www/styles.css
 450c7c96a9509dbb549b2eb0a2e3284cc722c65006286f5a6d4419f40971b19b  android-mvp3/app/src/main/java/com/glucopapa/shell/AiJsonlExport.java
 d4231c58ecf7327a7f0bb4d6dd8474b5002534b1b3ab73aac915282db371d7e0  android-mvp3/app/src/main/java/com/glucopapa/shell/DiagnosticRing.java
 385b4eda078a29be3a7ba9d14fca325d19788a60eb3c71c207127b8da1ad0d31  android-mvp3/app/src/main/java/com/glucopapa/shell/DiagnosticWriter.java

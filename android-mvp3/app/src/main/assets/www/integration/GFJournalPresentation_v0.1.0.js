@@ -89,7 +89,9 @@
     Mounted.set(doc,entry);
     for(const selector of ['.top','.callout','#meta','.foot'])doc.querySelector(selector)?.setAttribute('hidden','');
     const toolbar=doc.querySelector('.toolbar'), daily=doc.getElementById('dailyStats');
+    const timezone=doc.getElementById('timezone');
     doc.querySelector('.tablewrap').closest('.section').after(daily);
+    if(timezone)daily.after(timezone);
     const heading=textElement(doc,'h2','Итоги за выбранный период');
     daily.before(heading);
     const span=doc.createElement('select');
@@ -113,7 +115,7 @@
     doc.getElementById('kind').append(sport);
     for(const id of ['date','kind'])doc.getElementById(id).addEventListener('change',()=>entry.refresh());
     for(const id of ['prev','next'])doc.getElementById(id).addEventListener('click',()=>entry.refresh());
-    const style=textElement(doc,'style','tr.ill td{background:#ffe8ef}.sick-swatch{background:#f5bbd1}'+
+    const style=textElement(doc,'style','[hidden]{display:none!important}#tbody tr.ill td{background:#ffe8ef}.sick-swatch{background:#f5bbd1}'+
       'tr.sport-period td{background:#e7f6ff}.sport-swatch{background:#b6def5}');
     doc.head.append(style);
     const legend=textElement(doc,'span','Период спорта');legend.className='key';
