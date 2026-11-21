@@ -37,4 +37,5 @@ jobs:
           node tools/test_auto_profile_v024.js
           node tools/test_plan_calculator_v023.js
           node tools/test_care_workflow_v025.js
+          node --test qa/mvp3-calculators/contracts.test.cjs
           python3 tools/check_local_ai.py

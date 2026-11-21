@@ -150,7 +150,7 @@
     const text = node.querySelector('[data-calc-summary]');
     const list = node.querySelector('[data-calc-blockers]');
     const trace = node.querySelector('[data-calc-trace]');
-    text.textContent = 'Расчёт недоступен';
+    text.textContent = evidence.trace ? 'Исходные данные и промежуточные вычисления' : 'Недостаточно данных для вычисления';
     list.replaceChildren(...evidence.blockers.map(blocker => {
       const item = node.ownerDocument.createElement('li');
       item.textContent = blocker.message;
@@ -196,7 +196,7 @@
       }
     }
     lines.push(...evidence.uncertainties.map(v => 'Неопределённость · ' + v.message),
-      'Лечебный расчёт недоступен.');
+      'Полный численный результат ещё не сформирован для этого маршрута.');
     trace.textContent = lines.join('\n');
   }
 

@@ -128,8 +128,19 @@
       set('minutesExplain',estimate?estimate.rangeMinutes.map(fmt).join('–')+' мин · '+estimate.matchedCases+' случаев':
         reasons[current?.code]||'Подходящий исторический интервал недоступен.');
       set('sampleMatches',estimate?'По '+estimate.distinctDays+' дням наблюдений':'');
-      set('doseSuggested','—');
-      set('doseExplain',meal?'Расчётная доза недоступна. Можно записать фактически введённую.':
+      // Display a research-only numeric component from the original calculation module.
+      // Calculation is read-only; recording an actual injection remains a separate explicit action.
+      let arithmetic=null, arithmeticError=null;
+      if(meal)try{
+        arithmetic=root.GFMealCalc.createCalculator(host,{rinfastEngine:root.RinfastEngine})
+          .inspect(meal.id).researchArithmetic;
+      }catch(error){arithmeticError=String(error.message||error);}
+      const modelUnits=arithmetic?.unroundedEquivalentUnits;
+      set('doseSuggested',Number.isFinite(modelUnits)?fmt(modelUnits)+' ЕД (C/УК)':'—');
+      set('doseExplain',Number.isFinite(modelUnits)?
+        'Расчётный вклад углеводов: '+fmt(arithmetic.carbsG)+' г / '+fmt(arithmetic.ratioGPerUnit)+
+        ' г/ЕД. Остальные вклады полной модели здесь не вычислены.':
+        meal?'Нет арифметического результата: '+(arithmetic?.reason||arithmeticError||'неполные входные данные')+'.':
         'Сначала соберите и сохраните тарелку.');
       set('injectionHint',displayedShot?'Подтверждённый укол записан.':'Подтвердите выполненный укол.');
       set('plateChip',stages[status]||'Нет тарелки');
