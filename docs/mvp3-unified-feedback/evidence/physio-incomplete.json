@@ -1,0 +1,13 @@
+{
+  "status": "PASS",
+  "data": "SYNTHETIC_ONLY",
+  "profiles": 30,
+  "childProfiles": 10,
+  "incompleteTrajectories": 180,
+  "routesChecked": [
+    "low",
+    "high",
+    "meal"
+  ],
+  "clinical": "NOT_VALIDATED"
+}

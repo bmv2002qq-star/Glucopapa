@@ -1,0 +1,12 @@
+{
+  "runtimeCommit": "35f3a3cc2678faa9d7a11b91bc9e1fbbe464dff7",
+  "statistics": {
+    "tests": 1194,
+    "pass": 1194,
+    "fail": 0,
+    "skipped": 0
+  },
+  "archiveGFIA": 39,
+  "archiveGFMealCalc": 46,
+  "data": "SYNTHETIC_ONLY"
+}

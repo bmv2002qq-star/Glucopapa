@@ -1,0 +1,23 @@
+{
+  "status": "PASS_SCOPED",
+  "mode": "SYNTHETIC_ONLY",
+  "environment": "BROWSER_MULTI_FILE",
+  "sport": {
+    "start": "09:00",
+    "end": "09:30",
+    "minutesDisplayed": 30,
+    "background": "rgb(231, 246, 255)"
+  },
+  "illness": {
+    "start": "10:00",
+    "end": "12:00",
+    "minutesDisplayed": 120,
+    "background": "rgb(255, 243, 230)"
+  },
+  "persistedDurationsMinutes": {
+    "sport": 30.0,
+    "illness": 120.0
+  },
+  "bothIntervalsAfterReload": true,
+  "androidRendering": "NOT_TESTED"
+}

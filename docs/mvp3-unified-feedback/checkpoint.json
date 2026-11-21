@@ -1,0 +1,108 @@
+{
+  "asOf": "2026-11-21",
+  "baseline": "1b4fc14eb9ff358b3ba71fb174282d6351b6a923",
+  "releaseBranch": "qa/mvp3-unified-feedback-20261120",
+  "codeCommit": "35f3a3cc2678faa9d7a11b91bc9e1fbbe464dff7",
+  "run": 44840722877,
+  "runResult": "failure",
+  "apkArtifact": 14680378326,
+  "apkName": "Glucopapa-V2-0.3.18-qa-debug",
+  "apkSha256": "a5044e236fdaea2248d9f9ae6376a56eb4d47c051633d2ec64656bcd2c8d4f5f",
+  "apkInstalledSha256": "a5044e236fdaea2248d9f9ae6376a56eb4d47c051633d2ec64656bcd2c8d4f5f",
+  "apkArtifactSha256": "sha256:1b93ee5efdc59f8580e36ec16879e693cf96b0eb25191679627962bdfbf96e5c",
+  "apkArtifactExpiry": "2027-02-18T23:59:27Z",
+  "signingCertSha256": "e800fd2c5b9d7686d63387ee2ae347c7c29de7ab4be7f6239343a1b14759542f",
+  "sameCertificateAs017": false,
+  "signingBrief": "Сертификат отличается от 0.3.17-qa. До установки экспортируйте и проверьте копию вне приложения. Android отклонит установку поверх APK с другим ключом.",
+  "appId": "com.glucopapa.shell",
+  "version": "0.3.18-qa",
+  "versionCode": 13,
+  "normalDebug": true,
+  "device": "NOT_TESTED",
+  "realXDrip": "NOT_TESTED",
+  "clinical": "NOT_VALIDATED",
+  "mainShaVerified": "2151fbbf2b40ac6eca4f5b02c2ba355c4e9a75f8",
+  "nativeProfile": true,
+  "nativeBack": true,
+  "api36Back": "NOT_RUN",
+  "nativeMeal": "PASS",
+  "nativeCgm": true,
+  "nativeReplay": true,
+  "api31Touch": {
+    "status": "PASS",
+    "input": "ANDROID_POINTER_DOWN_UP",
+    "routes": "HIGH, LOW, journal",
+    "webview_accessibility": "ENV_BLOCKED"
+  },
+  "releaseCriteria": "FAIL",
+  "androidBrief": "API 31 PASS, API 34 PASS, API 35 PASS, API 36 FAIL. Системный жест на API 36 имеет статус NOT_RUN. Установленный обычный APK Android 15 совпадает по SHA-256. Таймер и профиль восстановлены из SQLite.",
+  "replayBrief": "На Android 15 25 920 точек восстановились из SQLite после остановки приложения.",
+  "browserBrief": "29 карточек и маршрутов, 320/390/428/1280 px. Пять этапов GFMealCalc проверены на трёх мобильных ширинах. SQLite проверяется на Android.",
+  "soakSeconds": {
+    "35": 85.1,
+    "34": 85.9
+  },
+  "testRun": 44841899075,
+  "testCommit": "9dc4a539451cad09c3b0e98fd96c18aa2d520810",
+  "testRunResult": "failure",
+  "sameRuntimeTree": true,
+  "previousAndroid36": {
+    "id": 136648127445,
+    "case": "native-web",
+    "systemGesture": "PASS",
+    "cause": "QA_FAIL java.lang.IllegalStateException: {\"error\":\"ReferenceError: GFInjectionTimingPanel is not defined\",\"stack\":\"ReferenceError: GFInjectionTimingPanel is not defined\\n    at <anonymous>:85:9\",\"status\":\"FAIL\"}"
+  },
+  "android36Retest": {
+    "run": 44843540199,
+    "commit": "93c93ccda49657d6e29c720d223df01b5b8e7744",
+    "result": "in_progress"
+  },
+  "archiveChecks": {
+    "FOOD-013": "PASS_SCOPED",
+    "REPLAY-013": "PASS_SCOPED",
+    "replayedSteps": 864,
+    "archivedSessions": 10,
+    "emptyArchiveGi": 20,
+    "archiveNumerics": "PASS"
+  },
+  "remaining": [
+    "REAL_FOLLOWER_ANDROID_DEVICE",
+    "GFSYNC_EXISTING_SERVER_AND_3_DEVICES",
+    "GFXDRIP_LICENSE_AND_THIRD_SOURCE",
+    "APPROVED_ABSORPTION_AND_MEAL_NORMS",
+    "CLINICAL_VALIDATION"
+  ],
+  "criterionCounts": {
+    "BLOCKED": 19,
+    "NOT_RUN": 37,
+    "PASS": 26,
+    "FAIL": 1
+  },
+  "androidEvidence": "evidence/android.json",
+  "androidJobs": {
+    "35": {
+      "jobId": 136652087062,
+      "result": "success"
+    },
+    "35-core": {
+      "jobId": 136648127540,
+      "result": "success"
+    },
+    "31": {
+      "jobId": 136652087119,
+      "result": "success"
+    },
+    "36": {
+      "jobId": 136652087187,
+      "result": "failure"
+    },
+    "34": {
+      "jobId": 136652087361,
+      "result": "success"
+    },
+    "35-core-repeat": {
+      "jobId": 136652087093,
+      "result": "success"
+    }
+  }
+}

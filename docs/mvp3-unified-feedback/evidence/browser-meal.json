@@ -1,0 +1,56 @@
+{
+  "status": "PASS",
+  "environment": "BROWSER_MULTI_FILE",
+  "data": "SYNTHETIC_ONLY",
+  "actualEngine": "0.2.1-history-only",
+  "results": [
+    {
+      "width": 320,
+      "cards": [
+        "plateCard",
+        "calcCard",
+        "timerCard",
+        "mealCard",
+        "endCard"
+      ],
+      "matched": 6,
+      "historySaved": true,
+      "writeCount": 1,
+      "restart": true,
+      "correctionGrams": 50,
+      "futureInjectionRejected": true
+    },
+    {
+      "width": 390,
+      "cards": [
+        "plateCard",
+        "calcCard",
+        "timerCard",
+        "mealCard",
+        "endCard"
+      ],
+      "matched": 6,
+      "historySaved": true,
+      "writeCount": 1,
+      "restart": true,
+      "correctionGrams": 50,
+      "futureInjectionRejected": true
+    },
+    {
+      "width": 428,
+      "cards": [
+        "plateCard",
+        "calcCard",
+        "timerCard",
+        "mealCard",
+        "endCard"
+      ],
+      "matched": 6,
+      "historySaved": true,
+      "writeCount": 1,
+      "restart": true,
+      "correctionGrams": 50,
+      "futureInjectionRejected": true
+    }
+  ]
+}

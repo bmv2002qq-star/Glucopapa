@@ -1,0 +1,20 @@
+{
+  "archiveSha256": "6ef93b49b213057485fc5cda86371c307e451f7a8ef15b1484735d0565d3d5f2",
+  "archiveCrc": "PASS",
+  "archiveEntries": 52,
+  "archiveBytes": 12153332,
+  "referenceCommit": "1b4fc14eb9ff358b3ba71fb174282d6351b6a923",
+  "referenceAppCommit": "a1e8faef9603cc1a054e915062adb0c39d9552b7",
+  "referenceApkSha256": "6aeca1140e20563f372eb9ec45addbfaa3c9a21a9bdcfa137e01a7d2f8e5eb9b",
+  "acceptedArchives": {
+    "CL-042.1": "ce1638979f425bd95b41bc5510e75613be8497b2d128d074668acb20ff923108",
+    "Stage11": "de021ce0b241db29ffdb7466d9c19053b089c54d79dbbfeda24e8e06d04d3b90"
+  },
+  "approvedGFMealCalcSha256": "a075d83b1fe750ae37a971ec66796b2342e2d8ca7d90e274ae362a6e332242dc",
+  "approvedGFInjectionAnalyticsSha256": "8d482c02cb999fdae58b8b5366b94e9df3adb83f80d683fec3798a9777389951",
+  "storage": {
+    "version": "0.5.12-unified-CANDIDATE",
+    "journalSchema": 5,
+    "nativeSQLiteSchema": 2
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "status": "PASS",
+  "protected_assets": 26,
+  "load_order": 92,
+  "active_storage": "modules/GFStorage_v0.5.12/src/gfstorage_core.js",
+  "native_helpers": 1,
+  "web_assets": 146,
+  "packaged_assets": 105,
+  "archive_verified": true,
+  "archive_unchanged_assets": 131,
+  "archive_changed_assets": [
+    "app.js",
+    "index.html",
+    "integration/GFInjectionFact_v0.1.0.js",
+    "integration/GFJournalPresentation_v0.1.0.js",
+    "integration/GFModuleDirectory_v0.1.0.js",
+    "integration/GFModuleUI_v0.2.1.js",
+    "integration/GFProviderCgm_v0.1.0.js",
+    "integration/GFSettingsPanel_v0.1.0.js",
+    "modules/GFStorage_v0.5.12/src/gfstorage_core.js",
+    "runtime/APK_FILES.txt",
+    "runtime/LOAD_ORDER.txt",
+    "styles.css"
+  ],
+  "apk_mirror": true,
+  "frames": [
+    "approved/GFNutrition_v0.4.6_LIVE.html",
+    "approved/GFJournal_v0.1.2_3COL_CANDIDATE.html",
+    "approved/GFSettings_v0.1.4_LIVE.html",
+    "integration/approved_routes/GFMealCalc_v0.3.0_VIEW.html",
+    "integration/approved_routes/LOW_v0.2_VIEW.html",
+    "integration/approved_routes/GFHighTarget_v0.1.3_VIEW.html"
+  ]
+}

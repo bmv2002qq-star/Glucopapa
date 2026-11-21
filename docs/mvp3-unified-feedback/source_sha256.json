@@ -1,0 +1,275 @@
+{
+  "baseline": "1b4fc14eb9ff358b3ba71fb174282d6351b6a923",
+  "candidate": "35f3a3cc2678faa9d7a11b91bc9e1fbbe464dff7",
+  "testHarnessCommit": "9dc4a539451cad09c3b0e98fd96c18aa2d520810",
+  "files": [
+    {
+      "path": ".github/workflows/mvp3-android-device.yml",
+      "baselineSha256": "a32f0b9402b4283d8bd74c36e0d157433d06e70111ac1cc89415524e3adac8d6",
+      "candidateSha256": "4ad4cac2b977029819b1daad1cfdb0edbc4bba48e870dbc07a2ac63d939fd150"
+    },
+    {
+      "path": ".github/workflows/mvp3-android-sqlite.yml",
+      "baselineSha256": "a0971fdc05c85c9e7b38cd481f8178e406ba1170aaf98100dd80ec3ff7bb60be",
+      "candidateSha256": "2bae41d4b356465180511a74d5183b773e480d9a7d4390abe8c859408fe4a645"
+    },
+    {
+      "path": "android-mvp3/app/build.gradle",
+      "baselineSha256": "48339984e1d48ac1330e956d5a879e5c356d4498b53717d949ba8dc336881ea4",
+      "candidateSha256": "b46346be4e2bf4d54b88e770f1d8d799d8824150c1c32dbe3c1f75fff202f4f8"
+    },
+    {
+      "path": "android-mvp3/app/src/androidTest/assets/meal-timing-case.js",
+      "baselineSha256": null,
+      "candidateSha256": "8b430e7f1b5f80871c17c4612418c50d8adb779f1c72304e27a0b1726049fcaa"
+    },
+    {
+      "path": "android-mvp3/app/src/androidTest/assets/meal-workflow-qa.js",
+      "baselineSha256": null,
+      "candidateSha256": "2a27a5fe842353e2e699de98ef0f26a858efa14a45ab51e8702fff56c84ed706"
+    },
+    {
+      "path": "android-mvp3/app/src/androidTest/assets/production-qa.js",
+      "baselineSha256": "11a620c7dedf1c28849ba6f4894edca5d2f6e2f71cafd4cb1642f5dfeb34d253",
+      "candidateSha256": "81c77b6e2b2de2c3b654b9751d8713fdfbebfa475adfb7d2d1ce0e8f1d7bf230"
+    },
+    {
+      "path": "android-mvp3/app/src/androidTest/assets/webview-qa.js",
+      "baselineSha256": "e446ebf255dc2d3ebd5507ab15f84fffa633231811cac3ba07ec7a77b314dcbd",
+      "candidateSha256": "ebde81cca8b8333262cb65b0b3024c9d308115f1dc62335548cf5e9d5f95ab2b"
+    },
+    {
+      "path": "android-mvp3/app/src/androidTest/java/com/glucopapa/shell/HistoryContractChecks.java",
+      "baselineSha256": "2686c692f7e7eebe69f6f12115125cd0f4d6aac359c020bce2cb204ca26b9b13",
+      "candidateSha256": "c8778da9284e5e240d4fa8461d79e2e000b970488d8f302d34b60df7702bca02"
+    },
+    {
+      "path": "android-mvp3/app/src/androidTest/java/com/glucopapa/shell/qa/StorageInstrumentation.java",
+      "baselineSha256": "eb84178b272b5beeaa8d695faa45b340bc9bc66963ca34c42ddde43a85d83d8f",
+      "candidateSha256": "e6f089b5027c4ee24c57dd0a5fe10394d60d2e0ab1ffa6c77f5e06c964676cef"
+    },
+    {
+      "path": "android-mvp3/app/src/androidTest/java/com/glucopapa/shell/qa/WebViewChecks.java",
+      "baselineSha256": "f5a0e327afceb185b569ec5b1947f33254efc3b635f6b7c8bb2ea0772586430a",
+      "candidateSha256": "bb09167c10422bb5302412715866c9d1faddcb2daf7088962fafee6f3e810f77"
+    },
+    {
+      "path": "android-mvp3/app/src/main/AndroidManifest.xml",
+      "baselineSha256": "d7777f44ec2186ec3e1251cd14687b110bb6fa2b06cea50d7504f9d9bc79350a",
+      "candidateSha256": "a5243ef896a301806e1ca24884eae180c9f26bb6cf9fe286a205394fd98960c4"
+    },
+    {
+      "path": "android-mvp3/app/src/main/assets/www/app.js",
+      "baselineSha256": "b9a7a5a0fb1138973db86e7e20602d4cf36349847a0658a8ec8ee0edc23587c9",
+      "candidateSha256": "e9b6e463059ddd36cc092254933c3d59716bb09fd3379956710448be0233414e"
+    },
+    {
+      "path": "android-mvp3/app/src/main/assets/www/index.html",
+      "baselineSha256": "dc4574a53a18b0276269077288ebb93c6064b0800ce090fa355941010b4dad99",
+      "candidateSha256": "007fee9fefda749ed555679e65be6d4839612a007cc7cd727764337fc3d3a6d6"
+    },
+    {
+      "path": "android-mvp3/app/src/main/assets/www/integration/GFInjectionFact_v0.1.0.js",
+      "baselineSha256": "2718e5317cf16b2a092006f11954e65d43135f9fc804adb28494d2e483b3f843",
+      "candidateSha256": "19a33b981f1ae7a3912a9dcc57df768ceb6720e221badf177f683d77cb36980e"
+    },
+    {
+      "path": "android-mvp3/app/src/main/assets/www/integration/GFJournalPresentation_v0.1.0.js",
+      "baselineSha256": "53a2dd86a14a4d7bcf235ffa1eccaa31e7a2d8c4fba049dee61716799f277a19",
+      "candidateSha256": "1ad7b2c319068d0dd018027b4f8b39da917011755a23fcd8c19c4fcd89ea04c2"
+    },
+    {
+      "path": "android-mvp3/app/src/main/assets/www/integration/GFMealTimingService_v0.1.0.js",
+      "baselineSha256": null,
+      "candidateSha256": "f33b5e1c21927fe7fa67c837aeceffe9b74e505fb00bd9dc3a9c651282d1920f"
+    },
+    {
+      "path": "android-mvp3/app/src/main/assets/www/integration/GFMealWorkflowView_v0.1.0.js",
+      "baselineSha256": null,
+      "candidateSha256": "b9b7ac59f0844240bb7687eefeee26b902556b347e177cf749535659843ecd76"
+    },
+    {
+      "path": "android-mvp3/app/src/main/assets/www/integration/GFModuleDirectory_v0.1.0.js",
+      "baselineSha256": "87c68e3f8fc6122f2886cabf60d8bc706a2fb9cb55d7b42bef4ad8020ef65cc5",
+      "candidateSha256": "1478d48bc786b12ec62acd8bedc57274a59ecc79217c70ee8f84bf655e30cb2a"
+    },
+    {
+      "path": "android-mvp3/app/src/main/assets/www/integration/GFModuleUI_v0.2.1.js",
+      "baselineSha256": "05505fd382e40c4ab17992bf122121c35119ee9b847a523990ea80e4d17f2e67",
+      "candidateSha256": "2ef931436d573a64c95ebefc1fd136db6f91257958c97d5747edf00daa8917e9"
+    },
+    {
+      "path": "android-mvp3/app/src/main/assets/www/integration/GFProviderCgm_v0.1.0.js",
+      "baselineSha256": "9fc3df4202c540f630b02973e0a913150cf52a0d1ef2bc1c58a7be975dc5ab8b",
+      "candidateSha256": "edee2aeaba68ee3878ab3a2c54732b259471fc3c555e03d677eb2e6e1c9989ce"
+    },
+    {
+      "path": "android-mvp3/app/src/main/assets/www/integration/GFSettingsPanel_v0.1.0.js",
+      "baselineSha256": "2fa8f3e0b966d99bd76bc43c15fd70dc2f361a74da38b7374d031550ab2b2f9e",
+      "candidateSha256": "c1d6014415f97d61c422f1b100935a856880eda1cc8461cfab6ef1b633e693eb"
+    },
+    {
+      "path": "android-mvp3/app/src/main/assets/www/integration/approved_routes/GFMealCalc_v0.3.0_VIEW.html",
+      "baselineSha256": null,
+      "candidateSha256": "36e742ebce581d4c1ef8efae165f76e995edd8065f871522c01468d5182c1f27"
+    },
+    {
+      "path": "android-mvp3/app/src/main/assets/www/modules/GFStorage_v0.5.12/src/gfstorage_core.js",
+      "baselineSha256": "a0830122b9e568c6dcc11422425af0dc5c6557c333a889ad6750d0e67e1ee910",
+      "candidateSha256": "7ee71b974f9b6c5cd438c31d92c4b7dd3d673a905f688c5a8dca404dd7913981"
+    },
+    {
+      "path": "android-mvp3/app/src/main/assets/www/runtime/APK_FILES.txt",
+      "baselineSha256": "b4ced00475482aee6720c3c3e64bd9a66957673ae1beb96f132c3dfb75cf785b",
+      "candidateSha256": "6444050212dc3aa01bf449700c97ced1207eaa256ba92e82b72b3cd543d378e8"
+    },
+    {
+      "path": "android-mvp3/app/src/main/assets/www/runtime/LOAD_ORDER.txt",
+      "baselineSha256": "b542023e26e31632c5314c8effc61622cd51fe3502fd3d72b8dffd6216a75fc7",
+      "candidateSha256": "f632a555e7e90a9be874d99a0c6668beb3848d4fd09b27d3da8f99284cc918f8"
+    },
+    {
+      "path": "android-mvp3/app/src/main/assets/www/styles.css",
+      "baselineSha256": "47f6de66de685729930f705ee53ac4419c0c877bb5408dec5da74a3fff2975f7",
+      "candidateSha256": "1b7acc73d79f68399f2d5361a48a8184a4c784ca7dcfbef0a09f4f346f109220"
+    },
+    {
+      "path": "android-mvp3/app/src/main/java/com/glucopapa/shell/GFNativeXDrip.java",
+      "baselineSha256": "c7668b857163c3adf427d1bb85a8adc1e9f903ddf50cd1c33e5f77d0a7a4e655",
+      "candidateSha256": "1d5d72e42bef3f97ca0d40fc0f7de5308169f8d330d290139864b6b4b22bd46d"
+    },
+    {
+      "path": "android-mvp3/app/src/main/java/com/glucopapa/shell/GFNativeXDripHistory.java",
+      "baselineSha256": "282f5823d1a708e6b81b6b8ec883a8e4b59471176f4accec49c74ff03c098d83",
+      "candidateSha256": "a8764b75d7a231f7dbe85666140535181602c84349d3829c80b99793b875cfcb"
+    },
+    {
+      "path": "android-mvp3/app/src/main/java/com/glucopapa/shell/MainActivity.java",
+      "baselineSha256": "aa44a1d0d3fb0e6f18bbedf1514f5a22595d36db2d9618d6c8ef57148473126e",
+      "candidateSha256": "72e68372c260cf03a4f86ac2c052050b2a0f1da5e038cfc6317c588c27d71d1f"
+    },
+    {
+      "path": "android-mvp3/app/src/main/res/values-v36/gf_back.xml",
+      "baselineSha256": "a098a22731de600389afc0913e3ae9d1be632cd00356ce2f2f7ab8a7f2f7ac80",
+      "candidateSha256": null
+    },
+    {
+      "path": "android-mvp3/app/src/main/res/values/gf_back.xml",
+      "baselineSha256": "5a70d3a925ca1a3d0fdc78b7313ffd7412b1aaaa31da4394835f34e765039eff",
+      "candidateSha256": null
+    },
+    {
+      "path": "docs/mvp3-unified-feedback/INTAKE.md",
+      "baselineSha256": null,
+      "candidateSha256": "8bd63fb7db9320f6d892066486b181e000d23d1bb24cce76cf012b736dfcc464"
+    },
+    {
+      "path": "docs/mvp3-unified-feedback/JR-20261121-GFMEAL-TIMING.md",
+      "baselineSha256": null,
+      "candidateSha256": "993515ae9759b2b5fe6d41c72c62e14cd72a2d4db2c34702affe34d44c0a449d"
+    },
+    {
+      "path": "docs/mvp3-unified-feedback/originals/GFMealCalc_UI_v0.3.0_APPROVED_SOURCE.html",
+      "baselineSha256": null,
+      "candidateSha256": "a075d83b1fe750ae37a971ec66796b2342e2d8ca7d90e274ae362a6e332242dc"
+    },
+    {
+      "path": "qa/mvp3-android/android-source.sha256",
+      "baselineSha256": "117b3b7a9456d09650b193a6d824f35e1b3b771234a324ebfc03e76e828580c6",
+      "candidateSha256": "599e835abb7cd43fce03c77af1af917f0412b924470773605de9297775871132"
+    },
+    {
+      "path": "qa/mvp3-android/ci_ui.py",
+      "baselineSha256": "2c1e74c08299800ab35801f3e58887a2f962e10f08d1042970fef0f562b727a9",
+      "candidateSha256": "3b4a8aa346b4be6e7c502d1db9428d518f63f4a343ef933355501e827b0d8835"
+    },
+    {
+      "path": "qa/mvp3-android/run-on-emulator.sh",
+      "baselineSha256": "91ac8effb6922793dfcb2cdfb713feb20dea225d59cb030422b3eafe159b49d0",
+      "candidateSha256": "96dd6d63c7c6b74fcd1c21ed716e2970f8288de8e717c462701d1f219c0573aa"
+    },
+    {
+      "path": "qa/mvp3-android/sqlite_smoke.py",
+      "baselineSha256": "42f63cc1e84ec01c24b4f28f56c68c033238eba6eb6d5091ec099c77d2f4b6d8",
+      "candidateSha256": "eed09753beaa9ffa5e2c3e30d09c19734dbce446b036e97ec376c5efb9c2eaa5"
+    },
+    {
+      "path": "qa/mvp3-calculators/browser.py",
+      "baselineSha256": "6afa376737051daf1566f6593c40d90259d7b528b104814310de18bb3c2ea29b",
+      "candidateSha256": "743506bfdfd3592220520e6fced7106a1878371096a92baeec2fa6f3e84ec28e"
+    },
+    {
+      "path": "qa/mvp3-cl042/browser-acceptance.py",
+      "baselineSha256": "74b559455d08a76eb257feb614da50e83dc9f82c57a920169ee64c1c22bea746",
+      "candidateSha256": "e1ae88356cb5b3a8eda6894af37122825573e8e65382af01b2cf7cf6fba16885"
+    },
+    {
+      "path": "qa/mvp3-feedback/backup-v015.cjs",
+      "baselineSha256": "514b0e558a4ee41c60f620b64a3e793dcdd5b23f3ff68efe5b0861fd5b439010",
+      "candidateSha256": "2dd755a1052cb5538af5128937dff7197bc4d7360ccf1d7d4d66b3482f17916f"
+    },
+    {
+      "path": "qa/mvp3-feedback/browser.py",
+      "baselineSha256": "1edd55fe76475cc10b2ff9d7a8c6e8ec48067b481618a5cc28a6886d23d560c9",
+      "candidateSha256": "a70bb8d3265703e31e743a063046c3e5f2bb143416cd8b52477ba0f7b0ea9932"
+    },
+    {
+      "path": "qa/mvp3-feedback/web-live.test.cjs",
+      "baselineSha256": "f059791332cb8e92c0d20c6003852db484a240186114a0a99caa32e4c89416e0",
+      "candidateSha256": "8a7248df83d6f02682422994190386e439faaa19ea84aae1fabcd592a8ac0fe6"
+    },
+    {
+      "path": "qa/mvp3-full/browser_modules.py",
+      "baselineSha256": "3f98188545a23ba8f4f415bdf54209b1945f57ab36541a8ef129f856fab41719",
+      "candidateSha256": "e9c3ab0d8f2320c633a1ad29324bb961492d0420b47cbcc57fe0d0cb5d2a17ff"
+    },
+    {
+      "path": "qa/mvp3-full/integrity.py",
+      "baselineSha256": "dcef29dc2316a2bc755fb52f320806452245655583e1606e32e27d7fa7728469",
+      "candidateSha256": "69e5b2ee2d63a605b52fe6cd4dfee7a8ee6eec575c0c65116ac41432251d5de9"
+    },
+    {
+      "path": "qa/mvp3-unified-feedback/browser_meal.py",
+      "baselineSha256": null,
+      "candidateSha256": "492fdf4d00a76a9a4a7cd0cb7f2ea961864ce58430a092b1f93ac9e61f857105"
+    },
+    {
+      "path": "qa/mvp3-unified-feedback/derive_meal_interface.py",
+      "baselineSha256": null,
+      "candidateSha256": "1ecdc570926e12eb1e62fb48bfbdbccdc2e8d2e582460d312d2ba9d58c9500e7"
+    },
+    {
+      "path": "qa/mvp3-unified-feedback/meal-timing.test.cjs",
+      "baselineSha256": null,
+      "candidateSha256": "b9a48b5b89134689c90f73b3c8ce61d4caf4f3fdddb84d9cc81942771723c134"
+    }
+  ],
+  "testHarnessChanges": [
+    {
+      "path": ".github/workflows/mvp3-android-sqlite.yml",
+      "sha256": "63f60e2bc4e4470b53e8d7d7e942f964d2d9b0951a651d25f8c4ed365b856ea0"
+    },
+    {
+      "path": "android-mvp3/app/src/androidTest/java/com/glucopapa/shell/qa/WebViewChecks.java",
+      "sha256": "b875ad578e47bd1271ece8924ec7c941777eae6f087c87275090c24256ccb03d"
+    },
+    {
+      "path": "qa/mvp3-android/android-source.sha256",
+      "sha256": "a16e0c6e7cf2a9b8ecae0b13fe691d87af4b521b24e4553bd00aabba47835c9a"
+    },
+    {
+      "path": "qa/mvp3-unified-feedback/physio-incomplete.cjs",
+      "sha256": "1d260f321a527a609a3fb6f2ec354765761c53f5180d4b8c31ad186643b67843"
+    }
+  ],
+  "approved": [
+    {
+      "path": "docs/mvp3-unified-feedback/originals/GFMealCalc_UI_v0.3.0_APPROVED_SOURCE.html",
+      "sha256": "a075d83b1fe750ae37a971ec66796b2342e2d8ca7d90e274ae362a6e332242dc"
+    },
+    {
+      "path": "android-mvp3/app/src/main/assets/www/modules/GFInjectionAnalytics_v0.2.1/GFInjectionAnalytics_v0.2.1.js",
+      "sha256": "8d482c02cb999fdae58b8b5366b94e9df3adb83f80d683fec3798a9777389951"
+    }
+  ]
+}
