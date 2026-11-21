@@ -20,8 +20,8 @@ function render({host,renderer,engine,nowMs=Date.now(),historyH=12,showInsulin=t
    graphPort.getRevision()!==graph.revision)return plain('BLOCKED','REVISION_CHANGED','Данные изменились во время чтения');
  const cgm=source.cgmMetadata;
  if(evidence.status==='BLOCKED')return plain('BLOCKED',evidence.code,'CGM недоступен: '+evidence.code,{sourceStatus:evidence.sourceStatus});
- if(!cgm)return plain('BLOCKED','CGM_SOURCE_UNKNOWN','Источник CGM не зарегистрирован в GFStorage');
- if(!['synthetic','device_recorded','xdrip_local'].includes(cgm.sourceType))return plain('BLOCKED','SOURCE_INVALID','Неизвестный тип CGM');
+ if(!cgm&&!evidence.archive)return plain('BLOCKED','CGM_SOURCE_UNKNOWN','Источник CGM не зарегистрирован в GFStorage');
+ if(cgm&&!['synthetic','device_recorded','xdrip_local'].includes(cgm.sourceType))return plain('BLOCKED','SOURCE_INVALID','Неизвестный тип CGM');
  const sourceStatus=evidence.sourceStatus;
  const clean=evidence.timelineReadings??evidence.readings;
  if(clean.length<2)return plain('BLOCKED',evidence.status==='FUTURE_BLOCKED'?evidence.code:'CGM_NOT_ENOUGH','Недостаточно достоверных точек CGM данного источника',{count:clean.length,sourceStatus});
@@ -29,20 +29,21 @@ function render({host,renderer,engine,nowMs=Date.now(),historyH=12,showInsulin=t
  const futureBlocked=evidence.status==='FUTURE_BLOCKED',qualityBlocked=evidence.status==='QUALITY_BLOCKED';
  const cov=rinfast.coverage;const start=Date.parse(cov?.startIso||''),end=Date.parse(cov?.endIso||'');
  const coverageConfirmed=Boolean(cov?.confirmedComplete===true&&cov.declaredBy==='parent'&&Number.isFinite(start)&&Number.isFinite(end)&&start<=nowMs-LOOKBACK_HOURS*HOUR&&end>=nowMs&&start<=end);
- const events=(graph.events||[]);
+ const events=(rinfast.events||[]);
  const confirmed=events.filter(e=>e.type==='insulin_injection'&&e.status==='confirmed'&&e.insulinId==='rinfast'&&Number.isFinite(Date.parse(e.administeredAt))).map(e=>({id:e.id,insulinId:'rinfast',status:'confirmed',units:e.units,ts:Date.parse(e.administeredAt)}));
  const missingHistory=!coverageConfirmed;
  // If coverage is unknown, render observed CGM but NEVER pass insulin events to the renderer.
  const canRenderShots=Boolean(showInsulin&&coverageConfirmed);
  let picture;
- try{picture=renderer.renderSvg({readings:clean.map(p=>({ts:p.ts,mmol:p.mmol})),shots:canRenderShots?confirmed:[],engine,now:nowMs,historyH,futureH:6,offsetH:0,showInsulin:canRenderShots,showTotal:false,layout:'guided'});}
+ const inRangeShots=confirmed.filter(shot=>shot.ts<=nowMs);
+ try{picture=renderer.renderSvg({readings:clean.map(p=>({ts:p.ts,mmol:p.mmol})),shots:canRenderShots?inRangeShots:[],engine,now:nowMs,historyH,futureH:6,offsetH:0,showInsulin:canRenderShots,showTotal:false,layout:'guided'});}
  catch(e){return plain('BLOCKED','RENDER_FAILED','График отклонил противоречивую историю',{sourceStatus,reasonDetail:String(e.message||e)});}
  const status=evidence.status;
- const notice=[sourceStatus==='SYNTHETIC'?'CGM: СИНТЕТИЧЕСКИЕ ТЕСТОВЫЕ ДАННЫЕ':sourceStatus==='XDRIP_LOCAL'?'CGM: локальный источник xDrip+ · наблюдения':'CGM: источник заявлен как устройство',
+ const notice=[sourceStatus==='SYNTHETIC'?'CGM: СИНТЕТИЧЕСКИЕ ТЕСТОВЫЕ ДАННЫЕ':sourceStatus==='XDRIP_LOCAL'?'CGM: локальный источник xDrip+ · наблюдения':sourceStatus==='REAL_CGM_IMPORT'?'Архив xDrip+':'CGM: источник заявлен как устройство',
  futureBlocked?'Время измерения или получения CGM находится в будущем':qualityBlocked?'Последнее CGM отклонено по качеству: текущий сахар не показывать':fresh?'Текущее значение допускается только с отметкой источника':status==='OBSERVED_ONLY'?'Качество для прогноза не подтверждено':'CGM устарел: актуальное значение не определено',
  missingHistory?'История инъекций не подтверждена полной: кривые РинФаста скрыты':!showInsulin?'Кривые РинФаста отключены':'История уколов подтверждена пользователем, кривые схематические'].join(' · ');
  return {status,code:evidence.code,reason:notice,svg:picture.svg,count:picture.readings,shotCount:picture.shownShots.length,shownShots:picture.shownShots,
- sourceRevision:graph.revision,window:picture.view,sensorSourceId:cgm.sourceDeviceId,
+ sourceRevision:graph.revision,window:picture.view,sensorSourceId:cgm?.sourceDeviceId??null,
  currentMmol:(fresh&&!qualityBlocked&&!futureBlocked)?latest.mmol:null,latestAt:new Date(latest.ts).toISOString(),sourceStatus,historyVerified:coverageConfirmed,
  insulinCurvesShown:canRenderShots,coverageSource:coverageConfirmed?'PARENT_DECLARED':'UNKNOWN',safetyNote:'Не использовать визуальные кривые как измерение остатка инсулина или основание для дозировки'};
 }

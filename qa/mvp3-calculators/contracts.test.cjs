@@ -91,13 +91,11 @@ test('Research C/UK arithmetic is visible for a non-fictional profile and does n
     settings.saveProfile({timeZone: 'UTC', displayName: 'Локальный исследовательский профиль'}, port.getRevision());
     addPlate(host, {estimated: false});
     const revision = host.diagnostics().revision;
-    const result = MealCalc.createCalculator(host, {rinfastEngine: Rinfast})
-        .inspect(sessionId, {atIso: iso(at)});
-    assert.equal(result.researchArithmetic.status, 'RESEARCH_CARB_EQUIVALENT');
-    assert.equal(result.researchArithmetic.unroundedEquivalentUnits, 2);
-    assert.equal(result.researchArithmetic.fromActualFood, false);
-    assert.equal(result.researchArithmetic.therapeuticRecommendation, false);
-    assert.equal(result.therapyRecommendation, null);
+    const result = Evidence.mealCarbEquivalent(host, sessionId, iso(at));
+    assert.equal(result.status, 'RESEARCH_CARB_EQUIVALENT');
+    assert.equal(result.unroundedEquivalentUnits, 2);
+    assert.equal(result.fromActualFood, false);
+    assert.equal(result.therapeuticRecommendation, false);
     assert.equal(host.diagnostics().revision, revision);
     assert.deepEqual(host.connect('journal').read('events'), []);
 });
@@ -105,11 +103,13 @@ test('Research C/UK arithmetic is visible for a non-fictional profile and does n
 test('Research C/UK requires a unique active manual coefficient, not a fabricated zero', () => {
     const host = testJournal({manual: false});
     addPlate(host, {estimated: false});
-    const result = MealCalc.createCalculator(host, {rinfastEngine: Rinfast})
-        .inspect(sessionId, {atIso: iso(at)});
-    assert.equal(result.researchArithmetic.status, 'INPUT_INCOMPLETE');
-    assert.equal(result.researchArithmetic.reason, 'CARB_COEFFICIENT_MISSING');
-    assert.equal(result.researchArithmetic.unroundedEquivalentUnits, null);
+    const result = Evidence.mealCarbEquivalent(host, sessionId, iso(at));
+    assert.equal(result.status, 'INPUT_INCOMPLETE');
+    assert.equal(result.reason, 'COEFFICIENT_MODE');
+    assert.equal(result.unroundedEquivalentUnits, null);
+    const port=host.connect('settings');
+    Settings.createSettingsService({settingsPort:port}).setCoefficientMode('carb_g_per_u','manual',port.getRevision());
+    assert.equal(Evidence.mealCarbEquivalent(host, sessionId, iso(at)).reason,'CARB_COEFFICIENT_MISSING');
 });
 
 test('All routes separate synthetic/stale/absent CGM and unsupported coefficient modes', t => {

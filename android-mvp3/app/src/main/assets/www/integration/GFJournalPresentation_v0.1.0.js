@@ -122,6 +122,9 @@
     const swatch=doc.createElement('i');swatch.className='swatch sport-swatch';
     legend.prepend(swatch);
     doc.querySelector('.legend')?.append(legend);
+    const additional=textElement(doc,'section','');
+    additional.className='section';additional.hidden=true;
+    daily.after(additional);
     doc.defaultView.addEventListener('message',event=>{
       if(event.origin!==root.location.origin||event.source!==root||event.data?.type!=='gp:snapshot'||
           event.data?.role!=='journal'||!entry.result)return;
@@ -131,7 +134,24 @@
       paintSummary(doc,'dailyStats',d.rows,d.norms);
       paintSummary(doc,'monthlyStats',d.monthly,d.monthlyNorms);
       const elements=doc.querySelectorAll('#tbody tr');
-      d.rows.forEach((row,index)=>{if(row.kind==='sport')elements[index]?.classList.add('sport-period');});
+      d.rows.forEach((row,index)=>{
+        if(row.kind==='sport')elements[index]?.classList.add('sport-period');
+        if(d.history&&row.id.startsWith('qa-seed-')){
+          const label=textElement(doc,'small','Сценарий · ');
+          label.className='sub';
+          elements[index]?.lastElementChild?.prepend(label);
+        }
+      });
+      additional.hidden=!d.history;
+      if(d.history){
+        const notes=within(d.history.notes,d.range);
+        const meters=d.history.meter.map(row=>({...row,day:root.GFJournal.ymd(row.ts,d.history.timeZone)}));
+        const title=textElement(doc,'h2','Архивные примечания и замеры глюкометром');
+        const list=[...notes.map(note=>[note.day,note.time??'Время неизвестно','Со слов владельца',note.text]),
+          ...within(meters,d.range).map(row=>[row.day,new Date(row.ts).toLocaleTimeString('ru-RU',{
+            timeZone:d.history.timeZone,hour:'2-digit',minute:'2-digit'}),'Глюкометр',fmt(row.mmol)+' ммоль/л'])];
+        additional.replaceChildren(title,...list.map(parts=>textElement(doc,'p',parts.join(' · '))));
+      }
     });
     return entry;
   }
@@ -143,7 +163,7 @@
     if(!date.dataset.chosen)date.value=today;
     const range=fromControls(doc,today),month=calendarMonth(range.end,today);
     const rows=within(all.rows,range), monthly=within(all.rows,month);
-    entry.result={range,month,rows:matching(rows,doc.getElementById('kind').value),monthly,
+    entry.result={range,month,rows:matching(rows,doc.getElementById('kind').value),monthly,history:all.researchHistory,
       norms:nutritionRange(settings,range,all.zone,today),monthlyNorms:nutritionRange(settings,month,all.zone,today)};
     const illnessEnds=new Map(all.illness.filter(p=>p.end!==null).map(p=>[p.id+'-end',Math.round((p.end-p.start)/60000)]));
     return {...all,rows:rows.map(row=>{

@@ -5,7 +5,7 @@
     <queries>
         <provider android:authorities="com.eveningoutpost.dexdrip.contentprovider" />
     </queries>
-    <application android:label="ГлюкоПапа V2"
+    <application android:label="${glucopapaLabel}"
         android:theme="@android:style/Theme.Material.Light.NoActionBar"
         android:usesCleartextTraffic="false"
         android:networkSecurityConfig="@xml/gf_loopback_network"

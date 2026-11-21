@@ -89,7 +89,8 @@ public class MainActivity extends Activity {
             @Override public WebResourceResponse shouldInterceptRequest(WebView w, WebResourceRequest request) {
                 final Uri uri = request.getUrl();
                 if ("appassets.androidplatform.net".equals(uri.getHost())
-                    && "https".equals(uri.getScheme())) {
+                    && "https".equals(uri.getScheme()) && uri.getPath() != null
+                    && uri.getPath().startsWith("/assets/www/") && !uri.getPath().contains("/../")) {
                     WebResourceResponse asset = loader.shouldInterceptRequest(uri);
                     if (asset != null) return asset;
                     return new WebResourceResponse("text/plain", "UTF-8", 404,
@@ -117,7 +118,7 @@ public class MainActivity extends Activity {
             }
         });
         // Safe only because ALL content is local, fixed assets and all external requests are blocked.
-        view.addJavascriptInterface(new LocalExport(), "AndroidExporter");
+        if (!GFNativeStorage.RESEARCH_JOURNAL) view.addJavascriptInterface(new LocalExport(), "AndroidExporter");
         view.addJavascriptInterface(new ShellPreferences(), "GFShellPreferences");
         nativeStorage = new GFNativeStorage(getApplicationContext());
         view.addJavascriptInterface(nativeStorage, "GFNativeStorage");

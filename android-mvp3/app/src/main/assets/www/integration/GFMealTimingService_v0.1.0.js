@@ -9,7 +9,7 @@
     const publish = (code, estimate = null) =>
       output.publish({sessionId, units, site, referenceAt: atIso, code, estimate}, revision);
 
-    if (mode !== 'local') return publish('NON_LOCAL_HISTORY');
+    if (mode !== 'local' || host.connect('archive').summary()) return publish('NON_LOCAL_HISTORY');
     if (!Number.isFinite(units) || units < 0.5 || units > 50 || !Number.isInteger(units * 2)) {
       return publish('DOSE_MISSING');
     }

@@ -19,7 +19,7 @@ function periodAt(iso,zone){
 function windowHas(time,from,to){const parse=x=>Number(x.slice(0,2))*60+Number(x.slice(3,5));const s=parse(from),e=parse(to);if(s===e)return false;return s<e?(time>=s&&time<e):(time>=s||time<e);}
 function activeCoefficient(snapshot,nowIso){
  const now=timeMs(nowIso),tz=snapshot.profile?.timeZone;
- if(!tz||snapshot.profile?.coefficientModes?.carb_g_per_u!=='manual')return null;
+ if(!tz)return null;
  const fmt=new Intl.DateTimeFormat('en-GB',{timeZone:tz,hour:'2-digit',minute:'2-digit',hourCycle:'h23'}),parts=fmt.formatToParts(now),tod=Number(parts.find(x=>x.type==='hour').value)*60+Number(parts.find(x=>x.type==='minute').value);
  const records=snapshot.coefficients||[];
  if(!TIME_GRID)return null; // Missing validation dependency must not imply approval.
@@ -66,19 +66,12 @@ function createCalculator(host,{rinfastEngine=null,clock=()=>new Date().toISOStr
   if(meal.actualPlate===null)warnings.push('Фактически съеденное пока не подтверждено.');
   const autoCandidates=(s.proposals||[]).filter(x=>x.kind==='carb_g_per_u'&&x.status==='research_only'&&x.applied===false&&finite(x.candidate)).map(x=>({value:x.candidate,id:x.id,origin:'Исследовательское предложение · не применяется'}));
   const doseIntent=meal.doseIntent?{units:meal.doseIntent.units,source:'parent_manual',notAdministered:true}:null;
-  // Research arithmetic from the active GFStorage meal and coefficient, for any profile.
-  // This is ONE model component (C / UK), not a complete calculated insulin dose:
-  // correction, IOB, COB, food kinetics, activity and illness are not included here.
-  const plateCarbs=plate?.totals?.carbs;
-  const arithmeticReady=coefficient&&finite(plateCarbs)&&plateCarbs>=0;
-  const researchArithmetic=arithmeticReady
-   ? {status:'RESEARCH_CARB_EQUIVALENT',carbsG:plateCarbs,ratioGPerUnit:coefficient.value,
-      unroundedEquivalentUnits:plateCarbs/coefficient.value,fromActualFood:meal.actualPlate!==null,
-      roundedToPenStep:false,therapeuticRecommendation:false,
-      source:'GFStorage.mealSessions + GFSettings.coefficients',
-      note:'Арифметический вклад углеводов C / УК; без коррекции CGM, IOB/COB и иных эффектов.'}
-   : {status:'INPUT_INCOMPLETE',unroundedEquivalentUnits:null,therapeuticRecommendation:false,
-      reason:!coefficient?'CARB_COEFFICIENT_MISSING':'PLATE_CARBS_MISSING'};
+  // Fictional fixture ONLY: illustrate carbohydrate arithmetic using live storage plate/ratio.
+  // No corrections, IOB, rounding, timing, clinical validation or use as parent intent.
+  const isFictional=s.profile?.displayName==='ВЫМЫШЛЕННЫЙ РЕБЁНОК'&&sessionId.startsWith('demo-meal-');
+  const researchArithmetic=isFictional&&coefficient&&plate.containsEstimatedValues
+   ? {status:'SYNTHETIC_ARITHMETIC_ONLY',carbsG:plate.totals.carbs,ratioGPerUnit:coefficient.value,unroundedEquivalentUnits:plate.totals.carbs/coefficient.value,fromActualFood:meal.actualPlate!==null,roundedToPenStep:false,therapeuticRecommendation:false,note:'Только арифметика вымышленного примера: углеводы / заданное г/ЕД. Не назначение, без поправок и без округления.'}
+   : {status:'NOT_AVAILABLE_FOR_REAL_DATA',unroundedEquivalentUnits:null,therapeuticRecommendation:false};
   return deepFreeze(copy({version:VERSION,sessionId,sessionVersion:meal.version,storageRevision:s.revision,asOf:atIso,mealStatus:meal.status,plateSource:meal.actualPlate?'actual':'planned',plate,period,cgm,coefficient,autoCandidates,iob,doseIntent,confirmedInjections:knownShots,mealStartedAt:meal.startedAt,mealCompletedAt:meal.completedAt,researchArithmetic,warnings,clinicalValidation:false,therapyRecommendation:null}));
  }
  // Educational arithmetic ONLY for an immutable, fictional, fixed data set. This never accesses a child's profile.

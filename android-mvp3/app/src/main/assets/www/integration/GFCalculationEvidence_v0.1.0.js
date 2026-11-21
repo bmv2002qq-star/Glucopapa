@@ -84,6 +84,26 @@
       carbsG: plate.totals.carbs, fatG: plate.totals.fat, proteinG: plate.totals.protein};
   }
 
+  function mealCarbEquivalent(host, sessionId, checkedAt = new Date().toISOString()) {
+    const settingsPort=host.connect('settings'), calculator=host.connect('calculator');
+    const settings=settingsPort.getSnapshot(), stored=calculator.getSnapshot();
+    const unavailable=reason=>Object.freeze({status:'INPUT_INCOMPLETE',reason,
+      unroundedEquivalentUnits:null,therapeuticRecommendation:false});
+    if(settings.revision!==stored.revision||settingsPort.getRevision()!==settings.revision||
+        calculator.getRevision()!==stored.revision)return unavailable('REVISION_CHANGED');
+    const session=stored.mealSessions.find(meal=>meal.id===sessionId);
+    const plate=session?.actualPlate||session?.plannedPlate;
+    const carbs=plate?.totals?.carbs;
+    if(plate?.schema!=='GFPlate.v1'||!Number.isFinite(carbs)||carbs<0)return unavailable('PLATE_CARBS_MISSING');
+    const timeline=root.GFSettings.coefficientTimeline(settings.coefficients,checkedAt,settings.profile.timeZone);
+    const ratio=coefficient(timeline,settings.profile,'carb_g_per_u');
+    if(ratio.issue)return unavailable(ratio.issue.code==='COEFFICIENT_MISSING'?
+      'CARB_COEFFICIENT_MISSING':ratio.issue.code);
+    return Object.freeze({status:'RESEARCH_CARB_EQUIVALENT',carbsG:carbs,ratioGPerUnit:ratio.value,
+      unroundedEquivalentUnits:carbs/ratio.value,fromActualFood:Boolean(session.actualPlate),
+      roundedToPenStep:false,therapeuticRecommendation:false});
+  }
+
   function inspect({host, route, nowMs = Date.now(), activeMeal = null, cobOptions = {}}) {
     if (!['low', 'high', 'meal'].includes(route)) throw Error('CALC_UNKNOWN_ROUTE');
     const checkedAt = new Date(nowMs).toISOString();
@@ -200,7 +220,7 @@
     trace.textContent = lines.join('\n');
   }
 
-  const api = Object.freeze({VERSION: '0.1.0', inspect, render});
+  const api = Object.freeze({VERSION: '0.1.0', inspect, render, mealCarbEquivalent});
   root.GFCalculationEvidence = api;
   if (typeof module === 'object' && module.exports) module.exports = api;
 })(globalThis);

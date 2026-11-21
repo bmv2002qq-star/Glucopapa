@@ -30,6 +30,8 @@ class Entrypoint(HTMLParser):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--apk', type=Path)
+    parser.add_argument('--private-seed', type=Path,
+                        help='Exact private bootstrap to compare locally with a private APK')
     parser.add_argument('--archive-web', type=Path)
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[2] / 'android-mvp3'
@@ -131,9 +133,14 @@ def main():
     if args.apk:
         with ZipFile(args.apk) as apk:
             assert apk.testzip() is None
-            assert {'assets/www/' + name: data for name, data in packaged.items()} == {
+            expected = {'assets/www/' + name: data for name, data in packaged.items()}
+            if args.private_seed:
+                expected['assets/bootstrap/journal.json'] = args.private_seed.read_bytes()
+            assert expected == {
                 name: apk.read(name) for name in apk.namelist()
                 if name.startswith('assets/') and not name.endswith('/')}
+    elif args.private_seed:
+        parser.error('--private-seed requires --apk')
 
     print(json.dumps({'status': 'PASS', 'protected_assets': protected, 'load_order': len(order),
                       'active_storage': core[0], 'native_helpers': len(databases), 'web_assets': len(files), 'packaged_assets': len(packaged),

@@ -128,12 +128,11 @@
       set('minutesExplain',estimate?estimate.rangeMinutes.map(fmt).join('–')+' мин · '+estimate.matchedCases+' случаев':
         reasons[current?.code]||'Подходящий исторический интервал недоступен.');
       set('sampleMatches',estimate?'По '+estimate.distinctDays+' дням наблюдений':'');
-      // Display a research-only numeric component from the original calculation module.
+      // Show carbohydrate arithmetic as a separate research component.
       // Calculation is read-only; recording an actual injection remains a separate explicit action.
       let arithmetic=null, arithmeticError=null;
       if(meal)try{
-        arithmetic=root.GFMealCalc.createCalculator(host,{rinfastEngine:root.RinfastEngine})
-          .inspect(meal.id).researchArithmetic;
+        arithmetic=root.GFCalculationEvidence.mealCarbEquivalent(host,meal.id);
       }catch(error){arithmeticError=String(error.message||error);}
       const modelUnits=arithmetic?.unroundedEquivalentUnits;
       set('doseSuggested',Number.isFinite(modelUnits)?fmt(modelUnits)+' ЕД (C/УК)':'—');

@@ -7,8 +7,10 @@ android {
         minSdk 26
         targetSdk 35
         testInstrumentationRunner 'com.glucopapa.shell.qa.StorageInstrumentation'
-        versionCode 13
-        versionName '0.3.18-qa'
+        versionCode 14
+        versionName '0.3.19-qa'
+        buildConfigField 'String', 'PRIVATE_SEED_SCOPE', '"none"'
+        manifestPlaceholders = [glucopapaLabel: 'ГлюкоПапа V2']
     }
     buildFeatures { buildConfig true }
     buildTypes {
@@ -22,6 +24,19 @@ android {
             applicationIdSuffix '.fixture'
             matchingFallbacks = ['debug']
             buildConfigField 'boolean', 'FIXTURE_JOURNAL', 'true'
+        }
+        privateMain {
+            initWith debug
+            matchingFallbacks = ['debug']
+            buildConfigField 'String', 'PRIVATE_SEED_SCOPE', '"main"'
+        }
+        privateResearch {
+            initWith debug
+            applicationIdSuffix '.qa'
+            versionNameSuffix '-research'
+            matchingFallbacks = ['debug']
+            manifestPlaceholders = [glucopapaLabel: 'ГлюкоПапа V2 · Исследования']
+            buildConfigField 'String', 'PRIVATE_SEED_SCOPE', '"research"'
         }
     }
     testBuildType = providers.gradleProperty('glucopapaTestTarget').getOrElse('fixture')
@@ -74,5 +89,31 @@ tasks.configureEach {
     }
     if (name == 'mergeFixtureAssets') {
         dependsOn(stageFixtureEntrypoint)
+    }
+}
+
+// Private inputs are read from outside the checkout and never staged by ordinary CI builds.
+['privateMain':'glucopapaMainSeed', 'privateResearch':'glucopapaResearchSeed'].each { variant, property ->
+    def privateAssets = layout.buildDirectory.dir("generated/personalAssets/${variant}")
+    def suppliedSeed = providers.gradleProperty(property)
+    def validate = tasks.register("validate${variant.capitalize()}Seed") {
+        doLast {
+            def source = suppliedSeed.isPresent() ? file(suppliedSeed.get()).canonicalFile : null
+            if (source == null || !source.isFile() || source.toPath().startsWith(rootProject.projectDir.parentFile.canonicalFile.toPath())) {
+                throw new GradleException('A private seed file outside the Git checkout is required')
+            }
+        }
+    }
+    def prepare = tasks.register("stage${variant.capitalize()}Seed", Sync) {
+        dependsOn(validate)
+        from(suppliedSeed.map { file(it) }) {
+            into('bootstrap')
+            rename { 'journal.json' }
+        }
+        into(privateAssets)
+    }
+    android.sourceSets.getByName(variant).assets.srcDir(privateAssets)
+    tasks.matching { it.name == "merge${variant.capitalize()}Assets" }.configureEach {
+        dependsOn(stageRuntimeAssets, prepare)
     }
 }

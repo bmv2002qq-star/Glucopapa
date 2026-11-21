@@ -6,6 +6,9 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.content.ContentValues;
 import android.webkit.JavascriptInterface;
+import android.content.res.AssetManager;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -18,13 +21,39 @@ import org.json.JSONObject;
  * The JavaScript GFStorage schema v5 remains the authoritative data validator.
  */
 public final class GFNativeStorage extends SQLiteOpenHelper {
-    private static final String DB_NAME = "gfstorage_v5.db";
+    static final boolean RESEARCH_JOURNAL = "research".equals(BuildConfig.PRIVATE_SEED_SCOPE);
+    private static final String DB_NAME = RESEARCH_JOURNAL ? "gfstorage_research_v5.db" : "gfstorage_v5.db";
     private static final int DB_VERSION = 2; // SQLite infrastructure, NOT GFStorage schema
     private static final int MAX_JSON_CHARS = 10_000_000;
     private static final String TABLE = "snapshots";
     private static final int CHUNK_CODEPOINTS = 65_536;
 
-    public GFNativeStorage(Context context) { super(context, DB_NAME, null, DB_VERSION); }
+    private final AssetManager assets;
+
+    public GFNativeStorage(Context context) {
+        super(context, DB_NAME, null, DB_VERSION);
+        assets = context.getAssets();
+    }
+
+    @JavascriptInterface public String seedScope() { return BuildConfig.PRIVATE_SEED_SCOPE; }
+
+    @JavascriptInterface public String readPrivateSeed() {
+        if ("none".equals(BuildConfig.PRIVATE_SEED_SCOPE)) return reply(true, "ABSENT", null, -1);
+        try (InputStream input = assets.open("bootstrap/journal.json")) {
+            ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+            byte[] buffer = new byte[16384];
+            for (int n; (n = input.read(buffer)) != -1;) {
+                if (bytes.size() + n > MAX_JSON_CHARS) throw new IllegalStateException("PRIVATE_SEED_SIZE");
+                bytes.write(buffer, 0, n);
+            }
+            String payload = bytes.toString(StandardCharsets.UTF_8.name());
+            JSONObject value = checked(payload);
+            checkProvenance(LOCAL_KEY, value);
+            return reply(true, "FOUND", payload, value.getInt("revision"));
+        } catch (Exception error) {
+            return reply(false, "PRIVATE_SEED_READ_FAILED", null, -1);
+        }
+    }
 
     @Override public void onCreate(SQLiteDatabase db) {
         db.execSQL("CREATE TABLE snapshots (mode_key TEXT PRIMARY KEY NOT NULL, revision INTEGER NOT NULL, data TEXT NOT NULL, payload_sha256 TEXT NOT NULL)");
@@ -73,6 +102,8 @@ public final class GFNativeStorage extends SQLiteOpenHelper {
     }
     private static void checkProvenance(String key, JSONObject snapshot) {
         if (!LOCAL_KEY.equals(key)) return;
+        if (snapshot.has("privateHistory") != RESEARCH_JOURNAL)
+            throw new IllegalArgumentException("DENIED_JOURNAL_SCOPE");
         JSONObject metadata = snapshot.optJSONObject("cgmMetadata");
         if (metadata != null && "synthetic".equals(metadata.optString("sourceType")))
             throw new IllegalArgumentException("DENIED_SYNTHETIC_SOURCE");
@@ -178,6 +209,30 @@ public final class GFNativeStorage extends SQLiteOpenHelper {
                 return reply(true,"IMPORTED",null,incoming);
             } finally { db.endTransaction(); }
         } catch (Exception e) { return reply(false,"IMPORT_FAILED",null,-1); }
+    }
+
+    @JavascriptInterface public synchronized String restoreOverPrivateSeed(String key, String json) {
+        if (!LOCAL_KEY.equals(key) || !"main".equals(BuildConfig.PRIVATE_SEED_SCOPE))
+            return reply(false, "DENIED_JOURNAL_SCOPE", null, -1);
+        try {
+            JSONObject incoming = checked(json);
+            checkProvenance(key,incoming);
+            JSONObject seed = new JSONObject(readPrivateSeed());
+            if (!seed.optBoolean("ok") || !"FOUND".equals(seed.optString("code")))
+                return reply(false, "PRIVATE_SEED_READ_FAILED", null, -1);
+            int revision = incoming.getInt("revision");
+            ContentValues row = new ContentValues();
+            row.put("revision", revision);
+            row.put("data", json);
+            row.put("payload_sha256", digest(json));
+            SQLiteDatabase db = getWritableDatabase();
+            // The digest in the UPDATE is the compare-and-swap condition, under SQLite's write lock.
+            int replaced = db.update(TABLE, row, "mode_key=? AND revision=? AND payload_sha256=?",
+                new String[]{key, Integer.toString(seed.getInt("revision")), digest(seed.getString("data"))});
+            return replaced == 1 ? reply(true, "IMPORTED", null, revision) : reply(true, "EXISTS", null, -1);
+        } catch (Exception error) {
+            return reply(false, "IMPORT_FAILED", null, -1);
+        }
     }
     @JavascriptInterface public synchronized String writeIfRevision(String key,String json,int expectedRevision) {
         try {

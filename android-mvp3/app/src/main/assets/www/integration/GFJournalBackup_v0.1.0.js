@@ -19,6 +19,7 @@
       load: () => snapshot,
       save: () => { throw Error('BACKUP_VALIDATION_WRITE'); }
     }}).exportState();
+    if (parsed.privateHistory) throw Error('BACKUP_RESEARCH_JOURNAL_ISOLATED');
     if (mode === 'local' && (parsed.cgmMetadata?.sourceType === 'synthetic' || parsed.cgm.some(x => x.source === 'synthetic'))) {
       throw Error('BACKUP_SYNTHETIC_NOT_LOCAL');
     }
@@ -60,7 +61,10 @@
   // the absent check and insert atomic, even if a second host wrote after the preview.
   function importEmpty(native, key, verified) {
     if (key !== 'GFV2SHELL_DATA_v1_' + verified.mode) throw Error('BACKUP_MODE_MISMATCH');
-    const p = JSON.parse(native.importIfAbsent(key, JSON.stringify(verified.snapshot)));
+    const snapshot = JSON.stringify(verified.snapshot);
+    let p = JSON.parse(native.importIfAbsent(key, snapshot));
+    if (p.ok && p.code === 'EXISTS' && native.seedScope?.() === 'main')
+      p = JSON.parse(native.restoreOverPrivateSeed(key, snapshot));
     if (p.ok && p.code === 'EXISTS') throw Error('BACKUP_TARGET_EXISTS');
     if (p.ok !== true || p.code !== 'IMPORTED' || p.revision !== verified.snapshot.revision) {
       throw Error('BACKUP_WRITE_FAILED');

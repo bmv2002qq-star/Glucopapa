@@ -17,6 +17,8 @@
   const XDRIP_ID='xdrip-local-provider', XDRIP_TYPE='xdrip_local';
   const XDRIP_HISTORY='xdrip_loopback_history', XDRIP_HISTORY_WINDOW=24*60*60*1000;
   const XDRIP_WEB='xdrip_loopback_live';
+  const PRIVATE_FIXTURE_ID='qa-seed-';
+  const HYBRID_ANALYSIS_ROLES=new Set(['research','injectionAnalytics','calculator','lowReview','rinfast','levemir']);
   const QUICK_FOOD_IDS=Object.freeze(['gf:00444','legacy:0075','legacy:0022','legacy:0145','legacy:0038','legacy:0040']);
   const MEAL_TYPES=new Set(['breakfast','lunch','dinner','snack']);
   const isXDripHistory=row=>row.transport===XDRIP_HISTORY;
@@ -68,6 +70,8 @@
     cgmAdapter:['cgm','cgmMetadata'],
     forecastWriter:['forecasts','forecastAssessments'],
     syncWriter:['syncInbox','cgm','cgmMetadata'],
+    archive:[],
+    researchSeed:[],
   };
   const KINDS=new Set(['isf_mmol_per_u','carb_g_per_u','tdd_u','target_range_mmol']);
   const forbidden = new Set(['__proto__','prototype','constructor']);
@@ -385,10 +389,66 @@
     return incoming.size;
   }
   function emptyState(){return {schemaVersion:SCHEMA_VERSION,revision:0,profile:{birthDate:null,timeZone:null,displayName:null,sex:null,allergies:[],dailyNutritionReference:null,exerciseGuidance:null,exerciseGuidanceEnabled:true,hypoActivityMultipliers:null,hypoActivityEnabled:true,activityBaseLevel:'low',coefficientModes:{carb_g_per_u:'manual',isf_mmol_per_u:'manual'},illnessFactor:null},measurements:[],drugs:clone(DRUGS),models:clone(MODELS),orders:[],coefficients:[],events:[],mealSessions:[],workflowLog:[],coverage:null,cgm:[],cgmMetadata:null,conditionPeriods:[],forecasts:[],forecastAssessments:[],syncInbox:[],results:[],proposals:[],graphPreferences:{layout:'guided',theme:'light',rangeHours:12,showRinfast:true,showTotal:false},history:[]};}
+  function validatePrivateReplay(replay){
+    const keys=['version','provenance','clinicalUse','appliedToProfile','cgmCount','groups'];
+    requireFields(replay,keys,keys);
+    if(replay.version!==1||replay.provenance!=='synthetic_replay'||replay.clinicalUse!==false||
+        replay.appliedToProfile!==false||!Number.isSafeInteger(replay.cgmCount)||replay.cgmCount<1||replay.cgmCount>100000||
+        !Array.isArray(replay.groups)||replay.groups.length!==4)fail('PRIVATE_REPLAY_FORMAT');
+    for(const [index,group] of replay.groups.entries()){
+      const groupKeys=['slot','windows','historicalMinutes','matched'];
+      requireFields(group,groupKeys,groupKeys);
+      if(group.slot!==['night','morning','day','evening'][index]||!Array.isArray(group.windows)||group.windows.length!==3||
+          !Number.isInteger(group.historicalMinutes)||group.historicalMinutes<0||group.historicalMinutes>60||
+          !Number.isInteger(group.matched)||group.matched<4||group.matched>20)fail('PRIVATE_REPLAY_SLOT');
+      for(const [i,row] of group.windows.entries()){
+        const fields=['days','meals','corrections','gramsPerUnit','changePerUnit'];
+        requireFields(row,fields,fields);
+        if(row.days!==[3,4,7][i]||!Number.isInteger(row.meals)||row.meals<0||row.meals>100||
+            !Number.isInteger(row.corrections)||row.corrections<0||row.corrections>100)
+          fail('PRIVATE_REPLAY_WINDOW');
+        if(row.gramsPerUnit!==null)range(row.gramsPerUnit,0,200);
+        if(row.changePerUnit!==null)range(row.changePerUnit,-100,100);
+      }
+    }
+    return replay;
+  }
+  function validatePrivateHistory(archive){
+    const keys=['version','timeZone','sourceDigest','points','meter','notes'];
+    requireFields(archive,[...keys,'replay'],keys);
+    if(Object.hasOwn(archive,'replay'))validatePrivateReplay(archive.replay);
+    if(archive.version!==1||typeof archive.sourceDigest!=='string'||!/^[a-f0-9]{64}$/.test(archive.sourceDigest))
+      fail('PRIVATE_HISTORY_FORMAT');
+    text(archive.timeZone,100);
+    new Intl.DateTimeFormat('en',{timeZone:archive.timeZone});
+    function readings(rows,allowSharedMinute=false){
+      if(!Array.isArray(rows)||rows.length>100000)fail('PRIVATE_HISTORY_COUNT');
+      let prior=-Infinity,priorMgdl=-Infinity;
+      for(const row of rows){
+        if(!Array.isArray(row)||row.length!==2||!Number.isSafeInteger(row[0])||
+            row[0]%60000!==0||row[0]<prior||row[0]<946684800000||row[0]>4102444800000||
+            (row[0]===prior&&(!allowSharedMinute||row[1]<=priorMgdl))||
+            !Number.isInteger(row[1])||row[1]<0||row[1]>1000)fail('PRIVATE_HISTORY_READING');
+        [prior,priorMgdl]=row;
+      }
+    }
+    readings(archive.points);readings(archive.meter,true);
+    if(!archive.points.length||!Array.isArray(archive.notes)||archive.notes.length>2000)fail('PRIVATE_HISTORY_EMPTY');
+    const ids=new Set();
+    for(const note of archive.notes){
+      requireFields(note,['id','day','time','text','provenance'],['id','day','time','text','provenance']);
+      id(note.id);date(note.day);if(note.time!==null)hhmm(note.time);text(note.text,2500);
+      if(note.provenance!=='user_reported'||ids.has(note.id))fail('PRIVATE_HISTORY_NOTE');
+      ids.add(note.id);
+    }
+    return archive;
+  }
+  function archiveEnd(s){return s.privateHistory?.points.at(-1)[0]+59999;}
   function validateStored(s){
     if(!object(s)||s.schemaVersion!==SCHEMA_VERSION||!Number.isSafeInteger(s.revision)||s.revision<0)fail('Несовместимая версия базы');
     const expected=Object.keys(emptyState());
-    requireFields(s,expected,expected);
+    requireFields(s,[...expected,'privateHistory'],expected);
+    if(Object.hasOwn(s,'privateHistory'))validatePrivateHistory(s.privateHistory);
     for(const key of ['measurements','orders','coefficients','events','mealSessions','workflowLog','cgm','conditionPeriods','forecasts','forecastAssessments','syncInbox','results','proposals','history'])if(!Array.isArray(s[key]))fail('Повреждена таблица '+key);
     if(s.history.length!==s.revision)fail('Повреждён журнал ревизий');
     if(!object(s.graphPreferences))fail('Повреждены настройки графика');
@@ -600,9 +660,7 @@
     function projection(role){
       const out={schemaVersion:state.schemaVersion,revision:state.revision};
       for(const field of READ[role]){
-        if(role==='injectionAnalytics'&&field==='events')out[field]=state.events.map(projectedEventForAnalytics);
-        else if(field==='cgm')out[field]=readCgm(role);
-        else out[field]=role==='food'&&field==='mealSessions'?state.mealSessions.map(foodView):state[field];
+        out[field]=readDomain(role,field,true);
       }
       return frozen(out);
     }
@@ -614,8 +672,15 @@
     }
     function select(role,field){
       if(!READ[role].includes(field))fail('Нет доступа к разделу '+field);
-      if(field==='cgm')return frozen(readCgm(role));
-      return frozen(role==='food'&&field==='mealSessions'?state.mealSessions.map(foodView):state[field]);
+      return frozen(readDomain(role,field));
+    }
+    function readDomain(role,field,projectAnalytics=false){
+      if(field==='cgm')return readCgm(role);
+      const rows=state.privateHistory&&HYBRID_ANALYSIS_ROLES.has(role)&&['events','mealSessions','conditionPeriods'].includes(field)
+        ?state[field].filter(row=>!row.id.startsWith(PRIVATE_FIXTURE_ID)):state[field];
+      if(projectAnalytics&&field==='events'&&role==='injectionAnalytics')return rows.map(projectedEventForAnalytics);
+      if(field==='mealSessions'&&role==='food')return rows.map(foodView);
+      return rows;
     }
     function validatePlate(p){
       requireFields(p,['schema','source','createdAt','items','totals','containsEstimatedValues'],['schema','source','createdAt','items','totals','containsEstimatedValues']);
@@ -683,6 +748,41 @@
         getRevision:()=>state.revision,
         subscribe:(cb)=>{if(typeof cb!=='function')fail('Требуется callback');listeners.add(cb);return ()=>listeners.delete(cb);},
       };
+      if(role==='archive'){
+        port.summary=()=>{
+          const a=state.privateHistory;
+          return a?frozen({scope:'private_research',timeZone:a.timeZone,revision:state.revision,
+            firstAt:a.points[0][0],lastAt:a.points.at(-1)[0],cgmCount:a.points.length,meterCount:a.meter.length,
+            reportedNotes:a.notes.length}):null;
+        };
+        port.glucose=()=>frozen((state.privateHistory?.points??[]).map(([ts,mgdl])=>({id:'cgm-import-'+ts,ts,mgdl,
+          mmol:mgdl/XDRIP_MGDL_PER_MMOL,kind:'observed',source:'real_cgm_import',direction:null})));
+        port.meter=()=>frozen((state.privateHistory?.meter??[]).map(([ts,mgdl])=>({id:'meter-'+ts+'-'+mgdl,ts,mgdl,
+          mmol:mgdl/XDRIP_MGDL_PER_MMOL,provenance:'real_meter_import'})));
+        port.reportedNotes=()=>frozen(state.privateHistory?.notes??[]);
+        port.replay=()=>frozen(state.privateHistory?.replay??null);
+      }
+      if(role==='researchSeed'){
+        port.install=(input,rev)=>commit(role,'privateHistory','install_private_archive',d=>{
+          const value=validatePrivateHistory(input);
+          if(d.privateHistory){
+            if(JSON.stringify(d.privateHistory)===JSON.stringify(value))return null;
+            fail('PRIVATE_HISTORY_ALREADY_INSTALLED');
+          }
+          if(d.cgm.length||d.cgmMetadata)fail('PRIVATE_HISTORY_REQUIRES_NEW_JOURNAL');
+          d.privateHistory=clone(value);return 'private-history-v1';
+        },rev);
+        port.recordReplay=(input,rev)=>commit(role,'privateHistory','record_synthetic_replay',d=>{
+          if(!d.privateHistory)fail('PRIVATE_HISTORY_REQUIRED');
+          const replay=validatePrivateReplay(input);
+          if(d.privateHistory.replay){
+            if(JSON.stringify(d.privateHistory.replay)===JSON.stringify(replay))return null;
+            fail('PRIVATE_REPLAY_ALREADY_RECORDED');
+          }
+          d.privateHistory.replay=clone(replay);
+          return 'synthetic-replay-v1';
+        },rev);
+      }
       if(role==='mealTiming'){
         port.readPreview=sessionId=>currentTiming?.sessionId===sessionId&&
           currentTiming.sourceRevision===state.revision?currentTiming:null;
@@ -904,6 +1004,7 @@
           observation?.transport===XDRIP_WEB?'ingest_xdrip_web':'ingest_xdrip_provider', (d,now)=>{
           const row=xdripObservation(observation);
           if(Date.parse(row.receivedAt)>Date.parse(now))fail('CGM_XDRIP_FUTURE_RECEIPT');
+          if(d.privateHistory&&row.ts<=archiveEnd(d))return null;
           if(d.cgmMetadata&&d.cgmMetadata.sourceType!==XDRIP_TYPE)fail('CGM_SOURCE_CONFLICT');
           d.cgmMetadata={sourceDeviceId:XDRIP_ID,sourceType:XDRIP_TYPE,samplingMinutes:null,qualityScore:null};
           return upsertXDrip(d,row)?XDRIP_ID+':'+row.ts:null;
@@ -914,10 +1015,12 @@
           const receipt=Date.parse(row.receivedAt);
           if(row.transport!==XDRIP_WEB||receipt>Date.parse(now)||row.ts<receipt-XDRIP_HISTORY_WINDOW||
               !Array.isArray(batch.items)||batch.items.length>287)fail('CGM_XDRIP_HISTORY_FORMAT');
+          if(d.privateHistory&&row.ts<=archiveEnd(d))return null;
           if(d.cgmMetadata&&d.cgmMetadata.sourceType!==XDRIP_TYPE)fail('CGM_SOURCE_CONFLICT');
           d.cgmMetadata={sourceDeviceId:XDRIP_ID,sourceType:XDRIP_TYPE,samplingMinutes:null,qualityScore:null};
           const liveChanged=upsertXDrip(d,row);
-          const added=insertXDripHistory(d,row.ts,row.receivedAt,batch.items);
+          const items=d.privateHistory?batch.items.filter(item=>item.ts>archiveEnd(d)):batch.items;
+          const added=insertXDripHistory(d,row.ts,row.receivedAt,items);
           return liveChanged||added?'window:'+added:null;
         },rev);
         port.ingestXDripHistory=(batch,rev)=>commit(role,'cgm','import_xdrip_history',(d,now)=>{
@@ -932,7 +1035,8 @@
           const anchor=d.cgm.find(row=>row.sourceDeviceId===XDRIP_ID&&row.ts===anchorTs);
           if(!anchor||anchor.transport!==undefined||Math.trunc(anchor.mgdl)!==anchorSgv||
               Date.parse(anchor.receivedAt)>receipt)fail('CGM_XDRIP_HISTORY_ANCHOR');
-          const added=insertXDripHistory(d,anchorTs,receivedAt,items);
+          const eligible=d.privateHistory?items.filter(item=>item.ts>archiveEnd(d)):items;
+          const added=insertXDripHistory(d,anchorTs,receivedAt,eligible);
           return added?'history:'+added:null;
         },rev);
         port.setSourceMetadata=(meta,rev)=>commit(role,'cgmMetadata','set_provenance',d=>{
