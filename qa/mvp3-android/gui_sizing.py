@@ -111,8 +111,17 @@ def main():
         emulator.execute('shell', 'wm', 'density', '160')
         for width, height in [(320, 760), (390, 850), (428, 900), (1280, 850)]:
             emulator.execute('shell', 'wm', 'size', f'{width}x{height}')
+            emulator.execute('shell', 'input', 'keyevent', 'KEYCODE_WAKEUP')
+            emulator.execute('shell', 'wm', 'dismiss-keyguard')
             emulator.start()
-            ui.home()
+            try:
+                ui.home()
+            except RuntimeError:
+                capture(emulator, output, f'home-failed-{width}.png')
+                focus = emulator.text('shell', 'dumpsys', 'window')
+                focused = [line.strip() for line in focus.splitlines() if 'mCurrentFocus' in line or 'mFocusedApp' in line]
+                (output / 'gui-focus.log').write_text('\n'.join(focused) + '\n')
+                raise
             webview = next(n for n in ui.last_root.iter('node') if n.get('class') == 'android.webkit.WebView')
             nav = screen_navigation(ui.last_root)
             require(nav is not None, f'Navigation missing at width {width}')

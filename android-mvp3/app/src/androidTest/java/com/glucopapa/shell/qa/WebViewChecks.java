@@ -93,7 +93,7 @@ final class WebViewChecks {
         boolean gesture = "2".equals(mode);
         evaluate(web, "GPApp.open('home'); GPApp.open('approved-low'); GPApp.open('approved-nutrition'); true");
         instrumentation.waitForIdleSync();
-        long focusUntil = SystemClock.elapsedRealtime() + 4000;
+        long focusUntil = SystemClock.elapsedRealtime() + 15000;
         AtomicReference<Boolean> focus = new AtomicReference<>(false);
         while (SystemClock.elapsedRealtime() < focusUntil) {
             instrumentation.runOnMainSync(() -> focus.set(web.hasWindowFocus()));
