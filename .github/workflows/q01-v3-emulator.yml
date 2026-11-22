@@ -49,9 +49,7 @@ jobs:
           target=Path(os.environ['RUNNER_TEMP'])/'q01-runtime'
           with zipfile.ZipFile(io.BytesIO(data)) as z:
               for info in z.infolist():
-                  if not info.filename.startswith('integration/android-app/'):
-                      continue
-                  relative=info.filename.removeprefix('integration/android-app/')
+                  relative=info.filename
                   p=(target/'source'/relative).resolve()
                   assert p.is_relative_to((target/'source').resolve())
                   if not info.is_dir():
