@@ -1,0 +1,14 @@
+{
+  "candidate": "Q01_GfSettings_TimeGrid_v0.2.0_NOT_OWNER_APPROVED",
+  "source": "M03 original sha256 853e7a2ac97ac20148eb096ca33c1b0ebe02e09742dcdad11a85beb692df5484",
+  "files": {
+    "overlay/android-app/app/src/main/assets/www/q01/GFSettingsV3_v0.2.0.js": "7c88e2064ebbe45e7bf953a7e06d73656e1563230dc3f139d1b383fc82ff8dbf",
+    "overlay/android-app/app/src/main/assets/www/q01/GFTimeGridV3_v0.2.0.js": "5479f301b2217fdb3b3457c6e911f2de6fdae6d394a41f1536758faa7869ba55",
+    "overlay/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3DomainWriter.kt": "5ab14567c49ec09e4fc33fad091fdfb7140b9a7f997923f614e72f8aaacb5ea5",
+    "overlay/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3NativeWriter.kt": "858bb9837f4c5e9efd9ce8cac4bc2058b5493a6f34d6dc2043ae4eda4c509cd2",
+    "overlay/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3SettingsModeContract.kt": "d263c7735df0054e4e030e257ea5d9c3ea827bfda330142eb544ea7a59ed8815",
+    "overlay/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3SettingsTrustedAdapter.kt": "1fe4412ca567ce3e0b72cac2c39454b71e0c16b46094174ef15898e154661e35",
+    "tests/test_q01_modules.cjs": "55512f87afd7f545bfc0fe3ce7b9833396e4fced4344617c795afb066f2b6a9e",
+    "tests/test_q01_sqlite_mirror.py": "a1ee271111b17715e6986fc01d85b5a03153c2889856e3be3da89b273b1a5c1c"
+  }
+}
