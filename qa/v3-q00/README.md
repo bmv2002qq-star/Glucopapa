@@ -10,11 +10,11 @@ This **QA-only** branch does not modify approved M00–M03 sources. Its only goa
 - Gradle root inside archive: `android-app/` (AGP 8.7.3, Kotlin 2.0.21, Android SDK 35).
 - Expected APK application ID: `org.glukopapa.v3.m00`.
 
-## Source injection / privacy
+## Public archive (owner authorization, 2026-11-22)
 
-The approved archive currently exists only in the user's private project Library; it is **not present in GitHub**. Do not upload its contents to this public repository without the owner's explicit approval.
+The owner explicitly authorized placing the approved ZIP on public GitHub, including its personal data if present. A safety review found no obvious password, API key, or private-key material in the ZIP's text files; the archive does contain synthetic/demo data and review artifacts. Its contents are now publicly reconstructable from `qa/v3-q00/archive.parts/part-000.b64` through `part-017.b64`. **Public commits cannot be made confidential again simply by deleting the branch.**
 
-To run the real APK smoke test, configure the repository Actions secret `GFV3_M03_ARCHIVE_URL` with a temporary HTTPS URL that returns the exact approved ZIP to the GitHub Actions runner. Limit its lifetime and access. The runner verifies the pinned archive SHA-256, the 275 entry checksums and the V3 app identity. If the archive or the secret is absent, the workflow **fails closed**; it must never fall back to building the repository's V2 shell.
+The QA workflow reconstructs the exact original ZIP, validates each part's SHA-256, pins the archive's SHA-256, verifies all 275 file checksums, and only then builds the V3 application. The workflow does not use a private download link, does not fall back to V2, and does not change approved source files.
 
 GitHub Actions workflow: `.github/workflows/q00-v3-m03-apk-smoke.yml`, triggered on pushes to this QA branch. A manual workflow_dispatch trigger may require the workflow to exist on the default branch before GitHub allows manual invocation.
 

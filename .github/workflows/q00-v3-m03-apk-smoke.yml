@@ -21,8 +21,6 @@ jobs:
     name: Verify immutable source and build V3 debug APK
     runs-on: ubuntu-24.04
     timeout-minutes: 45
-    env:
-      M03_APPROVED_ZIP_URL: ${{ secrets.GFV3_M03_ARCHIVE_URL }}
     steps:
       - name: Checkout QA-only branch without stored credentials
         uses: actions/checkout@v4
@@ -34,21 +32,36 @@ jobs:
         run: |
           mkdir -p "$RUNNER_TEMP/gfv3-q00/source" "$RUNNER_TEMP/gfv3-q00/evidence"
 
-      - name: Download and cryptographically verify EXACT V3 M03 approved archive
+      - name: Reconstruct and verify PUBLIC owner-approved V3 M03 archive (SHA locked)
         shell: bash
         run: |
           set -euo pipefail
-          if [[ -z "$M03_APPROVED_ZIP_URL" ]]; then
-            echo "Q00_SOURCE_MISSING: set the repository Actions secret GFV3_M03_ARCHIVE_URL to a secure HTTPS URL for the owner-approved M03 ZIP" | tee "$RUNNER_TEMP/gfv3-q00/evidence/source-blocker.txt"
-            exit 2
-          fi
-          case "$M03_APPROVED_ZIP_URL" in
-            https://*) ;;
-            *) echo "Q00_SOURCE_REJECTED: approved source URL must be HTTPS" | tee "$RUNNER_TEMP/gfv3-q00/evidence/source-blocker.txt"; exit 2 ;;
-          esac
-          curl --fail --silent --show-error --location --retry 2 --retry-delay 3 \
-            "$M03_APPROVED_ZIP_URL" \
-            --output "$RUNNER_TEMP/gfv3-q00/approved-m03.zip"
+          python3 - <<'PY'
+          import base64
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+          root=Path('qa/v3-q00/archive.parts')
+          m=json.loads((root/'PARTS_MANIFEST.json').read_text('utf-8'))
+          assert m['archive_sha256']=='853e7a2ac97ac20148eb096ca33c1b0ebe02e09742dcdad11a85beb692df5484', 'Unexpected source manifest'
+          assert len(m['parts'])==18, 'Missing archive parts'
+          chunks=[]
+          for i,part in enumerate(m['parts']):
+              assert part['name']==f'part-{i:03d}.b64', 'Unexpected part name'
+              data=''.join((root/part['name']).read_text('ascii').split())
+              assert len(data)==part['base64_chars'], f'Length mismatch in {part["name"]}'
+              assert hashlib.sha256(data.encode()).hexdigest()==part['sha256'], f'Part hash mismatch: {part["name"]}'
+              chunks.append(data)
+          encoded=''.join(chunks)
+          assert len(encoded)==m['b64_length'], 'Corrupt part assembly'
+          binary=base64.b64decode(encoded,validate=True)
+          assert len(binary)==m['archive_bytes'], 'Wrong archive length'
+          assert hashlib.sha256(binary).hexdigest()==m['archive_sha256'], 'Approved M03 archive SHA mismatch'
+          path=Path(os.environ['RUNNER_TEMP'])/'gfv3-q00'/'approved-m03.zip'
+          path.write_bytes(binary)
+          print('Q00_SOURCE_PUBLIC_ARCHIVE_HASH_PASS',m['archive_sha256'],len(binary))
+          PY
           python3 qa/v3-q00/verify_source.py \
             "$RUNNER_TEMP/gfv3-q00/approved-m03.zip" \
             "$RUNNER_TEMP/gfv3-q00/source" \
