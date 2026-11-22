@@ -40,9 +40,9 @@ jobs:
           parts=[]
           for item in manifest['parts']:
               raw=(source/item['name']).read_text('ascii')
-              assert hashlib.sha256(raw.strip().encode('ascii')).hexdigest()==item['sha256']
+              assert hashlib.sha256(''.join(raw.split()).encode('ascii')).hexdigest()==item['sha256']
               assert hashlib.sha256(raw.encode('ascii')).hexdigest()==item['file_sha256']
-              parts.append(raw.strip())
+              parts.append(''.join(raw.split()))
           data=base64.b64decode(''.join(parts),validate=True)
           assert hashlib.sha256(data).hexdigest()==manifest['archive_sha256']
           assert manifest['archive_sha256']=='70bfbc23562b26010f5c75085fb7e177bd9c30aeadeea8a2605cacaf18482337'
