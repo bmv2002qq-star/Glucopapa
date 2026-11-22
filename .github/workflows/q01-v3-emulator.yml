@@ -1,0 +1,107 @@
+name: GlukoPapa V3 Q01 real Android emulator - QA only
+on:
+  push:
+    branches:
+      - qa/v3-q01-emulator-20261122
+    paths:
+      - .github/workflows/q01-v3-emulator.yml
+      - qa/v3-q01-emulator/**
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  q01-emulator-runtime:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+      - name: Prepare isolated audited integration source and test-only instrumentation
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/q01-runtime/evidence"
+          python3 - <<'PY'
+          import hashlib,json,base64,os,zipfile,io
+          from pathlib import Path
+          source=Path('qa/v3-q01-integration/archive.parts')
+          manifest=json.loads((source/'MANIFEST.json').read_text('utf-8'))
+          parts=[]
+          for item in manifest['parts']:
+              raw=(source/item['name']).read_text('ascii')
+              assert hashlib.sha256(raw.strip().encode('ascii')).hexdigest()==item['sha256']
+              assert hashlib.sha256(raw.encode('ascii')).hexdigest()==item['file_sha256']
+              parts.append(raw.strip())
+          data=base64.b64decode(''.join(parts),validate=True)
+          assert hashlib.sha256(data).hexdigest()==manifest['archive_sha256']
+          assert manifest['archive_sha256']=='70bfbc23562b26010f5c75085fb7e177bd9c30aeadeea8a2605cacaf18482337'
+          target=Path(os.environ['RUNNER_TEMP'])/'q01-runtime'
+          with zipfile.ZipFile(io.BytesIO(data)) as z:
+              for info in z.infolist():
+                  if not info.filename.startswith('integration/android-app/'):
+                      continue
+                  relative=info.filename.removeprefix('integration/android-app/')
+                  p=(target/'source'/relative).resolve()
+                  assert p.is_relative_to((target/'source').resolve())
+                  if not info.is_dir():
+                      p.parent.mkdir(parents=True,exist_ok=True)
+                      p.write_bytes(z.read(info))
+          print('Q01_ORIGINAL_PROJECT_SHA_PASS',hashlib.sha256(data).hexdigest())
+          PY
+          cp qa/v3-q01-emulator/Q01AndroidRuntimeTest.kt "$RUNNER_TEMP/q01-runtime/source/app/src/androidTest/java/org/glukopapa/v3/m00/Q01AndroidRuntimeTest.kt" 2>/dev/null || {
+            mkdir -p "$RUNNER_TEMP/q01-runtime/source/app/src/androidTest/java/org/glukopapa/v3/m00"
+            cp qa/v3-q01-emulator/Q01AndroidRuntimeTest.kt "$RUNNER_TEMP/q01-runtime/source/app/src/androidTest/java/org/glukopapa/v3/m00/Q01AndroidRuntimeTest.kt"
+          }
+          # QA-only, external androidTest source set. No production Kotlin/HTML is changed.
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          p=Path(os.environ['RUNNER_TEMP'])/'q01-runtime/source/app/build.gradle.kts'
+          content=p.read_text('utf-8').replace('targetSdk = 35','targetSdk = 35\n        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"')
+          content+='\n\ndependencies {\n    androidTestImplementation("androidx.test:core:1.6.1")\n    androidTestImplementation("androidx.test:runner:1.6.2")\n    androidTestImplementation("androidx.test.ext:junit:1.2.1")\n}\n'
+          p.write_text(content,'utf-8')
+          PY
+      - name: Grant access to KVM acceleration
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Android 15 emulator runtime/instrumentation and SQLite database
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          target: google_apis
+          profile: pixel_4
+          ram-size: 2048M
+          heap-size: 512M
+          disk-size: 4096M
+          disable-animations: true
+          emulator-boot-timeout: 900
+          script: |
+            set -euo pipefail
+            cd "$RUNNER_TEMP/q01-runtime/source"
+            gradle --no-daemon --console=plain :app:connectedDebugAndroidTest 2>&1 | tee "$RUNNER_TEMP/q01-runtime/evidence/connected-tests.log"
+            find app/build/outputs/androidTest-results -type f -maxdepth 8 -print > "$RUNNER_TEMP/q01-runtime/evidence/xml-list.txt" || true
+            cp -R app/build/outputs/androidTest-results "$RUNNER_TEMP/q01-runtime/evidence/" || true
+            adb shell dumpsys package org.glukopapa.v3.m00.q01qa | head -50 > "$RUNNER_TEMP/q01-runtime/evidence/package-dumpsys.txt" || true
+            adb logcat -d -t 500 > "$RUNNER_TEMP/q01-runtime/evidence/logcat-last-500.txt" || true
+      - name: Upload emulator evidence, including failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: GlukoPapa-Q01-Android-Emulator-Runtime-QA
+          path: ${{ runner.temp }}/q01-runtime/evidence/
+          if-no-files-found: warn
+          retention-days: 14
