@@ -67,7 +67,7 @@ jobs:
           from pathlib import Path
           p=Path(os.environ['RUNNER_TEMP'])/'q01-runtime/source/app/build.gradle.kts'
           content=p.read_text('utf-8').replace('targetSdk = 35','targetSdk = 35\n        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"')
-          content+='\n\ndependencies {\n    androidTestImplementation("androidx.test:core:1.6.1")\n    androidTestImplementation("androidx.test:runner:1.6.2")\n    androidTestImplementation("androidx.test.ext:junit:1.2.1")\n}\n'
+          content+='\n\ndependencies {\n    androidTestImplementation("androidx.test:core:1.6.1")\n    androidTestImplementation("androidx.test:runner:1.6.2")\n    androidTestImplementation("androidx.test.ext:junit:1.2.1")\n    androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")\n}\n'
           p.write_text(content,'utf-8')
           PY
       - name: Grant access to KVM acceleration
