@@ -88,13 +88,16 @@ jobs:
           disable-animations: true
           emulator-boot-timeout: 900
           script: |
-            set -euo pipefail
+            set -eu
             cd "$RUNNER_TEMP/q01-runtime/source"
-            gradle --no-daemon --console=plain :app:connectedDebugAndroidTest 2>&1 | tee "$RUNNER_TEMP/q01-runtime/evidence/connected-tests.log"
-            find app/build/outputs/androidTest-results -type f -maxdepth 8 -print > "$RUNNER_TEMP/q01-runtime/evidence/xml-list.txt" || true
-            cp -R app/build/outputs/androidTest-results "$RUNNER_TEMP/q01-runtime/evidence/" || true
+            status=0
+            gradle --no-daemon --console=plain :app:connectedDebugAndroidTest > "$RUNNER_TEMP/q01-runtime/evidence/connected-tests.log" 2>&1 || status=$?
+            cat "$RUNNER_TEMP/q01-runtime/evidence/connected-tests.log"
+            find app/build/outputs/androidTest-results -maxdepth 8 -type f -print > "$RUNNER_TEMP/q01-runtime/evidence/xml-list.txt" 2>/dev/null || true
+            cp -R app/build/outputs/androidTest-results "$RUNNER_TEMP/q01-runtime/evidence/" 2>/dev/null || true
             adb shell dumpsys package org.glukopapa.v3.m00.q01qa | head -50 > "$RUNNER_TEMP/q01-runtime/evidence/package-dumpsys.txt" || true
             adb logcat -d -t 500 > "$RUNNER_TEMP/q01-runtime/evidence/logcat-last-500.txt" || true
+            exit "$status"
       - name: Upload emulator evidence, including failures
         if: always()
         uses: actions/upload-artifact@v4
