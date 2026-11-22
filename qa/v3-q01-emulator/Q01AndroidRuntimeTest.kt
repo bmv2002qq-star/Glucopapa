@@ -11,6 +11,9 @@ import org.json.JSONObject
 import org.json.JSONTokener
 import org.junit.Assert.*
 import org.junit.Test
+import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.test.espresso.action.ViewActions.click
 import org.junit.runner.RunWith
 import java.time.Instant
 import java.util.concurrent.CountDownLatch
@@ -134,4 +137,69 @@ class Q01AndroidRuntimeTest {
             assertEquals("true",decoded("String(!!document.getElementById('q01SettingsFrame'))"))
         }
     }
+    /** End-to-end: actual JS -> native owner dialog -> native installed port -> SQLite -> JS read.
+     * Acceptance is a disposable emulator registry fixture; shipping registry stays NOT_ACCEPTED.
+     */
+    @Test fun webViewOwnerDialogSettingsSqliteAndCancellation() {
+        val ctx=app()
+        reset(ctx)
+        ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+            fun js(source:String):String {
+                val answer=AtomicReference<String>("")
+                val latch=CountDownLatch(1)
+                scenario.onActivity { activity ->
+                    val content=activity.findViewById<ViewGroup>(android.R.id.content)
+                    val view=content.getChildAt(0) as WebView
+                    view.evaluateJavascript(source) { json -> answer.set(json);latch.countDown() }
+                }
+                assertTrue(latch.await(25,TimeUnit.SECONDS))
+                return answer.get()
+            }
+            fun decoded(source:String):String=JSONTokener(js(source)).nextValue().toString()
+            var available=false
+            repeat(25) {
+                if(decoded("String(!!window.GPV3V3Bridge)")=="true")available=true
+                if(!available)Thread.sleep(400)
+            }
+            assertTrue("Real native bridge must be available",available)
+            val started=JSONObject(decoded("GPV3V3Bridge.initializeProfile('Europe/London',GPV3V3Bridge.getRevision())"))
+            assertEquals("PROFILE_CONFIGURED",started.getString("status"))
+            val db=GfDbHelper(ctx)
+            testAcceptedFixture(db) // ISOLATED EMULATOR ONLY
+            fun request(value:Double,marker:String):JSONObject {
+                val src="""(function(){const p=JSON.parse(GPV3V3Bridge.readShellPort('settings'));const intent={type:'GFSETTINGS_V3_OWNER_INTENT',command:'setting',role:'settingsWriter',ownerConfirmed:true,profileId:p.profileId,expectedRevision:p.revision,idempotencyKey:'q01-e2e-key-$marker',payload:{settingChangeId:'q01-e2e-change-$marker',settingKey:'target',value:{mmolL:$value,source:'OWNER_MANUAL'}}};return GPV3V3Bridge.requestSettingsOwnerIntent(JSON.stringify(intent))})()"""
+                return JSONObject(decoded(src))
+            }
+            val queued=request(6.3,"confirm")
+            assertEquals("PENDING",queued.getString("state"))
+            onView(withText("Подтвердить")).perform(click())
+            var outcome:JSONObject?=null
+            repeat(45) {
+                if(outcome==null){
+                    val result=JSONObject(decoded("GPV3V3Bridge.pollSettingsOwnerIntent('"+queued.getString("ticket")+"')"))
+                    if(result.getString("state")=="FINISHED") outcome=result
+                    else if(result.getString("state")=="REJECTED")fail("Native queue rejected: $result")
+                    else Thread.sleep(100)
+                }
+            }
+            assertNotNull("Native acceptance did not finish",outcome)
+            assertTrue(outcome!!.getJSONObject("result").getBoolean("accepted"))
+            val after=JSONObject(decoded("GPV3V3Bridge.readShellPort('settings')"))
+            val preferences=after.getJSONObject("data").getJSONArray("preferences")
+            val target=(0 until preferences.length()).map { preferences.getJSONObject(it) }
+                .firstOrNull { it.getString("key")=="target" }
+            assertNotNull("GFStorage settings projection must contain target",target)
+            assertEquals(6.3,target!!.getJSONObject("value").getDouble("mmolL"),0.001)
+            assertTrue(after.getJSONObject("data").getJSONArray("settingHistory").length()>0)
+            val cancelled=request(7.4,"cancel")
+            assertEquals("PENDING",cancelled.getString("state"))
+            onView(withText("Отмена")).perform(click())
+            val final=JSONObject(decoded("GPV3V3Bridge.pollSettingsOwnerIntent('"+cancelled.getString("ticket")+"')"))
+            assertEquals("CANCELLED",final.getString("state"))
+            val afterCancel=JSONObject(decoded("GPV3V3Bridge.readShellPort('settings')"))
+            assertEquals(after.getLong("revision"),afterCancel.getLong("revision"))
+            db.close()
+        }
+    }
+
 }
