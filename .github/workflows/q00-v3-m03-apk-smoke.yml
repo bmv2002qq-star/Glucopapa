@@ -78,6 +78,15 @@ jobs:
         with:
           node-version: '22'
 
+      - name: Python 3.11 and pinned host-test parser
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install host-test BeautifulSoup dependency
+        shell: bash
+        run: python3 -m pip install --disable-pip-version-check --no-input 'beautifulsoup4==4.13.4'
+
       - name: Run approved package host smoke tests
         shell: bash
         run: |
