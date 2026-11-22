@@ -1,0 +1,137 @@
+package org.glukopapa.v3.m00
+
+import android.content.ContentValues
+import android.content.Context
+import android.view.ViewGroup
+import android.webkit.WebView
+import androidx.test.core.app.ApplicationProvider
+import androidx.test.core.app.ActivityScenario
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import org.json.JSONObject
+import org.json.JSONTokener
+import org.junit.Assert.*
+import org.junit.Test
+import org.junit.runner.RunWith
+import java.time.Instant
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicReference
+
+/** QA-only Android emulator instrumentation, never shipped in the application APK.
+ * The registry is modified ONLY inside a disposable emulator SQLite fixture.
+ * A successful synthetic activation does not signify owner acceptance of Q01.
+ */
+@RunWith(AndroidJUnit4::class)
+class Q01AndroidRuntimeTest {
+    private fun app(): Context = ApplicationProvider.getApplicationContext()
+    private fun jsonAssets(ctx: Context, name:String) = ctx.assets.open(name).bufferedReader().use { it.readText() }
+    private fun storage(ctx:Context, db:GfDbHelper) = GfV3Storage(db,
+        jsonAssets(ctx,"db/module_catalog_v1.json"),jsonAssets(ctx,"db/writer_grants_v0.11.json"))
+    private fun reset(ctx:Context) { assertTrue("Disposable QA database must be clear", ctx.deleteDatabase("glukopapa_v3.db") || !ctx.getDatabasePath("glukopapa_v3.db").exists()) }
+    private fun testAcceptedFixture(db:GfDbHelper) {
+        val fields=ContentValues().apply {
+            put("status","OWNER_INTEGRATION_ACCEPTED")
+            put("feature_enabled",1)
+            put("read_roles_json","[\"settings\"]")
+            put("write_roles_json","[\"settingsWriter\",\"coefficientWriter\"]")
+        }
+        assertEquals("Expected exactly one GFSettings registry row",1,
+            db.writableDatabase.update("v3_module_registry",fields,"module_id=?",arrayOf("GFSettings")))
+    }
+    private fun ownerSetting(snapshot:JSONObject,changeId:String,idempotency:String,key:String,value:JSONObject):JSONObject =
+        JSONObject().put("type","GFSETTINGS_V3_OWNER_INTENT")
+            .put("command","setting").put("role","settingsWriter")
+            .put("ownerConfirmed",true).put("profileId",snapshot.getString("profileId"))
+            .put("expectedRevision",snapshot.getLong("revision"))
+            .put("idempotencyKey",idempotency)
+            .put("payload",JSONObject().put("settingChangeId",changeId).put("settingKey",key)
+                .put("value",value).put("effectiveAtUtc",Instant.now().toString()))
+
+    @Test fun nativeGuardedSettingsPersistAndReadAfterReopen() {
+        val ctx=app()
+        reset(ctx)
+        var db=GfDbHelper(ctx)
+        var store=storage(ctx,db)
+        assertEquals(3,store.schemaVersion())
+        assertEquals(7,db.readableDatabase.version)
+        val initial=store.revision()
+        store.initializeProfile("profile-emulator-qa","Europe/London",initial)
+        val gateway=GfV3NativeModuleGateway(store,GfV3NativeWriter(db),GfV3CorrectionWriter(db),db)
+        val adapter=GfV3SettingsTrustedAdapter(gateway.bindInstalledAdapter("GFSettings"))
+        try { adapter.readSettingsSnapshot();fail("Unaccepted GFSettings must be denied") }
+        catch (e:SecurityException) { assertTrue(e.message.orEmpty().contains("NATIVE_MODULE_NOT_ACCEPTED")) }
+        testAcceptedFixture(db) // TEST FIXTURE ONLY: not delivered to users, not modifying approved sources.
+        val snap=adapter.readSettingsSnapshot()
+        val setting=ownerSetting(snap,"q01-qa-target-0001","q01-qa-idempotent-0001", "target",
+            JSONObject().put("mmolL",6.0).put("source","OWNER_MANUAL"))
+        val applied=adapter.applyOwnerIntent(setting)
+        assertEquals(snap.getLong("revision")+1,applied.getLong("revision"))
+        val after=store.readShellPort("settings")
+        assertTrue(after.getJSONObject("data").getJSONArray("preferences").toString().contains("target"))
+        assertTrue(after.getJSONObject("data").getJSONArray("settingHistory").toString().contains("target"))
+        assertTrue(store.changeFeed(snap.getLong("revision")).getJSONArray("changes").length()>0)
+        val repeated=GfV3NativeWriter(db).append("GFSettings","settingsWriter","q01-qa-idempotent-0001",snap.getLong("revision"),setting.getJSONObject("payload"))
+        assertEquals(false,repeated.getBoolean("created"))
+        assertEquals(applied.getLong("revision"),store.revision())
+        val conflict=ownerSetting(snap,"q01-qa-target-0002","q01-qa-idempotent-0002", "target",
+            JSONObject().put("mmolL",7.0).put("source","OWNER_MANUAL"))
+        try { adapter.applyOwnerIntent(conflict);fail("Old revision must be denied") }
+        catch (e:IllegalArgumentException){assertTrue(e.message.orEmpty().contains("V3_REVISION_CONFLICT"))}
+        val cur=adapter.readSettingsSnapshot()
+        val measurement=ownerSetting(cur,"q01-qa-weight-0003","q01-qa-idempotent-0003","measurement",
+            JSONObject().put("weightKg",20.5).put("heightCm",121.0).put("measuredAtUtc","2026-11-20T12:00:00Z"))
+        adapter.applyOwnerIntent(measurement)
+        val revision=store.revision()
+        assertTrue(store.readShellPort("settings").getJSONObject("data").getJSONArray("measurements").length()>0)
+        db.close()
+        db=GfDbHelper(ctx)
+        store=storage(ctx,db)
+        assertEquals(revision,store.revision())
+        val reopened=store.readShellPort("settings").getJSONObject("data")
+        assertTrue(reopened.getJSONArray("preferences").toString().contains("target"))
+        assertTrue(reopened.getJSONArray("measurements").toString().contains("20.5"))
+        val journal=store.readShellPort("journal")
+        assertEquals(revision,journal.getLong("revision"))
+        db.close()
+    }
+
+    /** Exercises the actual Android Activity/WebView/JS bridge rather than a JS mock. */
+    @Test fun actualWebViewShellProfileAndUnacceptedGuard() {
+        val ctx=app()
+        reset(ctx)
+        ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+            fun js(source:String):String {
+                val answer=AtomicReference<String>("")
+                val latch=CountDownLatch(1)
+                scenario.onActivity { activity ->
+                    val content=activity.findViewById<ViewGroup>(android.R.id.content)
+                    val view=content.getChildAt(0) as WebView
+                    view.evaluateJavascript(source) { json -> answer.set(json);latch.countDown() }
+                }
+                assertTrue("Timed out on real WebView JS: $source",latch.await(25,TimeUnit.SECONDS))
+                return answer.get()
+            }
+            fun decoded(source:String):String=JSONTokener(js(source)).nextValue().toString()
+            var ready=false
+            repeat(30) {
+                if(decoded("(function(){return String(!!window.GPV3V3Bridge&&!!window.GPV3V3Host&&!!document.getElementById('m00SetupTimeZone'))})()") == "true") {
+                    ready=true;return@repeat
+                }
+                Thread.sleep(400)
+            }
+            assertTrue("Native bridge and settings setup must render",ready)
+            assertEquals("3",js("GPV3V3Bridge.getSchemaVersion()"))
+            val first=JSONObject(decoded("GPV3V3Bridge.readShellPort('settings')"))
+            assertFalse(first.getBoolean("profileConfigured"))
+            assertEquals("true",decoded("(function(){window.confirm=()=>true;const z=document.getElementById('m00SetupTimeZone');z.value='Europe/London';z.dispatchEvent(new Event('input',{bubbles:true}));z.parentNode.querySelector('button').click();return String(!!document.getElementById('q01SettingsFrame'))})()"))
+            val profile=JSONObject(decoded("GPV3V3Bridge.readShellPort('settings')"))
+            assertTrue(profile.getBoolean("profileConfigured"))
+            assertEquals("Europe/London",profile.getJSONObject("data").getJSONObject("profile").getString("timeZone"))
+            val r=decoded("(function(){const p=JSON.parse(GPV3V3Bridge.readShellPort('settings'));const intent={type:'GFSETTINGS_V3_OWNER_INTENT',command:'setting',role:'settingsWriter',ownerConfirmed:true,profileId:p.profileId,expectedRevision:p.revision,idempotencyKey:'q01-qa-denied-0001',payload:{settingChangeId:'q01-qa-denied-change-0001',settingKey:'target',value:{mmolL:6,source:'OWNER_MANUAL'}}};return GPV3V3Bridge.requestSettingsOwnerIntent(JSON.stringify(intent))})()")
+            val result=JSONObject(r)
+            assertEquals("CAPABILITY_DENIED",result.getJSONObject("error").getString("code"))
+            assertEquals(profile.getLong("revision"),JSONObject(decoded("GPV3V3Bridge.readShellPort('settings')")).getLong("revision"))
+            assertEquals("true",decoded("String(!!document.getElementById('q01SettingsFrame'))"))
+        }
+    }
+}
