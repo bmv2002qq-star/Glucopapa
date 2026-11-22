@@ -1,0 +1,150 @@
+name: GlukoPapa V3 Q01 Integrated QA APK - NOT APPROVED
+
+on:
+  push:
+    branches:
+      - qa/v3-q01-integration-ci-20261122
+    paths:
+      - .github/workflows/q01-v3-integration-apk.yml
+      - qa/v3-q01-integration/**
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: v3-q01-integrated-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-integrated-q01:
+    name: Verify archived source, host smoke and build Q01 debug APK
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Verify and unpack immutable Q01 integration QA source
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/q01-integration/evidence" "$RUNNER_TEMP/q01-integration/project"
+          python3 - <<'PY'
+          import base64,hashlib,json,os,zipfile
+          from pathlib import Path
+          transfer=Path('qa/v3-q01-integration/archive.parts')
+          manifest=json.loads((transfer/'MANIFEST.json').read_text('utf-8'))
+          assert manifest['archive_sha256']=='70bfbc23562b26010f5c75085fb7e177bd9c30aeadeea8a2605cacaf18482337'
+          assert len(manifest['parts']) == 14
+          chunks=[]
+          for i,part in enumerate(manifest['parts']):
+              assert part['name']==f'part-{i:03d}.b64'
+              raw=(transfer/part['name']).read_bytes()
+              assert hashlib.sha256(raw).hexdigest()==part['file_sha256'], part['name']
+              compact=b''.join(raw.split())
+              assert len(compact)==part['chars']
+              assert hashlib.sha256(compact).hexdigest()==part['sha256'], part['name']
+              chunks.append(compact)
+          encoded=b''.join(chunks)
+          assert len(encoded)==manifest['base64_length']
+          data=base64.b64decode(encoded,validate=True)
+          assert len(data)==manifest['archive_bytes']
+          assert hashlib.sha256(data).hexdigest()==manifest['archive_sha256']
+          root=Path(os.environ['RUNNER_TEMP'])/'q01-integration'
+          archive=root/'integration_source.zip'; archive.write_bytes(data)
+          dest=root/'project'
+          with zipfile.ZipFile(archive) as z:
+              for name in z.namelist():
+                  p=Path(name)
+                  assert not p.is_absolute() and '..' not in p.parts, 'Unsafe archive path'
+              z.extractall(dest)
+          required=['settings.gradle.kts','app/build.gradle.kts',
+                    'app/src/main/java/org/glukopapa/v3/m00/GfV3SettingsOwnerIntentQueue.kt',
+                    'app/src/main/assets/www/q01/settings.html',
+                    'app/src/main/assets/www/q01/settings_ui_v3.js']
+          assert all((dest/p).is_file() for p in required)
+          (root/'evidence'/'source-sha256.txt').write_text(manifest['archive_sha256']+'\n')
+          print('Q01_INTEGRATED_SOURCE_VERIFIED', len(z.namelist()),len(data),manifest['archive_sha256'])
+          PY
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run Q01 static JavaScript syntax smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/q01-integration/project/app/src/main/assets/www/q01"
+          for f in GFSettingsV3_v0.2.0.js GFTimeGridV3_v0.2.0.js settings_ui_v3.js; do
+            node --check "$root/$f"
+          done
+          echo Q01_INTEGRATED_NODE_SYNTAX_PASS | tee "$RUNNER_TEMP/q01-integration/evidence/node-check.log"
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
+      - name: Install SDK 35 tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          sdkmanager --install 'platforms;android-35' 'build-tools;35.0.0' < /dev/null
+          sdkmanager --list_installed > "$RUNNER_TEMP/q01-integration/evidence/sdk-packages.txt"
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+      - name: Compile and package exactly this integrated Q01 source
+        shell: bash
+        run: |
+          set -euo pipefail
+          java -version 2>&1 | tee "$RUNNER_TEMP/q01-integration/evidence/java-version.txt"
+          gradle --version | tee "$RUNNER_TEMP/q01-integration/evidence/gradle-version.txt"
+          gradle --no-daemon --console=plain --stacktrace \
+            -p "$RUNNER_TEMP/q01-integration/project" :app:assembleDebug \
+            2>&1 | tee "$RUNNER_TEMP/q01-integration/evidence/assemble.log"
+      - name: Verify APK signature, debug namespace and integration assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          apk="$RUNNER_TEMP/q01-integration/project/app/build/outputs/apk/debug/app-debug.apk"
+          test -s "$apk"
+          sha256sum "$apk" | tee "$RUNNER_TEMP/q01-integration/evidence/apk.sha256"
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$apk" | tee "$RUNNER_TEMP/q01-integration/evidence/apk-badging.txt"
+          grep -F "package: name='org.glukopapa.v3.m00.q01qa'" "$RUNNER_TEMP/q01-integration/evidence/apk-badging.txt"
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose "$apk" | tee "$RUNNER_TEMP/q01-integration/evidence/apk-signature.txt"
+          python3 - "$apk" <<'PY'
+          import sys,zipfile
+          with zipfile.ZipFile(sys.argv[1]) as z:
+              names=set(z.namelist())
+          required=[
+            'assets/www/index.html',
+            'assets/www/q01/settings.html',
+            'assets/www/q01/settings_ui_v3.js',
+            'assets/www/q01/GFSettingsV3_v0.2.0.js',
+            'assets/www/q01/GFTimeGridV3_v0.2.0.js',
+            'assets/www/m02/gfmain_home_adapter.js',
+            'assets/www/m03/gfmodule_directory_adapter.js',
+            'assets/db/schema_v7.sql',
+            'classes.dex']
+          missing=[v for v in required if v not in names]
+          assert not missing, 'Missing required Q01 APK assets: '+repr(missing)
+          print('Q01_INTEGRATED_APK_ASSETS_PASS',len(required))
+          PY
+      - name: Upload integrated QA APK (candidate, NOT approved)
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: GlukoPapa-V3-Q01-INTEGRATION-QA-NOT-APPROVED-debug-apk
+          path: ${{ runner.temp }}/q01-integration/project/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
+      - name: Upload evidence including failed compilation log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: GlukoPapa-V3-Q01-INTEGRATION-QA-evidence
+          path: ${{ runner.temp }}/q01-integration/evidence/
+          if-no-files-found: warn
+          retention-days: 14
