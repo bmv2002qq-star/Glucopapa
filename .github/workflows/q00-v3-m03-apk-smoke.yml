@@ -1,0 +1,153 @@
+name: GlukoPapa V3 Q00 · approved M03 APK smoke
+
+on:
+  push:
+    branches:
+      - qa/v3-q00-approved-m03-apk-20261122
+    paths:
+      - .github/workflows/q00-v3-m03-apk-smoke.yml
+      - qa/v3-q00/**
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: q00-v3-m03-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  approved-m03-debug-apk:
+    name: Verify immutable source and build V3 debug APK
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      M03_APPROVED_ZIP_URL: ${{ secrets.GFV3_M03_ARCHIVE_URL }}
+    steps:
+      - name: Checkout QA-only branch without stored credentials
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Prepare evidence directory
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/gfv3-q00/source" "$RUNNER_TEMP/gfv3-q00/evidence"
+
+      - name: Download and cryptographically verify EXACT V3 M03 approved archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "$M03_APPROVED_ZIP_URL" ]]; then
+            echo "Q00_SOURCE_MISSING: set the repository Actions secret GFV3_M03_ARCHIVE_URL to a secure HTTPS URL for the owner-approved M03 ZIP" | tee "$RUNNER_TEMP/gfv3-q00/evidence/source-blocker.txt"
+            exit 2
+          fi
+          case "$M03_APPROVED_ZIP_URL" in
+            https://*) ;;
+            *) echo "Q00_SOURCE_REJECTED: approved source URL must be HTTPS" | tee "$RUNNER_TEMP/gfv3-q00/evidence/source-blocker.txt"; exit 2 ;;
+          esac
+          curl --fail --silent --show-error --location --retry 2 --retry-delay 3 \
+            "$M03_APPROVED_ZIP_URL" \
+            --output "$RUNNER_TEMP/gfv3-q00/approved-m03.zip"
+          python3 qa/v3-q00/verify_source.py \
+            "$RUNNER_TEMP/gfv3-q00/approved-m03.zip" \
+            "$RUNNER_TEMP/gfv3-q00/source" \
+            "$RUNNER_TEMP/gfv3-q00/evidence/source-integrity.json"
+
+      - name: Java 17 for approved AGP 8.7.3 / Kotlin 2.0.21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Node 22 for approved host tests
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Run approved package host smoke tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/gfv3-q00/source"
+          {
+            node tests/m03/test_m03_core.js
+            python3 tests/m03/test_m03_native_registry.py
+            node tests/test_m02_contract.js
+            python3 tests/test_asset_route_integrity.py
+          } 2>&1 | tee "$RUNNER_TEMP/gfv3-q00/evidence/host-smoke.log"
+
+      - name: Provision Android SDK platform 35 / build-tools 35
+        uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
+
+      - name: Install approved compileSdk 35 and build tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          sdkmanager --install 'platforms;android-35' 'build-tools;35.0.0' < /dev/null
+          sdkmanager --list_installed | tee "$RUNNER_TEMP/gfv3-q00/evidence/sdk-packages.txt"
+
+      - name: Gradle 8.9 (compatible with AGP 8.7.3)
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Assemble EXACT approved V3 source (not android-mvp3 V2)
+        shell: bash
+        run: |
+          set -euo pipefail
+          java -version 2>&1 | tee "$RUNNER_TEMP/gfv3-q00/evidence/java-version.txt"
+          gradle --version | tee "$RUNNER_TEMP/gfv3-q00/evidence/gradle-version.txt"
+          gradle --no-daemon --console=plain --stacktrace \
+            -p "$RUNNER_TEMP/gfv3-q00/source/android-app" :app:assembleDebug \
+            2>&1 | tee "$RUNNER_TEMP/gfv3-q00/evidence/assemble-debug.log"
+
+      - name: Verify APK package, signature and M02/M03 assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          apk="$RUNNER_TEMP/gfv3-q00/source/android-app/app/build/outputs/apk/debug/app-debug.apk"
+          test -s "$apk"
+          sha256sum "$apk" | tee "$RUNNER_TEMP/gfv3-q00/evidence/apk.sha256"
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$apk" \
+            | tee "$RUNNER_TEMP/gfv3-q00/evidence/apk-badging.txt"
+          grep -F "package: name='org.glukopapa.v3.m00'" \
+            "$RUNNER_TEMP/gfv3-q00/evidence/apk-badging.txt"
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose "$apk" \
+            | tee "$RUNNER_TEMP/gfv3-q00/evidence/apk-signature.txt"
+          python3 - "$apk" <<'PY'
+          import sys
+          from zipfile import ZipFile
+          required = [
+              'assets/www/index.html',
+              'assets/www/m02/gfmain_home_adapter.js',
+              'assets/www/m03/gfmodule_directory_adapter.js',
+              'assets/www/m03/gfmodule_hub_core.js',
+              'assets/db/schema_v7.sql',
+          ]
+          with ZipFile(sys.argv[1]) as archive:
+              missing = [name for name in required if name not in archive.namelist()]
+          if missing:
+              raise SystemExit('Q00_APK_MISSING_APPROVED_ASSETS: '+repr(missing))
+          print('Q00_APK_MANIFEST_AND_ASSETS_PASS', len(required))
+          PY
+
+      - name: Upload verified V3 debug APK
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: GlukoPapa-V3-M03-Q00-approved-source-debug-apk
+          path: ${{ runner.temp }}/gfv3-q00/source/android-app/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload QA evidence (including failures; NEVER upload source ZIP)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: GlukoPapa-V3-M03-Q00-evidence
+          path: ${{ runner.temp }}/gfv3-q00/evidence/
+          if-no-files-found: warn
+          retention-days: 14
