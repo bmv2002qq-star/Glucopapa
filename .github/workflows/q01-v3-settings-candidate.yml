@@ -1,0 +1,231 @@
+name: GlukoPapa V3 Q01 · UNAPPROVED GFSettings + GFTimeGrid APK smoke
+
+on:
+  push:
+    branches:
+      - qa/v3-q01-settings-candidate-20261122
+    paths:
+      - .github/workflows/q01-v3-settings-candidate.yml
+      - qa/v3-q01/**
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: q01-v3-settings-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  approved-m03-debug-apk:
+    name: Verify immutable source and build V3 debug APK
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - name: Checkout QA-only branch without stored credentials
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Prepare evidence directory
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/gfv3-q00/source" "$RUNNER_TEMP/gfv3-q00/evidence"
+
+      - name: Reconstruct and verify PUBLIC owner-approved V3 M03 archive (SHA locked)
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import base64
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+          root=Path('qa/v3-q00/archive.parts')
+          m=json.loads((root/'PARTS_MANIFEST.json').read_text('utf-8'))
+          assert m['archive_sha256']=='853e7a2ac97ac20148eb096ca33c1b0ebe02e09742dcdad11a85beb692df5484', 'Unexpected source manifest'
+          assert len(m['parts'])==18, 'Missing archive parts'
+          chunks=[]
+          for i,part in enumerate(m['parts']):
+              assert part['name']==f'part-{i:03d}.b64', 'Unexpected part name'
+              data=''.join((root/part['name']).read_text('ascii').split())
+              assert len(data)==part['base64_chars'], f'Length mismatch in {part["name"]}'
+              assert hashlib.sha256(data.encode()).hexdigest()==part['sha256'], f'Part hash mismatch: {part["name"]}'
+              chunks.append(data)
+          encoded=''.join(chunks)
+          assert len(encoded)==m['b64_length'], 'Corrupt part assembly'
+          binary=base64.b64decode(encoded,validate=True)
+          assert len(binary)==m['archive_bytes'], 'Wrong archive length'
+          assert hashlib.sha256(binary).hexdigest()==m['archive_sha256'], 'Approved M03 archive SHA mismatch'
+          path=Path(os.environ['RUNNER_TEMP'])/'gfv3-q00'/'approved-m03.zip'
+          path.write_bytes(binary)
+          print('Q00_SOURCE_PUBLIC_ARCHIVE_HASH_PASS',m['archive_sha256'],len(binary))
+          PY
+          python3 qa/v3-q00/verify_source.py \
+            "$RUNNER_TEMP/gfv3-q00/approved-m03.zip" \
+            "$RUNNER_TEMP/gfv3-q00/source" \
+            "$RUNNER_TEMP/gfv3-q00/evidence/source-integrity.json"
+
+      - name: Audit SHA-256 of proposed Q01 source, then overlay ONLY candidate files
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib, json, os, shutil
+          from pathlib import Path
+          source=Path('qa/v3-q01')
+          manifest=json.loads((source/'Q01_MANIFEST.json').read_text('utf-8'))
+          assert manifest['candidate']=='Q01_GfSettings_TimeGrid_v0.2.0_NOT_OWNER_APPROVED'
+          expected=manifest['files']
+          assert len(expected)==8 and len(set(expected))==8
+          assert all(k.startswith(('overlay/','tests/')) for k in expected)
+          for relative, digest in sorted(expected.items()):
+              p=source/relative
+              assert p.is_file() and hashlib.sha256(p.read_bytes()).hexdigest()==digest, 'Q01 file hash mismatch: '+relative
+          dest=Path(os.environ['RUNNER_TEMP'])/'gfv3-q00'/'source'
+          for rel in expected:
+              if rel.startswith('overlay/'):
+                  target=dest/rel.removeprefix('overlay/')
+                  target.parent.mkdir(parents=True,exist_ok=True)
+                  shutil.copy2(source/rel,target)
+          evidence=Path(os.environ['RUNNER_TEMP'])/'gfv3-q00'/'evidence'/'q01-candidate-integrity.json'
+          evidence.write_text(json.dumps({'status':'CANDIDATE_UNAPPROVED','sha256_verified':len(expected),'approved_m03_unchanged':True},indent=2)+'\n')
+          print('Q01_OVERLAY_HASH_PASS',len(expected),'approved M03 unchanged')
+          PY
+
+      - name: Java 17 for approved AGP 8.7.3 / Kotlin 2.0.21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Node 22 for approved host tests
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Python 3.11 and pinned host-test parser
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install host-test BeautifulSoup dependency
+        shell: bash
+        run: python3 -m pip install --disable-pip-version-check --no-input 'beautifulsoup4==4.13.4'
+
+      - name: Run approved package host smoke tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/gfv3-q00/source"
+          {
+            node tests/m03/test_m03_core.js
+            python3 tests/m03/test_m03_native_registry.py
+            node tests/test_m02_contract.js
+            python3 tests/test_asset_route_integrity.py
+          } 2>&1 | tee "$RUNNER_TEMP/gfv3-q00/evidence/host-smoke.log"
+
+      - name: Run Q01 1557 independent JS cases and 11 SQLite host mirror cases
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p qa/v3-q01/src
+          cp qa/v3-q01/overlay/android-app/app/src/main/assets/www/q01/GFTimeGridV3_v0.2.0.js qa/v3-q01/src/
+          cp qa/v3-q01/overlay/android-app/app/src/main/assets/www/q01/GFSettingsV3_v0.2.0.js qa/v3-q01/src/
+          node --test qa/v3-q01/tests/test_q01_modules.cjs 2>&1 | tee "$RUNNER_TEMP/gfv3-q00/evidence/q01-node-tests.log"
+          GFV3_APPROVED_ROOT="$RUNNER_TEMP/gfv3-q00/source" \
+            python3 -m unittest discover -s qa/v3-q01/tests -p 'test_q01_sqlite_mirror.py' -v \
+            2>&1 | tee "$RUNNER_TEMP/gfv3-q00/evidence/q01-sqlite-mirror.log"
+
+      - name: Provision Android SDK platform 35 / build-tools 35
+        uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
+
+      - name: Install approved compileSdk 35 and build tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          sdkmanager --install 'platforms;android-35' 'build-tools;35.0.0' < /dev/null
+          sdkmanager --list_installed | tee "$RUNNER_TEMP/gfv3-q00/evidence/sdk-packages.txt"
+
+      - name: Gradle 8.9 (compatible with AGP 8.7.3)
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Assemble EXACT approved V3 source (not android-mvp3 V2)
+        shell: bash
+        run: |
+          set -euo pipefail
+          java -version 2>&1 | tee "$RUNNER_TEMP/gfv3-q00/evidence/java-version.txt"
+          gradle --version | tee "$RUNNER_TEMP/gfv3-q00/evidence/gradle-version.txt"
+          gradle --no-daemon --console=plain --stacktrace \
+            -p "$RUNNER_TEMP/gfv3-q00/source/android-app" :app:assembleDebug \
+            2>&1 | tee "$RUNNER_TEMP/gfv3-q00/evidence/assemble-debug.log"
+
+      - name: Verify APK package, signature and M02/M03 assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          apk="$RUNNER_TEMP/gfv3-q00/source/android-app/app/build/outputs/apk/debug/app-debug.apk"
+          test -s "$apk"
+          sha256sum "$apk" | tee "$RUNNER_TEMP/gfv3-q00/evidence/apk.sha256"
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$apk" \
+            | tee "$RUNNER_TEMP/gfv3-q00/evidence/apk-badging.txt"
+          grep -F "package: name='org.glukopapa.v3.m00'" \
+            "$RUNNER_TEMP/gfv3-q00/evidence/apk-badging.txt"
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose "$apk" \
+            | tee "$RUNNER_TEMP/gfv3-q00/evidence/apk-signature.txt"
+          python3 - "$apk" <<'PY'
+          import sys
+          from zipfile import ZipFile
+          required = [
+              'assets/www/index.html',
+              'assets/www/m02/gfmain_home_adapter.js',
+              'assets/www/m03/gfmodule_directory_adapter.js',
+              'assets/www/m03/gfmodule_hub_core.js',
+              'assets/db/schema_v7.sql',
+          ]
+          with ZipFile(sys.argv[1]) as archive:
+              missing = [name for name in required if name not in archive.namelist()]
+          if missing:
+              raise SystemExit('Q00_APK_MISSING_APPROVED_ASSETS: '+repr(missing))
+          print('Q00_APK_MANIFEST_AND_ASSETS_PASS', len(required))
+          PY
+
+      - name: Confirm Q01 candidate assets packaged but NOT owner activated
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          from zipfile import ZipFile
+          apk=Path(os.environ['RUNNER_TEMP'])/'gfv3-q00/source/android-app/app/build/outputs/apk/debug/app-debug.apk'
+          with ZipFile(apk) as z:
+              names=set(z.namelist())
+              required={'assets/www/q01/GFSettingsV3_v0.2.0.js','assets/www/q01/GFTimeGridV3_v0.2.0.js'}
+              assert not required.difference(names), 'Q01 candidate assets missing'
+              assert 'classes.dex' in names, 'Native classes absent'
+          print('Q01_CANDIDATE_APK_ASSETS_PASS',len(required),'NOT_OWNER_APPROVED')
+          PY
+
+      - name: Upload verified V3 debug APK
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: GlukoPapa-V3-Q01-UNAPPROVED-CANDIDATE-debug-apk
+          path: ${{ runner.temp }}/gfv3-q00/source/android-app/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload QA evidence (including failures; NEVER upload source ZIP)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: GlukoPapa-V3-Q01-CANDIDATE-evidence
+          path: ${{ runner.temp }}/gfv3-q00/evidence/
+          if-no-files-found: warn
+          retention-days: 14
