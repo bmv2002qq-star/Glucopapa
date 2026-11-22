@@ -12,6 +12,7 @@ import org.json.JSONTokener
 import org.junit.Assert.*
 import org.junit.Test
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.matcher.RootMatchers.isDialog
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.espresso.action.ViewActions.click
 import org.junit.runner.RunWith
@@ -172,7 +173,7 @@ class Q01AndroidRuntimeTest {
             }
             val queued=request(6.3,"confirm")
             assertEquals("PENDING",queued.getString("state"))
-            onView(withText("Подтвердить")).perform(click())
+            onView(withText("Подтвердить")).inRoot(isDialog()).perform(click())
             var outcome:JSONObject?=null
             repeat(45) {
                 if(outcome==null){
@@ -193,7 +194,7 @@ class Q01AndroidRuntimeTest {
             assertTrue(after.getJSONObject("data").getJSONArray("settingHistory").length()>0)
             val cancelled=request(7.4,"cancel")
             assertEquals("PENDING",cancelled.getString("state"))
-            onView(withText("Отмена")).perform(click())
+            onView(withText("Отмена")).inRoot(isDialog()).perform(click())
             val final=JSONObject(decoded("GPV3V3Bridge.pollSettingsOwnerIntent('"+cancelled.getString("ticket")+"')"))
             assertEquals("CANCELLED",final.getString("state"))
             val afterCancel=JSONObject(decoded("GPV3V3Bridge.readShellPort('settings')"))
