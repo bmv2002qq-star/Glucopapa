@@ -101,7 +101,7 @@ jobs:
           echo "fb6cab42034474bbd7472a7add6b9998c81bbf10d96fdd1dba4022c8498af99e  $RUNNER_TEMP/q02-runtime/source/app/src/main/assets/www/m02/gf_normalized_facts_shared.js" | sha256sum -c -
           echo "dd6716335603448d661bba91aa4ec272016efb5c90f7299b38f3119d69e7d3d3  qa/v3-q03-normalized/gf_normalized_facts_v3.js" | sha256sum -c -
           echo "54dc03aa062e3c79e431520eca0bb629f4ef00341123587ee523124ea6adf4fe  qa/v3-q03-normalized/q03_readonly_screen.js" | sha256sum -c -
-          echo "912c743786f8e804ceda1e484c76088f86f53769dc5256f6c53653ea60a74234  qa/v3-q03-normalized/q03_normalized_facts.html" | sha256sum -c -
+          echo "cad33a9842206315e36802f66f8db24cdfae84599e96a84930b20ae89e762333  qa/v3-q03-normalized/q03_normalized_facts.html" | sha256sum -c -
           echo "5b9bbc3b7ff5d7aca611f947040d27caaf80bd4bb3865ed179a4c6b4ff8964af  qa/v3-q03-normalized/apply_q03_host_patch.py" | sha256sum -c -
           echo "88f4c10401f74d47ced5302ff9866b2aa66213efca7db1551a6bc66aae8e6a43  qa/v3-q03-normalized/Q03AndroidReadOnlyTest.kt" | sha256sum -c -
           python3 qa/v3-q03-normalized/apply_q03_host_patch.py "$RUNNER_TEMP/q02-runtime/source"
