@@ -15,6 +15,7 @@ import org.json.JSONTokener
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
+import java.util.regex.Pattern
 import org.junit.Test
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
@@ -34,9 +35,16 @@ class Q02AndroidBackupTest {
     private fun clickNative(label:String) {
         val device=UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         device.wakeUp()
-        val button=device.wait(Until.findObject(By.text(label)),15_000)
-        assertNotNull("Native dialog action not visible: $label",button)
-        button!!.click()
+        val selector=By.text(Pattern.compile("(?iu)^\\s*"+Pattern.quote(label)+"\\s*$"))
+        val byText=device.wait(Until.findObject(selector),12_000)
+        val byId=byText?:device.wait(Until.findObject(
+            By.res("android",if(label=="Подтвердить")"button1" else "button2")),5_000)
+        if(byId==null) {
+            val visible=device.findObjects(By.clazz("android.widget.Button")).map{it.text}
+            System.err.println("Q02_DIALOG_DIAGNOSTIC expected=$label package=${device.currentPackageName} visibleButtons=$visible")
+        }
+        assertNotNull("Native dialog action not visible: $label",byId)
+        byId!!.click()
     }
 
     private fun ctx():Context=ApplicationProvider.getApplicationContext()
