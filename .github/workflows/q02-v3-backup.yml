@@ -66,32 +66,38 @@ jobs:
           cp qa/v3-q01-emulator/overlay/GfV3SettingsTrustedAdapter.kt "$RUNNER_TEMP/q02-runtime/source/app/src/main/java/org/glukopapa/v3/m00/GfV3SettingsTrustedAdapter.kt"
           echo "c52a018946ad62bf92bdfedf1ad65e2750d187704db567ef51442e74e1ed221b  qa/v3-q01-emulator/overlay/settings_ui_v3.js" | sha256sum -c -
           cp qa/v3-q01-emulator/overlay/settings_ui_v3.js "$RUNNER_TEMP/q02-runtime/source/app/src/main/assets/www/q01/settings_ui_v3.js"
-          cp qa/v3-q01-emulator/Q01AndroidRuntimeTest.kt "$RUNNER_TEMP/q02-runtime/source/app/src/androidTest/java/org/glukopapa/v3/m00/Q01AndroidRuntimeTest.kt" 2>/dev/null || {
+          cp qa/v3-q02-backup/Q01RuntimeTest_UiAutomator_QA.kt "$RUNNER_TEMP/q02-runtime/source/app/src/androidTest/java/org/glukopapa/v3/m00/Q01AndroidRuntimeTest.kt" 2>/dev/null || {
             mkdir -p "$RUNNER_TEMP/q02-runtime/source/app/src/androidTest/java/org/glukopapa/v3/m00"
-            cp qa/v3-q01-emulator/Q01AndroidRuntimeTest.kt "$RUNNER_TEMP/q02-runtime/source/app/src/androidTest/java/org/glukopapa/v3/m00/Q01AndroidRuntimeTest.kt"
+            cp qa/v3-q02-backup/Q01RuntimeTest_UiAutomator_QA.kt "$RUNNER_TEMP/q02-runtime/source/app/src/androidTest/java/org/glukopapa/v3/m00/Q01AndroidRuntimeTest.kt"
           }
           # QA-only, Q02 source is new native service, Q01 approved mathematical cores unchanged.
           echo "6d6f688a0c3766d4a11014f0de8bc502b7fe53587f0d16b9b7cbc6035c3c462e  qa/v3-q02-backup/GfV3EncryptedSnapshot.kt" | sha256sum -c -
           cp qa/v3-q02-backup/GfV3EncryptedSnapshot.kt "$RUNNER_TEMP/q02-runtime/source/app/src/main/java/org/glukopapa/v3/m00/GfV3EncryptedSnapshot.kt"
-          echo "bde9d0dc7194aed8fa1f216aac0d51d18a578893ed24293615f2fd00324e1822  qa/v3-q02-backup/Q02AndroidBackupTest.kt" | sha256sum -c -
+          echo "f4d40a752bcb270c6e04c6e13b73a310b7af4d4c7cf40ec7e64af5d95ca357ac  qa/v3-q02-backup/Q02AndroidBackupTest.kt" | sha256sum -c -
           cp qa/v3-q02-backup/Q02AndroidBackupTest.kt "$RUNNER_TEMP/q02-runtime/source/app/src/androidTest/java/org/glukopapa/v3/m00/Q02AndroidBackupTest.kt"
 
+
+          # Device-bound automatic backups are independent of manual password-protected exports.
+          echo "18f0edca4f2e7cdb0ff3e71b469dbc533e9cd9cb376e532d2a911e53900bafec  qa/v3-q02-backup/GfV3AutoLocalBackup.kt" | sha256sum -c -
+          cp qa/v3-q02-backup/GfV3AutoLocalBackup.kt "$RUNNER_TEMP/q02-runtime/source/app/src/main/java/org/glukopapa/v3/m00/GfV3AutoLocalBackup.kt"
+          echo "f61127ec7a515ffda05eb2595821db422bf5e32bc3067bccb8b6c8b952a73398  qa/v3-q02-backup/GfV3AutoBackupJobService.kt" | sha256sum -c -
+          cp qa/v3-q02-backup/GfV3AutoBackupJobService.kt "$RUNNER_TEMP/q02-runtime/source/app/src/main/java/org/glukopapa/v3/m00/GfV3AutoBackupJobService.kt"
           # Q02 host owner permission adapters / approved HTML presentation, SHA-locked.
-          echo "b23fdd2934a017f36f134b5c142abba71eb4c074525218712dfcfc5b1340e31b  qa/v3-q02-backup/GfV3BackupOwnerUi.kt" | sha256sum -c -
+          echo "264ec9a66f3b9826c4294d7140f4d3a7ca5d83f6004f3ba57fff1f58b6a4946e  qa/v3-q02-backup/GfV3BackupOwnerUi.kt" | sha256sum -c -
           cp qa/v3-q02-backup/GfV3BackupOwnerUi.kt "$RUNNER_TEMP/q02-runtime/source/app/src/main/java/org/glukopapa/v3/m00/GfV3BackupOwnerUi.kt"
           echo "4f77e75770feedce08804c37e9c4ffd6ccd3307474ba0517469f089d02ade6ed  qa/v3-q02-backup/GfV3Q02Bridge.kt" | sha256sum -c -
           cp qa/v3-q02-backup/GfV3Q02Bridge.kt "$RUNNER_TEMP/q02-runtime/source/app/src/main/java/org/glukopapa/v3/m00/GfV3Q02Bridge.kt"
           echo "1c6bbb0a8e5676fc86186cd8e6d83ed2782f8ad2dae1230891544eece308986a  qa/v3-q02-backup/overlay/backup.html" | sha256sum -c -
           mkdir -p "$RUNNER_TEMP/q02-runtime/source/app/src/main/assets/www/q02"
           cp qa/v3-q02-backup/overlay/backup.html "$RUNNER_TEMP/q02-runtime/source/app/src/main/assets/www/q02/backup.html"
-          echo "e0860115f4ebc232157e42a8578735b728650b67ec2ba3712022be2bcee1bd5b  qa/v3-q02-backup/apply_q02_ui_patch.py" | sha256sum -c -
+          echo "ac7bb6eaa6bb4c47ebc00ca1e2317d43f051fbfc0a03d7c6ffe5d454b3134505  qa/v3-q02-backup/apply_q02_ui_patch.py" | sha256sum -c -
           python3 qa/v3-q02-backup/apply_q02_ui_patch.py "$RUNNER_TEMP/q02-runtime/source"
           python3 - <<'PY'
           import os
           from pathlib import Path
           p=Path(os.environ['RUNNER_TEMP'])/'q02-runtime/source/app/build.gradle.kts'
           content=p.read_text('utf-8').replace('targetSdk = 35','targetSdk = 35\n        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"').replace('applicationIdSuffix = ".q01qa"','applicationIdSuffix = ".q02qa"').replace('versionName = "0.10-Q01-INTEGRATION-QA"','versionName = "0.11-Q02-BACKUP-QA"')
-          content+='\n\ndependencies {\n    androidTestImplementation("androidx.test:core:1.6.1")\n    androidTestImplementation("androidx.test:runner:1.6.2")\n    androidTestImplementation("androidx.test.ext:junit:1.2.1")\n    androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")\n}\n'
+          content+='\n\ndependencies {\n    androidTestImplementation("androidx.test:core:1.6.1")\n    androidTestImplementation("androidx.test:runner:1.6.2")\n    androidTestImplementation("androidx.test.ext:junit:1.2.1")\n    androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")\n    androidTestImplementation("androidx.test.uiautomator:uiautomator:2.3.0")\n}\n'
           p.write_text(content,'utf-8')
           PY
       - name: Grant access to KVM acceleration
