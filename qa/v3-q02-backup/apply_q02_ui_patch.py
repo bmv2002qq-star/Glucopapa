@@ -14,9 +14,11 @@ src='nativeModuleGateway=GfV3NativeModuleGateway(v3,GfV3NativeWriter(helper),GfV
 assert src in s
 s=s.replace(src,src+'''
         // Independent Q02 native owner gateway; no direct JavaScript SQL or backup bytes.
-        backupOwnerUi=GfV3BackupOwnerUi(this,GfV3EncryptedSnapshot(applicationContext,helper),v3) {
+        val q02Auto=GfV3AutoLocalBackup(applicationContext,helper)
+        backupOwnerUi=GfV3BackupOwnerUi(this,GfV3EncryptedSnapshot(applicationContext,helper),q02Auto,v3) {
             web.loadUrl("$origin/") // restore success refreshes all M01/M02/Q01 views
-        }''')
+        }
+        GfV3AutoLocalBackup.schedule(applicationContext) // Android background 24h local backups''')
 assert 'it.path!="/q01/settings.html"' in s
 s=s.replace('it.path!="/q01/settings.html"','it.path!="/q01/settings.html" && it.path!="/q02/backup.html"')
 assert 'addJavascriptInterface(GfV3Bridge(v3,editQueue,settingsQueue),"GPV3V3Bridge")' in s
@@ -28,6 +30,12 @@ r=java/'GfV3LocalAssetRoutes.kt';s=r.read_text('utf-8')
 assert 'if (path == "/q01/settings.html")' in s
 s=s.replace('if (path == "/q01/settings.html")','if (path == "/q02/backup.html") return Resource("www/q02/backup.html", "text/html")\n        if (path == "/q01/settings.html")')
 r.write_text(s,'utf-8')
+manifest=root/'app/src/main/AndroidManifest.xml';s=manifest.read_text('utf-8')
+assert '<application android:allowBackup="false"' in s
+s=s.replace('<application android:allowBackup="false"', '<uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>\n    <application android:allowBackup="false"')
+assert '</application>' in s
+s=s.replace('</application>', '<service android:name=".GfV3AutoBackupJobService" android:permission="android.permission.BIND_JOB_SERVICE" android:exported="true"/>\n    </application>')
+manifest.write_text(s,'utf-8')
 idx=assets/'index.html';s=idx.read_text('utf-8')
 needle='<div class="page-heading"><div><p class="eyebrow">Настройки</p><h1>Профиль и подключения</h1></div></div>'
 assert s.count(needle)==1
