@@ -34,6 +34,7 @@ class Q01AndroidRuntimeTest {
     private fun app(): Context = ApplicationProvider.getApplicationContext()
     private fun clickNative(label:String) {
         val device=UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+        device.wakeUp()
         val button=device.wait(Until.findObject(By.text(label)),15_000)
         assertNotNull("Native dialog action not visible: $label",button)
         button!!.click()
