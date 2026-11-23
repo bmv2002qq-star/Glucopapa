@@ -1,6 +1,6 @@
 'use strict';
 const assert=require('node:assert/strict');
-const N=require('../js/gf_normalized_facts_v3.js');
+const N=require('./gf_normalized_facts_v3.js');
 const {test}=require('node:test');
 const plate=(carbs=12,estimated=false)=>({schema:'GFPlate.v1',items:[{name:'Гречка',amount:100,unit:'g',carbs,fat:2,protein:3,kcal:72}],totals:{carbs,fat:2,protein:3,kcal:72},containsEstimatedValues:estimated});
 const s=(id='s1',time='2026-11-23T08:00:00Z',status='completed')=>({sessionId:id,status,startedAtUtc:time,actualPlate:plate()});
