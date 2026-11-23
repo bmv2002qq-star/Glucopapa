@@ -9,6 +9,9 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+concurrency:
+  group: q01-v3-runtime-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   q01-emulator-runtime:
     runs-on: ubuntu-24.04
