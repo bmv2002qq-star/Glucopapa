@@ -6,6 +6,12 @@ mkdir -p "$ROOT/evidence"
 cd "$ROOT/source"
 test -e app/src/main/java/org/glukopapa/v3/m00/GfV3EncryptedSnapshot.kt
 sha256sum app/src/main/java/org/glukopapa/v3/m00/GfV3EncryptedSnapshot.kt | tee "$ROOT/evidence/q02-code.sha256"
+# Keep the headless emulator screen focusable for native dialogs.
+adb shell settings put system screen_off_timeout 2147483647 || true
+adb shell svc power stayon true || true
+adb shell wm dismiss-keyguard || true
+adb shell input keyevent KEYCODE_WAKEUP || true
+adb shell input keyevent 82 || true
 set +e
 gradle --no-daemon --console=plain :app:connectedDebugAndroidTest >"$ROOT/evidence/connected-tests.log" 2>&1
 rc=$?
