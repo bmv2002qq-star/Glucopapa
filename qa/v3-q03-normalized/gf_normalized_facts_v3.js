@@ -22,7 +22,9 @@ function utc(raw){
  // Date.UTC translates years 0..99 to 1900..1999; reconstruct without that rule.
  const dt=new Date(0);dt.setUTCFullYear(y,month-1,d);dt.setUTCHours(h,minute,sec,ms);
  const absolute=dt.getTime()-offset*60000;
- return Number.isFinite(absolute)?new Date(absolute).toISOString():null;
+ if(!Number.isFinite(absolute))return null;
+ const result=new Date(absolute).toISOString();
+ return /^\d{4}-/.test(result)?result:null;
 }
 function stamp(src){return src?.occurredAtUtc??src?.startedAtUtc??src?.administeredAtUtc??src?.measuredAtUtc??src?.createdAtUtc??src?.startedAt??src?.occurredAt??src?.administeredAt??src?.measuredAt??src?.createdAt??null;}
 function idOf(src){return src?.eventId??src?.sessionId??src?.measurementId??src?.observationId??src?.id??null;}
@@ -61,7 +63,7 @@ function normalize(journal,graph){
  const collisions=new Set();for(const [id,a] of occurrences)if(a.length>1){collisions.add(id);issue('DUPLICATE_ID',id,`${a.length} records`);}
  const normalizedSessions=new Map();
  for(let i=0;i<sessions.length;i++){
-  const src=sessions[i],id=idOf(src),validId=ident(id)&&!collisions.has(id);const when=utc(stamp(src));
+  const src=sessions[i],id=idOf(src),when=utc(stamp(src));
   if(!ident(id)){issue('INVALID_ID',null,'mealSession '+i);continue;}
   if(collisions.has(id))continue;
   if(!when){issue('INVALID_UTC',id,'mealSession');continue;}
@@ -71,6 +73,15 @@ function normalize(journal,graph){
   const row={id,kind:'mealSession',utc:when,rawDomain:'mealSessions',rawIndex:i,status:src.status||'unknown',carbsGrams:nutrition?nutrition.carbs:null,quality:nutrition?.estimated?'ESTIMATED':nutrition?'CONFIRMED':'UNKNOWN',counted:!!nutrition,link:null};
   normalizedSessions.set(id,row);rows.push(row);
  }
+ // Identical confirmed sessions close in time are never silently merged or double-counted.
+ const approvedMeals=[...normalizedSessions.values()].filter(x=>x.counted);
+ for(let i=0;i<approvedMeals.length;i++)for(let k=i+1;k<approvedMeals.length;k++){
+  const a=approvedMeals[i],b=approvedMeals[k];
+  if(Math.abs(Date.parse(a.utc)-Date.parse(b.utc))>60000)continue;
+  if(JSON.stringify(sessions[a.rawIndex].actualPlate)!==JSON.stringify(sessions[b.rawIndex].actualPlate))continue;
+  issue('MEAL_SESSION_POSSIBLE_DUPLICATE',a.id,b.id);
+  a.counted=false;b.counted=false;a.quality='AMBIGUOUS';b.quality='AMBIGUOUS';
+ }
  for(let i=0;i<events.length;i++){
   const src=events[i],id=idOf(src);if(!ident(id)){issue('INVALID_ID',null,'event '+i);continue;}
   if(collisions.has(id))continue;
@@ -78,7 +89,11 @@ function normalize(journal,graph){
   const kind=src.eventType||src.type||'unknown';
   if(kind==='meal'&&src.status==='recorded'){
    const explicitA=src.sessionId,explicitB=src.linkedMealSessionId;
-   if(ident(explicitA)&&ident(explicitB)&&explicitA!==explicitB)issue('MEAL_LINK_CONFLICT',id);
+   if(ident(explicitA)&&ident(explicitB)&&explicitA!==explicitB){
+    issue('MEAL_LINK_CONFLICT',id);
+    rows.push({id,kind:'legacyMeal',utc:time,rawDomain:'events',rawIndex:i,status:'AMBIGUOUS',carbsGrams:null,quality:'UNKNOWN',counted:false,link:null});
+    continue;
+   }
    const linkedId=ident(explicitA)?explicitA:ident(explicitB)?explicitB:null;
    if(linkedId){
     if(normalizedSessions.has(linkedId)){
@@ -97,7 +112,9 @@ function normalize(journal,graph){
   const src=cgm[i],id=idOf(src);if(!ident(id)){issue('CGM_ID_UNKNOWN',null,'graph '+i);continue;}
   if(collisions.has(id))continue;
   const time=utc(stamp(src));if(!time){issue('INVALID_UTC',id,'cgm');continue;}
-  rows.push({id,kind:'cgm',utc:time,rawDomain:'cgm',rawIndex:i,status:src.quality||'unverified',carbsGrams:null,quality:src.quality||'UNKNOWN',counted:false,link:null});
+  const observed=src.provenance==='observed'&&['good','verified'].includes(src.quality);
+  if(!observed)issue('CGM_NOT_VERIFIED',id,src.provenance||'provenance_unknown');
+  rows.push({id,kind:'cgm',utc:time,rawDomain:'cgm',rawIndex:i,status:observed?'OBSERVED':'NON_OBSERVED',carbsGrams:null,quality:observed?src.quality:'UNVERIFIED',counted:false,link:null});
  }
  if(events.length>=2000||sessions.length>=2000||cgm.length>=2000||j.data.coverage?.complete===false||g.data.coverage?.complete===false)issue('HISTORY_MAY_BE_TRUNCATED',null);
  rows.sort((a,b)=>b.utc.localeCompare(a.utc)||a.id.localeCompare(b.id));
