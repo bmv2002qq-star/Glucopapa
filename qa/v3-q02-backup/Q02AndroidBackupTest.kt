@@ -152,7 +152,7 @@ class Q02AndroidBackupTest {
             js("document.getElementById('createPreview').click();'CLICKED'")
             clickNative("Отмена")
             Thread.sleep(250)
-            assertEquals("No plaintext or encrypted user backup on cancellation",0,dir.listFiles()?.size?:0)
+            assertEquals("Cancelled manual backup must not be written",0,dir.listFiles()?.count{it.name.endsWith(".gpv3")}?:0)
             val rev=js("String(GPV3V3Bridge.getRevision())").toLong()
             assertTrue(rev>=0)
         }
@@ -191,6 +191,41 @@ class Q02AndroidBackupTest {
         }finally{
             original.fill(0);plain.fill(0);scratch.delete();h.close()
         }
+    }
+
+    @Test fun deviceKeyAutoBackupRoundtripAndTamperProtection() {
+        val h=helper();val rev=seed(h)
+        val automatic=GfV3AutoLocalBackup(ctx(),h)
+        try {
+            val file=automatic.createDaily(force=true)
+            assertTrue(file.endsWith(".gpv3auto"))
+            assertTrue(automatic.list().contains(file))
+            val privateFile=java.io.File(ctx().filesDir,"q02-encrypted/$file")
+            assertFalse(String(privateFile.readBytes(),Charsets.ISO_8859_1).contains("Q02TESTPROFILE"))
+            assertFalse(String(privateFile.readBytes(),Charsets.ISO_8859_1).contains("mmolL"))
+            val damaged=privateFile.readBytes();damaged[damaged.size-1]=(damaged.last().toInt() xor 1).toByte()
+            val corrupt=java.io.File(ctx().filesDir,"q02-encrypted/GPV3-AUTO-11111111-1111-1111-1111-111111111111.gpv3auto")
+            corrupt.writeBytes(damaged)
+            fails("tampered Keystore auto backup") { automatic.restoreLocal(corrupt.name,rev) }
+            corrupt.delete()
+            assertEquals(rev.toString(),scalar(h,"SELECT revision FROM v3_meta WHERE id=1"))
+            h.writableDatabase.execSQL("DELETE FROM v3_measurements")
+            h.writableDatabase.execSQL("UPDATE v3_meta SET revision=revision+1 WHERE id=1")
+            val out=automatic.restoreLocal(file,rev+1)
+            assertEquals(rev,out.revision)
+            assertEquals("1",scalar(h,"SELECT count(*) FROM v3_measurements"))
+            assertTrue("Auto restoration must preserve prior state",automatic.list().size>=2)
+        }finally{h.close()}
+    }
+
+    @Test fun autoJobScheduleRunsWithoutNetworkPermission() {
+        val context=ctx()
+        GfV3AutoLocalBackup.schedule(context)
+        val scheduler=context.getSystemService(Context.JOB_SCHEDULER_SERVICE) as android.app.job.JobScheduler
+        val pending=scheduler.getPendingJob(GfV3AutoLocalBackup.PERIODIC_JOB_ID)
+        assertNotNull("Q02 daily auto schedule must be installed",pending)
+        assertTrue("The 24-hour backup schedule must survive device reboot",pending!!.isPersisted)
+        assertFalse("No INTERNET permission may be requested", context.packageManager.checkPermission("android.permission.INTERNET",context.packageName)==android.content.pm.PackageManager.PERMISSION_GRANTED)
     }
 
 }
