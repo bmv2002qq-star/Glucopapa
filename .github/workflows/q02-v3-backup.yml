@@ -71,7 +71,7 @@ jobs:
             cp qa/v3-q01-emulator/Q01AndroidRuntimeTest.kt "$RUNNER_TEMP/q02-runtime/source/app/src/androidTest/java/org/glukopapa/v3/m00/Q01AndroidRuntimeTest.kt"
           }
           # QA-only, Q02 source is new native service, Q01 approved mathematical cores unchanged.
-          echo "44ef6dc6bafcb224ebae22c3354d4a2cf6e1ecaf0e33f0917ea7bc5d44d6745a  qa/v3-q02-backup/GfV3EncryptedSnapshot.kt" | sha256sum -c -
+          echo "4f8fd1447c62380100e69e66ea7719b404e768261036b436262af9f25ecac8cb  qa/v3-q02-backup/GfV3EncryptedSnapshot.kt" | sha256sum -c -
           cp qa/v3-q02-backup/GfV3EncryptedSnapshot.kt "$RUNNER_TEMP/q02-runtime/source/app/src/main/java/org/glukopapa/v3/m00/GfV3EncryptedSnapshot.kt"
           echo "401d0cb8c377f28d156cadd97a25cd744575491caf258a72d9191620b5686c8e  qa/v3-q02-backup/Q02AndroidBackupTest.kt" | sha256sum -c -
           cp qa/v3-q02-backup/Q02AndroidBackupTest.kt "$RUNNER_TEMP/q02-runtime/source/app/src/androidTest/java/org/glukopapa/v3/m00/Q02AndroidBackupTest.kt"
