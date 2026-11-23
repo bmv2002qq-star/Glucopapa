@@ -5,6 +5,8 @@ input_html=Path('/mnt/data/q03_work/ГлюкоПапа_V3_Q03_GFNormalizedFacts_
 assert input_html.count('<script>')==1 and input_html.count('</script>')==1
 replaced=re.sub(r'<script>\s*\(function\(\)\{.*?</script>', '<script src="/q03/gf_normalized_facts_v3.js"></script>\n<script src="/q03/q03_readonly_screen.js"></script>',input_html,flags=re.S)
 assert replaced!=input_html
+assert "script-src 'unsafe-inline'" in replaced
+replaced=replaced.replace("script-src 'unsafe-inline'","script-src 'self'")
 replaced=replaced.replace('Пример одной ревизии хранилища: <span class="code">rev 42</span>. Реальные данные не загружены.','Данные загружаются из GFStorage, если профиль настроен.')
 replaced=replaced.replace('<strong>6</strong><span>исходных событий','<strong>—</strong><span>исходных событий')
 replaced=replaced.replace('<strong>3</strong><span>принятых факта','<strong>—</strong><span>принятых факта')
