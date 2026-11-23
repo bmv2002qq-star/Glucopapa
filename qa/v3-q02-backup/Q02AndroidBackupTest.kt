@@ -42,6 +42,10 @@ class Q02AndroidBackupTest {
         if(byId==null) {
             val visible=device.findObjects(By.clazz("android.widget.Button")).map{it.text}
             System.err.println("Q02_DIALOG_DIAGNOSTIC expected=$label package=${device.currentPackageName} visibleButtons=$visible")
+            val texts=device.findObjects(By.clazz("android.widget.TextView")).map{it.text}.take(30)
+            System.err.println("Q02_VISIBLE_TEXT $texts")
+            val main=Thread.getAllStackTraces().entries.firstOrNull{it.key.name=="main"}
+            System.err.println("Q02_MAIN_THREAD_STATE ${main?.key?.state} trace=${main?.value?.take(32)?.joinToString(" >> ")}")
         }
         assertNotNull("Native dialog action not visible: $label",byId)
         byId!!.click()
