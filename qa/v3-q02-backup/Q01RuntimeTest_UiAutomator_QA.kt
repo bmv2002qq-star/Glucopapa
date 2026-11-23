@@ -11,6 +11,8 @@ import org.json.JSONObject
 import org.json.JSONTokener
 import org.junit.Assert.*
 import java.util.regex.Pattern
+import org.junit.Before
+import org.junit.After
 import org.junit.Test
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.matcher.RootMatchers.isDialog
@@ -33,6 +35,17 @@ import java.util.concurrent.atomic.AtomicReference
 @RunWith(AndroidJUnit4::class)
 class Q01AndroidRuntimeTest {
     private fun app(): Context = ApplicationProvider.getApplicationContext()
+    /** Isolation only: cancel pending Q02 jobs between synthetic instrumentation cases.
+     * Production JobScheduler registration is never changed by this cleanup. */
+    private fun cancelSyntheticQ02Jobs() {
+        val ctx=ApplicationProvider.getApplicationContext<Context>()
+        val jobs=ctx.getSystemService(Context.JOB_SCHEDULER_SERVICE) as android.app.job.JobScheduler
+        jobs.cancel(GfV3AutoLocalBackup.PERIODIC_JOB_ID)
+        jobs.cancel(GfV3AutoLocalBackup.INITIAL_JOB_ID)
+    }
+    @Before fun beforeIsolatedQ02Case()=cancelSyntheticQ02Jobs()
+    @After fun afterIsolatedQ02Case()=cancelSyntheticQ02Jobs()
+
     private fun clickNative(label:String) {
         val device=UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         device.wakeUp()
