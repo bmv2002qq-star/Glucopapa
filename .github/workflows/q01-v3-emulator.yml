@@ -57,6 +57,10 @@ jobs:
                       p.write_bytes(z.read(info))
           print('Q01_ORIGINAL_PROJECT_SHA_PASS',hashlib.sha256(data).hexdigest())
           PY
+          # Separate unapproved Q01 integration adapter v0.2.1: bounded daily factors.
+          # Never edit approved GFSettings/TimeGrid standalone mathematical sources.
+          echo "a1dd6967908b9e42a08c0ea4896b70a6f2a7632006d5336a1ec94d46df1d331a  qa/v3-q01-emulator/overlay/GfV3SettingsTrustedAdapter.kt" | sha256sum -c -
+          cp qa/v3-q01-emulator/overlay/GfV3SettingsTrustedAdapter.kt "$RUNNER_TEMP/q01-runtime/source/app/src/main/java/org/glukopapa/v3/m00/GfV3SettingsTrustedAdapter.kt"
           cp qa/v3-q01-emulator/Q01AndroidRuntimeTest.kt "$RUNNER_TEMP/q01-runtime/source/app/src/androidTest/java/org/glukopapa/v3/m00/Q01AndroidRuntimeTest.kt" 2>/dev/null || {
             mkdir -p "$RUNNER_TEMP/q01-runtime/source/app/src/androidTest/java/org/glukopapa/v3/m00"
             cp qa/v3-q01-emulator/Q01AndroidRuntimeTest.kt "$RUNNER_TEMP/q01-runtime/source/app/src/androidTest/java/org/glukopapa/v3/m00/Q01AndroidRuntimeTest.kt"
@@ -88,6 +92,14 @@ jobs:
           disable-animations: true
           emulator-boot-timeout: 900
           script: bash qa/v3-q01-emulator/run_q01_emulator.sh
+      - name: Upload v0.2.1 QA-only test APK (NOT approved)
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: GlukoPapa-V3-Q01-v0.2.1-EMULATOR-PASS-debug-apk
+          path: ${{ runner.temp }}/q01-runtime/source/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
       - name: Upload emulator evidence, including failures
         if: always()
         uses: actions/upload-artifact@v4
