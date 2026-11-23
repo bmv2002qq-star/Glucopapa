@@ -316,6 +316,20 @@ class Q01AndroidRuntimeTest {
         try {adapter.applyOwnerIntent(wrongProfile);fail("Cross-profile write was saved")}
         catch(e:IllegalArgumentException){assertTrue(e.message.orEmpty().contains("SETTINGS_PROFILE_CONFLICT"))}
         assertEquals(baseline,store.revision())
+        // Security regression: direct JS may forge a factor outside the JS's 0.1..10
+        // range. The trusted native adapter must reject it independently.
+        val badFactor=JSONObject().put("type","GFSETTINGS_V3_OWNER_INTENT")
+            .put("command","coefficient").put("role","coefficientWriter")
+            .put("ownerConfirmed",true).put("profileId",snap.getString("profileId"))
+            .put("expectedRevision",baseline).put("idempotencyKey","q01-factor-forged-200")
+            .put("payload",JSONObject().put("coefficientId","q01-factor-cid-200")
+                .put("kind","illness_factor").put("slotId",JSONObject.NULL)
+                .put("value",200.0).put("mode","manual")
+                .put("source","OWNER_MANUAL").put("ownerApproved",true)
+                .put("effectiveFromUtc",Instant.now().toString()))
+        try {adapter.applyOwnerIntent(badFactor);fail("Out-of-range daily factor was saved")}
+        catch(e:IllegalArgumentException){assertTrue(e.message.orEmpty().contains("COEFFICIENT_VALUE_OUT_OF_RANGE"))}
+        assertEquals(baseline,store.revision())
         val body=store.readShellPort("settings").getJSONObject("data")
         assertEquals(0,body.getJSONArray("settingHistory").length())
         assertEquals(0,body.getJSONArray("preferences").length())
