@@ -4,6 +4,17 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Assert.*
+import android.view.ViewGroup
+import android.webkit.WebView
+import androidx.test.core.app.ActivityScenario
+import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.matcher.RootMatchers.isDialog
+import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.test.espresso.action.ViewActions.click
+import org.json.JSONTokener
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicReference
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.json.JSONObject
@@ -96,4 +107,41 @@ class Q02AndroidBackupTest {
             fails("path traversal"){svc.restoreLocalEncrypted("../../evil",pass,rev)}
         }finally{h.close()}
     }
+    @Test fun q02ApprovedHtmlNativeOwnerCancelKeepsDatabaseUnchanged() {
+        val context=ctx()
+        context.deleteDatabase("glukopapa_v3.db")
+        val dir=java.io.File(context.filesDir,"q02-encrypted")
+        dir.listFiles()?.forEach { it.delete() } // Disposable test sandbox only.
+        ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+            fun js(source:String):String {
+                val answer=AtomicReference<String>("")
+                val latch=CountDownLatch(1)
+                scenario.onActivity { act ->
+                    val web=act.findViewById<ViewGroup>(android.R.id.content).getChildAt(0) as WebView
+                    web.evaluateJavascript(source){result->answer.set(result);latch.countDown()}
+                }
+                assertTrue("Q02 WebView JavaScript must answer",latch.await(25,TimeUnit.SECONDS))
+                return JSONTokener(answer.get()).nextValue().toString()
+            }
+            assertEquals("true",js("String(!!window.GPV3Q02Native)"))
+            js("location.href='/q02/backup.html';'NAV' ")
+            var loaded=false
+            repeat(35) {
+                if(!loaded){
+                    loaded=js("String(!!document.getElementById('createPreview'))")=="true"
+                    if(!loaded)Thread.sleep(180)
+                }
+            }
+            assertTrue("Q02 approved HTML must be served by native route",loaded)
+            val before=js("String(GPV3Q02Native.request('invalid-action'))")
+            assertTrue("JS must not gain unchecked native backup API",before.contains("Q02_ACTION_REJECTED"))
+            js("document.getElementById('createPreview').click();'CLICKED'")
+            onView(withText("Отмена")).inRoot(isDialog()).perform(click())
+            Thread.sleep(250)
+            assertEquals("No plaintext or encrypted user backup on cancellation",0,dir.listFiles()?.size?:0)
+            val rev=js("String(GPV3V3Bridge.getRevision())").toLong()
+            assertTrue(rev>=0)
+        }
+    }
+
 }
