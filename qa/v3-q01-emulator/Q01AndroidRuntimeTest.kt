@@ -272,16 +272,21 @@ class Q01AndroidRuntimeTest {
             assertTrue("M02 DOM must not invent actuals",text.contains("—"))
             val iframeReady=decoded("String(!!document.getElementById('q01SettingsFrame')&&!!document.getElementById('q01SettingsFrame').contentDocument)")
             assertEquals("true",iframeReady)
+            // GFSettingsV3UI exports mount(), not readView(); mount() returns
+            // the component's instance. Exercise the real visible DOM instead.
             var mounted=false
             for(i in 0 until 35) {
-                if(decoded("String(!!document.getElementById('q01SettingsFrame')?.contentWindow?.GFSettingsV3UI?.readView())")=="true") {mounted=true;break}
+                if(decoded("String((()=>{const d=document.getElementById('q01SettingsFrame')?.contentDocument;return !!d&&d.getElementById('pName')?.value==='QA profile'})())")=="true") {mounted=true;break}
                 Thread.sleep(400)
             }
-            assertTrue("Settings iframe must mount actual approved screen",mounted)
-            val screen=JSONObject(decoded("JSON.stringify(document.getElementById('q01SettingsFrame').contentWindow.GFSettingsV3UI.readView())"))
-            assertEquals(revision,screen.getLong("revision"))
-            assertEquals("QA profile",screen.getJSONObject("profile").getString("displayName"))
-            assertEquals("OWNER_MANUAL",screen.getJSONObject("nutritionReference").getString("source"))
+            assertTrue("Settings iframe must render saved profile from GFStorage",mounted)
+            val frameExpr="document.getElementById('q01SettingsFrame').contentDocument"
+            assertEquals("Europe/London",decoded("String("+frameExpr+".getElementById('pZone').value)"))
+            assertEquals("43",decoded("String("+frameExpr+".getElementById('normProtein').value)"))
+            assertEquals("53",decoded("String("+frameExpr+".getElementById('normFat').value)"))
+            assertEquals("160",decoded("String("+frameExpr+".getElementById('normCarbs').value)"))
+            assertEquals("1700",decoded("String("+frameExpr+".getElementById('normKcal').value)"))
+            assertTrue(decoded("String("+frameExpr+".getElementById('revisionBadge').textContent)").contains(revision.toString()))
         }
     }
 
