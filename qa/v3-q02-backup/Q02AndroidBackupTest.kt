@@ -16,6 +16,10 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 import org.junit.Test
+import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.uiautomator.By
+import androidx.test.uiautomator.UiDevice
+import androidx.test.uiautomator.Until
 import org.junit.runner.RunWith
 import org.json.JSONObject
 import java.security.MessageDigest
@@ -27,6 +31,13 @@ import android.database.sqlite.SQLiteDatabase
 @RunWith(AndroidJUnit4::class)
 class Q02AndroidBackupTest {
     private val pass="Q02-test-passphrase-NOT-REAL-2026".toCharArray()
+    private fun clickNative(label:String) {
+        val device=UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+        val button=device.wait(Until.findObject(By.text(label)),15_000)
+        assertNotNull("Native dialog action not visible: $label",button)
+        button!!.click()
+    }
+
     private fun ctx():Context=ApplicationProvider.getApplicationContext()
     private fun helper():GfDbHelper {
         val c=ctx(); c.deleteDatabase("glukopapa_v3.db")
@@ -139,7 +150,7 @@ class Q02AndroidBackupTest {
             val before=js("String(GPV3Q02Native.request('invalid-action'))")
             assertTrue("JS must not gain unchecked native backup API",before.contains("Q02_ACTION_REJECTED"))
             js("document.getElementById('createPreview').click();'CLICKED'")
-            onView(withText("Отмена")).inRoot(isDialog()).perform(click())
+            clickNative("Отмена")
             Thread.sleep(250)
             assertEquals("No plaintext or encrypted user backup on cancellation",0,dir.listFiles()?.size?:0)
             val rev=js("String(GPV3V3Bridge.getRevision())").toLong()
