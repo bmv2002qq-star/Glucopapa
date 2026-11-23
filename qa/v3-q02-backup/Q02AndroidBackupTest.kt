@@ -19,6 +19,9 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.json.JSONObject
 import java.security.MessageDigest
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
+import android.database.sqlite.SQLiteDatabase
 
 /** No patient data: all database records in this test are artificial QA fixtures. */
 @RunWith(AndroidJUnit4::class)
@@ -141,6 +144,41 @@ class Q02AndroidBackupTest {
             assertEquals("No plaintext or encrypted user backup on cancellation",0,dir.listFiles()?.size?:0)
             val rev=js("String(GPV3V3Bridge.getRevision())").toLong()
             assertTrue(rev>=0)
+        }
+    }
+
+    @Test fun authenticatedInvalidForeignKeySnapshotRollsBackEveryTable() {
+        val h=helper();val rev=seed(h);val svc=GfV3EncryptedSnapshot(ctx(),h)
+        val backup=svc.createEncrypted(pass)
+        val plain=GfV3BackupCodec.decrypt(backup,pass)
+        val size=ByteBuffer.wrap(plain,0,4).order(ByteOrder.BIG_ENDIAN).int
+        val manifest=JSONObject(String(plain,4,size,Charsets.UTF_8))
+        val original=plain.copyOfRange(4+size,plain.size)
+        val scratch=java.io.File(ctx().cacheDir,"q02-invalid-fk-synthetic.sqlite")
+        scratch.writeBytes(original)
+        try {
+            val source=SQLiteDatabase.openDatabase(scratch.absolutePath,null,SQLiteDatabase.OPEN_READWRITE)
+            source.setForeignKeyConstraintsEnabled(false)
+            source.execSQL("INSERT INTO v3_write_grants(module_id,role,grant_status,implementation_status,granted_by) VALUES(?,?,?,?,?)",
+                arrayOf("Q02_NONEXISTENT_MODULE","settingsWriter","OWNER_GRANTED_EXPERIMENTAL","PREPARED_NATIVE","OWNER_EXPLICIT_REQUEST_20261121"))
+            source.close()
+            val altered=scratch.readBytes()
+            manifest.put("sqliteBytes",altered.size)
+            manifest.put("sqliteSha256",MessageDigest.getInstance("SHA-256").digest(altered).joinToString(""){"%02x".format(it.toInt() and 255)})
+            val meta=manifest.toString().toByteArray(Charsets.UTF_8)
+            val payload=ByteBuffer.allocate(4+meta.size+altered.size).order(ByteOrder.BIG_ENDIAN)
+                .putInt(meta.size).put(meta).put(altered).array()
+            val authenticated=GfV3BackupCodec.encrypt(payload,pass)
+            try {
+                fails("Foreign key failure must roll back entire restore"){
+                    svc.restoreEncrypted(authenticated,pass,rev)
+                }
+                assertEquals(rev.toString(),scalar(h,"SELECT revision FROM v3_meta WHERE id=1"))
+                assertEquals("1",scalar(h,"SELECT count(*) FROM v3_measurements"))
+                assertEquals("0",scalar(h,"SELECT count(*) FROM v3_write_grants WHERE module_id='Q02_NONEXISTENT_MODULE'"))
+            }finally{payload.fill(0);altered.fill(0);authenticated.fill(0)}
+        }finally{
+            original.fill(0);plain.fill(0);scratch.delete();h.close()
         }
     }
 
