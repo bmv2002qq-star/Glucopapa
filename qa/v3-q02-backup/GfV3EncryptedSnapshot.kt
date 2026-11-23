@@ -63,6 +63,15 @@ internal class GfV3EncryptedSnapshot(private val ctx: Context, private val helpe
     private val backupDir:File get()=File(ctx.filesDir,"q02-encrypted").apply { if(!exists())check(mkdirs()) }
     private val tempDir:File get()=File(ctx.cacheDir,"q02-ephemeral").apply { if(!exists())check(mkdirs()) }
 
+    init { // Recover from process termination: never retain orphan plaintext SQLite scratch files.
+        synchronized(gate) {
+            tempDir.listFiles()?.filter { it.isFile && (it.name.startsWith("snapshot-") || it.name.startsWith("restore-")) }?.forEach {
+                check(it.delete()) {"Q02_ABANDONED_PLAINTEXT_CLEANUP_FAILED"}
+            }
+            backupDir.listFiles()?.filter { it.name.endsWith(".partial") }?.forEach { it.delete() }
+        }
+    }
+
     data class Summary(val fileName:String,val revision:Long,val dbVersion:Int,val byteCount:Int,val createdAtUtc:String)
 
     /** The only plaintext SQLite temporary is in the app-private cache and is deleted in finally. */
@@ -122,7 +131,12 @@ internal class GfV3EncryptedSnapshot(private val ctx: Context, private val helpe
         requireValidFilename(fileName)
         val file=File(backupDir,fileName)
         require(file.isFile && file.length() in 1..(MAX_DB+MAX_MANIFEST+512).toLong()){"Q02_BACKUP_FILE_INVALID"}
-        return restoreEncrypted(file.readBytes(),passphrase,expectedCurrentRevision,fileName)
+        val encrypted=file.readBytes()
+        // Verify backup before taking a protective copy of the current database.
+        inspectEncrypted(encrypted,passphrase)
+        require(revision(helper.writableDatabase)==expectedCurrentRevision) {"Q02_CURRENT_REVISION_CONFLICT"}
+        createLocalEncrypted(passphrase) // protective encrypted pre-restore backup; no plaintext export
+        return restoreEncrypted(encrypted,passphrase,expectedCurrentRevision,fileName)
     }
 
     /** Read-only decrypt/verify: no impact on current database (e.g. wrong passphrase). */
@@ -184,6 +198,8 @@ internal class GfV3EncryptedSnapshot(private val ctx: Context, private val helpe
                     require(schemaFingerprint(db)==schemaFingerprint(db,"q02source")) {"Q02_ATTACHED_SCHEMA_MISMATCH"}
                     db.beginTransaction()
                     try {
+                        // Writer CAS must be rechecked AFTER acquiring the SQLite write transaction.
+                        require(revision(db)==expectedCurrentRevision) {"Q02_CURRENT_REVISION_CONFLICT"}
                         for(name in mainTables){
                             require(Regex("^[A-Za-z0-9_]+$").matches(name)) {"Q02_TABLE_NAME_INVALID"}
                             db.execSQL("DELETE FROM \"$name\"")
