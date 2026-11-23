@@ -30,6 +30,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
+          cache-read-only: false
       - name: Prepare Q01 approved baseline + Q02 native implementation and instrumented regression
         shell: bash
         run: |
@@ -79,9 +80,9 @@ jobs:
 
 
           # Device-bound automatic backups are independent of manual password-protected exports.
-          echo "18f0edca4f2e7cdb0ff3e71b469dbc533e9cd9cb376e532d2a911e53900bafec  qa/v3-q02-backup/GfV3AutoLocalBackup.kt" | sha256sum -c -
+          echo "25ec840df256563788744c7ff736455cf3ac4ac8e3e37c4351411d3349dbcbd6  qa/v3-q02-backup/GfV3AutoLocalBackup.kt" | sha256sum -c -
           cp qa/v3-q02-backup/GfV3AutoLocalBackup.kt "$RUNNER_TEMP/q02-runtime/source/app/src/main/java/org/glukopapa/v3/m00/GfV3AutoLocalBackup.kt"
-          echo "f61127ec7a515ffda05eb2595821db422bf5e32bc3067bccb8b6c8b952a73398  qa/v3-q02-backup/GfV3AutoBackupJobService.kt" | sha256sum -c -
+          echo "6177416f4fa68464d4b9b4e4b785447bf5fef1b32489055633141a458deae521  qa/v3-q02-backup/GfV3AutoBackupJobService.kt" | sha256sum -c -
           cp qa/v3-q02-backup/GfV3AutoBackupJobService.kt "$RUNNER_TEMP/q02-runtime/source/app/src/main/java/org/glukopapa/v3/m00/GfV3AutoBackupJobService.kt"
           # Q02 host owner permission adapters / approved HTML presentation, SHA-locked.
           echo "6909529b90e6ef3138490be2228f38ca4bf591468c4fd33faf7c6ed8309ca3c0  qa/v3-q02-backup/GfV3BackupOwnerUi.kt" | sha256sum -c -
