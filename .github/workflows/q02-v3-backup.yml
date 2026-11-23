@@ -67,7 +67,7 @@ jobs:
           cp qa/v3-q01-emulator/overlay/GfV3SettingsTrustedAdapter.kt "$RUNNER_TEMP/q02-runtime/source/app/src/main/java/org/glukopapa/v3/m00/GfV3SettingsTrustedAdapter.kt"
           echo "c52a018946ad62bf92bdfedf1ad65e2750d187704db567ef51442e74e1ed221b  qa/v3-q01-emulator/overlay/settings_ui_v3.js" | sha256sum -c -
           cp qa/v3-q01-emulator/overlay/settings_ui_v3.js "$RUNNER_TEMP/q02-runtime/source/app/src/main/assets/www/q01/settings_ui_v3.js"
-          echo "bb503f480c6fb681770707590353c1ce6658410e125d0741b8c2f233c790952d  qa/v3-q02-backup/Q01RuntimeTest_UiAutomator_QA.kt" | sha256sum -c -
+          echo "85b5169d6768d1cd1ff54b474918a258de332b140382710a6e7ed04ba2c52f94  qa/v3-q02-backup/Q01RuntimeTest_UiAutomator_QA.kt" | sha256sum -c -
           cp qa/v3-q02-backup/Q01RuntimeTest_UiAutomator_QA.kt "$RUNNER_TEMP/q02-runtime/source/app/src/androidTest/java/org/glukopapa/v3/m00/Q01AndroidRuntimeTest.kt" 2>/dev/null || {
             mkdir -p "$RUNNER_TEMP/q02-runtime/source/app/src/androidTest/java/org/glukopapa/v3/m00"
             cp qa/v3-q02-backup/Q01RuntimeTest_UiAutomator_QA.kt "$RUNNER_TEMP/q02-runtime/source/app/src/androidTest/java/org/glukopapa/v3/m00/Q01AndroidRuntimeTest.kt"
@@ -75,7 +75,7 @@ jobs:
           # QA-only, Q02 source is new native service, Q01 approved mathematical cores unchanged.
           echo "6d6f688a0c3766d4a11014f0de8bc502b7fe53587f0d16b9b7cbc6035c3c462e  qa/v3-q02-backup/GfV3EncryptedSnapshot.kt" | sha256sum -c -
           cp qa/v3-q02-backup/GfV3EncryptedSnapshot.kt "$RUNNER_TEMP/q02-runtime/source/app/src/main/java/org/glukopapa/v3/m00/GfV3EncryptedSnapshot.kt"
-          echo "746c28149a831c628c0a91232408c317c8f5c9436a730c8a2321912a0794ab23  qa/v3-q02-backup/Q02AndroidBackupTest.kt" | sha256sum -c -
+          echo "89810793b01ea2c2800a1e99a75e52722c3ea8797cbac7dc324e9afde7e79c8d  qa/v3-q02-backup/Q02AndroidBackupTest.kt" | sha256sum -c -
           cp qa/v3-q02-backup/Q02AndroidBackupTest.kt "$RUNNER_TEMP/q02-runtime/source/app/src/androidTest/java/org/glukopapa/v3/m00/Q02AndroidBackupTest.kt"
 
 
@@ -119,7 +119,7 @@ jobs:
           disk-size: 4096M
           disable-animations: true
           emulator-boot-timeout: 900
-          script: bash qa/v3-q02-backup/run_q02_ui_diagnostics.sh
+          script: bash qa/v3-q02-backup/run_q02_emulator.sh
       - name: Upload Q02 QA-only test APK (NOT approved)
         if: success()
         uses: actions/upload-artifact@v4
