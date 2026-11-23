@@ -1,0 +1,151 @@
+name: GlukoPapa V3 Q03 normalized facts - QA only
+on:
+  push:
+    branches:
+      - qa/v3-q03-normalized-facts-20261123
+    paths:
+      - .github/workflows/q03-v3-normalized.yml
+      - qa/v3-q03-normalized/**
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: q03-v3-runtime-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  q03-emulator-runtime:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+          cache-read-only: false
+      - name: Node Q03 pure read-only normalization tests
+        run: node --test qa/v3-q03-normalized/q03_normalized_facts.test.js
+      - name: Prepare Q01/Q02 approved baseline + Q03 read-only integration and instrumentation
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/q02-runtime/evidence"
+          python3 - <<'PY'
+          import hashlib,json,base64,os,zipfile,io
+          from pathlib import Path
+          source=Path('qa/v3-q01-integration/archive.parts')
+          manifest=json.loads((source/'MANIFEST.json').read_text('utf-8'))
+          parts=[]
+          for item in manifest['parts']:
+              raw=(source/item['name']).read_text('ascii')
+              assert hashlib.sha256(''.join(raw.split()).encode('ascii')).hexdigest()==item['sha256']
+              assert hashlib.sha256(raw.encode('ascii')).hexdigest()==item['file_sha256']
+              parts.append(''.join(raw.split()))
+          data=base64.b64decode(''.join(parts),validate=True)
+          assert hashlib.sha256(data).hexdigest()==manifest['archive_sha256']
+          assert manifest['archive_sha256']=='70bfbc23562b26010f5c75085fb7e177bd9c30aeadeea8a2605cacaf18482337'
+          target=Path(os.environ['RUNNER_TEMP'])/'q02-runtime'
+          with zipfile.ZipFile(io.BytesIO(data)) as z:
+              for info in z.infolist():
+                  relative=info.filename
+                  p=(target/'source'/relative).resolve()
+                  assert p.is_relative_to((target/'source').resolve())
+                  if not info.is_dir():
+                      p.parent.mkdir(parents=True,exist_ok=True)
+                      p.write_bytes(z.read(info))
+          print('Q01_ORIGINAL_PROJECT_SHA_PASS',hashlib.sha256(data).hexdigest())
+          PY
+          # Separate unapproved Q01 integration adapter v0.2.1: bounded daily factors.
+          # Never edit approved GFSettings/TimeGrid standalone mathematical sources.
+          echo "a1dd6967908b9e42a08c0ea4896b70a6f2a7632006d5336a1ec94d46df1d331a  qa/v3-q01-emulator/overlay/GfV3SettingsTrustedAdapter.kt" | sha256sum -c -
+          cp qa/v3-q01-emulator/overlay/GfV3SettingsTrustedAdapter.kt "$RUNNER_TEMP/q02-runtime/source/app/src/main/java/org/glukopapa/v3/m00/GfV3SettingsTrustedAdapter.kt"
+          echo "c52a018946ad62bf92bdfedf1ad65e2750d187704db567ef51442e74e1ed221b  qa/v3-q01-emulator/overlay/settings_ui_v3.js" | sha256sum -c -
+          cp qa/v3-q01-emulator/overlay/settings_ui_v3.js "$RUNNER_TEMP/q02-runtime/source/app/src/main/assets/www/q01/settings_ui_v3.js"
+          echo "85b5169d6768d1cd1ff54b474918a258de332b140382710a6e7ed04ba2c52f94  qa/v3-q02-backup/Q01RuntimeTest_UiAutomator_QA.kt" | sha256sum -c -
+          cp qa/v3-q02-backup/Q01RuntimeTest_UiAutomator_QA.kt "$RUNNER_TEMP/q02-runtime/source/app/src/androidTest/java/org/glukopapa/v3/m00/Q01AndroidRuntimeTest.kt" 2>/dev/null || {
+            mkdir -p "$RUNNER_TEMP/q02-runtime/source/app/src/androidTest/java/org/glukopapa/v3/m00"
+            cp qa/v3-q02-backup/Q01RuntimeTest_UiAutomator_QA.kt "$RUNNER_TEMP/q02-runtime/source/app/src/androidTest/java/org/glukopapa/v3/m00/Q01AndroidRuntimeTest.kt"
+          }
+          # QA-only, Q02 source is new native service, Q01 approved mathematical cores unchanged.
+          echo "6d6f688a0c3766d4a11014f0de8bc502b7fe53587f0d16b9b7cbc6035c3c462e  qa/v3-q02-backup/GfV3EncryptedSnapshot.kt" | sha256sum -c -
+          cp qa/v3-q02-backup/GfV3EncryptedSnapshot.kt "$RUNNER_TEMP/q02-runtime/source/app/src/main/java/org/glukopapa/v3/m00/GfV3EncryptedSnapshot.kt"
+          echo "89810793b01ea2c2800a1e99a75e52722c3ea8797cbac7dc324e9afde7e79c8d  qa/v3-q02-backup/Q02AndroidBackupTest.kt" | sha256sum -c -
+          cp qa/v3-q02-backup/Q02AndroidBackupTest.kt "$RUNNER_TEMP/q02-runtime/source/app/src/androidTest/java/org/glukopapa/v3/m00/Q02AndroidBackupTest.kt"
+
+
+          # Device-bound automatic backups are independent of manual password-protected exports.
+          echo "25ec840df256563788744c7ff736455cf3ac4ac8e3e37c4351411d3349dbcbd6  qa/v3-q02-backup/GfV3AutoLocalBackup.kt" | sha256sum -c -
+          cp qa/v3-q02-backup/GfV3AutoLocalBackup.kt "$RUNNER_TEMP/q02-runtime/source/app/src/main/java/org/glukopapa/v3/m00/GfV3AutoLocalBackup.kt"
+          echo "6177416f4fa68464d4b9b4e4b785447bf5fef1b32489055633141a458deae521  qa/v3-q02-backup/GfV3AutoBackupJobService.kt" | sha256sum -c -
+          cp qa/v3-q02-backup/GfV3AutoBackupJobService.kt "$RUNNER_TEMP/q02-runtime/source/app/src/main/java/org/glukopapa/v3/m00/GfV3AutoBackupJobService.kt"
+          # Q02 host owner permission adapters / approved HTML presentation, SHA-locked.
+          echo "6909529b90e6ef3138490be2228f38ca4bf591468c4fd33faf7c6ed8309ca3c0  qa/v3-q02-backup/GfV3BackupOwnerUi.kt" | sha256sum -c -
+          cp qa/v3-q02-backup/GfV3BackupOwnerUi.kt "$RUNNER_TEMP/q02-runtime/source/app/src/main/java/org/glukopapa/v3/m00/GfV3BackupOwnerUi.kt"
+          echo "4f77e75770feedce08804c37e9c4ffd6ccd3307474ba0517469f089d02ade6ed  qa/v3-q02-backup/GfV3Q02Bridge.kt" | sha256sum -c -
+          cp qa/v3-q02-backup/GfV3Q02Bridge.kt "$RUNNER_TEMP/q02-runtime/source/app/src/main/java/org/glukopapa/v3/m00/GfV3Q02Bridge.kt"
+          echo "1c6bbb0a8e5676fc86186cd8e6d83ed2782f8ad2dae1230891544eece308986a  qa/v3-q02-backup/overlay/backup.html" | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/q02-runtime/source/app/src/main/assets/www/q02"
+          cp qa/v3-q02-backup/overlay/backup.html "$RUNNER_TEMP/q02-runtime/source/app/src/main/assets/www/q02/backup.html"
+          echo "ac7bb6eaa6bb4c47ebc00ca1e2317d43f051fbfc0a03d7c6ffe5d454b3134505  qa/v3-q02-backup/apply_q02_ui_patch.py" | sha256sum -c -
+          python3 qa/v3-q02-backup/apply_q02_ui_patch.py "$RUNNER_TEMP/q02-runtime/source"
+
+          # Q03 independent read-only adapter, approved HTML design; no Q01/Q02 math or medical writers changed.
+          echo "fb6cab42034474bbd7472a7add6b9998c81bbf10d96fdd1dba4022c8498af99e  $RUNNER_TEMP/q02-runtime/source/app/src/main/assets/www/m02/gf_normalized_facts_shared.js" | sha256sum -c -
+          echo "c66088d3e6911b5584dee8b9cfc7e0a967764764c7b4b16ec304ccc7a58dcbd0  qa/v3-q03-normalized/gf_normalized_facts_v3.js" | sha256sum -c -
+          echo "7d6d6ad6af9f124c0fc2253d7af1eb8ffd0555be68d3f8743c80f7c29efbfa82  qa/v3-q03-normalized/q03_readonly_screen.js" | sha256sum -c -
+          echo "912c743786f8e804ceda1e484c76088f86f53769dc5256f6c53653ea60a74234  qa/v3-q03-normalized/q03_normalized_facts.html" | sha256sum -c -
+          echo "5b9bbc3b7ff5d7aca611f947040d27caaf80bd4bb3865ed179a4c6b4ff8964af  qa/v3-q03-normalized/apply_q03_host_patch.py" | sha256sum -c -
+          echo "88f4c10401f74d47ced5302ff9866b2aa66213efca7db1551a6bc66aae8e6a43  qa/v3-q03-normalized/Q03AndroidReadOnlyTest.kt" | sha256sum -c -
+          python3 qa/v3-q03-normalized/apply_q03_host_patch.py "$RUNNER_TEMP/q02-runtime/source"
+          cp qa/v3-q03-normalized/Q03AndroidReadOnlyTest.kt "$RUNNER_TEMP/q02-runtime/source/app/src/androidTest/java/org/glukopapa/v3/m00/Q03AndroidReadOnlyTest.kt"
+
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          p=Path(os.environ['RUNNER_TEMP'])/'q02-runtime/source/app/build.gradle.kts'
+          content=p.read_text('utf-8').replace('targetSdk = 35','targetSdk = 35\n        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"').replace('applicationIdSuffix = ".q01qa"','applicationIdSuffix = ".q02qa"').replace('versionName = "0.10-Q01-INTEGRATION-QA"','versionName = "0.11-Q02-BACKUP-QA"')
+          content+='\n\ndependencies {\n    androidTestImplementation("androidx.test:core:1.6.1")\n    androidTestImplementation("androidx.test:runner:1.6.2")\n    androidTestImplementation("androidx.test.ext:junit:1.2.1")\n    androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")\n    androidTestImplementation("androidx.test.uiautomator:uiautomator:2.3.0")\n}\n'
+          p.write_text(content,'utf-8')
+          PY
+      - name: Grant access to KVM acceleration
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Android 15 Q03 normalized facts with Q01/Q02 regression
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          target: google_apis
+          profile: pixel_4
+          ram-size: 2048M
+          heap-size: 512M
+          disk-size: 4096M
+          disable-animations: true
+          emulator-boot-timeout: 900
+          script: bash qa/v3-q02-backup/run_q02_emulator.sh
+      - name: Upload Q02 QA-only test APK (NOT approved)
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: GlukoPapa-V3-Q03-EMULATOR-PASS-debug-apk
+          path: ${{ runner.temp }}/q02-runtime/source/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
+      - name: Upload emulator evidence, including failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: GlukoPapa-Q03-Android-Emulator-Runtime-QA
+          path: ${{ runner.temp }}/q02-runtime/evidence/
+          if-no-files-found: warn
+          retention-days: 14
