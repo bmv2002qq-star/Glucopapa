@@ -19,6 +19,7 @@ import java.util.concurrent.Executors
 internal class GfV3BackupOwnerUi(
     private val activity:Activity,
     private val service:GfV3EncryptedSnapshot,
+    private val automatic:GfV3AutoLocalBackup,
     private val storage:GfV3Storage,
     private val onRestored:()->Unit
 ) {
@@ -41,14 +42,17 @@ internal class GfV3BackupOwnerUi(
             if(destroyed){finish(ticket,"CANCELLED");return@runOnUiThread}
             if(action=="create") promptPassword(ticket,false,null)
             else {
-                val items=service.listLocalEncrypted()
+                val items=(service.listLocalEncrypted()+automatic.list())
                 if(items.isEmpty()){
                     AlertDialog.Builder(activity).setTitle("Резервные копии")
                         .setMessage("Локальных зашифрованных копий пока нет.")
                         .setPositiveButton("Понятно") {_,_->finish(ticket,"NO_BACKUPS")}
                         .setOnCancelListener{finish(ticket,"CANCELLED")}.show()
                 } else AlertDialog.Builder(activity).setTitle("Выбрать копию для восстановления")
-                    .setItems(items.toTypedArray()){_,idx->promptPassword(ticket,true,items[idx])}
+                    .setItems(items.toTypedArray()){_,idx->
+                        if(items[idx].endsWith(".gpv3auto")) promptAutoRestore(ticket,items[idx])
+                        else promptPassword(ticket,true,items[idx])
+                    }
                     .setNegativeButton("Отмена"){_,_->finish(ticket,"CANCELLED")}
                     .setOnCancelListener{finish(ticket,"CANCELLED")}.show()
             }
@@ -60,6 +64,23 @@ internal class GfV3BackupOwnerUi(
         return statuses[ticket]?.toString()?:JSONObject().put("status","UNKNOWN_TICKET").toString()
     }
     private fun finish(ticket:String,which:String,info:String="") {state(ticket,which,info);busy=false}
+    private fun promptAutoRestore(ticket:String,fileName:String) {
+        val revision=storage.revision()
+        AlertDialog.Builder(activity).setTitle("Восстановить автоматическую копию")
+            .setMessage("Копия зашифрована ключом Android этого устройства. Подтверди замену базы. Ревизия сейчас: $revision.")
+            .setNegativeButton("Отмена"){_,_->finish(ticket,"CANCELLED")}
+            .setOnCancelListener{finish(ticket,"CANCELLED")}
+            .setPositiveButton("Восстановить"){_,_->
+                state(ticket,"PROCESSING")
+                executor.execute {
+                    try{
+                        val result=automatic.restoreLocal(fileName,revision)
+                        finish(ticket,"DONE","Восстановлена ревизия ${result.revision}")
+                        activity.runOnUiThread{onRestored()}
+                    }catch(e:Exception){finish(ticket,"FAILED",e.message?:"AUTO_RESTORE_FAILED")}
+                }
+            }.show()
+    }
     private fun promptPassword(ticket:String,restore:Boolean,fileName:String?) {
         val first=EditText(activity).apply{
             hint="Пароль не менее 12 символов"
