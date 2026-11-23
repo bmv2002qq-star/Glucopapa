@@ -175,7 +175,7 @@ internal class GfV3EncryptedSnapshot(private val ctx: Context, private val helpe
                 val mainTables=tableNames(db)
                 require(mainTables==tableNames(source)) {"Q02_TABLE_SET_MISMATCH"}
                 // PRAGMA foreign_keys must be changed before beginTransaction.
-                val oldFk=db.isForeignKeyConstraintsEnabled
+                val oldFk=db.rawQuery("PRAGMA foreign_keys",null).use { c -> c.moveToFirst() && c.getInt(0)==1 }
                 db.setForeignKeyConstraintsEnabled(false)
                 var attached=false
                 try {
