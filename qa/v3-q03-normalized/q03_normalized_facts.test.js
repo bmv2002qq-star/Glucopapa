@@ -5,7 +5,7 @@ const {test}=require('node:test');
 const plate=(carbs=12,estimated=false)=>({schema:'GFPlate.v1',items:[{name:'Гречка',amount:100,unit:'g',carbs,fat:2,protein:3,kcal:72}],totals:{carbs,fat:2,protein:3,kcal:72},containsEstimatedValues:estimated});
 const s=(id='s1',time='2026-11-23T08:00:00Z',status='completed')=>({sessionId:id,status,startedAtUtc:time,actualPlate:plate()});
 const e=(id='e1',time='2026-11-23T08:00:00Z',linked='s1')=>({eventId:id,eventType:'meal',status:'recorded',occurredAtUtc:time,...(linked===null?{}:{sessionId:linked})});
-const c=(id='c1',time='2026-11-23T08:05:00Z')=>({measurementId:id,measuredAtUtc:time,quality:'good'});
+const c=(id='c1',time='2026-11-23T08:05:00Z')=>({measurementId:id,measuredAtUtc:time,quality:'good',provenance:'observed'});
 function fixture(){return [{schemaVersion:3,revision:9,inputRevision:4,profileId:'child',profileConfigured:true,data:{profile:{profileId:'child',timeZone:'Europe/London'},events:[e()],mealSessions:[s()]}},{schemaVersion:3,revision:9,inputRevision:4,profileId:'child',profileConfigured:true,data:{cgm:[c()]}}]}
 const calc=(f=fixture())=>N.normalize(...f);
 test('Q03-001 explicit meal link counted once; raw untouched',()=>{const f=fixture(),before=JSON.stringify(f),out=calc(f);assert.equal(out.summary.totalCarbsGrams,12);assert.equal(out.summary.confirmedMealCount,1);assert.equal(out.rows.find(r=>r.kind==='legacyMeal').counted,false);assert.equal(JSON.stringify(f),before);});
@@ -45,3 +45,9 @@ test('Q03-034 no hidden fallback for unknown times',()=>{const f=fixture();f[0].
 test('Q03-035 empty source returns empty fact set',()=>{const f=fixture();f[0].data.events=[];f[0].data.mealSessions=[];f[1].data.cgm=[];const x=calc(f);assert.equal(x.summary.normalizedCount,0);assert.equal(x.issues.length,0);});
 
 test('Q03-036 actual Android CGM observationId accepted',()=>{const f=fixture();f[1].data.cgm=[{observationId:'obs1',measuredAtUtc:'2026-11-23T08:05:00Z',quality:'good'}];const out=calc(f);assert.ok(out.rows.some(x=>x.kind==='cgm'&&x.id==='obs1'));});
+
+test('Q03-037 contradictory session links do not arbitrarily choose a winner',()=>{const f=fixture();f[0].data.events[0].linkedMealSessionId='s2';const x=calc(f);assert.ok(x.issues.some(i=>i.code==='MEAL_LINK_CONFLICT'));assert.equal(x.rows.find(r=>r.id==='e1').status,'AMBIGUOUS');assert.equal(x.rows.find(r=>r.id==='e1').link,null);});
+test('Q03-038 same confirmed plate within one minute is flagged not double counted',()=>{const f=fixture();f[0].data.mealSessions.push(s('s2','2026-11-23T08:00:05Z'));const x=calc(f);assert.equal(x.summary.totalCarbsGrams,0);assert.ok(x.issues.some(i=>i.code==='MEAL_SESSION_POSSIBLE_DUPLICATE'));assert.equal(x.rows.filter(r=>r.kind==='mealSession').length,2);});
+test('Q03-039 synthetic CGM is never marked observed',()=>{const f=fixture();f[1].data.cgm[0].provenance='synthetic';const x=calc(f);assert.equal(x.rows.find(r=>r.kind==='cgm').status,'NON_OBSERVED');assert.ok(x.issues.some(i=>i.code==='CGM_NOT_VERIFIED'));});
+test('Q03-040 observed CGM with unknown quality is not marked verified',()=>{const f=fixture();f[1].data.cgm[0].quality='bad';const x=calc(f);assert.equal(x.rows.find(r=>r.kind==='cgm').status,'NON_OBSERVED');});
+test('Q03-041 offset crossing year 9999 rejected as noncanonical',()=>assert.equal(N.canonicalUtc('9999-12-31T23:59:59-14:00'),null));
