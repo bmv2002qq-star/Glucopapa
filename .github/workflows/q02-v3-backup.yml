@@ -73,7 +73,7 @@ jobs:
           # QA-only, Q02 source is new native service, Q01 approved mathematical cores unchanged.
           echo "6d6f688a0c3766d4a11014f0de8bc502b7fe53587f0d16b9b7cbc6035c3c462e  qa/v3-q02-backup/GfV3EncryptedSnapshot.kt" | sha256sum -c -
           cp qa/v3-q02-backup/GfV3EncryptedSnapshot.kt "$RUNNER_TEMP/q02-runtime/source/app/src/main/java/org/glukopapa/v3/m00/GfV3EncryptedSnapshot.kt"
-          echo "f4d40a752bcb270c6e04c6e13b73a310b7af4d4c7cf40ec7e64af5d95ca357ac  qa/v3-q02-backup/Q02AndroidBackupTest.kt" | sha256sum -c -
+          echo "da05b9f4e12c2f5fa70ac868e94d61cef220ee4b97cf2d6845447a8cde19209c  qa/v3-q02-backup/Q02AndroidBackupTest.kt" | sha256sum -c -
           cp qa/v3-q02-backup/Q02AndroidBackupTest.kt "$RUNNER_TEMP/q02-runtime/source/app/src/androidTest/java/org/glukopapa/v3/m00/Q02AndroidBackupTest.kt"
 
 
