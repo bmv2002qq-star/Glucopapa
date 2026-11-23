@@ -26,6 +26,17 @@ internal class GfV3BackupOwnerUi(
     private val executor=Executors.newSingleThreadExecutor()
     private val statuses=ConcurrentHashMap<String,JSONObject>()
     @Volatile private var busy=false
+    @Volatile private var activeDialog:AlertDialog?=null
+
+    /** Dismiss native windows on activity destruction; otherwise Android reports WindowLeaked. */
+    private fun showDialog(builder:AlertDialog.Builder):AlertDialog {
+        check(!destroyed) { "Q02_ACTIVITY_DESTROYED" }
+        val dialog=builder.create()
+        dialog.setOnDismissListener { if(activeDialog===dialog)activeDialog=null }
+        activeDialog=dialog
+        dialog.show()
+        return dialog
+    }
     @Volatile private var destroyed=false
 
     private fun state(ticket:String,status:String,info:String="") {
@@ -47,14 +58,14 @@ internal class GfV3BackupOwnerUi(
                     AlertDialog.Builder(activity).setTitle("Резервные копии")
                         .setMessage("Локальных зашифрованных копий пока нет.")
                         .setPositiveButton("Понятно") {_,_->finish(ticket,"NO_BACKUPS")}
-                        .setOnCancelListener{finish(ticket,"CANCELLED")}.show()
+                        .setOnCancelListener{finish(ticket,"CANCELLED")}.let(::showDialog)
                 } else AlertDialog.Builder(activity).setTitle("Выбрать копию для восстановления")
                     .setItems(items.toTypedArray()){_,idx->
                         if(items[idx].endsWith(".gpv3auto")) promptAutoRestore(ticket,items[idx])
                         else promptPassword(ticket,true,items[idx])
                     }
                     .setNegativeButton("Отмена"){_,_->finish(ticket,"CANCELLED")}
-                    .setOnCancelListener{finish(ticket,"CANCELLED")}.show()
+                    .setOnCancelListener{finish(ticket,"CANCELLED")}.let(::showDialog)
             }
         }
         return ticket
@@ -79,7 +90,7 @@ internal class GfV3BackupOwnerUi(
                         activity.runOnUiThread{onRestored()}
                     }catch(e:Exception){finish(ticket,"FAILED",e.message?:"AUTO_RESTORE_FAILED")}
                 }
-            }.show()
+            }.let(::showDialog)
     }
     private fun promptPassword(ticket:String,restore:Boolean,fileName:String?) {
         val first=EditText(activity).apply{
@@ -128,7 +139,7 @@ internal class GfV3BackupOwnerUi(
                             }catch(e:Exception){finish(ticket,"FAILED",e.message?:"BACKUP_RESTORE_FAILED")}
                             finally{input.fill('\u0000')}
                         }
-                    }.show()
+                    }.let(::showDialog)
             } else {
                 state(ticket,"PROCESSING")
                 executor.execute {
@@ -138,7 +149,13 @@ internal class GfV3BackupOwnerUi(
                 }
             }
         }
-        builder.show()
+        showDialog(builder)
     }
-    fun shutdown(){destroyed=true;executor.shutdownNow();statuses.clear();busy=false}
+    fun shutdown() {
+        destroyed=true
+        activity.runOnUiThread { activeDialog?.dismiss();activeDialog=null }
+        executor.shutdownNow()
+        statuses.clear()
+        busy=false
+    }
 }
