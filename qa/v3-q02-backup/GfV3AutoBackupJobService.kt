@@ -8,10 +8,21 @@ import kotlin.concurrent.thread
 class GfV3AutoBackupJobService:JobService(){
     override fun onStartJob(params:JobParameters):Boolean {
         thread(name="Q02-AutoBackup") {
-            val helper=GfDbHelper(applicationContext)
-            try { GfV3AutoLocalBackup(applicationContext,helper).createDaily() }
-            catch(_:Exception) { /* no raw medical content in logs; retry on next scheduled pass */ }
-            finally {helper.close();jobFinished(params,false)}
+            var retry=false
+            var helper:GfDbHelper?=null
+            try {
+                helper=GfDbHelper(applicationContext)
+                GfV3AutoLocalBackup(applicationContext,helper).createDaily()
+                getSharedPreferences("q02-auto-status",MODE_PRIVATE).edit()
+                    .putString("lastResult","SUCCESS").putLong("lastRunMillis",System.currentTimeMillis()).apply()
+            } catch(_:Exception) {
+                retry=true
+                // Only a generic failure code and timestamp. No medical values or secrets.
+                getSharedPreferences("q02-auto-status",MODE_PRIVATE).edit()
+                    .putString("lastResult","FAILED").putLong("lastRunMillis",System.currentTimeMillis()).apply()
+            } finally {
+                try { helper?.close() } finally {jobFinished(params,retry)}
+            }
         }
         return true
     }
