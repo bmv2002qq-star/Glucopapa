@@ -47,11 +47,14 @@ internal class GfV3AutoLocalBackup(private val ctx:Context,private val helper:Gf
                 .setPeriodic(24*60*60*1000L)
                 .setRequiredNetworkType(JobInfo.NETWORK_TYPE_NONE)
                 .setPersisted(true).build()
-            check(jobs.schedule(periodic)==JobScheduler.RESULT_SUCCESS) {"Q02_AUTO_PERIODIC_SCHEDULE_FAILED"}
+            // Replacing the pending periodic JobInfo on every Activity launch postpones
+            // the next backup indefinitely for a frequently opened application.
+            if(jobs.getPendingJob(PERIODIC_JOB_ID)==null)
+                check(jobs.schedule(periodic)==JobScheduler.RESULT_SUCCESS) {"Q02_AUTO_PERIODIC_SCHEDULE_FAILED"}
             // Initial backup after install/activation, next periodic job handles later days.
             val directory=File(ctx.filesDir,"q02-encrypted")
             val exists=directory.listFiles()?.any{it.name.startsWith(FILE_PREFIX)&&it.name.endsWith(FILE_SUFFIX)}?:false
-            if(!exists) {
+            if(!exists && jobs.getPendingJob(INITIAL_JOB_ID)==null) {
                 val first=JobInfo.Builder(INITIAL_JOB_ID,component)
                     .setMinimumLatency(20_000L)
                     .setOverrideDeadline(5*60*1000L)
