@@ -14,5 +14,5 @@ cat "$ROOT/evidence/connected-tests.log" | tail -80
 if [ -d app/build/outputs/androidTest-results ]; then cp -R app/build/outputs/androidTest-results "$ROOT/evidence/";fi
 if [ -d app/build/reports/androidTests ]; then cp -R app/build/reports/androidTests "$ROOT/evidence/";fi
 adb logcat -d -t 1000 >"$ROOT/evidence/logcat-tail.txt" || true
-adb shell dumpsys package org.glukopapa.v3.m00.q01qa >"$ROOT/evidence/package.txt" || true
+adb shell dumpsys package org.glukopapa.v3.m00.q02qa >"$ROOT/evidence/package.txt" || true
 exit "$rc"
