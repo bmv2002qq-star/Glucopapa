@@ -270,6 +270,10 @@ class Q01AndroidRuntimeTest {
             val text=decoded("String(document.getElementById('m02Nutrition').innerText)")
             assertTrue("M02 DOM must display the saved protein norm",text.contains("43"))
             assertTrue("M02 DOM must not invent actuals",text.contains("—"))
+            // This iframe lives in the initially hidden Settings tab. Chromium
+            // may defer loading until the user really opens that view.
+            assertEquals("true",decoded("String(!!document.querySelector('[data-screen=\"settings\"]'))"))
+            decoded("(function(){document.querySelector('[data-screen=\"settings\"]').click();return 'settingsOpened'})()")
             val iframeReady=decoded("String(!!document.getElementById('q01SettingsFrame')&&!!document.getElementById('q01SettingsFrame').contentDocument)")
             assertEquals("true",iframeReady)
             // GFSettingsV3UI exports mount(), not readView(); mount() returns
@@ -279,7 +283,8 @@ class Q01AndroidRuntimeTest {
                 if(decoded("String((()=>{const d=document.getElementById('q01SettingsFrame')?.contentDocument;return !!d&&d.getElementById('pName')?.value==='QA profile'})())")=="true") {mounted=true;break}
                 Thread.sleep(400)
             }
-            assertTrue("Settings iframe must render saved profile from GFStorage",mounted)
+            val iframeDiagnostic=decoded("JSON.stringify((()=>{const f=document.getElementById('q01SettingsFrame');const d=f?.contentDocument;return {route:location.hash,visible:!document.getElementById('view-settings').hidden,url:f?.contentWindow?.location?.href,loaded:d?.readyState,profile:d?.getElementById('pName')?.value,notice:d?.getElementById('status')?.textContent,warning:d?.getElementById('storageWarning')?.textContent,GFSettings:typeof f?.contentWindow?.GFSettingsV3,ui:typeof f?.contentWindow?.GFSettingsV3UI}})())")
+            assertTrue("Settings iframe must render saved profile: $iframeDiagnostic",mounted)
             val frameExpr="document.getElementById('q01SettingsFrame').contentDocument"
             assertEquals("Europe/London",decoded("String("+frameExpr+".getElementById('pZone').value)"))
             assertEquals("43",decoded("String("+frameExpr+".getElementById('normProtein').value)"))
