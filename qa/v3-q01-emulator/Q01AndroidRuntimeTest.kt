@@ -157,7 +157,8 @@ class Q01AndroidRuntimeTest {
                 return answer.get()
             }
             fun decoded(source:String):String=JSONTokener(js(source)).nextValue().toString()
-            var available=false            repeat(25) {
+            var available=false
+            repeat(25) {
                 if(decoded("String(!!window.GPV3V3Bridge)")=="true")available=true
                 if(!available)Thread.sleep(400)
             }
