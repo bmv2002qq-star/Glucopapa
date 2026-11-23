@@ -3,7 +3,7 @@ import sys,hashlib
 p=Path(sys.argv[1])
 java=p/'app/src/main/java/org/glukopapa/v3/m00'
 assets=p/'app/src/main/assets/www/q03'
-source=Path(__file__).resolve().parents[1]/'js'
+source=Path(__file__).resolve().parent # Q03 CI keeps assets beside this script
 route=java/'GfV3LocalAssetRoutes.kt';activity=java/'MainActivity.kt'
 s=route.read_text(encoding='utf8')
 needle='        "/q01/settings_ui_v3.js"'
