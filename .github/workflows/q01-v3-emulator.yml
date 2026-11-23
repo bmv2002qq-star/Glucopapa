@@ -64,6 +64,8 @@ jobs:
           # Never edit approved GFSettings/TimeGrid standalone mathematical sources.
           echo "a1dd6967908b9e42a08c0ea4896b70a6f2a7632006d5336a1ec94d46df1d331a  qa/v3-q01-emulator/overlay/GfV3SettingsTrustedAdapter.kt" | sha256sum -c -
           cp qa/v3-q01-emulator/overlay/GfV3SettingsTrustedAdapter.kt "$RUNNER_TEMP/q01-runtime/source/app/src/main/java/org/glukopapa/v3/m00/GfV3SettingsTrustedAdapter.kt"
+          echo "c52a018946ad62bf92bdfedf1ad65e2750d187704db567ef51442e74e1ed221b  qa/v3-q01-emulator/overlay/settings_ui_v3.js" | sha256sum -c -
+          cp qa/v3-q01-emulator/overlay/settings_ui_v3.js "$RUNNER_TEMP/q01-runtime/source/app/src/main/assets/www/q01/settings_ui_v3.js"
           cp qa/v3-q01-emulator/Q01AndroidRuntimeTest.kt "$RUNNER_TEMP/q01-runtime/source/app/src/androidTest/java/org/glukopapa/v3/m00/Q01AndroidRuntimeTest.kt" 2>/dev/null || {
             mkdir -p "$RUNNER_TEMP/q01-runtime/source/app/src/androidTest/java/org/glukopapa/v3/m00"
             cp qa/v3-q01-emulator/Q01AndroidRuntimeTest.kt "$RUNNER_TEMP/q01-runtime/source/app/src/androidTest/java/org/glukopapa/v3/m00/Q01AndroidRuntimeTest.kt"
