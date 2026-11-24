@@ -1,0 +1,34 @@
+{
+  "module": "Q07 GFInjectionFact",
+  "version": "0.1.2-QA",
+  "sourceSha256": [
+    {
+      "path": "android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Q07ModuleInstaller.kt",
+      "sha256": "f1ff8aa600239ebf4a31207ad2747509e53b736841190c76d09ccdc66969eb64",
+      "new": true
+    },
+    {
+      "path": "android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Q07OwnerQueue.kt",
+      "sha256": "2505df41ce0c2d0315ab6f8bdda3e9a90fbdb2c611d92f18f9b8c9e39fce1b77",
+      "new": false
+    },
+    {
+      "path": "android-app/app/src/main/java/org/glukopapa/v3/m00/MainActivity.kt",
+      "sha256": "0b964095482f35d22e459e31886b3fe2341d1425b42e790215a5cae4615c7bb3",
+      "new": false
+    },
+    {
+      "path": "android-app/app/src/main/assets/www/q07/rinfast.html",
+      "sha256": "4eea8807f0c37a7a90ab9a948c0360350ea6b509c848d76ce0aa661afce9b951",
+      "new": false
+    },
+    {
+      "path": "android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q07RinFastModuleInstallerInstrumentedTest.kt",
+      "sha256": "816a91e2740249e32696570169cfa5c9ffac3e79dca8f5ba4885ef6f7385eb30",
+      "new": true
+    }
+  ],
+  "design": "Q07 HTML v0.1 unchanged; native-only user activation consent",
+  "effect": "No insulin action on activation",
+  "androidVerification": "PENDING"
+}
