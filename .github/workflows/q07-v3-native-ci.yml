@@ -97,6 +97,8 @@ jobs:
           patch -d q07-ci -p0 --batch --forward -i "$GITHUB_WORKSPACE/qa-transfer/q07/Q07_ANDROID15_NATIVE_INTEGRATION_TESTS_20261124.patch"
           echo '26e856ce126bcaca8a57b4b858ee6e2aecb48cdd684ce5140a40d48e72b3acc0  qa-transfer/q07/Q07_ANDROID15_WEBVIEW_AND_OWNER_PATCH_20261124.patch' | sha256sum -c -
           patch -d q07-ci -p0 --batch --forward -i "$GITHUB_WORKSPACE/qa-transfer/q07/Q07_ANDROID15_WEBVIEW_AND_OWNER_PATCH_20261124.patch"
+          echo 'd9cc724325da755196d1917c9a655b4c5d422b7c8fadf8d489bdd467dd722995  qa-transfer/q07/Q07_RINFAST_OWNER_WRITER_HARDENING_20261124.patch' | sha256sum -c -
+          patch -d q07-ci -p0 --batch --forward -i "$GITHUB_WORKSPACE/qa-transfer/q07/Q07_RINFAST_OWNER_WRITER_HARDENING_20261124.patch"
       - name: Q07 Q06 Q05 Q04 Q03 host and source regression
         shell: bash
         run: |
@@ -155,7 +157,7 @@ jobs:
             errors+=int(r.get('errors','0'))
             skipped+=int(r.get('skipped','0'))
           print('Q07 ANDROID XML',tests,failures,errors,skipped)
-          assert tests>=74 and failures==0 and errors==0 and skipped==0,'Q07_ANDROID_XML_GATE_FAILED'
+          assert tests>=76 and failures==0 and errors==0 and skipped==0,'Q07_ANDROID_XML_GATE_FAILED'
           PY
       - name: Upload Android Q07 APK and XML proof
         if: always()
@@ -196,7 +198,7 @@ jobs:
                   result[name+'_log_present']=True
               else:result[name+'_log_present']=False
           result['android_xml_found']=bool(result['test_xml_files'])
-          result['gate_passed']=bool(result['test_xml_files']) and result['total']>=74 and result['failures']==0 and result['errors']==0 and result['skipped']==0
+          result['gate_passed']=bool(result['test_xml_files']) and result['total']>=76 and result['failures']==0 and result['errors']==0 and result['skipped']==0
           (d/'latest.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n')
           PYRESULT
           git config user.name 'Glucopapa QA Android CI'
