@@ -152,6 +152,24 @@
              req.getDouble("units"),req.getString("site"),req.getString("atUtc"),
              req.optString("note"),req.getLong("expectedRevision"),true)
          else facts.correct(p.eventId,"q07-corr-${UUID.randomUUID()}",p.key,
+@@ -116,9 +128,14 @@
+             req.getDouble("units"),req.getString("site"),req.getString("reason"),true)
+     }
+     private fun finish(ticket:String,state:String,result:JSONObject) = synchronized(lock) {
+-        pending[ticket]?.let { if(!closed && it.state in setOf("PENDING","APPLYING")) {
+-            it.state=state;it.result=result
+-        }}
++        pending[ticket]?.let {
++            val allowed = !closed && when(state) {
++                "CANCELLED" -> it.state == "PENDING"
++                "FINISHED", "REJECTED" -> it.state == "APPLYING"
++                else -> false
++            }
++            if(allowed) { it.state=state;it.result=result }
++        }
+     }
+     fun poll(ticket:String):JSONObject = synchronized(lock) {
+         require(ticket.length in 10..128) { "Q07_TICKET_INVALID" }
 --- android-app/app/src/main/java/org/glukopapa/v3/m00/MainActivity.kt
 +++ android-app/app/src/main/java/org/glukopapa/v3/m00/MainActivity.kt
 @@ -85,7 +85,8 @@
@@ -177,7 +195,7 @@
  document.querySelectorAll('[data-dose]').forEach(b=>b.onclick=()=>$('dose').value=b.dataset.dose);
 --- /dev/null
 +++ android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q07RinFastModuleInstallerInstrumentedTest.kt
-@@ -0,0 +1,150 @@
+@@ -0,0 +1,179 @@
 +package org.glukopapa.v3.m00
 +
 +import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -326,5 +344,34 @@
 +        assertEquals(old,rev())
 +        assertEquals("NOT_CONNECTED",state().getString("status"))
 +        assertEquals(0L,count("v3_events"))
++    }
++
++    @Test fun doubleOwnerCallbackCannotCancelAfterNativeWriteIsReserved() {
++        val gateway=GfV3NativeModuleGateway(storage,GfV3NativeWriter(helper),GfV3CorrectionWriter(helper),helper)
++        val facts=GfV3Q07InjectionFacts(gateway.bindInstalledAdapter("GFInjectionFact"))
++        var respond:((Boolean)->Unit)?=null
++        val queue=GfV3Q07OwnerQueue(facts,storage,installer){_,done->respond=done}
++        try {
++            val snap=queue.snapshot()
++            val request=JSONObject().put("command","confirm")
++                .put("profileId",snap.getString("profileId"))
++                .put("expectedRevision",snap.getLong("revision"))
++                .put("units",1.0).put("site","abdomen")
++                .put("atUtc",java.time.Instant.now().minusSeconds(120).toString()).put("note","")
++            val ticket=queue.enqueue(request.toString()).getString("ticket")
++            assertNotNull(respond)
++            respond!!.invoke(true)
++            respond!!.invoke(false) // A second, stale callback cannot override APPLYING.
++            var state=JSONObject()
++            for(i in 0..70) {
++                state=queue.poll(ticket)
++                if(state.getString("state") !in setOf("PENDING","APPLYING"))break
++                Thread.sleep(40)
++            }
++            assertEquals("FINISHED",state.getString("state"))
++            assertTrue(state.getJSONObject("result").getBoolean("activationOnly"))
++            assertEquals("OWNER_INTEGRATION_ACCEPTED",this.state().getString("status"))
++            assertEquals(0L,count("v3_events"))
++        } finally { queue.close() }
 +    }
 +}
