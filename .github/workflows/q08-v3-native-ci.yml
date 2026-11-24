@@ -158,10 +158,15 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
-          echo '89092da0a5017b408de262d3e94ec0568d76e29ce45d70f142d9cdfdfb33b063  qa-transfer/q08/Q08_native_source_only_v041.patch' | sha256sum -c -
+          echo '48eee3cceeb7bf7c91ce88764727408df9628d89242d6b4d0dc1da864ce5bf7e  qa-transfer/q08/Q08_native_source_only_v042.patch' | sha256sum -c -
           cd q07-ci
-          git apply --check "$GITHUB_WORKSPACE/qa-transfer/q08/Q08_native_source_only_v041.patch"
-          git apply "$GITHUB_WORKSPACE/qa-transfer/q08/Q08_native_source_only_v041.patch"
+          git apply --check "$GITHUB_WORKSPACE/qa-transfer/q08/Q08_native_source_only_v042.patch"
+          git apply "$GITHUB_WORKSPACE/qa-transfer/q08/Q08_native_source_only_v042.patch"
+      - name: Q08 v042 exact UTC and transport regression (synthetic fixtures only)
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --test qa-transfer/q08/v042/tests/test_review.js
       - name: Compile Android Q08 candidate and instrumented tests
         shell: bash
         run: |
@@ -191,9 +196,9 @@ jobs:
         if: always()
         run: |
           set -euo pipefail
-          echo 'fa3874a746b18939c1287fe60a3ea695a3ca4b117939ea3564b69417df6acc36  qa-transfer/q08/verify_q08_android_xml.py' | sha256sum -c -
+          echo '9059478fe243c85bbca4efc5adee5ea7ba8809902efda924d5937987119921bd  qa-transfer/q08/verify_q08_android_xml_v042.py' | sha256sum -c -
           mkdir -p qa-results/q08
-          python3 qa-transfer/q08/verify_q08_android_xml.py q07-ci/android-app/app/build/outputs/androidTest-results/connected | tee qa-results/q08/gate.json
+          python3 qa-transfer/q08/verify_q08_android_xml_v042.py q07-ci/android-app/app/build/outputs/androidTest-results/connected | tee qa-results/q08/gate.json
       - name: Upload Android Q08 APK and XML proof
         if: always()
         uses: actions/upload-artifact@v4

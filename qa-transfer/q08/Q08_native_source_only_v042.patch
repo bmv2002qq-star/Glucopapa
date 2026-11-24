@@ -1,0 +1,328 @@
+--- /dev/null
++++ b/android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q08LevemirNativeInstrumentedTest.kt
+@@ -0,0 +1,100 @@
++package org.glukopapa.v3.m00
++
++import androidx.test.ext.junit.runners.AndroidJUnit4
++import androidx.test.platform.app.InstrumentationRegistry
++import org.junit.After
++import org.junit.Before
++import org.junit.Test
++import org.junit.Assert.*
++import org.junit.runner.RunWith
++import org.json.JSONArray
++import org.json.JSONObject
++import java.time.Instant
++
++/** Instrumentation only. Explicit synthetic database; no access to a real user's records. */
++@RunWith(AndroidJUnit4::class)
++class Q08LevemirNativeInstrumentedTest {
++    private val ctx get()=InstrumentationRegistry.getInstrumentation().targetContext
++    private lateinit var helper:GfDbHelper
++    private lateinit var storage:GfV3Storage
++    private lateinit var gateway:GfV3NativeModuleGateway
++    private lateinit var facts:GfV3Q08InjectionFacts
++    private val profile="q08-test-profile"
++    private val at="2025-01-30T05:00:00.123456789Z"
++    @Before fun setUp() {
++        ctx.deleteDatabase("glukopapa_v3.db")
++        openStorage()
++        storage.initializeProfile(profile,"Europe/Minsk",storage.revision())
++    }
++    private fun openStorage() {
++        helper=GfDbHelper(ctx)
++        val catalog=ctx.assets.open("db/module_catalog_v1.json").bufferedReader().use{it.readText()}
++        val grants=JSONArray(ctx.assets.open("db/writer_grants_v0.12.json").bufferedReader().use{it.readText()})
++        // QA only: test the proposed new role without enabling it in the shipping manifest.
++        grants.put(JSONObject().put("moduleId",GfV3Q08Rules.OWNER).put("role","actionWriter").put("grantStatus","OWNER_GRANTED_EXPERIMENTAL").put("implementationStatus","PREPARED_NATIVE"))
++        storage=GfV3Storage(helper,catalog,grants.toString())
++        gateway=GfV3NativeModuleGateway(storage,GfV3NativeWriter(helper),GfV3CorrectionWriter(helper),helper)
++        facts=GfV3Q08InjectionFacts(gateway.bindInstalledAdapter(GfV3Q08Rules.OWNER))
++    }
++    @After fun tearDown(){helper.close();ctx.deleteDatabase("glukopapa_v3.db")}
++    private fun accept(module:String=GfV3Q08Rules.OWNER) {
++        helper.writableDatabase.execSQL("UPDATE v3_module_registry SET status='OWNER_INTEGRATION_ACCEPTED',feature_enabled=1,read_roles_json='[\"research\"]' WHERE module_id=?",arrayOf(module))
++    }
++    private fun count(table:String):Int=helper.readableDatabase.rawQuery("SELECT COUNT(*) FROM $table",null).use{c->c.moveToFirst();c.getInt(0)}
++    private fun reject(block:()->Unit){try {block();fail("Expected rejection")}catch(e:IllegalArgumentException){}catch(e:IllegalStateException){}catch(e:SecurityException){}}
++    private fun shot(key:String="qa-shot-one",rev:Long=storage.revision(),slot:String="morning",approved:Boolean=true,child:String=profile,units:Double=1.5)=facts.confirm(child,key,rev,slot,units,"buttock",at,approved)
++    @Test fun notConnectedOrNotConfirmedNeverWrites(){reject{shot()};accept();reject{shot(approved=false)};assertEquals(0,count("v3_events"))}
++    @Test fun manualFactIsIdempotentAndSeparateFromRapid(){accept();val r=storage.revision();val first=shot(rev=r);assertTrue(first.getBoolean("created"));assertFalse(shot(rev=r).getBoolean("created"));assertEquals(1,count("v3_events"));assertEquals(1,count("v3_write_receipts"));val event=storage.readShellPort("journal").getJSONObject("data").getJSONArray("events").getJSONObject(0);assertEquals("levemir",event.getString("insulinId"));assertEquals("basal",event.getString("insulinClass"));assertEquals(at,event.getString("occurredAtUtc"));assertEquals(GfV3Q08Rules.OWNER,event.getString("sourceModule"));val rapid=GfV3Q07OwnerQueue(GfV3Q07InjectionFacts(gateway.bindInstalledAdapter("GFInjectionFact")),storage){_,done->done(false)};try{assertEquals(0,rapid.snapshot().getJSONArray("shots").length())}finally{rapid.close()}}
++    @Test fun staleProfileInvalidDoseAndDuplicateSlotBlocked(){accept();val r=storage.revision();reject{shot(child="another-profile")};reject{shot(units=1.25)};shot();reject{shot(key="qa-second-key",rev=r)};reject{shot(key="qa-second-key")};shot(key="qa-evening-key",slot="evening");assertEquals(2,count("v3_events"))}
++    @Test fun crossOwnerWriteDenied(){accept();accept("GFInjectionEntry");val first=shot();val row=storage.readShellPort("journal").getJSONObject("data").getJSONArray("events").getJSONObject(0);row.put("eventId","qa-forged-event");reject{gateway.bindInstalledAdapter("GFInjectionEntry").append("actionWriter","qa-forged-key",storage.revision(),row)};assertEquals(1,count("v3_events"))}
++    @Test fun correctionPreservesBasalIdentityAndHistory(){accept();val id=shot().getString("eventId");val port=gateway.bindInstalledAdapter(GfV3Q08Rules.OWNER);reject{port.correct("events",id,"qa-correction-bad","qa-correct-bad",storage.revision(),0,JSONObject().put("insulinId","rinfast"),"QA identity change","OWNER_MANUAL")};val out=port.correct("events",id,"qa-correction-good","qa-correct-good",storage.revision(),0,JSONObject().put("units",2.0),"QA fact correction","OWNER_MANUAL");assertTrue(out.getBoolean("applied"));assertEquals(1,count("v3_record_corrections"))}
++    @Test fun historyReadsMoreThanTwoThousandAndNeverClaimsSensorCoverage(){accept();val db=helper.writableDatabase;val asOf=Instant.parse("2025-02-01T00:00:00Z");val fixtureRevision=storage.revision();db.beginTransaction();try{for(i in 0 until 4320){val time=asOf.minusSeconds((i+1)*300L).toString();val p=JSONObject().put("measuredAtUtc",time).put("glucoseMmolL",6.0).put("provenance","observed").put("quality","VALID");db.execSQL("INSERT INTO v3_cgm(observation_id,profile_id,measured_at_utc,glucose_mmol_l,source_device_id,provenance,quality,payload_json,created_revision) VALUES(?,?,?,?,?,?,?,?,?)",arrayOf("qa-cgm-$i",profile,time,6.0,"qa-device","observed","VALID",p.toString(),fixtureRevision))};db.setTransactionSuccessful()}finally{db.endTransaction()};val h=GfV3Q08History(gateway.bindInstalledAdapter(GfV3Q08Rules.OWNER),storage).read(asOf);val data=h.getJSONObject("data");assertTrue(data.getJSONArray("cgm").length()>4000);assertFalse(data.getJSONObject("q08ReadWindow").getBoolean("sensorCoverageProven"));assertTrue(data.getJSONObject("q08ReadWindow").getBoolean("allStoredPagesRead"));val w=data.getJSONObject("q08ReadWindow");assertEquals(profile,w.getString("profileId"));assertEquals(fixtureRevision,w.getLong("revision"));assertEquals("Europe/Minsk",w.getString("timeZone"));assertEquals("2025-01-17T20:00:00Z",w.getString("startUtc"));assertEquals(asOf.toString(),w.getString("endUtc"))}
++    @Test fun extraActualSeparateFromRegularAndIdempotent() {
++        accept();shot()
++        val rev=storage.revision()
++        reject { facts.confirmAdditionalActual(profile,"qa-extra-unconfirmed",rev,1.5,"buttock",at,"QA recorded actual",false) }
++        reject { facts.confirmAdditionalActual(profile,"qa-extra-no-reason",rev,1.5,"buttock",at," ",true) }
++        reject { shot(key="qa-ordinary-duplicate") }
++        val extra=facts.confirmAdditionalActual(profile,"qa-extra-actual",rev,1.5,"buttock",at,"QA recorded actual",true)
++        assertTrue(extra.getBoolean("created"))
++        assertFalse(facts.confirmAdditionalActual(profile,"qa-extra-actual",rev,1.5,"buttock",at,"QA recorded actual",true).getBoolean("created"))
++        assertEquals(2,count("v3_events"));assertEquals(2,count("v3_write_receipts"))
++        shot(key="qa-regular-evening",slot="evening")
++        assertEquals(3,count("v3_events"))
++        val events=storage.readShellPort("journal").getJSONObject("data").getJSONArray("events")
++        val extras=(0 until events.length()).map{events.getJSONObject(it)}.filter{it.optString("levemirSlot")=="additional"}
++        assertEquals(1,extras.size);assertTrue(extras.single().getBoolean("additionalActual"))
++        assertEquals("QA recorded actual",extras.single().getString("additionalReason"))
++    }
++
++
++    @Test fun strictUtcRejectsImpossibleCalendarValuesAndNormalizedTimes() {
++        accept();val r=storage.revision()
++        for ((i,t) in listOf("2024-02-30T00:00:00Z","2025-01-01T24:00:00Z","2025-01-01T00:00:60Z").withIndex()) {
++            reject { facts.confirm(profile,"qa-invalid-time-$i",r,"morning",1.5,"buttock",t,true) }
++        }
++        assertEquals(r,storage.revision());assertEquals(0,count("v3_events"))
++    }
++    @Test fun restartPreservesActualBasalFactAndWriteReceipt() {
++        accept();val before=storage.revision();val created=shot(rev=before);val recorded=created.getLong("revision")
++        helper.close();openStorage()
++        assertEquals(recorded,storage.revision())
++        val e=storage.readShellPort("journal").getJSONObject("data").getJSONArray("events").getJSONObject(0)
++        assertEquals(created.getString("eventId"),e.getString("eventId"));assertEquals(at,e.getString("occurredAtUtc"));assertEquals("basal",e.getString("insulinClass"))
++        assertFalse(shot(rev=before).getBoolean("created"));assertEquals(1,count("v3_events"));assertEquals(1,count("v3_write_receipts"))
++    }
++    @Test fun encryptedRestoreKeepsBasalFactAndReceiptAndRemovesLaterCorrection() {
++        accept();val before=storage.revision();val id=shot(rev=before).getString("eventId")
++        val pass="q08-only-synthetic-restore-key".toCharArray()
++        val encrypted=GfV3EncryptedSnapshot(ctx,helper).createEncrypted(pass)
++        try {
++            val port=gateway.bindInstalledAdapter(GfV3Q08Rules.OWNER)
++            port.correct("events",id,"qa-restore-correction","qa-restore-key",storage.revision(),0,JSONObject().put("units",2.0),"QA actual correction","OWNER_MANUAL")
++            val restored=GfV3EncryptedSnapshot(ctx,helper).restoreEncrypted(encrypted,pass,storage.revision())
++            assertEquals(9,restored.dbVersion)
++            val events=storage.readShellPort("journal").getJSONObject("data").getJSONArray("events")
++            assertEquals(1,events.length());val e=events.getJSONObject(0);assertEquals(id,e.getString("eventId"));assertEquals("levemir",e.getString("insulinId"));assertEquals(at,e.getString("occurredAtUtc"));assertEquals(1.5,e.getDouble("units"),0.000001)
++            assertEquals(0,count("v3_record_corrections"));assertEquals(1,count("v3_write_receipts"))
++        } finally {encrypted.fill(0);pass.fill(' ')}
++    }
++}
+--- a/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3CorrectionWriter.kt
++++ b/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3CorrectionWriter.kt
+@@ -134,6 +134,12 @@
+             val after=modified(domain,src.kind,before,changes)
+             if(domain=="events" && before.optString("insulinId")=="rinfast")
+                 GfV3Q07InjectionContract.actual(after)
++            if(domain=="events" && (GfV3Q08Rules.isLevemir(before.optString("insulinId")) || GfV3Q08Rules.isLevemir(after.optString("insulinId")) || trustedOwnerModule==GfV3Q08Rules.OWNER)) {
++                if(trustedOwnerModule!=GfV3Q08Rules.OWNER || actor!="OWNER_MANUAL") throw SecurityException("Q08_WRONG_CORRECTION_OWNER")
++                require(before.optString("insulinId")=="levemir" && after.optString("insulinId")=="levemir" && before.optString("profileId")==profile && after.optString("profileId")==profile) { "Q08_CORRECTION_IDENTITY_CONFLICT" }
++                GfV3Q08InjectionContract.actual(after)
++                GfV3Q08InjectionContract.requireUniqueSlot(db,profile,after,recordId)
++            }
+             require(before.toString()!=after.toString()){ "NO_EFFECTIVE_CHANGE" }
+             val next=m.first+1
+             if(domain=="events") {
+--- a/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3NativeWriter.kt
++++ b/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3NativeWriter.kt
+@@ -70,6 +70,11 @@
+                 Triple(c.getLong(0),if(c.isNull(1))null else c.getString(1),c.getLong(2))
+             }
+             val profileId=meta.second ?: throw IllegalStateException("PROFILE_UNCONFIGURED")
++            if(role=="actionWriter" && (GfV3Q08Rules.isLevemir(payload.optString("insulinId")) || trustedNativeModule==GfV3Q08Rules.OWNER)) {
++                if(trustedNativeModule!=GfV3Q08Rules.OWNER) throw SecurityException("Q08_WRONG_NATIVE_OWNER")
++                require(payload.optString("profileId")==profileId) { "Q08_PROFILE_CONFLICT" }
++                GfV3Q08InjectionContract.actual(payload)
++            }
+             val duplicate=db.rawQuery("SELECT profile_id,domain,record_id,fingerprint,revision FROM v3_write_receipts WHERE idempotency_key=?",arrayOf(idempotencyKey)).use { c ->
+                 if(c.moveToFirst())listOf(c.getString(0),c.getString(1),c.getString(2),c.getString(3),c.getLong(4).toString()) else null
+             }
+@@ -112,6 +117,10 @@
+                         ).use { it.moveToFirst() }
+                         if(eventIdTaken)throw IllegalStateException("Q07_RINFAST_EVENT_ID_CONFLICT")
+                     }
++                    if(GfV3Q08Rules.isLevemir(payload.optString("insulinId"))) {
++                        GfV3Q08InjectionContract.requireUniqueSlot(db,profileId,payload)
++                        require(!db.rawQuery("SELECT 1 FROM v3_events WHERE event_id=? LIMIT 1",arrayOf(recordId)).use { it.moveToFirst() }) { "Q08_EVENT_ID_CONFLICT" }
++                    }
+                     db.insertOrThrow("v3_events",null,ContentValues().apply {
+                         put("event_id",recordId);put("profile_id",profileId);put("event_type",kind)
+                         put("event_status",status);put("occurred_at_utc",t);put("payload_json",payload.toString())
+--- /dev/null
++++ b/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Q08History.kt
+@@ -0,0 +1,54 @@
++package org.glukopapa.v3.m00
++
++import org.json.JSONArray
++import org.json.JSONObject
++import java.time.Instant
++import java.time.ZoneId
++
++/** Native-only reader. Reuses GFStorage's revision-pinned pagination, never guesses coverage. */
++internal class GfV3Q08History(private val port: GfV3NativeModuleGateway.BoundPort,
++                              private val storage: GfV3Storage) {
++    fun read(asOf: Instant = Instant.now()): JSONObject {
++        val snap = port.read("research") // existing registry permission gate
++        require(snap.getBoolean("profileConfigured")) { "PROFILE_UNCONFIGURED" }
++        val profile = snap.getString("profileId")
++        val revision = snap.getLong("revision")
++        val data = snap.getJSONObject("data")
++        val zone = ZoneId.of(data.getJSONObject("profile").getString("timeZone"))
++        val from = GfV3Q08Rules.startOfHistory(asOf, zone)
++        // Read all pages, filter only after parsing the actual UTC timestamp. Never silently truncate.
++        val domains = listOf("cgm", "events", "mealSessions")
++        for (domain in domains) {
++            var cursor = 0L
++            var total = 0
++            val result = JSONArray()
++            do {
++                val p = storage.readShellPage(domain,cursor,revision,500)
++                val rows = p.getJSONArray("rows")
++                val meta = GfV3Q08Rules.PageMeta(p.getString("profileId"),p.getLong("revision"),p.getString("domain"),p.getLong("nextCursor"),rows.length(),p.getBoolean("hasMore"),p.getBoolean("complete"))
++                GfV3Q08Rules.validatePage(meta,profile,revision,domain,cursor)
++                total += rows.length()
++                require(total <= 250000) { "Q08_HISTORY_BUDGET_EXCEEDED" }
++                for (i in 0 until rows.length()) {
++                    val row = rows.getJSONObject(i)
++                    val raw = when(domain) {
++                        "cgm" -> row.getString("measuredAtUtc")
++                        "events" -> row.getString("occurredAtUtc")
++                        else -> row.optString("startedAtUtc")
++                    }
++                    // A meal without a confirmed start is retained for diagnostics, not inferred.
++                    if(domain == "mealSessions" && raw.isBlank()) { result.put(row); continue }
++                    val at = GfV3Q08Rules.parseUtc(raw)
++                    // Keep basal history for last site and duplicate diagnostics; other events are not needed here.
++                    if(!at.isAfter(asOf) && ((domain == "events" && GfV3Q08Rules.isLevemir(row.optString("insulinId"))) || (!at.isBefore(from) && domain != "events"))) result.put(row)
++                }
++                cursor = meta.nextCursor
++            } while(meta.hasMore)
++            data.put(domain,result)
++        }
++        val finalContext = port.read("research") // recheck native grant as well as profile / revision
++        require(finalContext.getString("profileId")==profile && finalContext.getLong("revision")==revision && storage.revision()==revision) { "Q08_PAGE_CONTEXT_CHANGED" }
++        data.put("q08ReadWindow", JSONObject().put("profileId",profile).put("revision",revision).put("timeZone",zone.id).put("startUtc",from.toString()).put("endUtc",asOf.toString()).put("allStoredPagesRead",true).put("sensorCoverageProven",false))
++        return snap
++    }
++}
+--- /dev/null
++++ b/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Q08InjectionFacts.kt
+@@ -0,0 +1,77 @@
++package org.glukopapa.v3.m00
++
++import android.database.sqlite.SQLiteDatabase
++import org.json.JSONObject
++import java.time.Instant
++import java.time.ZoneId
++
++/** Native-only manual record contract. No dose calculation and no JavaScript writer. */
++internal object GfV3Q08InjectionContract {
++    fun actual(p: JSONObject, now: Instant = Instant.now()) {
++        require(p.optString("eventType") == "insulin_injection" && p.optString("status") == "confirmed" &&
++            p.optString("provenance") == "CONFIRMED_ACTUAL" && p.optBoolean("userConfirmed",false) &&
++            p.optString("insulinId") == "levemir" && p.optString("insulinClass") == "basal" &&
++            p.optString("confirmationSource") == "ANDROID_OWNER_UI") { "Q08_NOT_CONFIRMED_LEVEMIR" }
++        require(p.opt("units") is Number) { "Q08_DOSE_TYPE_INVALID" }
++        val slot = p.getString("levemirSlot")
++        val at = GfV3Q08Rules.parseUtc(p.getString("occurredAtUtc"))
++        if (slot == GfV3Q08Rules.EXTRA_SLOT) {
++            require(p.optBoolean("additionalActual", false)) { "Q08_EXTRA_EXPLICIT_REQUIRED" }
++            GfV3Q08Rules.validateExtra(p.getDouble("units"),p.getString("injectionSite"),at,now,p.optString("additionalReason"))
++        } else {
++            require(!p.has("additionalActual") && !p.has("additionalReason")) { "Q08_EXTRA_FLAG_ON_REGULAR" }
++            GfV3Q08Rules.validateManual(p.getDouble("units"),p.getString("injectionSite"),slot,at,now)
++        }
++    }
++    /** Run inside the same SQLite write transaction as append or correction. */
++    fun requireUniqueSlot(db: SQLiteDatabase, profile: String, event: JSONObject, excludeId: String? = null) {
++        val zone = db.rawQuery("SELECT timezone FROM v3_meta WHERE id=1 AND profile_id=?", arrayOf(profile)).use { c ->
++            require(c.moveToFirst() && !c.isNull(0)) { "Q08_PROFILE_CONFLICT" }; ZoneId.of(c.getString(0))
++        }
++        val at = GfV3Q08Rules.parseUtc(event.getString("occurredAtUtc"))
++        val slot = event.getString("levemirSlot")
++        // Request idempotency and event ID uniqueness remain enforced by the writer.
++        // Extra facts must not be rejected just because another real injection occupied the day.
++        if (slot == GfV3Q08Rules.EXTRA_SLOT) return
++        db.rawQuery("SELECT event_id,payload_json FROM v3_events WHERE profile_id=? AND event_type='insulin_injection' AND event_status='confirmed'",arrayOf(profile)).use { c ->
++            while(c.moveToNext()) {
++                if(c.getString(0)==excludeId) continue
++                val existing=JSONObject(c.getString(1))
++                if(!GfV3Q08Rules.isLevemir(existing.optString("insulinId"))) continue
++                val otherAt=GfV3Q08Rules.parseUtc(existing.getString("occurredAtUtc"))
++                if(GfV3Q08Rules.localDay(at,zone)!=GfV3Q08Rules.localDay(otherAt,zone)) continue
++                val otherSlot=existing.optString("levemirSlot")
++                if(otherSlot==GfV3Q08Rules.EXTRA_SLOT) continue
++                require(otherSlot in GfV3Q08Rules.slots) { "Q08_LEGACY_SLOT_UNRESOLVED" }
++                require(!GfV3Q08Rules.sameSlot(at,slot,otherAt,otherSlot,zone)) { "Q08_SLOT_ALREADY_RECORDED" }
++            }
++        }
++    }
++}
++internal class GfV3Q08InjectionFacts(private val port: GfV3NativeModuleGateway.BoundPort) {
++    /** approved must be supplied only by a trusted native user-action handler, never a JS field. */
++    fun confirm(profile: String, requestId: String, revision: Long, slot: String, units: Double, site: String,
++                atUtc: String, approved: Boolean): JSONObject {
++        require(slot in GfV3Q08Rules.slots) { "Q08_INVALID_SITE_OR_SLOT" }
++        return record(profile,requestId,revision,slot,units,site,atUtc,approved,null)
++    }
++    /** For a separately confirmed actual extra injection, never for advice or scheduling. */
++    fun confirmAdditionalActual(profile: String, requestId: String, revision: Long, units: Double, site: String,
++                                atUtc: String, reason: String, approved: Boolean): JSONObject =
++        record(profile,requestId,revision,GfV3Q08Rules.EXTRA_SLOT,units,site,atUtc,approved,reason)
++
++    private fun record(profile: String, requestId: String, revision: Long, slot: String, units: Double,
++                       site: String, atUtc: String, approved: Boolean, extraReason: String?): JSONObject {
++        if(!approved) throw SecurityException("Q08_NATIVE_OWNER_REQUIRED")
++        require(GfV3WriteContract.validId(requestId) && requestId.length<=96) { "Q08_REQUEST_ID_INVALID" }
++        val eventId="q08-event-$requestId"
++        val p=JSONObject().put("eventId",eventId).put("profileId",profile).put("eventType","insulin_injection")
++            .put("status","confirmed").put("provenance","CONFIRMED_ACTUAL").put("userConfirmed",true)
++            .put("insulinId","levemir").put("insulinClass","basal").put("levemirSlot",slot)
++            .put("units",units).put("injectionSite",site).put("occurredAtUtc",atUtc).put("confirmationSource","ANDROID_OWNER_UI")
++        if(extraReason != null) p.put("additionalActual",true).put("additionalReason",extraReason.trim())
++        GfV3Q08InjectionContract.actual(p)
++        val out=port.append("actionWriter","q08-write-$requestId",revision,p)
++        return JSONObject().put("accepted",true).put("eventId",out.getString("recordId")).put("revision",out.getLong("revision")).put("created",out.getBoolean("created"))
++    }
++}
+--- /dev/null
++++ b/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Q08Rules.kt
+@@ -0,0 +1,45 @@
++package org.glukopapa.v3.m00
++
++import java.time.Instant
++import java.time.ZoneId
++
++/** Non-clinical validation of manually entered historical facts and consistent read pages. */
++internal object GfV3Q08Rules {
++    const val OWNER = "GFLevemirReview"
++    val slots = setOf("morning", "evening")
++    const val EXTRA_SLOT = "additional"
++    val recordedSlots = slots + EXTRA_SLOT
++    val sites = setOf("abdomen", "arm", "thigh", "buttock")
++    fun isLevemir(insulin: String) = insulin.equals("levemir", ignoreCase = true)
++    fun checkDose(units: Double) {
++        require(units.isFinite() && units in 0.5..100.0 && units * 2 == kotlin.math.floor(units * 2)) { "Q08_INVALID_MANUAL_DOSE" }
++    }
++    private val utcPattern=Regex("""[0-9]{4}-[0-9]{2}-[0-9]{2}T(?:[01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](?:\.[0-9]{1,9})?Z""")
++    fun parseUtc(raw: String): Instant {
++        require(utcPattern.matches(raw)) { "Q08_INVALID_UTC" }
++        return try { Instant.parse(raw) } catch (_: java.time.format.DateTimeParseException) { throw IllegalArgumentException("Q08_INVALID_UTC") }
++    }
++    fun localDay(at: Instant, zone: ZoneId) = at.atZone(zone).toLocalDate()
++    fun startOfHistory(asOf: Instant, zone: ZoneId): Instant =
++        localDay(asOf,zone).minusDays(14).atStartOfDay(zone).toInstant().minusSeconds(3600)
++    fun validateManual(units: Double, site: String, slot: String, at: Instant, now: Instant) {
++        checkDose(units)
++        require(site in sites && slot in slots) { "Q08_INVALID_SITE_OR_SLOT" }
++        require(!at.isAfter(now)) { "Q08_FUTURE_ACTION" }
++    }
++    /** A separate native action records an already administered extra fact, not a scheduled dose. */
++    fun validateExtra(units: Double, site: String, at: Instant, now: Instant, reason: String) {
++        checkDose(units)
++        require(site in sites) { "Q08_INVALID_SITE_OR_SLOT" }
++        require(!at.isAfter(now)) { "Q08_FUTURE_ACTION" }
++        require(reason.trim().length in 3..500) { "Q08_EXTRA_REASON_REQUIRED" }
++    }
++    fun sameSlot(a: Instant, aSlot: String, b: Instant, bSlot: String, zone: ZoneId): Boolean =
++        aSlot == bSlot && localDay(a,zone) == localDay(b,zone)
++    data class PageMeta(val profile: String, val revision: Long, val domain: String, val nextCursor: Long, val count: Int, val hasMore: Boolean, val complete: Boolean)
++    fun validatePage(p: PageMeta, profile: String, revision: Long, domain: String, cursor: Long) {
++        require(p.profile == profile && p.revision == revision && p.domain == domain) { "Q08_PAGE_CONTEXT_CHANGED" }
++        require(p.count in 0..500 && p.nextCursor >= cursor && p.complete != p.hasMore) { "Q08_PAGE_INVALID" }
++        require(if(p.count == 0) !p.hasMore && p.nextCursor == cursor else p.nextCursor > cursor) { "Q08_PAGE_CURSOR_INVALID" }
++    }
++}
