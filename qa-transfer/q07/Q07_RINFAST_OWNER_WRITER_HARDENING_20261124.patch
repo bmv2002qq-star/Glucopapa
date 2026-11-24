@@ -1,0 +1,51 @@
+--- android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3NativeWriter.kt
++++ android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3NativeWriter.kt
+@@ -95,8 +95,16 @@
+                     GfV3WriteContract.validateRealEvent(kind,status,recordId,idempotencyKey,t)
+                     // A calculation is never accepted as an actual action.
+                     require(payload.optString("provenance") == "CONFIRMED_ACTUAL") { "ACTION_NOT_CONFIRMED" }
+-                    if(kind=="insulin_injection" && payload.optString("insulinId")=="rinfast")
++                    if(kind=="insulin_injection" && payload.optString("insulinId")=="rinfast") {
++                        // Q07 owns RinFast actual injections. A different accepted actionWriter
++                        // cannot impersonate GFInjectionFact or bypass the Android dialog.
++                        if(trustedNativeModule!="GFInjectionFact")
++                            throw SecurityException("Q07_RINFAST_WRONG_NATIVE_OWNER")
++                        require(payload.optString("confirmationSource")=="ANDROID_OWNER_DIALOG") {
++                            "Q07_RINFAST_OWNER_CONFIRMATION_SOURCE_REQUIRED"
++                        }
+                         GfV3Q07InjectionContract.actual(payload)
++                    }
+                     db.insertOrThrow("v3_events",null,ContentValues().apply {
+                         put("event_id",recordId);put("profile_id",profileId);put("event_type",kind)
+                         put("event_status",status);put("occurred_at_utc",t);put("payload_json",payload.toString())
+--- android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q07RinFastNativeIntegrationInstrumentedTest.kt
++++ android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q07RinFastNativeIntegrationInstrumentedTest.kt
+@@ -124,4 +124,28 @@
+             assertEquals(1L,rows("v3_write_receipts"))
+         } finally {encrypted.fill(0);pass.fill(' ')}
+     }
++
++    @Test fun anotherAcceptedActionWriterCannotCreateRinFastEvent() {
++        val r=rev();acceptOwner()
++        helper.writableDatabase.execSQL("UPDATE v3_module_registry SET status='OWNER_INTEGRATION_ACCEPTED',feature_enabled=1,write_roles_json='[\"actionWriter\"]' WHERE module_id='GFInjectionEntry'")
++        val forged=JSONObject().put("eventId","q07-fake-foreign-1")
++            .put("eventType","insulin_injection").put("status","confirmed")
++            .put("provenance","CONFIRMED_ACTUAL").put("userConfirmed",true)
++            .put("insulinId","rinfast").put("insulinClass","rapid")
++            .put("units",1.0).put("injectionSite","abdomen")
++            .put("occurredAtUtc",whenUtc).put("note","")
++            .put("confirmationSource","ANDROID_OWNER_DIALOG")
++        reject { gateway.bindInstalledAdapter("GFInjectionEntry").append("actionWriter","q07-forged-idem-1",r,forged) }
++        assertEquals(r,rev());assertEquals(0L,rows("v3_events"))
++    }
++    @Test fun directLowLevelRinFastWriterWithoutAndroidOwnerSourceMustFail() {
++        val r=rev();acceptOwner()
++        val forged=JSONObject().put("eventId","q07-spoof-native-1")
++            .put("eventType","insulin_injection").put("status","confirmed")
++            .put("provenance","CONFIRMED_ACTUAL").put("userConfirmed",true)
++            .put("insulinId","rinfast").put("units",1.0)
++            .put("injectionSite","abdomen").put("occurredAtUtc",whenUtc)
++        reject { gateway.bindInstalledAdapter("GFInjectionFact").append("actionWriter","q07-forged-idem-2",r,forged) }
++        assertEquals(r,rev());assertEquals(0L,rows("v3_events"))
++    }
+ }
