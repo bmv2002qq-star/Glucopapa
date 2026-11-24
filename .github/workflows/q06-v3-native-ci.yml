@@ -65,7 +65,7 @@ jobs:
           parts=sorted(Path('qa-transfer/q06').glob('q06-part-*.b64'))
           assert len(parts)==3, f'Q06 overlay parts {len(parts)}'
           payload=base64.b64decode(''.join(''.join(p.read_text().split()) for p in parts),validate=True)
-          assert hashlib.sha256(payload).hexdigest()=='0691e6eec9b7a1e1eb2ec6b08f588b7520abab1085476b3f655608745937b08f', 'Q06_OVERLAY_SHA_MISMATCH'
+          assert hashlib.sha256(payload).hexdigest()=='4ef559ea916be467ecf0b2682b7c77579d2d617af87ca2177f98fab383269a93', 'Q06_OVERLAY_SHA_MISMATCH'
           with zipfile.ZipFile(io.BytesIO(payload)) as z:
               assert z.testzip() is None, 'Q06_OVERLAY_ZIP_BAD'
               z.extractall('q06-ci')
@@ -81,20 +81,7 @@ jobs:
           python3 tests/test_q05_schema_host.py
           python3 tests/test_q05_static_contract.py
           python3 ../qa-transfer/q06/test_q06_ci_contract.py
-          # Q04 legacy host asserts the prior QA package suffix. Q06 must remain
-          # independently installable with .q06qa and never overwrite production.
-          python3 - <<'PYQ06'
-          from pathlib import Path
-          build=Path('android-app/app/build.gradle.kts').read_text()
-          assert 'applicationIdSuffix = ".q06qa"' in build, 'Q06_DEDICATED_QA_ID_MISSING'
-          assert 'applicationId = "org.glukopapa.v3.m00"' in build, 'PRODUCTION_APP_ID_CHANGED'
-          p=Path('tests/test_q04_integration_structure.py')
-          text=p.read_text()
-          source='applicationIdSuffix = ".q05qa"'
-          assert text.count(source)==1, 'Q04_QA_SUFFIX_CONTRACT_CHANGED'
-          p.write_text(text.replace(source,'applicationIdSuffix = ".q06qa"'))
-          PYQ06
-          python3 tests/test_q04_integration_structure.py
+          python3 tests/test_q06_q04_integration_structure.py
           python3 tests/test_q04_legacy_restore_host.py
           python3 tests/test_q04_sqlite_contract.py
           node tests/test_q04_native_adapter_contract.js
