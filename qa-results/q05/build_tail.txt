@@ -15,27 +15,27 @@ Daemon will be stopped at the end of the build
 > Task :app:parseDebugLocalResources
 > Task :app:processDebugMainManifest
 > Task :app:processDebugManifest
+> Task :app:processDebugManifestForPackage
 > Task :app:javaPreCompileDebug
 > Task :app:mergeDebugShaders
 > Task :app:compileDebugShaders NO-SOURCE
 > Task :app:generateDebugAssets UP-TO-DATE
 > Task :app:mergeDebugAssets
-> Task :app:processDebugManifestForPackage
-> Task :app:compressDebugAssets
 > Task :app:desugarDebugFileDependencies
-> Task :app:mergeDebugJniLibFolders
-> Task :app:checkDebugDuplicateClasses
-> Task :app:mergeDebugNativeLibs NO-SOURCE
 > Task :app:processDebugResources
-> Task :app:mergeExtDexDebug
-> Task :app:stripDebugDebugSymbols NO-SOURCE
+> Task :app:compressDebugAssets
+> Task :app:checkDebugDuplicateClasses
+> Task :app:mergeDebugJniLibFolders
+> Task :app:mergeDebugNativeLibs NO-SOURCE
 > Task :app:mergeLibDexDebug
+> Task :app:stripDebugDebugSymbols NO-SOURCE
+> Task :app:mergeExtDexDebug
 > Task :app:validateSigningDebug
 > Task :app:writeDebugAppMetadata
 > Task :app:writeDebugSigningConfigVersions
 > Task :app:preDebugAndroidTestBuild SKIPPED
-> Task :app:checkDebugAndroidTestAarMetadata
 > Task :app:generateDebugAndroidTestResValues
+> Task :app:checkDebugAndroidTestAarMetadata
 > Task :app:mapDebugAndroidTestSourceSetPaths
 > Task :app:generateDebugAndroidTestResources
 > Task :app:mergeDebugAndroidTestResources
@@ -82,7 +82,7 @@ w: file:///home/runner/work/Glucopapa/Glucopapa/q05-ci/android-app/app/src/main/
 > Task :app:packageDebugAndroidTest
 > Task :app:createDebugAndroidTestApkListingFileRedirect
 > Task :app:assembleDebugAndroidTest
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_3-1795531379991.json
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_3-1795531769573.json
 
-BUILD SUCCESSFUL in 1m 6s
+BUILD SUCCESSFUL in 1m 12s
 60 actionable tasks: 60 executed
