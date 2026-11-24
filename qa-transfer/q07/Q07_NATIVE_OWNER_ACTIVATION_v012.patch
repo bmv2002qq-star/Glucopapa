@@ -1,0 +1,330 @@
+--- /dev/null
++++ android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Q07ModuleInstaller.kt
+@@ -0,0 +1,83 @@
++package org.glukopapa.v3.m00
++
++import android.content.ContentValues
++import org.json.JSONArray
++import org.json.JSONObject
++import java.time.Instant
++
++/**
++ * Q07: explicit Android-owner-initiated module activation. No injection is created.
++ * Never invoke during startup or interpret a browser-supplied boolean as consent.
++ */
++internal class GfV3Q07ModuleInstaller(private val helper: GfDbHelper) {
++    companion object {
++        const val MODULE = "GFInjectionFact"
++        const val VERSION = "v0.1.2"
++    }
++
++    fun activateAfterAndroidDialog(expectedRevision: Long, nativeOwnerApproved: Boolean): JSONObject {
++        if (!nativeOwnerApproved) throw SecurityException("Q07_ACTIVATION_REQUIRES_ANDROID_OWNER")
++        require(expectedRevision >= 0) { "Q07_ACTIVATION_REVISION_INVALID" }
++        val db = helper.writableDatabase
++        db.beginTransaction()
++        try {
++            val meta = db.rawQuery("SELECT revision,profile_id,input_revision FROM v3_meta WHERE id=1", null).use { c ->
++                if (!c.moveToFirst()) throw IllegalStateException("V3_META_MISSING")
++                Triple(c.getLong(0), if (c.isNull(1)) null else c.getString(1), c.getLong(2))
++            }
++            if (meta.second == null) throw IllegalStateException("PROFILE_UNCONFIGURED")
++            if (meta.first != expectedRevision) throw IllegalStateException("V3_REVISION_CONFLICT")
++            val state = db.rawQuery(
++                "SELECT status,feature_enabled,write_roles_json FROM v3_module_registry WHERE module_id=?",
++                arrayOf(MODULE)
++            ).use { c ->
++                if (!c.moveToFirst()) throw SecurityException("Q07_MODULE_NOT_IN_CATALOG")
++                Triple(c.getString(0), c.getInt(1), c.getString(2))
++            }
++            if (state.first == "OWNER_INTEGRATION_ACCEPTED" && state.second == 1) {
++                db.setTransactionSuccessful()
++                return JSONObject().put("activated", false).put("alreadyActive", true)
++                    .put("revision", meta.first).put("moduleId", MODULE)
++            }
++            if (state.first != "NOT_CONNECTED" || state.second != 0)
++                throw SecurityException("Q07_ACTIVATION_ILLEGAL_REGISTRY_STATE")
++            val roles = JSONArray(state.third)
++            if ((0 until roles.length()).map { roles.getString(it) }.toSet() != setOf("actionWriter"))
++                throw SecurityException("Q07_ACTIVATION_WRITE_ROLES_INVALID")
++            val granted = db.rawQuery(
++                "SELECT 1 FROM v3_write_grants WHERE module_id=? AND role='actionWriter' " +
++                    "AND grant_status='OWNER_GRANTED_EXPERIMENTAL' " +
++                    "AND implementation_status='PREPARED_NATIVE' LIMIT 1", arrayOf(MODULE)
++            ).use { it.moveToFirst() }
++            if (!granted) throw SecurityException("Q07_ACTIVATION_GRANT_NOT_READY")
++
++            val next = meta.first + 1
++            val update = db.update("v3_module_registry", ContentValues().apply {
++                put("status", "OWNER_INTEGRATION_ACCEPTED")
++                put("feature_enabled", 1)
++                put("version", VERSION)
++                put("adapter_version", VERSION)
++                put("read_roles_json", "[\"journal\"]")
++                // Do not widen or invent additional write privileges.
++            }, "module_id=? AND status='NOT_CONNECTED' AND feature_enabled=0", arrayOf(MODULE))
++            if (update != 1) throw IllegalStateException("Q07_ACTIVATION_REGISTRY_CAS_FAILED")
++            val m = db.update("v3_meta", ContentValues().apply { put("revision", next) },
++                "id=1 AND revision=?", arrayOf(meta.first.toString()))
++            if (m != 1) throw IllegalStateException("Q07_ACTIVATION_REVISION_CAS_FAILED")
++            val now = Instant.now().toString()
++            db.insertOrThrow("v3_audit", null, ContentValues().apply {
++                put("revision", next);put("domain", "registry");put("record_id", MODULE)
++                put("action", "Q07_OWNER_DIALOG_ACTIVATION");put("source_module", "GFShell")
++                put("at_utc", now)
++            })
++            db.insertOrThrow("v3_change_feed", null, ContentValues().apply {
++                put("revision", next);put("domain", "registry");put("record_id", MODULE)
++                put("source_module", "GFShell");put("created_at_utc", now)
++            })
++            db.setTransactionSuccessful()
++            return JSONObject().put("activated", true).put("alreadyActive", false)
++                .put("revision", next).put("moduleId", MODULE)
++                .put("injectionRecorded", false).put("inputRevisionUnchanged", meta.third)
++        } finally { db.endTransaction() }
++    }
++}
+--- android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Q07OwnerQueue.kt
++++ android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Q07OwnerQueue.kt
+@@ -9,10 +9,12 @@
+ internal class GfV3Q07OwnerQueue(
+     private val facts: GfV3Q07InjectionFacts,
+     private val storage: GfV3Storage,
++    private val installer: GfV3Q07ModuleInstaller? = null,
+     private val onConfirm: (String,(Boolean)->Unit)->Unit
+ ) {
+     private data class Pending(val request: JSONObject, val eventId: String,
+-        val key: String, var state: String = "PENDING", var result: JSONObject? = null)
++        val key: String, val activationOnly: Boolean = false,
++        var state: String = "PENDING", var result: JSONObject? = null)
+     private val lock=Any()
+     private val pending=linkedMapOf<String,Pending>()
+     private val worker=Executors.newSingleThreadExecutor { r -> Thread(r,"Q07InjectionOwnerWorker").apply { isDaemon=true } }
+@@ -62,7 +64,8 @@
+                 (0 until m.getJSONArray("writeRoles").length()).any { j ->
+                     m.getJSONArray("writeRoles").getString(j)=="actionWriter" }
+         }
+-        require(permitted) { "Q07_PRODUCER_NOT_ACTIVATED" }
++        val activationOnly = !permitted
++        if (activationOnly) require(installer != null) { "Q07_PRODUCER_NOT_ACTIVATED" }
+         val units=request.getDouble("units")
+         val site=request.getString("site")
+         GfV3Q07InjectionContract.dose(units)
+@@ -77,12 +80,16 @@
+             require(request.getInt("recordVersion")>=0) { "Q07_EDIT_VERSION_INVALID" }
+             require(request.getString("reason").trim().length in 3..500) { "Q07_EDIT_REASON_REQUIRED" }
+         }
+-        val desc=if(command=="confirm")
++        val desc=if(activationOnly)
++            "Включить модуль РинФаст для записи фактических уколов?\n" +
++            "Будет включена запись через GFStorage после вашего разрешения.\n" +
++            "Этот запрос НЕ записывает укол. После активации повторите подтверждение факта."
++            else if(command=="confirm")
+             "Подтвердите, что РинФаст фактически введён.\nДоза: $units ЕД\nМесто: $site\nВремя: ${request.getString("atUtc")}.\nНе подтверждайте запланированный укол."
+             else "Подтвердите исправление ранее сделанного укола ${request.getString("eventId")}.\nНовая доза: $units ЕД\nМесто: $site\nПричина: ${request.getString("reason")}."
+         val ticket=UUID.randomUUID().toString()
+         val p=Pending(request,if(command=="confirm")"q07-event-${UUID.randomUUID()}" else request.getString("eventId"),
+-            "q07-write-${UUID.randomUUID()}")
++            "q07-write-${UUID.randomUUID()}",activationOnly)
+         synchronized(lock) { require(!closed && pending.isEmpty()) { "Q07_BUSY" }; pending[ticket]=p }
+         try {
+             onConfirm(desc) { approved ->
+@@ -94,7 +101,9 @@
+                         try {
+                             val out=apply(p)
+                             finish(ticket,"FINISHED",JSONObject().put("accepted",true)
+-                                .put("revision",out.getLong("revision")).put("recordId",p.eventId))
++                                .put("revision",out.getLong("revision")).put("recordId",if(p.activationOnly)"GFInjectionFact" else p.eventId)
++                                .put("activationOnly",p.activationOnly)
++                                .put("code",if(p.activationOnly)"Q07_ACTIVATED_RECONFIRM_SHOT" else "Q07_FACT_CONFIRMED"))
+                         } catch(e:Exception) {
+                             finish(ticket,"REJECTED",JSONObject().put("accepted",false)
+                                 .put("code",e.message?:"Q07_NATIVE_WRITE_REJECTED"))
+@@ -108,7 +117,10 @@
+     }
+     private fun apply(p: Pending): JSONObject {
+         val req=p.request
+-        return if(req.getString("command")=="confirm") facts.confirm(p.eventId,p.key,
++        return if(p.activationOnly) {
++            val nativeInstaller=installer ?: throw IllegalStateException("Q07_INSTALLER_MISSING")
++            nativeInstaller.activateAfterAndroidDialog(req.getLong("expectedRevision"), true)
++        } else if(req.getString("command")=="confirm") facts.confirm(p.eventId,p.key,
+             req.getDouble("units"),req.getString("site"),req.getString("atUtc"),
+             req.optString("note"),req.getLong("expectedRevision"),true)
+         else facts.correct(p.eventId,"q07-corr-${UUID.randomUUID()}",p.key,
+--- android-app/app/src/main/java/org/glukopapa/v3/m00/MainActivity.kt
++++ android-app/app/src/main/java/org/glukopapa/v3/m00/MainActivity.kt
+@@ -85,7 +85,8 @@
+             }
+         }
+         injectionQueue=GfV3Q07OwnerQueue(
+-            GfV3Q07InjectionFacts(nativeModuleGateway.bindInstalledAdapter("GFInjectionFact")),v3
++            GfV3Q07InjectionFacts(nativeModuleGateway.bindInstalledAdapter("GFInjectionFact")),v3,
++            GfV3Q07ModuleInstaller(helper)
+         ){msg,finish->
+             runOnUiThread {
+                 AlertDialog.Builder(this).setTitle("РинФаст — подтверждение владельца")
+--- android-app/app/src/main/assets/www/q07/rinfast.html
++++ android-app/app/src/main/assets/www/q07/rinfast.html
+@@ -345,7 +345,7 @@
+ function send(command,values){if(!snap)throw Error('PROFILE_UNCONFIGURED');const req={command,profileId:snap.profileId,expectedRevision:snap.revision,...values};return JSON.parse(n.requestOwnerAction(JSON.stringify(req)))}
+ function poll(ticket){let count=0;const work=()=>{let x;try{x=JSON.parse(n.pollOwnerAction(ticket));if(x.error)throw Error(x.error.code)}catch(e){setBusy(false);alertError(e);return}
+  if(x.state==='PENDING'||x.state==='APPLYING'){if(count++>120){setBusy(false);alertError(Error('Q07_CONFIRMATION_TIMEOUT'));return};setTimeout(work,200);return}
+- setBusy(false);if(x.state!=='FINISHED'||!x.result?.accepted){alertError(Error(x.result?.code||'OWNER_CANCELLED'))}else{$('note').value='';render()}};work()}
++ setBusy(false);if(x.state!=='FINISHED'||!x.result?.accepted){alertError(Error(x.result?.code||'OWNER_CANCELLED'))}else if(x.result?.activationOnly){render();alertError(Error('Модуль РинФаст активирован. Укол не записан. Повторите подтверждение фактически выполненного укола.'))}else{$('note').value='';render()}};work()}
+ $('minus').onclick=()=>{$('dose').value=Math.max(.5,Number($('dose').value)-.5)};
+ $('plus').onclick=()=>{$('dose').value=Math.min(100,Number($('dose').value)+.5)};
+ document.querySelectorAll('[data-dose]').forEach(b=>b.onclick=()=>$('dose').value=b.dataset.dose);
+--- /dev/null
++++ android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q07RinFastModuleInstallerInstrumentedTest.kt
+@@ -0,0 +1,150 @@
++package org.glukopapa.v3.m00
++
++import androidx.test.ext.junit.runners.AndroidJUnit4
++import androidx.test.platform.app.InstrumentationRegistry
++import org.json.JSONObject
++import org.junit.After
++import org.junit.Assert.*
++import org.junit.Before
++import org.junit.Test
++import org.junit.runner.RunWith
++
++/** Real Android owner activation and GFStorage registry transaction tests. */
++@RunWith(AndroidJUnit4::class)
++class Q07RinFastModuleInstallerInstrumentedTest {
++    private val ctx get() = InstrumentationRegistry.getInstrumentation().targetContext
++    private lateinit var helper:GfDbHelper
++    private lateinit var storage:GfV3Storage
++    private lateinit var installer:GfV3Q07ModuleInstaller
++    @Before fun before() {
++        InstrumentationRegistry.getInstrumentation().waitForIdleSync()
++        ctx.deleteDatabase("glukopapa_v3.db")
++        helper=GfDbHelper(ctx)
++        storage=GfV3Storage(helper,
++            ctx.assets.open("db/module_catalog_v1.json").bufferedReader().use { it.readText() },
++            ctx.assets.open("db/writer_grants_v0.12.json").bufferedReader().use { it.readText() })
++        installer=GfV3Q07ModuleInstaller(helper)
++        helper.writableDatabase.execSQL("UPDATE v3_meta SET profile_id='q07-installer-profile',timezone='UTC' WHERE id=1")
++    }
++    @After fun after() {helper.close();ctx.deleteDatabase("glukopapa_v3.db")}
++    private fun rev()=storage.revision()
++    private fun count(table:String):Long=helper.readableDatabase.rawQuery("SELECT COUNT(*) FROM $table",null).use {c->
++        assertTrue(c.moveToFirst());c.getLong(0)
++    }
++    private fun state():JSONObject {
++        val a=storage.readShellPort("registry").getJSONObject("data").getJSONArray("modules")
++        return (0 until a.length()).map(a::getJSONObject).single{it.getString("moduleId")=="GFInjectionFact"}
++    }
++    private fun reject(action:()->Unit) {
++        try {action();fail("Q07_INSTALLER_SHOULD_REJECT")}
++        catch(e:SecurityException) {} catch(e:IllegalArgumentException) {} catch(e:IllegalStateException) {}
++    }
++    @Test fun installingIsNeverAutomaticAndDoesNotWriteAnInjection() {
++        assertEquals("NOT_CONNECTED",state().getString("status"))
++        assertFalse(state().getBoolean("featureEnabled"))
++        assertEquals(0L,count("v3_events"))
++        val old=rev();val priorAudit=count("v3_audit")
++        reject {installer.activateAfterAndroidDialog(old,false)}
++        assertEquals(old,rev());assertEquals(priorAudit,count("v3_audit"))
++        assertEquals(0L,count("v3_events"))
++    }
++    @Test fun explicitNativeOwnerApprovalActivatesOnlyQ07WithoutMedicalInput() {
++        val before=rev();val priorAudit=count("v3_audit");val priorFeed=count("v3_change_feed")
++        val installed=installer.activateAfterAndroidDialog(before,true)
++        assertTrue(installed.getBoolean("activated"));assertFalse(installed.getBoolean("injectionRecorded"))
++        assertEquals(before+1,installed.getLong("revision"));assertEquals(before+1,rev())
++        assertEquals("OWNER_INTEGRATION_ACCEPTED",state().getString("status"))
++        assertTrue(state().getBoolean("featureEnabled"))
++        assertEquals("v0.1.2",state().getString("version"))
++        assertEquals(1, state().getJSONArray("writeRoles").length())
++        assertEquals("actionWriter",state().getJSONArray("writeRoles").getString(0))
++        assertEquals(priorAudit+1,count("v3_audit"));assertEquals(priorFeed+1,count("v3_change_feed"))
++        assertEquals(0L,count("v3_events"));assertEquals(0L,count("v3_write_receipts"))
++        assertEquals(0L,count("v3_record_corrections"))
++        val audit=helper.readableDatabase.rawQuery(
++            "SELECT action,source_module FROM v3_audit WHERE revision=?",arrayOf((before+1).toString())
++        ).use {c->assertTrue(c.moveToFirst());Pair(c.getString(0),c.getString(1))}
++        assertEquals("Q07_OWNER_DIALOG_ACTIVATION",audit.first)
++        assertEquals("GFShell",audit.second)
++    }
++    @Test fun staleRevisionOrMissingGrantCannotActivate() {
++        val r=rev();reject {installer.activateAfterAndroidDialog(r+1,true)}
++        helper.writableDatabase.execSQL("DELETE FROM v3_write_grants WHERE module_id='GFInjectionFact'")
++        reject {installer.activateAfterAndroidDialog(r,true)}
++        assertEquals(r,rev());assertEquals("NOT_CONNECTED",state().getString("status"))
++        assertEquals(0L,count("v3_events"))
++    }
++    @Test fun illegalWidenedRolesCannotActivateAndDoNotPartiallyWrite() {
++        val r=rev()
++        helper.writableDatabase.execSQL("UPDATE v3_module_registry SET write_roles_json='[\"actionWriter\",\"forecastWriter\"]' WHERE module_id='GFInjectionFact'")
++        reject {installer.activateAfterAndroidDialog(r,true)}
++        assertEquals(r,rev());assertFalse(state().getBoolean("featureEnabled"))
++    }
++    @Test fun activationIsIdempotentAndRejectsStaleRequests() {
++        val r=rev()
++        installer.activateAfterAndroidDialog(r,true)
++        val again=installer.activateAfterAndroidDialog(r+1,true)
++        assertFalse(again.getBoolean("activated"));assertTrue(again.getBoolean("alreadyActive"))
++        assertEquals(r+1,rev())
++        reject {installer.activateAfterAndroidDialog(r,true)}
++        assertEquals(r+1,rev())
++    }
++    @Test fun actualRinFastCannotAppearWithoutSecondOwnerConfirmation() {
++        val before=rev()
++        installer.activateAfterAndroidDialog(before,true)
++        val gateway=GfV3NativeModuleGateway(storage,GfV3NativeWriter(helper),GfV3CorrectionWriter(helper),helper)
++        val facts=GfV3Q07InjectionFacts(gateway.bindInstalledAdapter("GFInjectionFact"))
++        reject {facts.confirm("q07-install-test-1","q07-install-key-1",1.0,"abdomen",
++            "2026-11-24T12:00:00Z","",rev(),false)}
++        assertEquals(0L,count("v3_events"))
++        val ok=facts.confirm("q07-install-test-1","q07-install-key-1",1.0,"abdomen",
++            "2026-11-24T12:00:00Z","",rev(),true)
++        assertTrue(ok.getBoolean("created"));assertEquals(1L,count("v3_events"))
++        val queue=GfV3Q07OwnerQueue(facts,storage){_,done->done(false)}
++        try {
++            assertEquals("UNKNOWN_INCOMPLETE_COVERAGE",queue.snapshot().getString("iobStatus"))
++            assertTrue(queue.snapshot().isNull("modelRemainingUnits"))
++        } finally { queue.close() }
++    }
++
++    private fun activationQueueResponse(approve:Boolean):JSONObject {
++        val gateway=GfV3NativeModuleGateway(storage,GfV3NativeWriter(helper),GfV3CorrectionWriter(helper),helper)
++        val facts=GfV3Q07InjectionFacts(gateway.bindInstalledAdapter("GFInjectionFact"))
++        val queue=GfV3Q07OwnerQueue(facts,storage,installer){_,done->done(approve)}
++        try {
++            val before=queue.snapshot()
++            val request=JSONObject().put("command","confirm")
++                .put("profileId",before.getString("profileId"))
++                .put("expectedRevision",before.getLong("revision"))
++                .put("units",1.0).put("site","abdomen")
++                .put("atUtc",java.time.Instant.now().minusSeconds(120).toString()).put("note","")
++            val ticket=queue.enqueue(request.toString()).getString("ticket")
++            var poll=JSONObject()
++            for(i in 0..70) {
++                poll=queue.poll(ticket)
++                if (poll.getString("state") !in setOf("PENDING","APPLYING")) break
++                Thread.sleep(40)
++            }
++            assertTrue(poll.getString("state") !in setOf("PENDING","APPLYING"))
++            return poll
++        } finally {queue.close()}
++    }
++    @Test fun firstUseOwnerDialogActivatesWithoutRecordingShot() {
++        val result=activationQueueResponse(true)
++        assertEquals("FINISHED",result.getString("state"))
++        assertTrue(result.getJSONObject("result").getBoolean("accepted"))
++        assertTrue(result.getJSONObject("result").getBoolean("activationOnly"))
++        assertEquals("Q07_ACTIVATED_RECONFIRM_SHOT",result.getJSONObject("result").getString("code"))
++        assertEquals("OWNER_INTEGRATION_ACCEPTED",state().getString("status"))
++        assertEquals(0L,count("v3_events"))
++        assertEquals(0L,count("v3_write_receipts"))
++    }
++    @Test fun nativeCancelNeverActivatesAndNeverRecords() {
++        val old=rev()
++        val result=activationQueueResponse(false)
++        assertEquals("CANCELLED",result.getString("state"))
++        assertEquals(old,rev())
++        assertEquals("NOT_CONNECTED",state().getString("status"))
++        assertEquals(0L,count("v3_events"))
++    }
++}
