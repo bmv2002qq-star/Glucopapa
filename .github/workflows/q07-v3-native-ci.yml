@@ -1,4 +1,4 @@
-name: Q07 RinFast trusted owner Android 15 QA
+name: Q07 RinFast native activation Android 15 QA
 on:
   push:
     branches:
@@ -101,6 +101,23 @@ jobs:
           patch -d q07-ci -p0 --batch --forward -i "$GITHUB_WORKSPACE/qa-transfer/q07/Q07_RINFAST_OWNER_WRITER_HARDENING_20261124.patch"
           echo 'e8aaad3a29c4c9b584651135ac86312cd2861277074e51d15e390940ee3adb21  qa-transfer/q07/Q07_RUNTIME_EVENT_ID_AND_AUDIT_TEST_FIX_20261124.patch' | sha256sum -c -
           patch -d q07-ci -p0 --batch --forward -i "$GITHUB_WORKSPACE/qa-transfer/q07/Q07_RUNTIME_EVENT_ID_AND_AUDIT_TEST_FIX_20261124.patch"
+      - name: Apply Q07 explicit native owner activation overlay
+        shell: bash
+        run: |
+          set -euxo pipefail
+          echo 'SHA-verified Q07 owner activation source (never auto-activate at startup)'
+          patch -d q07-ci -p0 --batch --forward -i "$GITHUB_WORKSPACE/qa-transfer/q07/Q07_NATIVE_OWNER_ACTIVATION_v012.patch"
+          python3 - <<'PY'
+          import json,hashlib
+          from pathlib import Path
+          m=json.loads(Path('qa-transfer/q07/Q07_NATIVE_OWNER_ACTIVATION_v012_MANIFEST.json').read_text())
+          assert len(m['sourceSha256'])==5
+          for e in m['sourceSha256']:
+              p=Path('q07-ci')/e['path']
+              assert p.is_file(),p
+              assert hashlib.sha256(p.read_bytes()).hexdigest()==e['sha256'],p
+          print("Q07_OWNER_ACTIVATION_SOURCE_SHA_5of5_PASS")
+          PY
       - name: Q07 Q06 Q05 Q04 Q03 host and source regression
         shell: bash
         run: |
@@ -159,13 +176,13 @@ jobs:
             errors+=int(r.get('errors','0'))
             skipped+=int(r.get('skipped','0'))
           print('Q07 ANDROID XML',tests,failures,errors,skipped)
-          assert tests>=76 and failures==0 and errors==0 and skipped==0,'Q07_ANDROID_XML_GATE_FAILED'
+          assert tests>=84 and failures==0 and errors==0 and skipped==0,'Q07_ANDROID_XML_GATE_FAILED'
           PY
       - name: Upload Android Q07 APK and XML proof
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: q07-native-ci-evidence
+          name: q07-activation-native-ci-evidence
           path: |
             q07-ci/android-app/app/build/outputs/apk/debug/
             q07-ci/android-app/app/build/outputs/apk/androidTest/debug/
@@ -210,6 +227,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: q07-run-results
+          name: q07-activation-run-results
           path: qa-results/q07/
           if-no-files-found: warn
