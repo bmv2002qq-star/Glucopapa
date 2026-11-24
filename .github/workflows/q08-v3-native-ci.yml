@@ -7,6 +7,9 @@ on:
       - '.github/workflows/q08-v3-native-ci.yml'
       - 'qa-transfer/q08/**'
   workflow_dispatch:
+concurrency:
+  group: q08-qa-${{ github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:
@@ -155,10 +158,10 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
-          echo '3ef978d00073994fd2ba535e84e10a74d8a36564c558ab1dfa52e90885afbfcd  qa-transfer/q08/Q08_native_source_only_v040.patch' | sha256sum -c -
+          echo '89092da0a5017b408de262d3e94ec0568d76e29ce45d70f142d9cdfdfb33b063  qa-transfer/q08/Q08_native_source_only_v041.patch' | sha256sum -c -
           cd q07-ci
-          git apply --check "$GITHUB_WORKSPACE/qa-transfer/q08/Q08_native_source_only_v040.patch"
-          git apply "$GITHUB_WORKSPACE/qa-transfer/q08/Q08_native_source_only_v040.patch"
+          git apply --check "$GITHUB_WORKSPACE/qa-transfer/q08/Q08_native_source_only_v041.patch"
+          git apply "$GITHUB_WORKSPACE/qa-transfer/q08/Q08_native_source_only_v041.patch"
       - name: Compile Android Q08 candidate and instrumented tests
         shell: bash
         run: |
@@ -170,7 +173,7 @@ jobs:
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
-      - name: Android 15 Q07 plus Q06/Q05/Q01 Android15 regression
+      - name: Android 15 Q08 and baseline regression
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 35
@@ -183,27 +186,15 @@ jobs:
           emulator-boot-timeout: 900
           disable-animations: true
           script: bash -o pipefail -c 'cd q07-ci/android-app && gradle :app:connectedDebugAndroidTest --stacktrace --no-daemon 2>&1 | tee ../../q07-ci-logs/emulator.log'
-      - name: Verify all Q07 Android XML tests are passing
+      - name: Verify Q08 and baseline Android case identities and results
         shell: bash
         if: always()
         run: |
-          python3 - <<'PY'
-          import glob,xml.etree.ElementTree as E
-          fs=glob.glob('q07-ci/android-app/app/build/outputs/androidTest-results/connected/**/*.xml',recursive=True)
-          assert fs,'Q07_ANDROID_XML_MISSING'
-          tests=failures=errors=skipped=0
-          for f in fs:
-            r=E.parse(f).getroot()
-            tests+=int(r.get('tests','0'))
-            failures+=int(r.get('failures','0'))
-            errors+=int(r.get('errors','0'))
-            skipped+=int(r.get('skipped','0'))
-          print('Q07 ANDROID XML',tests,failures,errors,skipped)
-          assert tests>=91 and failures==0 and errors==0 and skipped==0,'Q08_ANDROID_XML_GATE_FAILED'
-          q08=[f for f in fs if 'Q08LevemirNativeInstrumentedTest' in f]
-          assert q08 and sum(int(E.parse(f).getroot().get('tests','0')) for f in q08)>=6,'Q08_TEST_CLASS_MISSING'
-          PY
-      - name: Upload Android Q07 APK and XML proof
+          set -euo pipefail
+          echo 'fa3874a746b18939c1287fe60a3ea695a3ca4b117939ea3564b69417df6acc36  qa-transfer/q08/verify_q08_android_xml.py' | sha256sum -c -
+          mkdir -p qa-results/q08
+          python3 qa-transfer/q08/verify_q08_android_xml.py q07-ci/android-app/app/build/outputs/androidTest-results/connected | tee qa-results/q08/gate.json
+      - name: Upload Android Q08 APK and XML proof
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -242,7 +233,14 @@ jobs:
                   result[name+'_log_present']=True
               else:result[name+'_log_present']=False
           result['android_xml_found']=bool(result['test_xml_files'])
-          result['gate_passed']=bool(result['test_xml_files']) and result['total']>=91 and result['failures']==0 and result['errors']==0 and result['skipped']==0
+          gate=pathlib.Path('qa-results/q08/gate.json')
+          result['gate_passed']=False
+          if gate.exists():
+              try:
+                  proof=json.loads(gate.read_text())
+                  result['gate_passed']=proof.get('gate_passed') is True
+                  result['q08_proof']=proof
+              except Exception as e: result['gate_error']=str(e)
           (d/'latest.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n')
           PYRESULT
           # Evidence is uploaded per run below; never rewrite a shared "latest.json"
@@ -253,5 +251,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: q08-native-run-results
-          path: qa-results/q07/
+          path: |
+            qa-results/q07/
+            qa-results/q08/
           if-no-files-found: warn
