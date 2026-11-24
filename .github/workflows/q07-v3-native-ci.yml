@@ -137,7 +137,25 @@ jobs:
           emulator-boot-timeout: 900
           disable-animations: true
           script: set -o pipefail; cd q07-ci/android-app && gradle :app:connectedDebugAndroidTest --stacktrace --no-daemon 2>&1 | tee ../../q07-ci-logs/emulator.log
-      - name: Upload Android Q06 APK and XML proof
+      - name: Verify all Q07 Android XML tests are passing
+        shell: bash
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import glob,xml.etree.ElementTree as E
+          fs=glob.glob('q07-ci/android-app/app/build/outputs/androidTest-results/connected/**/*.xml',recursive=True)
+          assert fs,'Q07_ANDROID_XML_MISSING'
+          tests=failures=errors=skipped=0
+          for f in fs:
+            r=E.parse(f).getroot()
+            tests+=int(r.get('tests','0'))
+            failures+=int(r.get('failures','0'))
+            errors+=int(r.get('errors','0'))
+            skipped+=int(r.get('skipped','0'))
+          print('Q07 ANDROID XML',tests,failures,errors,skipped)
+          assert tests>=73 and failures==0 and errors==0 and skipped==0,'Q07_ANDROID_XML_GATE_FAILED'
+          PY
+      - name: Upload Android Q07 APK and XML proof
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -176,6 +194,7 @@ jobs:
                   result[name+'_log_present']=True
               else:result[name+'_log_present']=False
           result['android_xml_found']=bool(result['test_xml_files'])
+          result['gate_passed']=bool(result['test_xml_files']) and result['total']>=73 and result['failures']==0 and result['errors']==0 and result['skipped']==0
           (d/'latest.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n')
           PYRESULT
           git config user.name 'Glucopapa QA Android CI'
