@@ -81,6 +81,19 @@ jobs:
           python3 tests/test_q05_schema_host.py
           python3 tests/test_q05_static_contract.py
           python3 ../qa-transfer/q06/test_q06_ci_contract.py
+          # Q04 legacy host asserts the prior QA package suffix. Q06 must remain
+          # independently installable with .q06qa and never overwrite production.
+          python3 - <<'PYQ06'
+          from pathlib import Path
+          build=Path('android-app/app/build.gradle.kts').read_text()
+          assert 'applicationIdSuffix = ".q06qa"' in build, 'Q06_DEDICATED_QA_ID_MISSING'
+          assert 'applicationId = "org.glukopapa.v3.m00"' in build, 'PRODUCTION_APP_ID_CHANGED'
+          p=Path('tests/test_q04_integration_structure.py')
+          text=p.read_text()
+          source='applicationIdSuffix = ".q05qa"'
+          assert text.count(source)==1, 'Q04_QA_SUFFIX_CONTRACT_CHANGED'
+          p.write_text(text.replace(source,'applicationIdSuffix = ".q06qa"'))
+          PYQ06
           python3 tests/test_q04_integration_structure.py
           python3 tests/test_q04_legacy_restore_host.py
           python3 tests/test_q04_sqlite_contract.py
