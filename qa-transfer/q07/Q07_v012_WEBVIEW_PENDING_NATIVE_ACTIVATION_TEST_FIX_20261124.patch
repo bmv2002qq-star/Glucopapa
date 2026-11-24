@@ -1,0 +1,19 @@
+--- android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q07RinFastWebViewInstrumentedTest.kt
++++ android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q07RinFastWebViewInstrumentedTest.kt
+@@ -56,7 +56,15 @@
+                 .put("expectedRevision",snapshot.getLong("revision")).put("units",1.0)
+                 .put("site","abdomen").put("atUtc","2026-11-24T10:00:00Z").put("note","")
+             val response=decoded(js(web,"GPV3Q07Native.requestOwnerAction(${JSONObject.quote(request.toString())})"))
+-            assertEquals("Q07_PRODUCER_NOT_ACTIVATED",response.getJSONObject("error").getString("code"))
++            // v0.1.2 intentionally offers native owner activation instead of returning
++            // Q07_PRODUCER_NOT_ACTIVATED. Until the Android owner explicitly approves,
++            // the callback remains pending and cannot record an insulin injection.
++            assertFalse("Q07 activation request must not be an error",response.has("error"))
++            assertEquals("PENDING",response.getString("state"))
++            val ticket=response.getString("ticket")
++            assertTrue("Q07 request should return a native owner confirmation ticket",ticket.length>=10)
++            val awaiting=decoded(js(web,"GPV3Q07Native.pollOwnerAction(${JSONObject.quote(ticket)})"))
++            assertEquals("PENDING",awaiting.getString("state"))
+             GfDbHelper(ctx).use{h->
+                 h.readableDatabase.rawQuery("SELECT COUNT(*) FROM v3_events",null).use{c->
+                     assertTrue(c.moveToFirst());assertEquals(0L,c.getLong(0))

@@ -1,0 +1,11 @@
+{
+  "module": "Q07",
+  "version": "v0.1.2",
+  "finding": "Q07-WEBVIEW-EXPECTATION-012",
+  "scope": "AndroidTest only, no production or medical math changes",
+  "testFile": "android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q07RinFastWebViewInstrumentedTest.kt",
+  "baseSha256": "51715d1b32ddf0950d499b36668d5ff0f39e8419b510c4982e9a0215c418e192",
+  "updatedSha256": "9aeed771c7783bcfe5b6e030315d6d5f13320394da10c04dbaa6151068088530",
+  "patchSha256": "4454907cfd90b88c487eb2f9217920b298a7a88d048dcb4f8078a2990cd91f09",
+  "expectedAndroidTestCount": 85
+}

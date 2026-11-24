@@ -118,6 +118,21 @@ jobs:
               assert hashlib.sha256(p.read_bytes()).hexdigest()==e['sha256'],p
           print("Q07_OWNER_ACTIVATION_SOURCE_SHA_5of5_PASS")
           PY
+      - name: Check WebView v0.1.2 activation no-write contract regression
+        shell: bash
+        run: |
+          set -euxo pipefail
+          echo '4454907cfd90b88c487eb2f9217920b298a7a88d048dcb4f8078a2990cd91f09  qa-transfer/q07/Q07_v012_WEBVIEW_PENDING_NATIVE_ACTIVATION_TEST_FIX_20261124.patch' | sha256sum -c -
+          patch -d q07-ci -p0 --batch --forward -i "$GITHUB_WORKSPACE/qa-transfer/q07/Q07_v012_WEBVIEW_PENDING_NATIVE_ACTIVATION_TEST_FIX_20261124.patch"
+          python3 - <<'PY'
+          import json,hashlib
+          from pathlib import Path
+          manifest=json.loads(Path('qa-transfer/q07/Q07_v012_WEBVIEW_TEST_FIX_MANIFEST_20261124.json').read_text())
+          p=Path('q07-ci')/manifest['testFile']
+          assert p.is_file()
+          assert hashlib.sha256(p.read_bytes()).hexdigest()==manifest['updatedSha256']
+          print('Q07_WEBVIEW_V012_VERIFIED',manifest['finding'])
+          PY
       - name: Q07 Q06 Q05 Q04 Q03 host and source regression
         shell: bash
         run: |
@@ -217,7 +232,7 @@ jobs:
                   result[name+'_log_present']=True
               else:result[name+'_log_present']=False
           result['android_xml_found']=bool(result['test_xml_files'])
-          result['gate_passed']=bool(result['test_xml_files']) and result['total']>=76 and result['failures']==0 and result['errors']==0 and result['skipped']==0
+          result['gate_passed']=bool(result['test_xml_files']) and result['total']>=85 and result['failures']==0 and result['errors']==0 and result['skipped']==0
           (d/'latest.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n')
           PYRESULT
           # Evidence is uploaded per run below; never rewrite a shared "latest.json"
