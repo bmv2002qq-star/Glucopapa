@@ -43,6 +43,8 @@ jobs:
               z.extractall('q04-ci')
           print('SOURCE_SHA256', actual, 'FILES',len(z.namelist()))
           PY
+          install -D qa-transfer/q04/Q04WebViewSmokeInstrumentedTest.kt q04-ci/android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q04WebViewSmokeInstrumentedTest.kt
+          install -D qa-transfer/q04/test_q04_legacy_restore_host.py q04-ci/tests/test_q04_legacy_restore_host.py
       - name: Run Q04 host regression and Q03 source contracts
         shell: bash
         run: |
@@ -50,6 +52,7 @@ jobs:
           cd q04-ci
           node tests/test_q04_native_adapter_contract.js
           python3 tests/test_q04_sqlite_contract.py
+          python3 tests/test_q04_legacy_restore_host.py
           python3 tests/test_q04_integration_structure.py
           cd tests/q03/tests
           node normalizer_node_tests.js
