@@ -80,10 +80,10 @@ Daemon will be stopped at the end of the build
 Starting 28 tests on emulator-5554 - 15
 
 emulator-5554 - 15 Tests 5/28 completed. (0 skipped) (0 failed)
-emulator-5554 - 15 Tests 10/28 completed. (0 skipped) (0 failed)
-emulator-5554 - 15 Tests 28/28 completed. (0 skipped) (0 failed)
+emulator-5554 - 15 Tests 11/28 completed. (0 skipped) (0 failed)
+emulator-5554 - 15 Tests 27/28 completed. (0 skipped) (0 failed)
 Finished 28 tests on emulator-5554 - 15
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__reactivecircus_android-emulator-runner-1795532270767.json
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__reactivecircus_android-emulator-runner-1795532618171.json
 
-BUILD SUCCESSFUL in 1m 10s
+BUILD SUCCESSFUL in 1m 13s
 61 actionable tasks: 1 executed, 60 up-to-date

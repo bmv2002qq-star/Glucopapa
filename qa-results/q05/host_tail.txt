@@ -35,7 +35,7 @@
 }
 + python3 tests/test_q05_static_contract.py
 {
-  "count": 28,
+  "count": 30,
   "result": "PASS",
   "tests": [
     "native v9 migration",
@@ -65,6 +65,8 @@
     "Q05 native Android WebView route test",
     "illness cannot close before last change",
     "profile IANA edit time",
+    "existing M00 sport and illness button navigation",
+    "obsolete four-level caption corrected",
     "Q04 still included"
   ]
 }
@@ -82,247 +84,247 @@ TAP version 13
 # Subtest: Q03-001 explicit meal link counted once; raw untouched
 ok 1 - Q03-001 explicit meal link counted once; raw untouched
   ---
-  duration_ms: 719.195109
+  duration_ms: 1066.133901
   type: 'test'
   ...
 # Subtest: Q03-002 complete UTC standard Z
 ok 2 - Q03-002 complete UTC standard Z
   ---
-  duration_ms: 0.178554
+  duration_ms: 0.196023
   type: 'test'
   ...
 # Subtest: Q03-003 correctly normalizes UTC+03:00
 ok 3 - Q03-003 correctly normalizes UTC+03:00
   ---
-  duration_ms: 0.078994
+  duration_ms: 0.081482
   type: 'test'
   ...
 # Subtest: Q03-004 correctly normalizes UTC-04:30
 ok 4 - Q03-004 correctly normalizes UTC-04:30
   ---
-  duration_ms: 0.095856
+  duration_ms: 0.078982
   type: 'test'
   ...
 # Subtest: Q03-005 invalid February 30 rejected
 ok 5 - Q03-005 invalid February 30 rejected
   ---
-  duration_ms: 0.118688
+  duration_ms: 0.124343
   type: 'test'
   ...
 # Subtest: Q03-006 leap year February 29 supported
 ok 6 - Q03-006 leap year February 29 supported
   ---
-  duration_ms: 0.063502
+  duration_ms: 0.066214
   type: 'test'
   ...
 # Subtest: Q03-007 nonleap February 29 rejected
 ok 7 - Q03-007 nonleap February 29 rejected
   ---
-  duration_ms: 0.097095
+  duration_ms: 0.126872
   type: 'test'
   ...
 # Subtest: Q03-008 unqualified local time rejected
 ok 8 - Q03-008 unqualified local time rejected
   ---
-  duration_ms: 0.093373
+  duration_ms: 0.100231
   type: 'test'
   ...
 # Subtest: Q03-009 invalid leap second rejected
 ok 9 - Q03-009 invalid leap second rejected
   ---
-  duration_ms: 0.18978
+  duration_ms: 0.191064
   type: 'test'
   ...
 # Subtest: Q03-010 timezone 14:15 rejected
 ok 10 - Q03-010 timezone 14:15 rejected
   ---
-  duration_ms: 0.253299
+  duration_ms: 0.231195
   type: 'test'
   ...
 # Subtest: Q03-011 1 January year 0001 not 1901
 ok 11 - Q03-011 1 January year 0001 not 1901
   ---
-  duration_ms: 0.112498
+  duration_ms: 0.106549
   type: 'test'
   ...
 # Subtest: Q03-012 duplicate event ID means both removed from projection
 ok 12 - Q03-012 duplicate event ID means both removed from projection
   ---
-  duration_ms: 0.50358
+  duration_ms: 0.55343
   type: 'test'
   ...
 # Subtest: Q03-013 duplicate session ID never counts carbs twice
 ok 13 - Q03-013 duplicate session ID never counts carbs twice
   ---
-  duration_ms: 0.348751
+  duration_ms: 1.186143
   type: 'test'
   ...
 # Subtest: Q03-014 event/session ID collision is ambiguous, no carb count
 ok 14 - Q03-014 event/session ID collision is ambiguous, no carb count
   ---
-  duration_ms: 0.406617
+  duration_ms: 0.360911
   type: 'test'
   ...
 # Subtest: Q03-015 timestamp match alone does not link meals
 ok 15 - Q03-015 timestamp match alone does not link meals
   ---
-  duration_ms: 0.35449
+  duration_ms: 0.358777
   type: 'test'
   ...
 # Subtest: Q03-016 dangling explicit link remains unresolved
 ok 16 - Q03-016 dangling explicit link remains unresolved
   ---
-  duration_ms: 0.353081
+  duration_ms: 0.297733
   type: 'test'
   ...
 # Subtest: Q03-017 invalid nutrition total never published
 ok 17 - Q03-017 invalid nutrition total never published
   ---
-  duration_ms: 0.236208
+  duration_ms: 0.210351
   type: 'test'
   ...
 # Subtest: Q03-018 planned meal with plate not counted
 ok 18 - Q03-018 planned meal with plate not counted
   ---
-  duration_ms: 0.173793
+  duration_ms: 0.213132
   type: 'test'
   ...
 # Subtest: Q03-019 valid estimated meal counted with explicit quality
 ok 19 - Q03-019 valid estimated meal counted with explicit quality
   ---
-  duration_ms: 0.21263
+  duration_ms: 0.219767
   type: 'test'
   ...
 # Subtest: Q03-020 invalid timestamp in event reported, not shifted
 ok 20 - Q03-020 invalid timestamp in event reported, not shifted
   ---
-  duration_ms: 0.192911
+  duration_ms: 0.196814
   type: 'test'
   ...
 # Subtest: Q03-021 revision mismatch fails closed
 ok 21 - Q03-021 revision mismatch fails closed
   ---
-  duration_ms: 0.315219
+  duration_ms: 0.284726
   type: 'test'
   ...
 # Subtest: Q03-022 input revision mismatch fails closed
 ok 22 - Q03-022 input revision mismatch fails closed
   ---
-  duration_ms: 0.072535
+  duration_ms: 0.069331
   type: 'test'
   ...
 # Subtest: Q03-023 profile mismatch fails closed
 ok 23 - Q03-023 profile mismatch fails closed
   ---
-  duration_ms: 0.052099
+  duration_ms: 0.059545
   type: 'test'
   ...
 # Subtest: Q03-024 wrong time zone fails closed
 ok 24 - Q03-024 wrong time zone fails closed
   ---
-  duration_ms: 0.110358
+  duration_ms: 0.110457
   type: 'test'
   ...
 # Subtest: Q03-025 nonrecorded legacy event does not become confirmed meal
 ok 25 - Q03-025 nonrecorded legacy event does not become confirmed meal
   ---
-  duration_ms: 0.221362
+  duration_ms: 0.222525
   type: 'test'
   ...
 # Subtest: Q03-026 no-profile fails closed
 ok 26 - Q03-026 no-profile fails closed
   ---
-  duration_ms: 0.06356
+  duration_ms: 0.071622
   type: 'test'
   ...
 # Subtest: Q03-027 missing CGM domain fails closed
 ok 27 - Q03-027 missing CGM domain fails closed
   ---
-  duration_ms: 0.166001
+  duration_ms: 0.127481
   type: 'test'
   ...
 # Subtest: Q03-028 duplicate CGM identifiers excluded
 ok 28 - Q03-028 duplicate CGM identifiers excluded
   ---
-  duration_ms: 0.181892
+  duration_ms: 0.156238
   type: 'test'
   ...
 # Subtest: Q03-029 explicitly marked incomplete coverage raises warning
 ok 29 - Q03-029 explicitly marked incomplete coverage raises warning
   ---
-  duration_ms: 0.168333
+  duration_ms: 0.196293
   type: 'test'
   ...
 # Subtest: Q03-030 output frozen deeply
 ok 30 - Q03-030 output frozen deeply
   ---
-  duration_ms: 0.155503
+  duration_ms: 0.175382
   type: 'test'
   ...
 # Subtest: Q03-031 bridge read survives a concurrent revision change by retry
 ok 31 - Q03-031 bridge read survives a concurrent revision change by retry
   ---
-  duration_ms: 0.270808
+  duration_ms: 0.297425
   type: 'test'
   ...
 # Subtest: Q03-032 inconsistent bridge revision rejects after retries
 ok 32 - Q03-032 inconsistent bridge revision rejects after retries
   ---
-  duration_ms: 0.191179
+  duration_ms: 0.175661
   type: 'test'
   ...
 # Subtest: Q03-033 positive normalized total not inferred from legacy meal
 ok 33 - Q03-033 positive normalized total not inferred from legacy meal
   ---
-  duration_ms: 0.189367
+  duration_ms: 0.18931
   type: 'test'
   ...
 # Subtest: Q03-034 no hidden fallback for unknown times
 ok 34 - Q03-034 no hidden fallback for unknown times
   ---
-  duration_ms: 0.174077
+  duration_ms: 0.225539
   type: 'test'
   ...
 # Subtest: Q03-035 empty source returns empty fact set
 ok 35 - Q03-035 empty source returns empty fact set
   ---
-  duration_ms: 0.173529
+  duration_ms: 0.193565
   type: 'test'
   ...
 # Subtest: Q03-036 actual Android CGM observationId accepted
 ok 36 - Q03-036 actual Android CGM observationId accepted
   ---
-  duration_ms: 0.196376
+  duration_ms: 0.203395
   type: 'test'
   ...
 # Subtest: Q03-037 contradictory session links do not arbitrarily choose a winner
 ok 37 - Q03-037 contradictory session links do not arbitrarily choose a winner
   ---
-  duration_ms: 0.216686
+  duration_ms: 0.189103
   type: 'test'
   ...
 # Subtest: Q03-038 same confirmed plate within one minute is flagged not double counted
 ok 38 - Q03-038 same confirmed plate within one minute is flagged not double counted
   ---
-  duration_ms: 0.204319
+  duration_ms: 0.240027
   type: 'test'
   ...
 # Subtest: Q03-039 synthetic CGM is never marked observed
 ok 39 - Q03-039 synthetic CGM is never marked observed
   ---
-  duration_ms: 0.166876
+  duration_ms: 0.203319
   type: 'test'
   ...
 # Subtest: Q03-040 observed CGM with unknown quality is not marked verified
 ok 40 - Q03-040 observed CGM with unknown quality is not marked verified
   ---
-  duration_ms: 0.612011
+  duration_ms: 0.153757
   type: 'test'
   ...
 # Subtest: Q03-041 offset crossing year 9999 rejected as noncanonical
 ok 41 - Q03-041 offset crossing year 9999 rejected as noncanonical
   ---
-  duration_ms: 0.100437
+  duration_ms: 0.043294
   type: 'test'
   ...
 1..41
@@ -333,10 +335,10 @@ ok 41 - Q03-041 offset crossing year 9999 rejected as noncanonical
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 995.341063
+# duration_ms 1544.038962
 + node stress_q03.js
 case n=1 duration_ms=11 metrics={"sourceCount":3,"normalizedCount":3,"issuesCount":0,"confirmedMealCount":1,"totalCarbsGrams":12}
-case n=10 duration_ms=0 metrics={"sourceCount":30,"normalizedCount":30,"issuesCount":0,"confirmedMealCount":10,"totalCarbsGrams":120}
-case n=100 duration_ms=8 metrics={"sourceCount":300,"normalizedCount":300,"issuesCount":0,"confirmedMealCount":100,"totalCarbsGrams":1200}
-case n=400 duration_ms=52 metrics={"sourceCount":1200,"normalizedCount":1200,"issuesCount":0,"confirmedMealCount":400,"totalCarbsGrams":4800}
+case n=10 duration_ms=1 metrics={"sourceCount":30,"normalizedCount":30,"issuesCount":0,"confirmedMealCount":10,"totalCarbsGrams":120}
+case n=100 duration_ms=9 metrics={"sourceCount":300,"normalizedCount":300,"issuesCount":0,"confirmedMealCount":100,"totalCarbsGrams":1200}
+case n=400 duration_ms=58 metrics={"sourceCount":1200,"normalizedCount":1200,"issuesCount":0,"confirmedMealCount":400,"totalCarbsGrams":4800}
 STRESS_CHECKS_PASS 27
