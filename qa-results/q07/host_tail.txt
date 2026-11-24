@@ -1,0 +1,350 @@
+    "v9 rollback preserves prior event",
+    "v9 foreign keys clean"
+  ]
+}
++ python3 tests/test_q05_static_contract.py
+{
+  "count": 30,
+  "result": "PASS",
+  "tests": [
+    "native v9 migration",
+    "encrypted v7->v9 migration",
+    "backup Q05 v9 fingerprint",
+    "Q01 Q05 normal compatibility",
+    "3 levels restricted",
+    "context no medical multipliers",
+    "trusted roles",
+    "native owner confirmation",
+    "not JS medical writer",
+    "profile CAS",
+    "owner gate before dialog",
+    "idempotency no double",
+    "period owner fixed",
+    "chronology guarded",
+    "independent sport illness",
+    "changed history immutable",
+    "permanent journal revisions",
+    "Q05 UI standalone approved structure",
+    "No JS local medical store",
+    "Native owner action tickets",
+    "native owner edit tickets",
+    "Android URL allowlisted",
+    "legacy alias descriptive",
+    "time zone from one snapshot",
+    "Q05 native Android WebView route test",
+    "illness cannot close before last change",
+    "profile IANA edit time",
+    "existing M00 sport and illness button navigation",
+    "obsolete four-level caption corrected",
+    "Q04 still included"
+  ]
+}
++ python3 ../qa-transfer/q06/test_q06_ci_contract.py
+{
+  "result": "PASS",
+  "count": 28,
+  "checks": [
+    "Q06 native context adapter exists",
+    "Independent read through GFStorage",
+    "No persisted modifications",
+    "No medical core fake",
+    "All numerical adjustments null",
+    "No numeric auto apply",
+    "Single snapshot",
+    "Read-only browser bridge",
+    "No trusted JS writer",
+    "Hardened WebView offline",
+    "Q06 strict route",
+    "Bridge added and removed",
+    "Index Q06 dedicated button",
+    "Sport illness button unchanged",
+    "Q06 UI correct review status",
+    "Q06 three levels",
+    "Offline Q06 CSP",
+    "Q06 UI reading real bridge",
+    "Q06 no dose controls",
+    "Sick and sport independently read",
+    "No overlap silently selected",
+    "UTC strictly required",
+    "Profile not configured fail closed",
+    "Bad source fails closed",
+    "Retrospective coefficient timeline",
+    "Descriptive only index",
+    "Q01..Q05 test modules preserved",
+    "Q05 schema stays v9"
+  ]
+}
++ python3 ../qa-transfer/q06-safety-20261124/test_q06_failclosed_static.py
+{"result": "PASS", "checks": 11, "caseNames": ["Medical status explicitly missing", "Model numeric opt-in disabled", "All medical fields MUST be present and null", "Applied modifiers always empty", "Model version null", "Context index exact by level", "Context provenance required", "Context modification disabled", "Native source one frozen read", "Native numeric values are all NULL", "Native source no writes"]}
++ python3 tests/test_q06_q04_integration_structure.py
+{"status": "PASS", "count": 24, "cases": ["no fake owner approval claim in code", "only read+save native Q04 interfaces", "bridge does not expose medical write", "bridge attached to Android QA shell", "WebView secondary storage and remote network disabled", "routing allowlisted", "v9 in native schema migration retaining v8", "revision and changefeed across native store", "input revision and global revision atomically advance", "stale and idempotency errors fail closed", "only unverified nutrition draft author", "custom ingredient claims filtered", "SQL disallows other authors", "Q02 export gated to migration version8", "Q02 v7->v9 scratch migration followed by v9 restore gate", "Q02 legacy migration authenticates original source and migrates only scratch", "no old writable localStorage mock in QA HTML", "Q04 port native-only", "medical actions denied in Q04 port", "allergen message does not claim validated actual SKU", "QA debug package cannot overwrite production app", "Q03 route uses correct asset path from router", "Q03 source retained byte for byte: gf_normalized_facts_v3.js", "Q03 source retained byte for byte: q03_readonly_screen.js"], "scope": "source consistency, NOT Android runtime"}
++ python3 tests/test_q04_legacy_restore_host.py
+{"status": "PASS", "cases": ["legacy_v7_roundtrip_to_live_v8_preserves_source", "forged_manifest_rejected_without_current_change", "transaction_failure_rolls_back_current_db", "schema_mismatch_rejected"], "count": 4, "scope": "host sqlite mirror, not native Android Kotlin"}
++ python3 tests/test_q04_sqlite_contract.py
+{"status": "PASS", "cases": ["single_revision_and_draft_only", "idempotency_retry_and_mismatch", "stale_revision_rolls_back", "v7_to_v8_additive_migration", "sqlite_backup_restore_full_draft", "schema_forbids_fabricated_verified_and_module"], "count": 6, "scope": "SQLite real schema + transaction mirror, NOT Android Kotlin runtime"}
++ node tests/test_q04_native_adapter_contract.js
+Q04_NATIVE_JS_PORT_PASS 23
++ cd tests/q03/tests
++ node normalizer_node_tests.js
+TAP version 13
+# Subtest: Q03-001 explicit meal link counted once; raw untouched
+ok 1 - Q03-001 explicit meal link counted once; raw untouched
+  ---
+  duration_ms: 246.453859
+  type: 'test'
+  ...
+# Subtest: Q03-002 complete UTC standard Z
+ok 2 - Q03-002 complete UTC standard Z
+  ---
+  duration_ms: 0.252098
+  type: 'test'
+  ...
+# Subtest: Q03-003 correctly normalizes UTC+03:00
+ok 3 - Q03-003 correctly normalizes UTC+03:00
+  ---
+  duration_ms: 0.143702
+  type: 'test'
+  ...
+# Subtest: Q03-004 correctly normalizes UTC-04:30
+ok 4 - Q03-004 correctly normalizes UTC-04:30
+  ---
+  duration_ms: 0.147729
+  type: 'test'
+  ...
+# Subtest: Q03-005 invalid February 30 rejected
+ok 5 - Q03-005 invalid February 30 rejected
+  ---
+  duration_ms: 0.211771
+  type: 'test'
+  ...
+# Subtest: Q03-006 leap year February 29 supported
+ok 6 - Q03-006 leap year February 29 supported
+  ---
+  duration_ms: 0.158621
+  type: 'test'
+  ...
+# Subtest: Q03-007 nonleap February 29 rejected
+ok 7 - Q03-007 nonleap February 29 rejected
+  ---
+  duration_ms: 0.188778
+  type: 'test'
+  ...
+# Subtest: Q03-008 unqualified local time rejected
+ok 8 - Q03-008 unqualified local time rejected
+  ---
+  duration_ms: 0.180562
+  type: 'test'
+  ...
+# Subtest: Q03-009 invalid leap second rejected
+ok 9 - Q03-009 invalid leap second rejected
+  ---
+  duration_ms: 0.334615
+  type: 'test'
+  ...
+# Subtest: Q03-010 timezone 14:15 rejected
+ok 10 - Q03-010 timezone 14:15 rejected
+  ---
+  duration_ms: 0.403685
+  type: 'test'
+  ...
+# Subtest: Q03-011 1 January year 0001 not 1901
+ok 11 - Q03-011 1 January year 0001 not 1901
+  ---
+  duration_ms: 0.193807
+  type: 'test'
+  ...
+# Subtest: Q03-012 duplicate event ID means both removed from projection
+ok 12 - Q03-012 duplicate event ID means both removed from projection
+  ---
+  duration_ms: 1.45105
+  type: 'test'
+  ...
+# Subtest: Q03-013 duplicate session ID never counts carbs twice
+ok 13 - Q03-013 duplicate session ID never counts carbs twice
+  ---
+  duration_ms: 0.334303
+  type: 'test'
+  ...
+# Subtest: Q03-014 event/session ID collision is ambiguous, no carb count
+ok 14 - Q03-014 event/session ID collision is ambiguous, no carb count
+  ---
+  duration_ms: 0.442308
+  type: 'test'
+  ...
+# Subtest: Q03-015 timestamp match alone does not link meals
+ok 15 - Q03-015 timestamp match alone does not link meals
+  ---
+  duration_ms: 0.48543
+  type: 'test'
+  ...
+# Subtest: Q03-016 dangling explicit link remains unresolved
+ok 16 - Q03-016 dangling explicit link remains unresolved
+  ---
+  duration_ms: 0.42214
+  type: 'test'
+  ...
+# Subtest: Q03-017 invalid nutrition total never published
+ok 17 - Q03-017 invalid nutrition total never published
+  ---
+  duration_ms: 0.333161
+  type: 'test'
+  ...
+# Subtest: Q03-018 planned meal with plate not counted
+ok 18 - Q03-018 planned meal with plate not counted
+  ---
+  duration_ms: 0.270072
+  type: 'test'
+  ...
+# Subtest: Q03-019 valid estimated meal counted with explicit quality
+ok 19 - Q03-019 valid estimated meal counted with explicit quality
+  ---
+  duration_ms: 0.322021
+  type: 'test'
+  ...
+# Subtest: Q03-020 invalid timestamp in event reported, not shifted
+ok 20 - Q03-020 invalid timestamp in event reported, not shifted
+  ---
+  duration_ms: 0.317372
+  type: 'test'
+  ...
+# Subtest: Q03-021 revision mismatch fails closed
+ok 21 - Q03-021 revision mismatch fails closed
+  ---
+  duration_ms: 0.399096
+  type: 'test'
+  ...
+# Subtest: Q03-022 input revision mismatch fails closed
+ok 22 - Q03-022 input revision mismatch fails closed
+  ---
+  duration_ms: 0.13193
+  type: 'test'
+  ...
+# Subtest: Q03-023 profile mismatch fails closed
+ok 23 - Q03-023 profile mismatch fails closed
+  ---
+  duration_ms: 0.124616
+  type: 'test'
+  ...
+# Subtest: Q03-024 wrong time zone fails closed
+ok 24 - Q03-024 wrong time zone fails closed
+  ---
+  duration_ms: 0.215078
+  type: 'test'
+  ...
+# Subtest: Q03-025 nonrecorded legacy event does not become confirmed meal
+ok 25 - Q03-025 nonrecorded legacy event does not become confirmed meal
+  ---
+  duration_ms: 0.310438
+  type: 'test'
+  ...
+# Subtest: Q03-026 no-profile fails closed
+ok 26 - Q03-026 no-profile fails closed
+  ---
+  duration_ms: 0.125848
+  type: 'test'
+  ...
+# Subtest: Q03-027 missing CGM domain fails closed
+ok 27 - Q03-027 missing CGM domain fails closed
+  ---
+  duration_ms: 0.245926
+  type: 'test'
+  ...
+# Subtest: Q03-028 duplicate CGM identifiers excluded
+ok 28 - Q03-028 duplicate CGM identifiers excluded
+  ---
+  duration_ms: 0.29002
+  type: 'test'
+  ...
+# Subtest: Q03-029 explicitly marked incomplete coverage raises warning
+ok 29 - Q03-029 explicitly marked incomplete coverage raises warning
+  ---
+  duration_ms: 0.276394
+  type: 'test'
+  ...
+# Subtest: Q03-030 output frozen deeply
+ok 30 - Q03-030 output frozen deeply
+  ---
+  duration_ms: 0.263349
+  type: 'test'
+  ...
+# Subtest: Q03-031 bridge read survives a concurrent revision change by retry
+ok 31 - Q03-031 bridge read survives a concurrent revision change by retry
+  ---
+  duration_ms: 0.402653
+  type: 'test'
+  ...
+# Subtest: Q03-032 inconsistent bridge revision rejects after retries
+ok 32 - Q03-032 inconsistent bridge revision rejects after retries
+  ---
+  duration_ms: 0.253811
+  type: 'test'
+  ...
+# Subtest: Q03-033 positive normalized total not inferred from legacy meal
+ok 33 - Q03-033 positive normalized total not inferred from legacy meal
+  ---
+  duration_ms: 0.252238
+  type: 'test'
+  ...
+# Subtest: Q03-034 no hidden fallback for unknown times
+ok 34 - Q03-034 no hidden fallback for unknown times
+  ---
+  duration_ms: 0.299898
+  type: 'test'
+  ...
+# Subtest: Q03-035 empty source returns empty fact set
+ok 35 - Q03-035 empty source returns empty fact set
+  ---
+  duration_ms: 0.285351
+  type: 'test'
+  ...
+# Subtest: Q03-036 actual Android CGM observationId accepted
+ok 36 - Q03-036 actual Android CGM observationId accepted
+  ---
+  duration_ms: 0.291232
+  type: 'test'
+  ...
+# Subtest: Q03-037 contradictory session links do not arbitrarily choose a winner
+ok 37 - Q03-037 contradictory session links do not arbitrarily choose a winner
+  ---
+  duration_ms: 0.33294
+  type: 'test'
+  ...
+# Subtest: Q03-038 same confirmed plate within one minute is flagged not double counted
+ok 38 - Q03-038 same confirmed plate within one minute is flagged not double counted
+  ---
+  duration_ms: 0.312081
+  type: 'test'
+  ...
+# Subtest: Q03-039 synthetic CGM is never marked observed
+ok 39 - Q03-039 synthetic CGM is never marked observed
+  ---
+  duration_ms: 0.280942
+  type: 'test'
+  ...
+# Subtest: Q03-040 observed CGM with unknown quality is not marked verified
+ok 40 - Q03-040 observed CGM with unknown quality is not marked verified
+  ---
+  duration_ms: 0.918441
+  type: 'test'
+  ...
+# Subtest: Q03-041 offset crossing year 9999 rejected as noncanonical
+ok 41 - Q03-041 offset crossing year 9999 rejected as noncanonical
+  ---
+  duration_ms: 0.100891
+  type: 'test'
+  ...
+1..41
+# tests 41
+# suites 0
+# pass 41
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 312.093414
++ node stress_q03.js
+case n=1 duration_ms=16 metrics={"sourceCount":3,"normalizedCount":3,"issuesCount":0,"confirmedMealCount":1,"totalCarbsGrams":12}
+case n=10 duration_ms=2 metrics={"sourceCount":30,"normalizedCount":30,"issuesCount":0,"confirmedMealCount":10,"totalCarbsGrams":120}
+case n=100 duration_ms=12 metrics={"sourceCount":300,"normalizedCount":300,"issuesCount":0,"confirmedMealCount":100,"totalCarbsGrams":1200}
+case n=400 duration_ms=82 metrics={"sourceCount":1200,"normalizedCount":1200,"issuesCount":0,"confirmedMealCount":400,"totalCarbsGrams":4800}
+STRESS_CHECKS_PASS 27

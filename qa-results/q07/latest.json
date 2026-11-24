@@ -1,16 +1,24 @@
 {
-  "run_id": "45458197224",
+  "run_id": "45458729160",
   "run_attempt": "1",
-  "sha": "569b68cfa9659724874ff6549c33682687755683",
+  "sha": "a963720da4bcb3fe3cc743ff6c228ab19341d21c",
   "workflow": "Q07 RinFast trusted owner Android 15 QA",
   "result_source": "native Android instrumentation XML, if present",
-  "test_xml_files": [],
-  "total": 0,
-  "failures": 0,
+  "test_xml_files": [
+    {
+      "file": "TEST-emulator-5554 - 15-_app-.xml",
+      "tests": 67,
+      "failures": 1,
+      "errors": 0,
+      "skipped": 0
+    }
+  ],
+  "total": 67,
+  "failures": 1,
   "errors": 0,
   "skipped": 0,
-  "host_log_present": false,
-  "build_log_present": false,
-  "emulator_log_present": false,
-  "android_xml_found": false
+  "host_log_present": true,
+  "build_log_present": true,
+  "emulator_log_present": true,
+  "android_xml_found": true
 }
