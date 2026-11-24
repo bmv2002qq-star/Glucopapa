@@ -1,0 +1,83 @@
+--- android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q07RinFastNativeIntegrationInstrumentedTest.kt
++++ android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q07RinFastNativeIntegrationInstrumentedTest.kt
+@@ -104,8 +104,8 @@
+     }
+     @Test fun wrongOwnerCannotAmendRinFastEvenIfOtherModuleIsEnabled() {
+         acceptOwner();confirm();val current=rev()
+-        helper.writableDatabase.execSQL("UPDATE v3_module_registry SET status='OWNER_INTEGRATION_ACCEPTED',feature_enabled=1,write_roles_json='[\"actionWriter\"]' WHERE module_id='GFHigh'")
+-        reject {gateway.bindInstalledAdapter("GFHigh").correct("events","q07-inj-native-1","q07-forge-1","q07-forge-key",current,0,
++        helper.writableDatabase.execSQL("UPDATE v3_module_registry SET status='OWNER_INTEGRATION_ACCEPTED',feature_enabled=1,write_roles_json='[\"actionWriter\"]' WHERE module_id='GFInjectionEntry'")
++        reject {gateway.bindInstalledAdapter("GFInjectionEntry").correct("events","q07-inj-native-1","q07-forge-1","q07-forge-key",current,0,
+             JSONObject().put("units",2.0),"Неверный владелец","OWNER_MANUAL")}
+         assertEquals(current,rev());assertEquals(0L,rows("v3_record_corrections"))
+     }
+--- /dev/null
++++ android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q07RinFastWebViewInstrumentedTest.kt
+@@ -0,0 +1,67 @@
++package org.glukopapa.v3.m00
++
++import android.content.Intent
++import android.view.ViewGroup
++import android.webkit.WebView
++import androidx.test.ext.junit.runners.AndroidJUnit4
++import androidx.test.platform.app.InstrumentationRegistry
++import org.junit.Assert.*
++import org.junit.Test
++import org.junit.runner.RunWith
++import org.json.JSONArray
++import org.json.JSONObject
++import java.util.concurrent.CountDownLatch
++import java.util.concurrent.TimeUnit
++import java.util.concurrent.atomic.AtomicReference
++
++/** Q07 real APK WebView smoke: no fake IOB=0, no unconfirmed/unauthorized event. */
++@RunWith(AndroidJUnit4::class)
++class Q07RinFastWebViewInstrumentedTest {
++    private val instr get()=InstrumentationRegistry.getInstrumentation()
++    private val ctx get()=instr.targetContext
++    private fun js(web:WebView,code:String):String{
++        val done=CountDownLatch(1);val output=AtomicReference("null")
++        instr.runOnMainSync{web.evaluateJavascript(code){v->output.set(v);done.countDown()}}
++        assertTrue("Q07 javascript timed out: $code",done.await(25,TimeUnit.SECONDS))
++        return output.get()
++    }
++    private fun poll(web:WebView,code:String,expect:String) {
++        repeat(55){if(js(web,code)==expect)return;Thread.sleep(300)}
++        fail("Q07 WebView expected $expect for $code, got ${js(web,code)}")
++    }
++    private fun decoded(raw:String)=JSONObject(JSONArray("[$raw]").getString(0))
++    @Test fun actualApprovedHtmlReadsOneNativeSnapshotButCannotWriteBeforeIntegrationAcceptance() {
++        ctx.deleteDatabase("glukopapa_v3.db")
++        GfDbHelper(ctx).use {h->
++            h.writableDatabase.execSQL("UPDATE v3_meta SET profile_id='q07-web-qa',timezone='Europe/Warsaw' WHERE id=1")
++        }
++        val activity=instr.startActivitySync(Intent(ctx,MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) as MainActivity
++        try {
++            val web=activity.findViewById<ViewGroup>(android.R.id.content).getChildAt(0) as WebView
++            poll(web,"document.readyState","\"complete\"")
++            assertEquals("true",js(web,"!!document.querySelector('[data-module=GFRinFast]')"))
++            js(web,"document.querySelector('[data-module=GFRinFast]').click();true")
++            poll(web,"location.pathname","\"/q07/rinfast.html\"")
++            poll(web,"document.readyState","\"complete\"")
++            assertEquals("\"object\"",js(web,"typeof GPV3Q07Native"))
++            assertEquals("\"undefined\"",js(web,"typeof GPV3Q07Native.append"))
++            assertEquals("\"undefined\"",js(web,"typeof GPV3Q07Native.setCoverageComplete"))
++            val snapshot=decoded(js(web,"GPV3Q07Native.readState()"))
++            assertTrue(snapshot.getBoolean("profileConfigured"))
++            assertEquals("UNKNOWN_INCOMPLETE_COVERAGE",snapshot.getString("iobStatus"))
++            assertTrue(snapshot.isNull("modelRemainingUnits"))
++            assertEquals("\"—\"",js(web,"document.getElementById('iob').textContent"))
++            assertEquals("true",js(web,"document.getElementById('coverageStatus').textContent.includes('UNKNOWN')"))
++            val request=JSONObject().put("command","confirm").put("profileId",snapshot.getString("profileId"))
++                .put("expectedRevision",snapshot.getLong("revision")).put("units",1.0)
++                .put("site","abdomen").put("atUtc","2026-11-24T10:00:00Z").put("note","")
++            val response=decoded(js(web,"GPV3Q07Native.requestOwnerAction(${JSONObject.quote(request.toString())})"))
++            assertEquals("Q07_PRODUCER_NOT_ACTIVATED",response.getJSONObject("error").getString("code"))
++            GfDbHelper(ctx).use{h->
++                h.readableDatabase.rawQuery("SELECT COUNT(*) FROM v3_events",null).use{c->
++                    assertTrue(c.moveToFirst());assertEquals(0L,c.getLong(0))
++                }
++            }
++        }finally {GfV3QaActivityLifecycle.finishAndAwait(instr,activity)}
++    }
++}
