@@ -1,0 +1,48 @@
+--- android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3NativeWriter.kt
++++ android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3NativeWriter.kt
+@@ -104,6 +104,13 @@
+                             "Q07_RINFAST_OWNER_CONFIRMATION_SOURCE_REQUIRED"
+                         }
+                         GfV3Q07InjectionContract.actual(payload)
++                        // The idempotency key alone does not prevent the same actual injection
++                        // ID from being submitted again with a different key. Reject it as a
++                        // stable domain error before SQLite surfaces a raw constraint exception.
++                        val eventIdTaken=db.rawQuery(
++                            "SELECT 1 FROM v3_events WHERE event_id=? LIMIT 1",arrayOf(recordId)
++                        ).use { it.moveToFirst() }
++                        if(eventIdTaken)throw IllegalStateException("Q07_RINFAST_EVENT_ID_CONFLICT")
+                     }
+                     db.insertOrThrow("v3_events",null,ContentValues().apply {
+                         put("event_id",recordId);put("profile_id",profileId);put("event_type",kind)
+--- android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q07RinFastNativeIntegrationInstrumentedTest.kt
++++ android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q07RinFastNativeIntegrationInstrumentedTest.kt
+@@ -55,11 +55,13 @@
+     }
+     @Test fun confirmedRinFastCreatesSingleAuditedJournalEventAndUnknownIob() {
+         acceptOwner();val r=rev()
++        // M03 startup registry audit is correctly present before the Q07 write.
++        val priorAudit=rows("v3_audit");val priorFeed=rows("v3_change_feed")
+         val created=confirm();assertTrue(created.getBoolean("created"));assertEquals(r+1,created.getLong("revision"))
+         val replay=confirm(expectedRevision=r)
+         assertFalse(replay.getBoolean("created"));assertEquals(r+1,replay.getLong("revision"))
+         assertEquals(1L,rows("v3_events"));assertEquals(1L,rows("v3_write_receipts"))
+-        assertEquals(1L,rows("v3_audit"));assertEquals(1L,rows("v3_change_feed"))
++        assertEquals(priorAudit+1,rows("v3_audit"));assertEquals(priorFeed+1,rows("v3_change_feed"))
+         val snapshot=storage.readShellPort("journal"); val data=snapshot.getJSONObject("data")
+         val shot=data.getJSONArray("events").getJSONObject(0)
+         assertEquals("GFInjectionFact",shot.getString("sourceModule"))
+@@ -83,7 +85,13 @@
+         assertEquals(r,rev())
+         confirm()
+         reject { confirm(id="q07-inj-native-2",key="q07-write-native-2",expectedRevision=r) }
+-        reject { confirm(id="q07-inj-native-1",key="q07-write-native-new",expectedRevision=rev()) }
++        // Same eventId with a *different* idempotency key: no raw SQLite exception.
++        try {
++            confirm(id="q07-inj-native-1",key="q07-write-native-new",expectedRevision=rev())
++            fail("Q07_DUPLICATE_EVENT_ID_ACCEPTED")
++        } catch(e:IllegalStateException) {
++            assertEquals("Q07_RINFAST_EVENT_ID_CONFLICT",e.message)
++        }
+         reject { confirm(id="q07-inj-native-2",key="q07-write-native-1",expectedRevision=rev()) }
+         assertEquals(1L,rows("v3_events"));assertEquals(r+1,rev())
+     }
