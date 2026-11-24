@@ -128,7 +128,7 @@ jobs:
           disk-size: 4096M
           emulator-boot-timeout: 900
           disable-animations: true
-          script: cd q07-ci/android-app && gradle :app:connectedDebugAndroidTest --stacktrace --no-daemon 2>&1 | tee ../../q07-ci-logs/emulator.log
+          script: set -o pipefail; cd q07-ci/android-app && gradle :app:connectedDebugAndroidTest --stacktrace --no-daemon 2>&1 | tee ../../q07-ci-logs/emulator.log
       - name: Upload Android Q06 APK and XML proof
         if: always()
         uses: actions/upload-artifact@v4
@@ -173,4 +173,4 @@ jobs:
           git config user.name 'Glucopapa QA Android CI'
           git config user.email 'qa-ci@users.noreply.github.com'
           git add qa-results/q07
-          git diff --cached --quiet || (git commit -m "test(q06): CI proof run ${GITHUB_RUN_ID} attempt ${GITHUB_RUN_ATTEMPT}" && git push origin HEAD:qa/v3-q07-rinfast-20261124)
+          git diff --cached --quiet || (git commit -m "test(q07): CI proof run ${GITHUB_RUN_ID} attempt ${GITHUB_RUN_ATTEMPT}" && git push origin HEAD:qa/v3-q07-rinfast-20261124)
