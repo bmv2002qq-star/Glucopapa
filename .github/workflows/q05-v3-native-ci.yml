@@ -34,7 +34,7 @@ jobs:
           from pathlib import Path
           p=sorted(Path('qa-transfer/q04').glob('q04-part-*.b64'))
           assert len(p)==19, f'Q04 base files {len(p)}'
-          b=base64.b64decode(''.join(x.read_text() for x in p),validate=True)
+          b=base64.b64decode(''.join(''.join(x.read_text().split()) for x in p),validate=True)
           assert hashlib.sha256(b).hexdigest()=='4ec4fcd5c8a08cebccee728905db4d988eab35ecfa60ecf4a15d98997266e6c6', 'Q04 BASE BAD SHA'
           with zipfile.ZipFile(io.BytesIO(b)) as z:
               assert z.testzip() is None
@@ -51,7 +51,7 @@ jobs:
           from pathlib import Path
           p=sorted(Path('qa-transfer/q05').glob('q05-part-*.b64'))
           assert len(p)==3, f'Q05 overlay parts {len(p)}'
-          b=base64.b64decode(''.join(x.read_text() for x in p),validate=True)
+          b=base64.b64decode(''.join(''.join(x.read_text().split()) for x in p),validate=True)
           assert hashlib.sha256(b).hexdigest()=='c03bee2a68d317266dfe7136dfd6385f21072e90f2588cda5b02fc0071c318e4', 'Q05 OVERRIDE HASH INVALID'
           with zipfile.ZipFile(io.BytesIO(b)) as z:
               assert z.testzip() is None
