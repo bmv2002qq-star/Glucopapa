@@ -246,6 +246,25 @@ jobs:
               assert hashlib.sha256(p.read_bytes()).hexdigest()==x['sha256'],p
           print('Q08_V047_SOURCE_SHA_13of13_PASS')
           PY
+      - name: Apply v048 terminal receipt queue and explicit version provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'bec10fd07d70e63c91371ae2bc549d3708ec299ef346a5bd32c1e85c5d0848d7  qa-transfer/q08/Q08_v048_terminal_queue_version.patch' | sha256sum -c -
+          patch -d q07-ci -p1 --batch --forward --dry-run -i "$GITHUB_WORKSPACE/qa-transfer/q08/Q08_v048_terminal_queue_version.patch"
+          patch -d q07-ci -p1 --batch --forward -i "$GITHUB_WORKSPACE/qa-transfer/q08/Q08_v048_terminal_queue_version.patch"
+          echo 'b40031da23bfdaf153a2b5de08cd36d8cea0ee11f71a7af89899e68aa379717e  qa-transfer/q08/Q08_v048_SOURCE_SHA.json' | sha256sum -c -
+          python3 - <<'PY'
+          import json,hashlib
+          from pathlib import Path
+          m=json.loads(Path('qa-transfer/q08/Q08_v048_SOURCE_SHA.json').read_text())
+          assert len(m['changes'])==13
+          for x in m['changes']:
+              p=Path('q07-ci')/x['path']
+              assert p.is_file(),p
+              assert hashlib.sha256(p.read_bytes()).hexdigest()==x['sha256'],p
+          print('Q08_V048_SOURCE_SHA_13of13_PASS')
+          PY
       - name: Q08 v042 exact UTC and transport regression (synthetic fixtures only)
         shell: bash
         run: |
@@ -280,9 +299,9 @@ jobs:
         if: always()
         run: |
           set -euo pipefail
-          echo '08ebcd2eb0a7ec2ed934a2e69ef5eb9ed2393f07f281e38762122f192ce8e787  qa-transfer/q08/verify_q08_android_xml_v047.py' | sha256sum -c -
+          echo 'ead8def41eb1d5eec3cf774fbfd04789a121ee96874d788acc764d32607ce296  qa-transfer/q08/verify_q08_android_xml_v048.py' | sha256sum -c -
           mkdir -p qa-results/q08
-          python3 qa-transfer/q08/verify_q08_android_xml_v047.py q07-ci/android-app/app/build/outputs/androidTest-results/connected | tee qa-results/q08/gate.json
+          python3 qa-transfer/q08/verify_q08_android_xml_v048.py q07-ci/android-app/app/build/outputs/androidTest-results/connected | tee qa-results/q08/gate.json
       - name: Upload Android Q08 APK and XML proof
         if: always()
         uses: actions/upload-artifact@v4

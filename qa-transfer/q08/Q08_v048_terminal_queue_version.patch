@@ -1,0 +1,71 @@
+--- a/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Q08ModuleInstaller.kt
++++ b/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Q08ModuleInstaller.kt
+@@ -12,7 +12,7 @@
+ internal class GfV3Q08ModuleInstaller(private val helper: GfDbHelper) {
+     companion object {
+         const val MODULE = "GFLevemirReview"
+-        const val VERSION = "v0.4.3"
++        const val VERSION = "v0.4.8"
+     }
+ 
+     fun activateAfterAndroidDialog(expectedProfile: String, expectedRevision: Long, nativeOwnerApproved: Boolean): JSONObject {
+--- a/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Q08OwnerQueue.kt
++++ b/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Q08OwnerQueue.kt
+@@ -32,6 +32,8 @@
+         val active=grant&&module.optString("status")=="OWNER_INTEGRATION_ACCEPTED"&&module.optBoolean("featureEnabled")&&strings(module.getJSONArray("readRoles"))==setOf("research")&&strings(module.getJSONArray("writeRoles"))==setOf("actionWriter")
+         val canActivate=grant&&module.optString("status")=="NOT_CONNECTED"&&!module.optBoolean("featureEnabled")&&strings(module.getJSONArray("writeRoles"))==setOf("actionWriter")
+         return JSONObject().put("profileConfigured",reg.getBoolean("profileConfigured")).put("profileId",reg.get("profileId")).put("revision",reg.getLong("revision")).put("active",active).put("canActivate",canActivate)
++            .put("runtimeVersion",GfV3Q08ModuleInstaller.VERSION).put("registryVersion",module.getString("version"))
++            .put("actionPending",synchronized(lock){pending.values.any{it.state=="PENDING"||it.state=="APPLYING"}})
+     }
+     fun snapshot():JSONObject {
+         require(status().getBoolean("active")){"Q08_PRODUCER_NOT_ACTIVATED"}
+@@ -95,7 +97,13 @@
+             "$heading\nКоличество: ${req.getDouble("units")} ЕД\nМесто: ${req.getString("site")}\nВремя: $local ($zone)\nЗапланированный укол не подтверждайте."
+         }
+         val ticket=UUID.randomUUID().toString()
+-        synchronized(lock){require(!closed&&pending.isEmpty()){"Q08_BUSY"};pending[ticket]=Pending(req)}
++        synchronized(lock){
++            // A navigation/timeout may abandon polling a terminal ticket. Never block a new explicit
++            // owner action on such a receipt, but keep a bounded terminal cache for late polling.
++            require(!closed&&pending.values.none{it.state=="PENDING"||it.state=="APPLYING"}){"Q08_BUSY"}
++            while(pending.size>=32){pending.remove(pending.keys.first())}
++            pending[ticket]=Pending(req)
++        }
+         try{onConfirm(message){approved->
+             val p=synchronized(lock){val x=pending[ticket];if(!closed&&x?.state=="PENDING"){if(!approved){x.state="CANCELLED";x.result=JSONObject().put("accepted",false).put("code","OWNER_CANCELLED");null}else{x.state="APPLYING";x}}else null}
+             if(p!=null)try{worker.execute{
+--- a/android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q08LevemirNativeInstrumentedTest.kt
++++ b/android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q08LevemirNativeInstrumentedTest.kt
+@@ -213,4 +213,31 @@
+         assertFalse(d.getJSONObject("q08ReadWindow").getBoolean("sensorCoverageProven"));assertEquals(602,count("v3_events"));assertEquals(1107,count("v3_meal_sessions"))
+     }
+ 
++    @Test fun abandonedTerminalReceiptsDoNotBlockNewOwnerActionAndVersionIsExplicit(){
++        var callback:((Boolean)->Unit)?=null
++        val queue=GfV3Q08OwnerQueue(facts,GfV3Q08History(gateway.bindInstalledAdapter(GfV3Q08Rules.OWNER),storage),storage,GfV3Q08ModuleInstaller(helper)){_,done->callback=done}
++        try{
++            assertEquals("v0.4.8",queue.status().getString("runtimeVersion"))
++            assertFalse(queue.status().getBoolean("actionPending"))
++            val abandoned=queue.enqueue(activation().toString()).getString("ticket");callback!!(false)
++            assertFalse(queue.status().getBoolean("actionPending"))
++            val install=queue.enqueue(activation().toString()).getString("ticket")
++            assertTrue(queue.status().getBoolean("actionPending"));reject{queue.enqueue(activation().toString())}
++            assertEquals("CANCELLED",queue.poll(abandoned).getString("state"));callback!!(true)
++            assertEquals("FINISHED",terminal(queue,install).getString("state"))
++            assertEquals("v0.4.8",queue.status().getString("registryVersion"));assertEquals(0,count("v3_events"))
++            val request=actual("qa-abandoned-terminal-fact");val first=queue.enqueue(request.toString()).getString("ticket");callback!!(true)
++            val deadline=System.nanoTime()+java.util.concurrent.TimeUnit.SECONDS.toNanos(10)
++            while(queue.status().getBoolean("actionPending")&&System.nanoTime()<deadline)Thread.sleep(20)
++            assertFalse(queue.status().getBoolean("actionPending"));assertEquals(1,count("v3_events"))
++            val replay=queue.enqueue(request.toString()).getString("ticket");assertTrue(queue.status().getBoolean("actionPending"))
++            val original=queue.poll(first).getJSONObject("result");assertTrue(original.getBoolean("created"));callback!!(true)
++            val again=terminal(queue,replay).getJSONObject("result");assertFalse(again.getBoolean("created"));assertEquals(original.getString("eventId"),again.getString("eventId"));assertEquals(1,count("v3_events"))
++            // Historical activation metadata is not rewritten by a read after an older restore.
++            helper.writableDatabase.execSQL("UPDATE v3_module_registry SET version='v0.4.3' WHERE module_id=?",arrayOf(GfV3Q08Rules.OWNER))
++            assertEquals("v0.4.3",queue.status().getString("registryVersion"));assertEquals("v0.4.8",queue.status().getString("runtimeVersion"))
++            assertTrue(queue.status().getBoolean("active"));assertEquals(1,count("v3_events"))
++        }finally{queue.close()}
++    }
++
+ }
