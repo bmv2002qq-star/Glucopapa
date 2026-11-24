@@ -138,7 +138,7 @@ jobs:
           disk-size: 4096M
           emulator-boot-timeout: 900
           disable-animations: true
-          script: set -o pipefail; cd q07-ci/android-app && gradle :app:connectedDebugAndroidTest --stacktrace --no-daemon 2>&1 | tee ../../q07-ci-logs/emulator.log
+          script: bash -o pipefail -c 'cd q07-ci/android-app && gradle :app:connectedDebugAndroidTest --stacktrace --no-daemon 2>&1 | tee ../../q07-ci-logs/emulator.log'
       - name: Verify all Q07 Android XML tests are passing
         shell: bash
         if: always()
