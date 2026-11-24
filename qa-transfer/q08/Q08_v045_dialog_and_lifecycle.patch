@@ -1,0 +1,69 @@
+--- a/android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q08LevemirWebViewInstrumentedTest.kt
++++ b/android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q08LevemirWebViewInstrumentedTest.kt
+@@ -28,14 +28,22 @@
+     private fun until(web:WebView,code:String,expected:String){repeat(70){if(js(web,code)==expected)return;Thread.sleep(250)};fail("Q08 WebView expected $expected for $code; got ${js(web,code)}")}
+     private fun decoded(raw:String)=JSONObject(JSONArray("[$raw]").getString(0))
+     private fun eventCount():Int=GfDbHelper(ctx).use{h->h.readableDatabase.rawQuery("SELECT COUNT(*) FROM v3_events",null).use{c->c.moveToFirst();c.getInt(0)}}
+-    private fun dialogButton(label:String){
++    private fun dialogButton(web:WebView,label:String,buttonId:String){
++        var lastNodes=""
+         repeat(80){
+             val root=instr.uiAutomation.rootInActiveWindow
+-            val nodes=root?.findAccessibilityNodeInfosByText(label)?:emptyList()
+-            for(n in nodes){if(n.text?.toString()==label&&n.isClickable&&n.performAction(AccessibilityNodeInfo.ACTION_CLICK))return}
++            val title=root?.findAccessibilityNodeInfosByText("Левемир — подтверждение владельца")?:emptyList()
++            val nodes=root?.findAccessibilityNodeInfosByViewId("android:id/$buttonId")?:emptyList()
++            val byText=root?.findAccessibilityNodeInfosByText(label)?:emptyList()
++            lastNodes="title=${title.map{it.text}}; id=${nodes.map{it.text}}; text=${byText.map{it.text}}"
++            if(title.any{it.text?.toString()?.equals("Левемир — подтверждение владельца",ignoreCase=true)==true}){
++                for(n in (nodes+byText)){
++                    if(n.text?.toString()?.trim()?.equals(label,ignoreCase=true)==true&&n.isEnabled&&n.isClickable&&n.performAction(AccessibilityNodeInfo.ACTION_CLICK))return
++                }
++            }
+             Thread.sleep(250)
+         }
+-        fail("Q08 native dialog button missing: $label")
++        fail("Q08 native dialog button missing: $label; $lastNodes; activation="+js(web,"document.getElementById('q08-activation-status')?.textContent")+"; morning="+js(web,"document.getElementById('message-morning')?.textContent"))
+     }
+     @Test fun approvedScreenNativeActivationAndActualConfirmationAreSeparate(){
+         instr.waitForIdleSync();ctx.deleteDatabase("glukopapa_v3.db")
+@@ -49,12 +57,12 @@
+             assertEquals("\"undefined\"",js(web,"typeof GPV3Q08Native.append"));assertEquals("\"undefined\"",js(web,"typeof GPV3Q08Native.setCoverageComplete"))
+             until(web,"document.getElementById('q08-activation').hidden","false");assertEquals(0,eventCount());assertFalse(decoded(js(web,"GPV3Q08Native.readStatus()")).getBoolean("active"))
+             assertEquals( "true",js(web,"document.querySelectorAll('details[open]').length===0"))
+-            js(web,"document.getElementById('q08-activate').click();true");dialogButton("Отмена");until(web,"document.getElementById('q08-activation-status').textContent.includes('OWNER_CANCELLED')","true");assertEquals(0,eventCount())
+-            js(web,"document.getElementById('q08-activate').click();true");dialogButton("Подтвердить");until(web,"document.getElementById('q08-activation')?.hidden===true","true");until(web,"JSON.parse(GPV3Q08Native.readStatus()).active===true","true");assertEquals(0,eventCount())
++            until(web,"document.getElementById('q08-activate').disabled","false");js(web,"document.getElementById('q08-activate').click();true");dialogButton(web,"Отмена","button2");until(web,"document.getElementById('q08-activation-status').textContent.includes('OWNER_CANCELLED')","true");assertEquals(0,eventCount())
++            until(web,"document.getElementById('q08-activate').disabled","false");js(web,"document.getElementById('q08-activate').click();true");dialogButton(web,"Подтвердить","button1");until(web,"document.getElementById('q08-activation')?.hidden===true","true");until(web,"JSON.parse(GPV3Q08Native.readStatus()).active===true","true");assertEquals(0,eventCount())
+             until(web,"document.getElementById('zone-morning')?.textContent==='Europe/Minsk'","true")
+             js(web,"document.getElementById('dose-morning').value='1.5';document.getElementById('date-morning').value='2025-01-30';document.getElementById('time-morning').value='08:00';document.getElementById('site-morning').value='Ягодица';document.querySelector('#form-morning button[type=submit]').click();true")
+             // Pending owner confirmation must not create a fact.
+-            assertEquals(0,eventCount());dialogButton("Подтвердить")
++            assertEquals(0,eventCount());dialogButton(web,"Подтвердить","button1")
+             until(web,"document.getElementById('message-morning').textContent.includes('Записано в GFStorage')","true");assertEquals(1,eventCount())
+             val snapshot=decoded(js(web,"GPV3Q08Native.readState()"));val e=snapshot.getJSONObject("data").getJSONArray("events").getJSONObject(0)
+             assertEquals("levemir",e.getString("insulinId"));assertEquals("basal",e.getString("insulinClass"));assertEquals("2025-01-30T05:00:00Z",e.getString("occurredAtUtc"));assertEquals("buttock",e.getString("injectionSite"));assertEquals(1.5,e.getDouble("units"),0.000001)
+--- a/android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q08LevemirNativeInstrumentedTest.kt
++++ b/android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q08LevemirNativeInstrumentedTest.kt
+@@ -153,4 +153,21 @@
+         assertEquals(9320,count("v3_cgm"))
+     }
+ 
++    @Test fun explicitActivationPersistsAcrossReopenAndEncryptedRestore(){
++        val activate=GfV3Q08ModuleInstaller(helper).activateAfterAndroidDialog(profile,storage.revision(),true)
++        assertTrue(activate.getBoolean("activated"));assertEquals(0,count("v3_events"))
++        val receipt=shot();val id=receipt.getString("eventId");val revision=storage.revision()
++        helper.close();openStorage();assertEquals(revision,storage.revision())
++        fun verifyActive(){
++            val queue=GfV3Q08OwnerQueue(facts,GfV3Q08History(gateway.bindInstalledAdapter(GfV3Q08Rules.OWNER),storage),storage,GfV3Q08ModuleInstaller(helper)){_,done->done(false)}
++            try{assertTrue(queue.status().getBoolean("active"));val events=queue.snapshot().getJSONObject("data").getJSONArray("events");assertEquals(1,events.length());assertEquals(id,events.getJSONObject(0).getString("eventId"))}finally{queue.close()}
++        }
++        verifyActive()
++        val pass="q08-qa-activation-restore-only".toCharArray();val encrypted=GfV3EncryptedSnapshot(ctx,helper).createEncrypted(pass)
++        try{
++            shot(key="qa-later-evening",slot="evening");assertEquals(2,count("v3_events"))
++            GfV3EncryptedSnapshot(ctx,helper).restoreEncrypted(encrypted,pass,storage.revision())
++            verifyActive();assertEquals(1,count("v3_write_receipts"));assertEquals(1,count("v3_events"))
++        }finally{encrypted.fill(0);pass.fill(' ')}
++    }
+ }
