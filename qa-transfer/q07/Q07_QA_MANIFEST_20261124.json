@@ -1,0 +1,135 @@
+{
+  "date": "2026-11-24",
+  "module": "Q07 RinFast GFActionWriter",
+  "version": "Q07-v0.1.0-QA-CANDIDATE",
+  "status": "HOST_QA_PASS_ANDROID_NOT_RUN_NOT_CONNECTED",
+  "approved_donor_original": {
+    "name": "ГлюкоПапа_МОДУЛЬ_РинФаст_v0.3.1_ИСПРАВЛЕННЫЕ_ГРАФИКИ.zip",
+    "sha256": "dcbabd02a72962c233d59c22949243685058ff82bd247d3877c02c572addeafa"
+  },
+  "baseline": {
+    "name": "КАНДИДАТ_ГлюкоПапа_V3_Q06_GFActivityGuidance_CONTEXT_ONLY_Android15_v0.1.2_20261124.zip",
+    "sha256": "66d121d1992d96c3fd611e0abd6b4bd88f5be3ddf9f4ca54ceadbc65ee0f0c72"
+  },
+  "approved_html_unchanged": {
+    "name": "Q07_РинФаст_GFActionWriter_HTML_v0.1_НА_СОГЛАСОВАНИЕ_20261124.html",
+    "sha256": "0deb598b569c3e9e545b2c8672c0f096530864975ee455cc144c5fc3d80877d8"
+  },
+  "changes": [
+    {
+      "path": "android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Q07InjectionContract.kt",
+      "before_sha256": null,
+      "after_sha256": "fc60805d35cb1e27e9cc5b402f24cf9fde15747e2a3b88f426e77f54d73447cc",
+      "change": "ADDED"
+    },
+    {
+      "path": "android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Q07InjectionFacts.kt",
+      "before_sha256": null,
+      "after_sha256": "2b70d19f63063fe973b61db168255d2d1860078a9447661a3b098bb9a97c348b",
+      "change": "ADDED"
+    },
+    {
+      "path": "android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Q07OwnerQueue.kt",
+      "before_sha256": null,
+      "after_sha256": "27ae609949f458159b237ef30dcbbb75251b836208d06ba1f677f12a9c5c3d60",
+      "change": "ADDED"
+    },
+    {
+      "path": "android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Q07Bridge.kt",
+      "before_sha256": null,
+      "after_sha256": "1817934e9ba7753231a662f3ac41196629ce8f92c7f4b2a2acea9b075ccc70b9",
+      "change": "ADDED"
+    },
+    {
+      "path": "android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3NativeWriter.kt",
+      "before_sha256": "858bb9837f4c5e9efd9ce8cac4bc2058b5493a6f34d6dc2043ae4eda4c509cd2",
+      "after_sha256": "a499065f46327c79ee1b8a5a8d24be9eeb3d6f20b4c8fae509752ef4d1454c3c",
+      "change": "MODIFIED"
+    },
+    {
+      "path": "android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3CorrectionWriter.kt",
+      "before_sha256": "d2c57eae9ab4a138ac5992b1f6cc7f3acbe2128eeb3cd9e4d79dca02f06032f5",
+      "after_sha256": "f2920284e6a4f6a98bc3cdf0e02fc1df9b260e4b452c2e14035186b650e75668",
+      "change": "MODIFIED"
+    },
+    {
+      "path": "android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Storage.kt",
+      "before_sha256": "5f366b9fcf9e959a24d0aaaa32bfb351e4053107d31cf52e4f4276e4f0e901e3",
+      "after_sha256": "fc3dc818e8d7fcf1ea800d798dd44b5af853cff67a68f2f8192a4ae11fa76d89",
+      "change": "MODIFIED"
+    },
+    {
+      "path": "android-app/app/src/main/java/org/glukopapa/v3/m00/MainActivity.kt",
+      "before_sha256": "2801e2b809276cf221b88af2514830d4b41e1cd4598d85858d41ce1df17f9836",
+      "after_sha256": "cea34977b90eff700155fd82ba30064f3c7787d95b5de20263956759f26f0f36",
+      "change": "MODIFIED"
+    },
+    {
+      "path": "android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3LocalAssetRoutes.kt",
+      "before_sha256": "673410bea650a4995de6eb688328302fea636763b58285feaf4ffa1583599460",
+      "after_sha256": "4feaf2c43a079236566fdc43311927de8c887bb16625ecbe28fc1f619cfc4d16",
+      "change": "MODIFIED"
+    },
+    {
+      "path": "android-app/app/src/main/assets/www/index.html",
+      "before_sha256": "39707ad2ed9913d1fef7c8beeab3940dfac98dd5057668698d74d9081e4cf933",
+      "after_sha256": "3be66f61ffe16c0a7765f47bbdbb2933f0b18d77b4db8643388200dd7d1d1b67",
+      "change": "MODIFIED"
+    },
+    {
+      "path": "android-app/app/src/main/assets/www/q07/rinfast.html",
+      "before_sha256": null,
+      "after_sha256": "77bc4b042a8264791953f6993eaca9fc5067b80e0b20377d08b6a12a68c6277e",
+      "change": "ADDED"
+    },
+    {
+      "path": "android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q07RinFastContractInstrumentedTest.kt",
+      "before_sha256": null,
+      "after_sha256": "a770aab67b91ab14d17752a10c095911cb0ed9723aefad64f31faa81f9da523d",
+      "change": "ADDED"
+    }
+  ],
+  "checks": {
+    "donor_original_node": {
+      "passed": 308,
+      "failed": 0
+    },
+    "q07_independent_host_browser": {
+      "passed": 64,
+      "failed": 0,
+      "native_mock": true
+    },
+    "kotlin_q07_compile_stub": {
+      "status": "PASS",
+      "android_sdk": false
+    },
+    "q05_static": 30,
+    "q05_schema_sqlite": 28,
+    "q04_sqlite": 6,
+    "q04_legacy_sqlite": 4,
+    "q04_native_js": 23,
+    "android_q07": {
+      "status": "NOT_RUN",
+      "reason": "SDK/Gradle project not present in source baseline"
+    },
+    "q04_q06_structure": {
+      "status": "BLOCKED_SOURCE_PACKAGE_INCOMPLETE",
+      "reason": "app/build.gradle.kts not in overlay"
+    },
+    "physical_android_Q29": {
+      "status": "NOT_RUN"
+    }
+  },
+  "issues": {
+    "A10-RINF-01": "OPEN (no trusted coverage source; UNKNOWN fallback mandatory)",
+    "A10-RINF-02": "PARTIAL IMPLEMENTATION, NOT VERIFIED native",
+    "A21-01": "OPEN owner activation and CI",
+    "A21-02": "OPEN true end-to-end",
+    "A10-RINF-03": "OPEN model calibration",
+    "A10-RINF-04": "OPEN version provenance mismatch",
+    "RET-018": "DEFERRED future Q06 numeric model; do not activate",
+    "Q29": "DEFERRED physical device"
+  },
+  "archive_sha256": "6dfaf0b50b97be190e54d748b5fe5d94ec050e0fd9487d9db8070c7c14e0d6ac",
+  "archive_bytes": 683957
+}
