@@ -1,0 +1,763 @@
+--- /dev/null
++++ android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Q07InjectionContract.kt
+@@ -0,0 +1,27 @@
++package org.glukopapa.v3.m00
++
++import org.json.JSONObject
++import java.time.Instant
++
++/** Q07: exact pen-step and trust-boundary checks, NOT a dose calculator. */
++internal object GfV3Q07InjectionContract {
++    val sites = setOf("abdomen", "arm", "thigh", "buttock")
++    fun dose(units: Double) {
++        require(units.isFinite() && units >= 0.5 && units <= 100.0 &&
++            kotlin.math.abs(units * 2.0 - kotlin.math.round(units * 2.0)) < 1e-8) {
++            "Q07_RINFAST_PEN_STEP_INVALID"
++        }
++    }
++    fun actual(payload: JSONObject, now: Instant = Instant.now()) {
++        require(payload.optString("eventType") == "insulin_injection" &&
++            payload.optString("status") == "confirmed" &&
++            payload.optString("provenance") == "CONFIRMED_ACTUAL" &&
++            payload.optBoolean("userConfirmed", false) &&
++            payload.optString("insulinId") == "rinfast") { "Q07_NOT_CONFIRMED_RINFAST" }
++        dose(payload.getDouble("units"))
++        require(payload.getString("injectionSite") in sites) { "Q07_SITE_INVALID" }
++        val at = GfV3WriteContract.requireUtc(payload.getString("occurredAtUtc"))
++        require(!at.isAfter(now.plusSeconds(60))) { "Q07_FUTURE_ACTION_REJECTED" }
++        require(payload.optString("note").length <= 150) { "Q07_NOTE_INVALID" }
++    }
++}
+--- /dev/null
++++ android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Q07InjectionFacts.kt
+@@ -0,0 +1,35 @@
++package org.glukopapa.v3.m00
++
++import org.json.JSONObject
++import java.time.Instant
++
++/** Q07 native-only owner. Independent of the RinFast research engine. */
++internal class GfV3Q07InjectionFacts(private val port: GfV3NativeModuleGateway.BoundPort) {
++    fun confirm(eventId: String, key: String, units: Double, site: String,
++                atUtc: String, note: String, revision: Long,
++                ownerConfirmedByAndroid: Boolean): JSONObject {
++        if (!ownerConfirmedByAndroid) throw SecurityException("Q07_ANDROID_OWNER_CONFIRMATION_REQUIRED")
++        require(GfV3WriteContract.validId(eventId) && GfV3WriteContract.validId(key)) { "Q07_ID_INVALID" }
++        val event = JSONObject().put("eventId", eventId).put("eventType", "insulin_injection")
++            .put("status", "confirmed").put("provenance", "CONFIRMED_ACTUAL")
++            .put("userConfirmed", true).put("insulinId", "rinfast").put("insulinClass", "rapid")
++            .put("units", units).put("injectionSite", site).put("occurredAtUtc", atUtc)
++            .put("note", note).put("confirmationSource", "ANDROID_OWNER_DIALOG")
++        GfV3Q07InjectionContract.actual(event)
++        return port.append("actionWriter", key, revision, event)
++    }
++
++    fun correct(eventId: String, correctionId: String, key: String, revision: Long,
++                recordVersion: Int, units: Double, site: String, reason: String,
++                ownerConfirmedByAndroid: Boolean): JSONObject {
++        if (!ownerConfirmedByAndroid) throw SecurityException("Q07_ANDROID_OWNER_CONFIRMATION_REQUIRED")
++        require(GfV3WriteContract.validId(eventId) && GfV3WriteContract.validId(correctionId) &&
++            GfV3WriteContract.validId(key)) { "Q07_EDIT_ID_INVALID" }
++        require(recordVersion >= 0 && reason.trim().length in 3..500) { "Q07_EDIT_REASON_REQUIRED" }
++        GfV3Q07InjectionContract.dose(units)
++        require(site in GfV3Q07InjectionContract.sites) { "Q07_SITE_INVALID" }
++        return port.correct("events", eventId, correctionId, key, revision,
++            recordVersion, JSONObject().put("units", units).put("injectionSite", site),
++            reason, "OWNER_MANUAL")
++    }
++}
+--- /dev/null
++++ android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Q07OwnerQueue.kt
+@@ -0,0 +1,133 @@
++package org.glukopapa.v3.m00
++
++import org.json.JSONArray
++import org.json.JSONObject
++import java.util.UUID
++import java.util.concurrent.Executors
++
++/** JS may request and poll, but only native UI consent + installed GFInjectionFact can write. */
++internal class GfV3Q07OwnerQueue(
++    private val facts: GfV3Q07InjectionFacts,
++    private val storage: GfV3Storage,
++    private val onConfirm: (String,(Boolean)->Unit)->Unit
++) {
++    private data class Pending(val request: JSONObject, val eventId: String,
++        val key: String, var state: String = "PENDING", var result: JSONObject? = null)
++    private val lock=Any()
++    private val pending=linkedMapOf<String,Pending>()
++    private val worker=Executors.newSingleThreadExecutor { r -> Thread(r,"Q07InjectionOwnerWorker").apply { isDaemon=true } }
++    private var closed=false
++
++    fun snapshot(): JSONObject {
++        // Journal returns one profile / one revision. No independent DB or mixed snapshots.
++        val journal=storage.readShellPort("journal")
++        val entries=journal.getJSONObject("data").getJSONArray("events")
++        val shots=JSONArray()
++        for (i in 0 until entries.length()) {
++            val e=entries.getJSONObject(i)
++            if(e.optString("eventType")=="insulin_injection" && e.optString("insulinId")=="rinfast") {
++                // Version and source are enriched inside the SAME SQLite journal read transaction.
++                // Do not mix a truncated corrections feed with the event snapshot.
++                require(e.optString("sourceModule")=="GFInjectionFact") { "Q07_EVENT_OWNER_MISMATCH" }
++                shots.put(JSONObject(e.toString()))
++            }
++        }
++        return JSONObject().put("revision",journal.getLong("revision"))
++            .put("profileId",journal.opt("profileId"))
++            .put("profileConfigured",journal.getBoolean("profileConfigured"))
++            .put("shots",shots)
++            .put("iobStatus","UNKNOWN_INCOMPLETE_COVERAGE")
++            .put("modelRemainingUnits",JSONObject.NULL)
++            .put("coverageProven",false)
++            .put("numericActivityEffectEnabled",false)
++    }
++
++    fun enqueue(raw: String): JSONObject {
++        require(raw.length in 20..2500) { "Q07_REQUEST_SIZE_INVALID" }
++        val request=JSONObject(raw)
++        val command=request.getString("command")
++        require(command in setOf("confirm","correct")) { "Q07_COMMAND_INVALID" }
++        val snap=snapshot()
++        require(snap.getBoolean("profileConfigured")) { "PROFILE_UNCONFIGURED" }
++        require(request.getLong("expectedRevision")==snap.getLong("revision")) { "V3_REVISION_CONFLICT" }
++        require(request.getString("profileId")==snap.getString("profileId")) { "Q07_PROFILE_CONFLICT" }
++        // Early gate is advisory; GFStorage rechecks registry and grant in SQL transaction.
++        val reg=storage.readShellPort("registry").getJSONObject("data")
++        val modules=reg.getJSONArray("modules")
++        val permitted=(0 until modules.length()).any { i ->
++            val m=modules.getJSONObject(i)
++            m.getString("moduleId")=="GFInjectionFact" &&
++                m.getString("status")=="OWNER_INTEGRATION_ACCEPTED" &&
++                m.getBoolean("featureEnabled") &&
++                (0 until m.getJSONArray("writeRoles").length()).any { j ->
++                    m.getJSONArray("writeRoles").getString(j)=="actionWriter" }
++        }
++        require(permitted) { "Q07_PRODUCER_NOT_ACTIVATED" }
++        val units=request.getDouble("units")
++        val site=request.getString("site")
++        GfV3Q07InjectionContract.dose(units)
++        require(site in GfV3Q07InjectionContract.sites) { "Q07_SITE_INVALID" }
++        if(command=="confirm") {
++            GfV3WriteContract.requireUtc(request.getString("atUtc"))
++            require(!java.time.Instant.parse(request.getString("atUtc")).isAfter(java.time.Instant.now().plusSeconds(60)))
++                { "Q07_FUTURE_ACTION_REJECTED" }
++            require(request.optString("note").length<=150) { "Q07_NOTE_INVALID" }
++        }else{
++            require(GfV3WriteContract.validId(request.getString("eventId"))) { "Q07_EVENT_ID_INVALID" }
++            require(request.getInt("recordVersion")>=0) { "Q07_EDIT_VERSION_INVALID" }
++            require(request.getString("reason").trim().length in 3..500) { "Q07_EDIT_REASON_REQUIRED" }
++        }
++        val desc=if(command=="confirm")
++            "Подтвердите, что РинФаст фактически введён.\nДоза: $units ЕД\nМесто: $site\nВремя: ${request.getString("atUtc")}.\nНе подтверждайте запланированный укол."
++            else "Подтвердите исправление ранее сделанного укола ${request.getString("eventId")}.\nНовая доза: $units ЕД\nМесто: $site\nПричина: ${request.getString("reason")}."
++        val ticket=UUID.randomUUID().toString()
++        val p=Pending(request,if(command=="confirm")"q07-event-${UUID.randomUUID()}" else request.getString("eventId"),
++            "q07-write-${UUID.randomUUID()}")
++        synchronized(lock) { require(!closed && pending.isEmpty()) { "Q07_BUSY" }; pending[ticket]=p }
++        try {
++            onConfirm(desc) { approved ->
++                if(!approved)finish(ticket,"CANCELLED",JSONObject().put("accepted",false).put("code","OWNER_CANCELLED"))
++                else {
++                    val reserved=synchronized(lock){pending[ticket]?.let{
++                        if(!closed&&it.state=="PENDING"){it.state="APPLYING";true}else false}?:false}
++                    if(reserved) try { worker.execute {
++                        try {
++                            val out=apply(p)
++                            finish(ticket,"FINISHED",JSONObject().put("accepted",true)
++                                .put("revision",out.getLong("revision")).put("recordId",p.eventId))
++                        } catch(e:Exception) {
++                            finish(ticket,"REJECTED",JSONObject().put("accepted",false)
++                                .put("code",e.message?:"Q07_NATIVE_WRITE_REJECTED"))
++                        }
++                    }} catch(_:Exception) { finish(ticket,"REJECTED",JSONObject().put("accepted",false)
++                        .put("code","Q07_WORKER_UNAVAILABLE")) }
++                }
++            }
++        }catch(e:Exception){synchronized(lock){pending.remove(ticket)};throw e}
++        return JSONObject().put("ticket",ticket).put("state","PENDING")
++    }
++    private fun apply(p: Pending): JSONObject {
++        val req=p.request
++        return if(req.getString("command")=="confirm") facts.confirm(p.eventId,p.key,
++            req.getDouble("units"),req.getString("site"),req.getString("atUtc"),
++            req.optString("note"),req.getLong("expectedRevision"),true)
++        else facts.correct(p.eventId,"q07-corr-${UUID.randomUUID()}",p.key,
++            req.getLong("expectedRevision"),req.getInt("recordVersion"),
++            req.getDouble("units"),req.getString("site"),req.getString("reason"),true)
++    }
++    private fun finish(ticket:String,state:String,result:JSONObject) = synchronized(lock) {
++        pending[ticket]?.let { if(!closed && it.state in setOf("PENDING","APPLYING")) {
++            it.state=state;it.result=result
++        }}
++    }
++    fun poll(ticket:String):JSONObject = synchronized(lock) {
++        require(ticket.length in 10..128) { "Q07_TICKET_INVALID" }
++        val p=pending[ticket]?:return@synchronized JSONObject().put("state","UNKNOWN_TICKET")
++        JSONObject().put("state",p.state).also { x ->
++            if(p.state !in setOf("PENDING","APPLYING")) {
++                x.put("result",p.result?:JSONObject.NULL);pending.remove(ticket)
++            }+        }
++    }
++    fun close() { synchronized(lock){closed=true;pending.clear()};worker.shutdownNow() }
++}
+--- /dev/null
++++ android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Q07Bridge.kt
+@@ -0,0 +1,12 @@
++package org.glukopapa.v3.m00
++
++import android.webkit.JavascriptInterface
++import org.json.JSONObject
++
++/** Request-only Q07 WebView adapter: no direct SQL/writer, module identity or coverage toggle. */
++internal class GfV3Q07Bridge(private val owner: GfV3Q07OwnerQueue) {
++    @JavascriptInterface fun readState(): String = try { owner.snapshot().toString() } catch(e:Exception) { fail(e) }
++    @JavascriptInterface fun requestOwnerAction(raw: String): String = try { owner.enqueue(raw).toString() } catch(e:Exception) { fail(e) }
++    @JavascriptInterface fun pollOwnerAction(ticket: String): String = try { owner.poll(ticket).toString() } catch(e:Exception) { fail(e) }
++    private fun fail(e:Exception):String = JSONObject().put("error",JSONObject().put("code",e.message?:"Q07_ERROR")).toString()
++}
+--- android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3NativeWriter.kt
++++ android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3NativeWriter.kt
+@@ -95,6 +95,8 @@
+                     GfV3WriteContract.validateRealEvent(kind,status,recordId,idempotencyKey,t)
+                     // A calculation is never accepted as an actual action.
+                     require(payload.optString("provenance") == "CONFIRMED_ACTUAL") { "ACTION_NOT_CONFIRMED" }
++                    if(kind=="insulin_injection" && payload.optString("insulinId")=="rinfast")
++                        GfV3Q07InjectionContract.actual(payload)
+                     db.insertOrThrow("v3_events",null,ContentValues().apply {
+                         put("event_id",recordId);put("profile_id",profileId);put("event_type",kind)
+                         put("event_status",status);put("occurred_at_utc",t);put("payload_json",payload.toString())
+--- android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3CorrectionWriter.kt
++++ android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3CorrectionWriter.kt
+@@ -132,6 +132,8 @@
+             if(src.owner!=trustedOwnerModule)throw SecurityException("EDIT_WRONG_OWNER")
+             val before=JSONObject(src.payload)
+             val after=modified(domain,src.kind,before,changes)
++            if(domain=="events" && before.optString("insulinId")=="rinfast")
++                GfV3Q07InjectionContract.actual(after)
+             require(before.toString()!=after.toString()){ "NO_EFFECTIVE_CHANGE" }
+             val next=m.first+1
+             if(domain=="events") {
+--- android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Storage.kt
++++ android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Storage.kt
+@@ -166,7 +166,9 @@
+             when(role){
+                 "journal" -> {
+                     data.put("profile",profile(db,id,m.timezone))
+-                    data.put("events",rows(db,"SELECT payload_json FROM v3_events WHERE profile_id=? ORDER BY occurred_at_utc DESC LIMIT 2000",id){jsonAt(it,0)})
++                    data.put("events",rows(db,"SELECT e.payload_json,e.source_module,COALESCE((SELECT MAX(h.correction_version) FROM v3_record_corrections h WHERE h.profile_id=e.profile_id AND h.domain='events' AND h.record_id=e.event_id),0) FROM v3_events e WHERE e.profile_id=? ORDER BY e.occurred_at_utc DESC LIMIT 2000",id){ c ->
++                        JSONObject(c.getString(0)).apply { put("sourceModule",c.getString(1));put("recordVersion",c.getInt(2)) }
++                    })
+                     data.put("mealSessions",rows(db,"SELECT payload_json FROM v3_meal_sessions WHERE profile_id=? ORDER BY created_revision DESC LIMIT 2000",id){jsonAt(it,0)})
+                     data.put("mealHistory",rows(db,"SELECT payload_json FROM v3_meal_history WHERE profile_id=? ORDER BY created_revision DESC LIMIT 2000",id){jsonAt(it,0)})
+                     data.put("conditionPeriods",rows(db,"SELECT payload_json FROM v3_condition_periods WHERE profile_id=? ORDER BY created_revision DESC LIMIT 2000",id){jsonAt(it,0)})
+--- android-app/app/src/main/java/org/glukopapa/v3/m00/MainActivity.kt
++++ android-app/app/src/main/java/org/glukopapa/v3/m00/MainActivity.kt
+@@ -21,6 +21,7 @@
+     private lateinit var backupOwnerUi:GfV3BackupOwnerUi
+     private lateinit var nutritionDrafts:GfV3Q04NutritionDrafts
+     private lateinit var activityQueue:GfV3Q05OwnerQueue
++    private lateinit var injectionQueue:GfV3Q07OwnerQueue
+     private val origin = "https://appassets.androidplatform.net"
+     override fun onCreate(savedInstanceState: Bundle?) {
+         super.onCreate(savedInstanceState)
+@@ -54,6 +55,9 @@
+         editQueue.registerAcceptedOwner("GFIllness") { intent ->
+             nativeModuleGateway.bindInstalledAdapter("GFIllness").correctJournalIntent(intent)
+         }
++        editQueue.registerAcceptedOwner("GFInjectionFact") { intent ->
++            nativeModuleGateway.bindInstalledAdapter("GFInjectionFact").correctJournalIntent(intent)
++        }
+         // Integration wiring is compiled but GFStorage controls enablement:
+         // QA candidate registry remains NOT_ACCEPTED; owner approval is a separate gate.
+         val settingsAdapter=GfV3SettingsTrustedAdapter(nativeModuleGateway.bindInstalledAdapter("GFSettings"))
+@@ -80,6 +84,16 @@
+                     .setOnCancelListener{finish(false)}.show()
+             }
+         }
++        injectionQueue=GfV3Q07OwnerQueue(
++            GfV3Q07InjectionFacts(nativeModuleGateway.bindInstalledAdapter("GFInjectionFact")),v3
++        ){msg,finish->
++            runOnUiThread {
++                AlertDialog.Builder(this).setTitle("РинФаст — подтверждение владельца")
++                    .setMessage(msg).setPositiveButton("Подтвердить факт"){_,_->finish(true)}
++                    .setNegativeButton("Отмена"){_,_->finish(false)}
++                    .setOnCancelListener{finish(false)}.show()
++            }
++        }
+         web=WebView(this).apply {
+             layoutParams=ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.MATCH_PARENT)
+             settings.javaScriptEnabled=true
+@@ -94,7 +108,7 @@
+             settings.mixedContentMode=WebSettings.MIXED_CONTENT_NEVER_ALLOW
+             webViewClient=object:WebViewClient(){
+                 override fun shouldOverrideUrlLoading(view:WebView?, request:WebResourceRequest?):Boolean =
+-                    request?.url?.let{ it.scheme!="https" || it.host!="appassets.androidplatform.net" || it.path!="/" && it.path!="/index.html" && it.path!="/q01/settings.html" && it.path!="/q02/backup.html" && it.path!="/q03/normalized-facts.html" && it.path!="/q04/nutrition.html" && it.path!="/q05/activity.html" && it.path!="/q06/guidance.html" }?:true
++                    request?.url?.let{ it.scheme!="https" || it.host!="appassets.androidplatform.net" || it.path!="/" && it.path!="/index.html" && it.path!="/q01/settings.html" && it.path!="/q02/backup.html" && it.path!="/q03/normalized-facts.html" && it.path!="/q04/nutrition.html" && it.path!="/q05/activity.html" && it.path!="/q06/guidance.html" && it.path!="/q07/rinfast.html" }?:true
+                 override fun shouldInterceptRequest(view:WebView?,request:WebResourceRequest?):WebResourceResponse? {
+                     val u=request?.url ?: return blocked()
+                     // loadDataWithBaseURL sets the offline origin but DOES NOT map
+@@ -114,6 +128,7 @@
+             addJavascriptInterface(GfV3Q04Bridge(nutritionDrafts),"GPV3Q04Drafts")
+             addJavascriptInterface(GfV3Q05Bridge(activityQueue),"GPV3Q05Native")
+             addJavascriptInterface(GfV3Q06Bridge(GfV3Q06ContextAdapter(v3)),"GPV3Q06Native")
++            addJavascriptInterface(GfV3Q07Bridge(injectionQueue),"GPV3Q07Native")
+         }
+         setContentView(web)
+         val html=assets.open("www/index.html").bufferedReader().use{it.readText()}
+@@ -125,12 +140,14 @@
+         editQueue.cancelPendingOnDestroy()
+         settingsQueue.cancelPendingOnDestroy()
+         activityQueue.close()
++        injectionQueue.close()
+         backupOwnerUi.shutdown()
+         web.removeJavascriptInterface("GPV3V3Bridge")
+         web.removeJavascriptInterface("GPV3Q02Native")
+         web.removeJavascriptInterface("GPV3Q04Drafts")
+         web.removeJavascriptInterface("GPV3Q05Native")
+         web.removeJavascriptInterface("GPV3Q06Native")
++        web.removeJavascriptInterface("GPV3Q07Native")
+         web.destroy()
+         helper.close()
+         super.onDestroy()
+--- android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3LocalAssetRoutes.kt
++++ android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3LocalAssetRoutes.kt
+@@ -21,6 +21,7 @@
+     fun resolve(scheme: String?, host: String?, path: String?, query: String?, fragment: String?): Resource? {
+         if (scheme != "https" || host != "appassets.androidplatform.net" || query != null || fragment != null) return null
+         if (path == "/" || path == "/index.html") return Resource("www/index.html", "text/html")
++        if (path == "/q07/rinfast.html") return Resource("www/q07/rinfast.html", "text/html")
+         if (path == "/q06/guidance.html") return Resource("www/q06/guidance.html", "text/html")
+         if (path == "/q05/activity.html") return Resource("www/q05/activity.html", "text/html")
+         if (path == "/q04/nutrition.html") return Resource("www/q04/nutrition.html", "text/html")
+--- android-app/app/src/main/assets/www/index.html
++++ android-app/app/src/main/assets/www/index.html
+@@ -159,6 +159,7 @@
+         <p class="micro-text" id="forecastPreviewNote">Здесь будет 4 линии: GFConsensus, GFForecast, GFxDrip, GFAPSEnhancer. Пока расчётов нет.</p>
+         <div class="two-actions"><button data-module="GFLOW" class="action-btn low" type="button"><span>↓ Низкий сахар</span><small>→ GFLOW</small></button><button data-module="GFHIGH" class="action-btn high" type="button"><span>↑ Высокий сахар</span><small>→ GFHIGH</small></button></div>
+         <button data-module="GFInjectionEntry" class="action-btn insulin wide" type="button"><span class="action-icon">✦</span><span class="action-copy"><b>Записать Левемир</b><small>→ GFInjectionEntry / Levemir</small></span><span aria-hidden="true" class="chevron">›</span></button>
++        <button data-module="GFRinFast" class="action-btn insulin wide" type="button"><span class="action-icon">✦</span><span class="action-copy"><b>Записать РинФаст</b><small>→ Q07 / фактическое введение</small></span><span aria-hidden="true" class="chevron">›</span></button>
+       </article>
+       <div class="two-actions action-margin"><button data-module="GFSport" type="button" class="action-btn neutral"><span>◷ Спорт</span><small>→ GFSport</small></button><button data-module="GFIllness" type="button" class="action-btn neutral"><span>✳ Болезнь</span><small>→ GFIllness</small></button></div>
+       <article class="surface spaced"><div class="section-head"><h2>Питание сегодня</h2><button class="text-link" data-module="GFMainNutrition" type="button">→ GFMainNutrition</button></div>
+@@ -782,6 +783,10 @@
+   ev.preventDefault();ev.stopImmediatePropagation();
+   location.assign('/q06/guidance.html');return;
+  }
++ if(button.dataset.module==='GFRinFast'){
++  ev.preventDefault();ev.stopImmediatePropagation();
++  location.assign('/q07/rinfast.html');return;
++ }
+  if(['GFSport','GFIllness'].includes(button.dataset.module)){
+   ev.preventDefault();ev.stopImmediatePropagation();
+   location.assign('/q05/activity.html');
+--- /dev/null
++++ android-app/app/src/main/assets/www/q07/rinfast.html
+@@ -0,0 +1,364 @@
++<!doctype html>
++<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#f5f8f8">
++<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; base-uri 'none'; form-action 'none'">
++<title>ГлюкоПапа V3 — Q07 РинФаст · native QA</title>
++<style>
++:root{--page:#f5f8f8;--card:#fff;--ink:#20343b;--muted:#76878d;--teal:#14857e;--deep:#105f61;--light:#e8f5f2;--edge:#e2ebeb;--orange:#f3a748;--shadow:0 3px 20px #1644510a}*{box-sizing:border-box}html{background:#eaf1f1}body{margin:0;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:var(--ink);font-size:14px;line-height:1.45}button,input,select,textarea{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #298ea5;outline-offset:2px}button:disabled{opacity:.4;cursor:not-allowed}.app{max-width:540px;background:var(--page);margin:auto;min-height:100vh;box-shadow:0 2px 32px #829ca82f;padding-bottom:90px}.header{height:70px;display:flex;align-items:center;justify-content:space-between;padding:12px 18px;background:white;border-bottom:1px solid #edf2f2}.brand{display:flex;align-items:center;gap:8px}.logo{width:37px;height:37px;border-radius:12px;background:linear-gradient(145deg,#23a6a0,#087f88);color:white;display:grid;place-items:center;font-weight:850;font-size:20px}.name{font-size:21px;font-weight:850;letter-spacing:-.8px}.name span{color:var(--teal)}.name sup{font-size:9px;color:#789197;letter-spacing:0;margin-left:3px}.profile{border:1px solid #dfebea;background:#f6fbfa;border-radius:11px;padding:7px 8px;font-size:10px;color:#5a787c}.status{display:flex;align-items:center;gap:7px;padding:10px 17px;background:#e9f5f3;color:#327f7b;font-size:11px;font-weight:670}.status i{height:7px;width:7px;border-radius:50%;background:#1da29a}.main{padding:17px 15px 24px}.eyebrow{color:#4a9590;letter-spacing:1.1px;text-transform:uppercase;font-size:10px;font-weight:850;margin:0 0 4px}.main h1{font-size:23px;letter-spacing:-.7px;line-height:1.2;margin:0 0 6px}.lead{margin:0 0 16px;color:var(--muted);font-size:12px}.card{background:#fff;border:1px solid var(--edge);box-shadow:var(--shadow);border-radius:18px;padding:16px;margin-bottom:12px}.titleline{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:13px}.card h2{margin:0;font-size:15px;letter-spacing:-.25px}.pill{font-size:10px;color:#498179;background:#eaf7f3;border:1px solid #d4ece5;border-radius:100px;padding:5px 9px;font-weight:720;white-space:nowrap}.pill.orange{background:#fff7ed;color:#ab7a31;border-color:#f5e4ca}.label{font-size:11px;color:#59777d;font-weight:730;display:block;margin-bottom:6px}.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}.control{width:100%;min-width:0;border:1px solid #d9e5e4;border-radius:11px;background:#fbfefe;color:#284d52;padding:10px 11px;height:43px}.dosebar{display:grid;grid-template-columns:46px minmax(0,1fr) 46px;gap:9px}.dosebar button{background:#eaf5f2;border:1px solid #cbe4df;border-radius:11px;color:#1b6c69;font-weight:850;font-size:22px}.dosebar input{font-size:25px;font-weight:800;text-align:center;height:51px}.chiprow{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0 0}.chip{background:#f5faf9;color:#3b7877;border:1px solid #dcebea;border-radius:10px;padding:7px 10px;font-size:11px;font-weight:730}.hint{margin:9px 0 0;font-size:11px;color:#7f9094;line-height:1.5}.btnrow{display:flex;gap:9px;margin-top:13px}.btn{border-radius:12px;border:1px solid #cee3e1;background:#fff;color:#337a77;padding:11px 12px;font-weight:760;font-size:12px;min-height:45px;flex:1}.btn.primary{background:#14857e;color:white;border-color:#14857e}.btn.muted{background:#f1f7f6}.callout{background:#f4f9f9;border:1px solid #dceaea;padding:12px 13px;border-radius:12px;font-size:11px;color:#4b757c}.callout.warn{background:#fff9f0;border-color:#f2dfbf;color:#866a43}.tiny{font-size:10px;color:#81969a}.strong{font-weight:800}.modelrow{display:grid;grid-template-columns:1fr 1fr;gap:10px}.numberbox{border:1px solid #e5eded;border-radius:12px;background:#fbfdfd;padding:12px}.numberbox span{display:block;font-size:10px;color:#738b90;margin-bottom:3px}.numberbox b{font-size:22px;letter-spacing:-.4px}.numberbox small{font-size:10px;color:#80969b}.modelstatus{padding:11px 12px;background:#f6f8f9;border:1px solid #e8edee;border-radius:11px;margin-top:10px;font-size:11px;color:#69828b}.legend{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;font-size:10px;color:#6e8488;margin:10px 0}.line{display:inline-block;width:16px;height:3px;border-radius:2px;vertical-align:middle;margin-right:4px;background:var(--teal)}.line.b{background:#e6a449}.line.c{background:#4d9bce}.chartwrap{border:1px solid #e6eeee;background:#fbfefe;border-radius:13px;padding:10px 7px;overflow:hidden}.chart{width:100%;height:160px;display:block}.rowlist{display:flex;flex-direction:column;gap:8px}.item{display:flex;gap:10px;align-items:flex-start;border:1px solid #e9efef;background:#fcfefe;border-radius:12px;padding:11px}.bubble{width:33px;height:33px;border-radius:10px;background:#e5f4f0;color:#147a74;display:grid;place-items:center;font-size:18px;flex:none}.item-body{flex:1;min-width:0}.item-body b{font-size:12px;display:block}.item-body small{display:block;margin-top:2px;font-size:10px;color:#7b9195}.menu{min-width:30px;min-height:30px;background:transparent;border:0;color:#6d898a;font-size:22px}.nav{position:fixed;max-width:540px;width:100%;bottom:0;left:50%;transform:translateX(-50%);height:69px;background:#fff;border-top:1px solid #e5eeee;display:flex;align-items:center;justify-content:space-around;box-shadow:0 -4px 22px #576b6b12}.nav div{color:#8a9ca0;font-size:10px;text-align:center;line-height:1.3}.nav .active{color:var(--teal);font-weight:800}.nav .ico{display:block;font-size:21px}.modalcover{position:fixed;inset:0;background:#203b419c;display:none;align-items:center;justify-content:center;z-index:20;padding:14px}.modal{background:#fff;border-radius:19px;width:min(100%,430px);max-height:90vh;overflow:auto;padding:19px}.modal h3{margin:0 0 8px;font-size:17px}.modal p{font-size:12px;color:#70888b}.modal .label{margin-top:12px}.modal textarea{height:64px;resize:vertical}.audit{background:#f8fafa;border-radius:9px;font-size:11px;color:#567379;padding:11px;margin:9px 0;white-space:pre-line}.footer{font-size:10px;color:#93a1a6;padding:8px 4px;text-align:center}.divider{height:1px;background:#edf1f1;margin:12px 0}.hidden{display:none}.qa{display:flex;justify-content:space-between;gap:9px;font-size:10px;color:#80969b}.qa strong{color:#648681}details summary{font-weight:730;color:#38817b;font-size:11px;cursor:pointer;margin:0 0 9px}@media(max-width:360px){.main{padding:12px 10px 20px}.card{padding:13px}.header{padding:10px}.name{font-size:19px}.profile{font-size:9px}.btn{font-size:11px;padding:9px}.numberbox b{font-size:18px}.modelrow{gap:7px}.chart{height:140px}}@media(min-width:560px){.app{border-left:1px solid #c7d9db;border-right:1px solid #c7d9db}}
++</style></head><body>
++<div class="app"><header class="header"><div class="brand"><div class="logo">Г</div><div class="name">Глюко<span>Папа</span><sup>V3</sup></div></div><div class="profile">● Профиль GFStorage</div></header>
++<div class="status"><i></i> Q07 · РинФаст · запись через GFStorage и Android</div>
++<main class="main"><div class="eyebrow">Главная / Инсулин</div><h1>РинФаст</h1><p class="lead">Запись фактического укола, история и модельная кривая короткого инсулина.</p>
++<section class="card" id="entry-card"><div class="titleline"><h2>Новый укол</h2><span class="pill">Шаг ручки 0,5 ЕД</span></div>
++<label class="label" for="dose">Введённая доза, ЕД</label><div class="dosebar"><button type="button" id="minus" aria-label="Уменьшить дозу на 0,5">−</button><input type="number" id="dose" class="control" value="0.5" step="0.5" min="0.5" max="100" inputmode="decimal" aria-label="Доза РинФаста"><button type="button" id="plus" aria-label="Увеличить дозу на 0,5">+</button></div>
++<div class="chiprow"><button type="button" class="chip" data-dose="0.5">0,5 ЕД</button><button type="button" class="chip" data-dose="1">1,0 ЕД</button><button type="button" class="chip" data-dose="1.5">1,5 ЕД</button><button type="button" class="chip" data-dose="2">2,0 ЕД</button></div>
++<div class="grid2" style="margin-top:13px"><div><label class="label" for="injectionTime">Когда сделан укол</label><input class="control" id="injectionTime" type="datetime-local"></div><div><label class="label" for="site">Место введения</label><select class="control" id="site"><option value="Живот">Живот</option><option value="Плечо">Плечо</option><option value="Бедро">Бедро</option><option value="Ягодица">Ягодица</option></select></div></div>
++<label class="label" for="note" style="margin-top:12px">Примечание (необязательно)</label><input class="control" id="note" maxlength="150" placeholder="Например, после завтрака">
++<div class="btnrow"><button type="button" class="btn primary" id="startConfirmation">Сделал укол · Записать</button></div><p class="hint">Подтверждение откроется отдельно. В настоящем приложении только доверенный модуль Q07 записывает событие в GFStorage.</p></section>
++<section class="card" id="model-card"><div class="titleline"><h2>Действие РинФаста</h2><span class="pill orange">Исследовательская модель</span></div>
++<div class="modelrow"><div class="numberbox"><span>Модельный остаток IOB</span><b id="iob">—</b><small> ЕД · суммарно</small></div><div class="numberbox"><span>Параметры кривой</span><b>300 / 75</b><small> мин · DIA / пик</small></div></div>
++<div class="modelstatus" id="coverageStatus" role="status">Полнота истории не подтверждена: суммарный IOB недоступен.</div>
++<div class="legend"><span><i class="line"></i> Укол 1</span><span><i class="line b"></i> Укол 2</span><span><i class="line c"></i> Следующий</span></div><div class="chartwrap"><svg id="chart" class="chart" viewBox="0 0 480 170" role="img" aria-label="Кривые модельного действия отдельных введений РинФаста"><line x1="36" y1="142" x2="471" y2="142" stroke="#c6d9d9" stroke-width="1"/><line x1="36" y1="20" x2="36" y2="142" stroke="#c6d9d9" stroke-width="1"/><g id="plot"></g><text x="36" y="162" font-size="10" fill="#82979d">0</text><text x="240" y="162" font-size="10" fill="#82979d">2,5 ч</text><text x="450" y="162" font-size="10" fill="#82979d">5 ч</text></svg></div>
++<p class="hint">График — по независимому исходному RinfastEngine v0.3.0 из утверждённого стенда v0.3.1. Он не прогнозирует сахар и не определяет дозу.</p>
++<div class="divider"></div><div class="qa"><span>Покрытие истории</span><strong id="scenario">История неполная</strong></div><div class="btnrow"><button type="button" class="btn muted" id="incompleteScenario">История неполная</button><button type="button" class="btn muted" id="completeScenario">Полная история (недоступно)</button></div><p class="tiny">Полноту истории нельзя установить вручную. До отдельного доверенного источника IOB UNKNOWN.</p></section>
++<section class="card"><div class="titleline"><h2>Последние уколы</h2><span class="pill" id="historyCount">0 записей</span></div><div id="history" class="rowlist"></div><div class="divider"></div><details><summary>Данные для расчёта и источники</summary><div class="callout"><div>РинФаст (аспарт). Профиль OpenAPS exponential: DIA 300 мин, пик 75 мин (предварительные модельные параметры).</div><div style="margin-top:8px">Входы: подтверждённые события, полное покрытие истории, источник и ревизия GFStorage. При отсутствии доверенной полноты — <strong>IOB UNKNOWN</strong>, а не 0.</div><div style="margin-top:8px">События Левемира относятся к Q08; активность Q05/Q06 автоматически дозу не изменяет.</div></div></details></section>
++<section class="callout warn" id="mockDisclaimer">Реальные записи выполняются только при подтверждении в Android и разрешённом GFStorage writer. При неполной истории IOB не выдаётся. Рекомендации по дозировке отсутствуют.</section>
++<p class="footer">ГлюкоПапа V3 · Q07 native QA · отдельно от одобренного дизайна v0.1</p></main>
++<nav class="nav" aria-label="Навигация — демонстрация"><div><span class="ico">⌂</span>Главная</div><div class="active"><span class="ico">◉</span>РинФаст</div><div><span class="ico">▤</span>Дневник</div><div><span class="ico">⌁</span>График</div><div><span class="ico">⚙</span>Настройки</div></nav></div>
++<div class="modalcover" id="confirmModal" role="dialog" aria-modal="true" aria-label="Подтверждение фактического укола"><div class="modal"><h3>Подтвердить укол</h3><p>Это подтверждение фактически введённого инсулина, а не назначение дозы. Заявка передаётся доверенному Android-обработчику. Только после второго, системного подтверждения будет записан факт.</p><div class="audit" id="summary"></div><div class="btnrow"><button type="button" class="btn" id="cancelConfirmation">Отмена</button><button type="button" class="btn primary" id="confirmInjection">Передать в Android</button></div></div></div>
++<div class="modalcover" id="editModal" role="dialog" aria-modal="true" aria-label="Корректировка записи"><div class="modal"><h3>Изменить запись</h3><p>Корректировки реального события выполняются владельцем модуля с отдельным журналом изменений и проверкой версии. Изменение записывается в GFStorage после отдельного подтверждения Android.</p><div class="audit" id="editOriginal"></div><div class="grid2"><div><label class="label" for="editDose">Доза, ЕД</label><input type="number" class="control" id="editDose" min="0.5" max="100" step="0.5"></div><div><label class="label" for="editSite">Место</label><select class="control" id="editSite"><option>Живот</option><option>Плечо</option><option>Бедро</option><option>Ягодица</option></select></div></div><label class="label" for="editReason">Причина корректировки</label><textarea id="editReason" class="control" placeholder="Например, ошибся при вводе" maxlength="300"></textarea><div class="btnrow"><button type="button" class="btn" id="cancelEdit">Отмена</button><button type="button" class="btn primary" id="saveEdit">Подтвердить исправление</button></div></div></div>
++<script>
++/* Q07 uses the donor's original JS calculation for the visual preview only. No trusted V3 writer. */
++/*
++ * ГлюкоПапа: независимый исследовательский модуль IOB для РинФаста (инсулин аспарт).
++ * v0.3.0. Расчётная кривая OpenAPS exponential (rapid acting), не индивидуальная
++ * фармакодинамическая оценка и НЕ алгоритм назначения инсулина/еды.
++ * Не требуется сеть, CGM, журнал еды или другие модули.
++ * License of THIS implementation: MIT. Reference method: OpenAPS/oref0.
++ */
++(function (root, factory) {
++  "use strict";
++  const api = factory();
++  if (typeof module === "object" && module.exports) module.exports = api;
++  if (root) root.RinfastEngine = api;
++})(typeof globalThis !== "undefined" ? globalThis : this, function () {+  "use strict";
++  const ENGINE_VERSION = "0.3.0";
++  const DEFAULT_PROFILE = Object.freeze({
++    drugId: "rinfast", drugName: "РинФаст", substance: "инсулин аспарт",
++    model: "openaps_exponential_rapid", modelVersion: "0.3.0",
++    diaMinutes: 300, peakMinutes: 75,
++    dataSource: "https://help.geropharm.ru/rinfast-insulin-aspart",
++    modelSource: "https://github.com/openaps/oref0/blob/master/lib/iob/calculate.js",
++    clinicalValidation: false
++  });
++  // Диапазоны — из инструкции производителя, НЕ параметры кривой OpenAPS.
++  const LABEL_TIME_RANGES = Object.freeze({
++    onsetMinutes: Object.freeze([10, 20]),
++    maximumEffectMinutes: Object.freeze([60, 180]),
++    durationMinutes: Object.freeze([180, 300]),
++    source: "https://help.geropharm.ru/rinfast-insulin-aspart"
++  });
++  const WARNINGS = Object.freeze([
++    "Расчёт — модель доли оставшегося эффекта, не измерение инсулина в крови.",
++    "Профиль 300/75 минут — исследовательские параметры OpenAPS, не индивидуальная кривая РинФаста.",
++    "Число IOB нельзя использовать самостоятельно для расчёта доз, углеводов или лечения гипогликемии.",
++    "Отсутствие записей в журнале не доказывает отсутствия введённого инсулина.",
++    "Ноль через выбранную DIA означает только завершение выбранной математической кривой, не гарантирует отсутствия действия в организме.",
++    "Начало 10–20 мин, максимум 1–3 ч, длительность 3–5 ч — диапазоны по инструкции, не персональные пороги.",
++    "Рост математической активности до 10 минут НЕ означает подтверждённый клинический эффект до 10 минут.",
++    "Модельная продолжительность 360+ минут выходит за пределы типичного диапазона 3–5 часов из инструкции и служит только анализу чувствительности."
++  ]);
++  function finiteNumber(v) { return typeof v === "number" && Number.isFinite(v); }
++  function clamp01(x) { return Math.max(0, Math.min(1, x)); }
++  function validateProfile(profile) {
++    const p = profile == null ? DEFAULT_PROFILE : profile;
++    if (!p || p.drugId !== "rinfast" || p.model !== "openaps_exponential_rapid") {
++      throw new Error("Профиль должен быть для РинФаста с моделью openaps_exponential_rapid.");
++    }
++    if (!finiteNumber(p.diaMinutes) || p.diaMinutes < 300 || p.diaMinutes > 480) {
++      throw new Error("Некорректная длительность DIA: разрешён исследовательский диапазон 300–480 мин.");
++    }
++    if (!finiteNumber(p.peakMinutes) || p.peakMinutes < 50 || p.peakMinutes > 120 || p.peakMinutes >= p.diaMinutes / 2) {
++      throw new Error("Некорректное время пика: 50–120 мин и строго меньше половины DIA.");
++    }
++    return p;
++  }
++  function parameters(profile) {
++    const p = validateProfile(profile);
++    const D = p.diaMinutes, P = p.peakMinutes;
++    const tau = P * (1 - P / D) / (1 - 2 * P / D);
++    const a = 2 * tau / D;
++    const scale = 1 / (1 - a + (1 + a) * Math.exp(-D / tau));
++    if (![tau, a, scale].every(Number.isFinite) || tau <= 0 || scale <= 0) {
++      throw new Error("Не удалось рассчитать устойчивые параметры кривой.");
++    }
++    return { D, P, tau, a, scale };
++  }
++  /** Returns a fraction of insulin GLUCOSE-LOWERING EFFECT remaining, not plasma insulin. */
++  function getCurve(ageMinutes, profile = DEFAULT_PROFILE) {
++    if (!finiteNumber(ageMinutes) || ageMinutes < 0) throw new Error("Возраст инъекции должен быть неотрицательным числом минут.");
++    const { D, tau, a, scale } = parameters(profile);
++    if (ageMinutes >= D) return { remainingFraction: 0, usedFraction: 1, activityFractionPerMinute: 0 };
++    if (ageMinutes === 0) return { remainingFraction: 1, usedFraction: 0, activityFractionPerMinute: 0 };
++    const t = ageMinutes;
++    const exp = Math.exp(-t / tau);
++    // Algebraically equivalent to OpenAPS iobContrib, but avoids / (1-a)
++    // singularity when peak makes a exactly 1.
++    const remaining = 1 - scale * ((t * t / (tau * D) - (1 - a) * (t / tau + 1)) * exp + (1 - a));
++    const activity = (scale / (tau * tau)) * t * (1 - t / D) * exp;
++    const r = clamp01(remaining);
++    return { remainingFraction: r, usedFraction: 1 - r, activityFractionPerMinute: Math.max(0, activity) };
++  }
++  /** Instruction-based qualitative phase, deliberately independent of model action. */
++  function getPhase(ageMinutes, profile = DEFAULT_PROFILE) {
++    const p = validateProfile(profile);
++    if (!finiteNumber(ageMinutes) || ageMinutes < 0) throw new Error("Возраст инъекции должен быть неотрицательным числом минут.");
++    if (ageMinutes >= p.diaMinutes) return {code:"MODEL_HORIZON_PASSED",label:"За пределами выбранного модельного интервала",modelMinutesRemaining:0};
++    const modelMinutesRemaining = p.diaMinutes - ageMinutes;
++    if (ageMinutes < 10) return {code:"BEFORE_TYPICAL_ONSET",label:"До типичного начала действия по инструкции",modelMinutesRemaining};
++    if (ageMinutes < 20) return {code:"ONSET_WINDOW",label:"Диапазон начала действия по инструкции",modelMinutesRemaining};
++    if (ageMinutes < 60) return {code:"BEFORE_MAX_EFFECT_WINDOW",label:"После начала, до диапазона максимального эффекта",modelMinutesRemaining};
++    if (ageMinutes <= 180) return {code:"MAX_EFFECT_WINDOW",label:"Диапазон максимального эффекта по инструкции",modelMinutesRemaining};
++    if (ageMinutes < 300) return {code:"LATE_EFFECT_WINDOW",label:"Поздняя часть диапазона действия по инструкции",modelMinutesRemaining};
++    return {code:"EXTENDED_RESEARCH_MODEL",label:"Исследовательское продление за 5 часов — вне типичного диапазона инструкции",modelMinutesRemaining};
++  }
++  function timestampMs(value) {
++    if (typeof value !== "string" || !/T\d\d:\d\d/.test(value) || !/(?:Z|[+\-]\d\d:\d\d)$/i.test(value)) {
++      throw new Error("Время должно быть ISO 8601 с часовым поясом, например 2026-11-13T13:00:00+03:00.");
++    }
++    const ms = Date.parse(value);
++    if (!Number.isFinite(ms)) throw new Error("Невозможно прочитать время.");
++    return ms;
++  }
++  function validateHorizons(horizons) {
++    if (!Array.isArray(horizons) || horizons.length < 1 || horizons.length > 12 ||
++        !horizons.every(v => Number.isInteger(v) && v > 0 && v <= 480) ||
++        new Set(horizons).size !== horizons.length) {
++      throw new Error("Горизонты прогноза: уникальные положительные целые минуты (1–480), не более 12.");
++    }
++    return horizons;
++  }
++  /**
++   * Input: {nowIso, events, profile, horizonsMinutes?}
++   * Event: {id, type:'insulin_injection', insulinId:'rinfast', status:'confirmed',
++   *         administeredAt:'ISO8601 with offset', units: positive number}
++   * On any ambiguous relevant record -> INCOMPLETE and ALL computed values null.
++   */
++  function calculate(request) {
++    if (!request || typeof request !== "object") throw new Error("Передайте объект запроса.");
++    const profile = validateProfile(request.profile || DEFAULT_PROFILE);
++    const now = timestampMs(request.nowIso);
++    if (!Array.isArray(request.events) || request.events.length > 10000) {
++      throw new Error("События журнала должны быть массивом длиной до 10 000.");
++    }
++    const horizons = validateHorizons(request.horizonsMinutes || [15, 30, 60]);
++    const issues = [], ignored = [];
++    const accepted = [], ids = new Set();
++    for (const event of request.events) {
++      if (!event || typeof event !== "object") {
++        issues.push("В журнале обнаружена повреждённая запись."); continue;
++      }
++      if (event.type !== "insulin_injection") {
++        if (!event.type) issues.push("В журнале запись без типа события.");
++        continue;
++      }
++      if (typeof event.insulinId !== "string" || !event.insulinId.trim()) {
++        issues.push("Инъекция без идентификатора инсулина."); continue;
++      }
++      if (event.insulinId !== "rinfast") {
++        if (event.insulinId === "levemir") {
++          ignored.push({ id: String(event.id || "?"), reason: "Левемир учитывается отдельным модулем" });
++        } else {
++          issues.push(`Инъекция ${String(event.id || "?")}: препарат ${event.insulinId} неизвестен этому модулю или является другим коротким инсулином; требуется сверка журнала.`);
++        }
++        continue;
++      }
++      if (typeof event.id !== "string" || !event.id.trim() || ids.has(event.id)) {
++        issues.push("Отсутствует или повторяется идентификатор инъекции РинФаста."); continue;
++      }
++      ids.add(event.id);
++      if (event.status !== "confirmed") {
++        issues.push(`Инъекция ${event.id}: нет подтверждения фактического введения (status=confirmed).`);
++        continue;
++      }
++      if (!finiteNumber(event.units) || event.units <= 0 || event.units > 200) {
++        issues.push(`Инъекция ${event.id}: недостоверная доза.`); continue;
++      }
++      let administration;
++      try { administration = timestampMs(event.administeredAt); }
++      catch (_) { issues.push(`Инъекция ${event.id}: недостоверное время.`); continue; }
++      if (administration > now) {
++        issues.push(`Инъекция ${event.id}: время в будущем относительно момента расчёта.`); continue;
++      }
++      const ageMinutes = (now - administration) / 60000;
++      if (ageMinutes >= profile.diaMinutes) {
++        ignored.push({ id: event.id, reason: "За пределами расчётной длительности действия" });
++        continue;
++      }
++      accepted.push({ id: event.id, units: event.units, ageMinutes, administeredAt: event.administeredAt });
++    }
++    const base = {
++      engineVersion: ENGINE_VERSION, modelVersion: profile.modelVersion || ENGINE_VERSION,
++      drugId: "rinfast", drugName: "РинФаст", model: profile.model,
++      diaMinutes: profile.diaMinutes, peakMinutes: profile.peakMinutes,
++      nowIso: request.nowIso, issues, ignored,
++      warnings: Array.from(WARNINGS), timingSource: LABEL_TIME_RANGES.source, instructionTiming: LABEL_TIME_RANGES, acceptedCount: accepted.length,
++      clinicalValidation: false,
++      statusMeaning: "MODEL_ESTIMATE означает математический расчёт, не индивидуально проверенное действие",
++      assumesCompleteJournal: true,
++      durationBeyondLabel: profile.diaMinutes > 300,
++      labelOnsetIsNotHardCutoff: true
++    };
++    if (issues.length) {
++      return { ...base, status: "INCOMPLETE", modelRemainingUnits: null,
++        activityModelUnitsPerMinute: null, futureActionModelUnits: null, contributions: null };
++    }
++    let modelRemainingUnits = 0, activityModelUnitsPerMinute = 0;
++    const futureActionModelUnits = Object.fromEntries(horizons.map(h => [String(h), 0]));
++    const contributions = accepted.map(inj => {
++      const atNow = getCurve(inj.ageMinutes, profile);
++      const actionNext = {};
++      for (const h of horizons) {
++        const after = getCurve(inj.ageMinutes + h, profile);
++        const part = Math.max(0, inj.units * (atNow.remainingFraction - after.remainingFraction));
++        actionNext[String(h)] = part;
++        futureActionModelUnits[String(h)] += part;
++      }
++      const remainingUnits = inj.units * atNow.remainingFraction;
++      const usedUnits = inj.units * atNow.usedFraction;
++      const activityUnitsPerMinute = inj.units * atNow.activityFractionPerMinute;
++      modelRemainingUnits += remainingUnits;
++      activityModelUnitsPerMinute += activityUnitsPerMinute;
++      return {
++        id: inj.id, administeredAt: inj.administeredAt, ageMinutes: inj.ageMinutes,
++        phase: getPhase(inj.ageMinutes, profile),
++        doseUnits: inj.units, remainingFraction: atNow.remainingFraction,
++        usedFraction: atNow.usedFraction, remainingModelUnits: remainingUnits,
++        usedModelUnits: usedUnits, activityModelUnitsPerMinute: activityUnitsPerMinute,
++        futureActionModelUnits: actionNext
++      };
++    });
++    return {
++      ...base, status: "MODEL_ESTIMATE", modelRemainingUnits,
++      activityModelUnitsPerMinute, futureActionModelUnits, contributions+    };
++  }
++  /**
++   * Исследовательская серия по времени вокруг nowIso.
++   * Перед инъекцией её действие = 0, после DIA = 0 только в рамках модели.
++   * Данные используются только для построения отдельных и суммарных графиков.
++   * Не оценивает фактический сахар и не назначает терапию.
++   */
++  function calculateTimeline(request, options = {}) {
++    if (!request || typeof request !== "object") throw new Error("Нужен объект запроса.");
++    const profile = validateProfile(request.profile || DEFAULT_PROFILE);
++    const now = timestampMs(request.nowIso);
++    const start = options.startOffsetMinutes == null ? -240 : options.startOffsetMinutes;
++    const end = options.endOffsetMinutes == null ? 360 : options.endOffsetMinutes;
++    const step = options.stepMinutes == null ? 5 : options.stepMinutes;
++    if (![start, end, step].every(finiteNumber) || !Number.isInteger(start) || !Number.isInteger(end) ||
++        !Number.isInteger(step) || start < -600 || end > 600 || end <= start || step < 1 || step > 60 ||
++        Math.ceil((end - start) / step) > 1200) {
++      throw new Error("Некорректный интервал графика: -600..+600 минут, шаг 1–60 минут.");
++    }
++    const audit = calculate({ nowIso: request.nowIso, events: request.events, profile });
++    if (audit.status !== "MODEL_ESTIMATE") return {
++      status: "INCOMPLETE", issues: audit.issues, rows: null, shotIds: null, clinicalValidation: false
++    };
++    const shots = request.events.filter(e => e.type === "insulin_injection" && e.insulinId === "rinfast")
++      .map(e => ({ id: e.id, units: e.units, administeredAt: e.administeredAt,
++        ageAtNowMinutes: (now - timestampMs(e.administeredAt)) / 60000 }));
++    const rows = [];
++    for (let offset = start; offset <= end; offset += step) {
++      const perShot = []; let totalActivityUnitsPerMinute = 0, totalRemainingModelUnits = 0;
++      for (const shot of shots) {
++        const age = shot.ageAtNowMinutes + offset;
++        const curve = age < 0 ? null : getCurve(age, profile);
++        const activityUnitsPerMinute = curve ? shot.units * curve.activityFractionPerMinute : 0;
++        const remainingModelUnits = curve ? shot.units * curve.remainingFraction : 0;
++        perShot.push({ id: shot.id, activityUnitsPerMinute, remainingModelUnits });
++        totalActivityUnitsPerMinute += activityUnitsPerMinute;
++        totalRemainingModelUnits += remainingModelUnits;
++      }
++      rows.push({ offsetMinutes: offset, totalActivityUnitsPerMinute, totalRemainingModelUnits, perShot });
++    }
++    if (rows.at(-1).offsetMinutes !== end) {
++      const tail = calculateTimeline(request, { startOffsetMinutes: end-1, endOffsetMinutes: end, stepMinutes: 1 });
++      // Include endpoint without duplicating previous data.
++      rows.push(tail.rows.at(-1));
++    }
++    return { status: "MODEL_ESTIMATE", modelVersion: ENGINE_VERSION,
++      profile: {diaMinutes: profile.diaMinutes, peakMinutes: profile.peakMinutes},
++      shotIds: shots.map(x => x.id), rows,
++      labelTiming: LABEL_TIME_RANGES, clinicalValidation: false };
++  }
++  /** Sensitivity analysis; NEVER chooses a patient-specific DIA. */
++  function compareDurations(request, durationMinutes = [300, 360]) {
++    if (!Array.isArray(durationMinutes) || durationMinutes.length < 2 || durationMinutes.length > 6 ||
++        new Set(durationMinutes).size !== durationMinutes.length) {
++      throw new Error("Нужны 2–6 уникальных вариантов исследовательского времени DIA.");
++    }
++    const baseline = validateProfile(request.profile || DEFAULT_PROFILE);
++    const alternatives = durationMinutes.map(diaMinutes => {
++      const profile = {...baseline, diaMinutes};
++      validateProfile(profile);
++      const r = calculate({...request, profile});
++      return {diaMinutes, peakMinutes: profile.peakMinutes, status: r.status,
++        modelRemainingUnits: r.modelRemainingUnits,
++        futureActionModelUnits: r.futureActionModelUnits, issues: r.issues};
++    });
++    return {status: alternatives.every(a => a.status === "MODEL_ESTIMATE") ? "MODEL_ESTIMATE" : "INCOMPLETE",
++      scenarios: alternatives, clinicalValidation: false,
++      note: "Диапазон сценариев НЕ является доверительным интервалом и НЕ предсказывает клиническую погрешность."};
++  }
++  return Object.freeze({ ENGINE_VERSION, DEFAULT_PROFILE, LABEL_TIME_RANGES, WARNINGS, getPhase,
++    validateProfile, getCurve, calculate, calculateTimeline, compareDurations });
++});
++
++</script>
++<script>
++(()=>{'use strict';
++const $=id=>document.getElementById(id),n=window.GPV3Q07Native;
++const names={abdomen:'Живот',arm:'Плечо',thigh:'Бедро',buttock:'Ягодица'};
++const codes={Живот:'abdomen',Плечо:'arm',Бедро:'thigh',Ягодица:'buttock'};
++let snap=null,busy=false,editing=null;
++const fmt=x=>Number(x).toLocaleString('ru-RU',{minimumFractionDigits:1,maximumFractionDigits:2});
++const valid=x=>Number.isFinite(x)&&x>=.5&&x<=100&&Math.abs(x*2-Math.round(x*2))<1e-8;
++const datetime=d=>{const q=x=>String(x).padStart(2,'0');return `${d.getFullYear()}-${q(d.getMonth()+1)}-${q(d.getDate())}T${q(d.getHours())}:${q(d.getMinutes())}`};
++const show=id=>$(id).style.display='flex',hide=id=>$(id).style.display='none';
++function read(){if(!n)throw Error('Q07_NATIVE_NOT_AVAILABLE');const d=JSON.parse(n.readState());if(d.error)throw Error(d.error.code);return d}
++function alertError(e){$('coverageStatus').textContent='Q07: '+String(e.message||e);}
++function setBusy(v){busy=v;['startConfirmation','saveEdit','confirmInjection'].forEach(id=>$(id).disabled=v)}
++function render(){let readError=null;try{snap=read()}catch(e){snap=null;readError=e}
++ const list=snap?.shots||[];
++ $('history').replaceChildren();$('historyCount').textContent=list.length+' записей';
++ for(const e of list){let div=document.createElement('div');div.className='item';let i=document.createElement('div');i.className='bubble';i.textContent='✦';
++ let body=document.createElement('div');body.className='item-body';let b=document.createElement('b');b.textContent='РинФаст · '+fmt(e.units)+' ЕД';let small=document.createElement('small');small.textContent=new Date(e.occurredAtUtc).toLocaleString('ru-RU')+' · '+(names[e.injectionSite]||e.injectionSite)+' · версия '+e.recordVersion;body.append(b,small);
++ let menu=document.createElement('button');menu.type='button';menu.className='menu';menu.textContent='⋯';menu.setAttribute('aria-label','Изменить укол');menu.onclick=()=>edit(e);div.append(i,body,menu);$('history').append(div)}
++ $('iob').textContent='—';$('coverageStatus').textContent=readError ? 'Q07: '+String(readError.message||readError) : 'IOB UNKNOWN: доверенная полнота истории уколов не подтверждена. Не приравнивать к нулю.';
++ $('scenario').textContent='Недостаточная полнота';$('incompleteScenario').disabled=true;$('completeScenario').disabled=true;
++ const plot=$('plot');plot.replaceChildren();let max=0,lines=[];
++ for(const r of list.slice(0,4)){const values=[];for(let t=0;t<=300;t+=4){const v=RinfastEngine.getCurve(t).activityFractionPerMinute*r.units;values.push(v);max=Math.max(max,v)}lines.push(values)}
++ if(max>0)for(const [i,a] of lines.entries()){let el=document.createElementNS('http://www.w3.org/2000/svg','polyline');el.setAttribute('points',a.map((v,j)=>`${(36+j*4/300*431).toFixed(1)},${(140-v/max*104).toFixed(1)}`).join(' '));el.setAttribute('fill','none');el.setAttribute('stroke',['#14857e','#e6a449','#4d9bce','#a479b6'][i]);el.setAttribute('stroke-width','2.5');plot.append(el)}
++ $('startConfirmation').disabled=!snap?.profileConfigured || busy;
++}
++function send(command,values){if(!snap)throw Error('PROFILE_UNCONFIGURED');const req={command,profileId:snap.profileId,expectedRevision:snap.revision,...values};return JSON.parse(n.requestOwnerAction(JSON.stringify(req)))}
++function poll(ticket){let count=0;const work=()=>{let x;try{x=JSON.parse(n.pollOwnerAction(ticket));if(x.error)throw Error(x.error.code)}catch(e){setBusy(false);alertError(e);return}
++ if(x.state==='PENDING'||x.state==='APPLYING'){if(count++>120){setBusy(false);alertError(Error('Q07_CONFIRMATION_TIMEOUT'));return};setTimeout(work,200);return}
++ setBusy(false);if(x.state!=='FINISHED'||!x.result?.accepted){alertError(Error(x.result?.code||'OWNER_CANCELLED'))}else{$('note').value='';render()}};work()}
++$('minus').onclick=()=>{$('dose').value=Math.max(.5,Number($('dose').value)-.5)};
++$('plus').onclick=()=>{$('dose').value=Math.min(100,Number($('dose').value)+.5)};
++document.querySelectorAll('[data-dose]').forEach(b=>b.onclick=()=>$('dose').value=b.dataset.dose);
++$('startConfirmation').onclick=()=>{const dose=Number($('dose').value),at=new Date($('injectionTime').value);if(!valid(dose)||!Number.isFinite(at.getTime())||at.getTime()>Date.now()+60000){alertError(Error('Проверьте дозу и время'));return};$('summary').textContent=`Фактически введён РинФаст: ${fmt(dose)} ЕД · ${at.toLocaleString('ru-RU')}. Нажатие продолжит запрос к Android.`;show('confirmModal')};
++$('cancelConfirmation').onclick=()=>hide('confirmModal');
++$('confirmInjection').onclick=()=>{try{hide('confirmModal');const d=Number($('dose').value),at=new Date($('injectionTime').value);if(!valid(d)||!Number.isFinite(at.getTime()))throw Error('INVALID_INPUT');setBusy(true);const x=send('confirm',{units:d,site:codes[$('site').value],atUtc:at.toISOString(),note:$('note').value});if(x.error)throw Error(x.error.code);poll(x.ticket)}catch(e){setBusy(false);alertError(e)}};
++function edit(e){editing=e;$('editOriginal').textContent=`РинФаст ${fmt(e.units)} ЕД. Версия ${e.recordVersion}`;$('editDose').value=e.units;$('editSite').value=names[e.injectionSite]||'Живот';$('editReason').value='';show('editModal')}
++$('cancelEdit').onclick=()=>hide('editModal');
++$('saveEdit').onclick=()=>{try{const d=Number($('editDose').value),reason=$('editReason').value.trim(),site=codes[$('editSite').value];if(!valid(d)||reason.length<3)throw Error('Проверьте дозу и причину');hide('editModal');setBusy(true);const x=send('correct',{eventId:editing.eventId,recordVersion:editing.recordVersion,units:d,site,reason});if(x.error)throw Error(x.error.code);poll(x.ticket)}catch(e){setBusy(false);alertError(e)}};
++for(const id of ['confirmModal','editModal'])$(id).addEventListener('click',e=>{if(e.target===$(id))hide(id)});
++$('injectionTime').value=datetime(new Date());
++$('mockDisclaimer').textContent='Q07 native: запись производится только после отдельного подтверждения Android через GFStorage V3. IOB недоступен до доверенного подтверждения полноты истории. Доза автоматически не рассчитывается.';
++$('scenario').textContent='Неполная история';
++render();
++})();
++</script></body></html>
+\ No newline at end of file
+--- /dev/null
++++ android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q07RinFastContractInstrumentedTest.kt
+@@ -0,0 +1,41 @@
++package org.glukopapa.v3.m00
++
++import androidx.test.ext.junit.runners.AndroidJUnit4
++import org.json.JSONObject
++import org.junit.Assert.fail
++import org.junit.Test
++import org.junit.runner.RunWith
++import java.time.Instant
++
++/** Q07 native-only guard checks; run in Android CI, not a medical dose efficacy test. */
++@RunWith(AndroidJUnit4::class)
++class Q07RinFastContractInstrumentedTest {
++    private fun sample(units: Double = 1.0): JSONObject = JSONObject()
++        .put("eventType", "insulin_injection")
++        .put("status", "confirmed")
++        .put("provenance", "CONFIRMED_ACTUAL")
++        .put("userConfirmed", true)
++        .put("insulinId", "rinfast")
++        .put("units", units)
++        .put("injectionSite", "abdomen")
++        .put("occurredAtUtc", "2026-11-20T10:00:00Z")
++        .put("note", "")
++    private fun rejects(block: () -> Unit) {
++        try { block(); fail("Expected input rejection") }
++        catch (e: IllegalArgumentException) { /* required */ }
++    }
++    @Test fun legalPenSteps() { for(d in listOf(0.5,1.0,1.5,2.0,20.5,99.5,100.0))
++        GfV3Q07InjectionContract.dose(d) }
++    @Test fun illegalPenSteps() { for(d in listOf(-1.0,0.0,0.1,0.7,1.3,2.25,100.5,Double.NaN,Double.POSITIVE_INFINITY,Double.NEGATIVE_INFINITY))
++        rejects { GfV3Q07InjectionContract.dose(d) } }
++    @Test fun confirmedActual() { GfV3Q07InjectionContract.actual(sample()) }
++    @Test fun otherInsulinBlocked() { rejects{GfV3Q07InjectionContract.actual(sample().put("insulinId","levemir"))} }
++    @Test fun missingParentConfirmationBlocked() { rejects{GfV3Q07InjectionContract.actual(sample().put("userConfirmed",false))} }
++    @Test fun plannedBlocked() { rejects{GfV3Q07InjectionContract.actual(sample().put("status","planned"))} }
++    @Test fun syntheticBlocked() { rejects{GfV3Q07InjectionContract.actual(sample().put("provenance","SYNTHETIC"))} }
++    @Test fun siteRestriction() { rejects{GfV3Q07InjectionContract.actual(sample().put("injectionSite","unknown"))} }
++    @Test fun exactTimeUtc() { rejects{GfV3Q07InjectionContract.actual(sample().put("occurredAtUtc","2026-11-20T11:00:00+01:00"))} }
++    @Test fun futureTimeBlocked() { rejects{GfV3Q07InjectionContract.actual(sample().put("occurredAtUtc",Instant.now().plusSeconds(120).toString()))} }
++    @Test fun noteBound() { rejects{GfV3Q07InjectionContract.actual(sample().put("note","x".repeat(151)))} }
++    @Test fun noteLength150Allowed() { GfV3Q07InjectionContract.actual(sample().put("note","x".repeat(150))) }
++}
