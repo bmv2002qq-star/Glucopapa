@@ -8,7 +8,7 @@ on:
       - 'qa-transfer/q05/**'
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 jobs:
   q05-native:
     runs-on: ubuntu-24.04
@@ -64,6 +64,8 @@ jobs:
         run: |
           set -euxo pipefail
           cd q05-ci
+          mkdir -p ../q05-ci-logs
+          exec > >(tee -a ../q05-ci-logs/host.log) 2>&1
           python3 tests/test_q05_schema_host.py
           python3 tests/test_q05_static_contract.py
           python3 tests/test_q04_integration_structure.py
@@ -78,7 +80,7 @@ jobs:
         run: |
           set -euxo pipefail
           cd q05-ci/android-app
-          gradle :app:assembleDebug :app:assembleDebugAndroidTest --stacktrace --no-daemon
+          gradle :app:assembleDebug :app:assembleDebugAndroidTest --stacktrace --no-daemon 2>&1 | tee ../../q05-ci-logs/build.log
       - name: Enable runner KVM acceleration
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
@@ -96,7 +98,7 @@ jobs:
           disk-size: 4096M
           emulator-boot-timeout: 900
           disable-animations: true
-          script: cd q05-ci/android-app && gradle :app:connectedDebugAndroidTest --stacktrace --no-daemon
+          script: cd q05-ci/android-app && gradle :app:connectedDebugAndroidTest --stacktrace --no-daemon 2>&1 | tee ../../q05-ci-logs/emulator.log
       - name: Upload Android Q05 APK and XML proof
         if: always()
         uses: actions/upload-artifact@v4
@@ -108,3 +110,37 @@ jobs:
             q05-ci/android-app/app/build/outputs/androidTest-results/
             q05-ci/android-app/app/build/reports/androidTests/
           if-no-files-found: warn
+      - name: Store Q05 run results in QA-only branch
+        if: always()
+        shell: bash
+        run: |
+          set -eu
+          mkdir -p qa-results/q05
+          python3 - <<'PYRESULT'
+          import json, os, glob, pathlib, xml.etree.ElementTree as E
+          d=pathlib.Path('qa-results/q05')
+          result={'run_id':os.getenv('GITHUB_RUN_ID'),'run_attempt':os.getenv('GITHUB_RUN_ATTEMPT'),
+              'sha':os.getenv('GITHUB_SHA'),'workflow':os.getenv('GITHUB_WORKFLOW'),
+              'result_source':'native Android instrumentation XML, if present',
+              'test_xml_files':[],'total':0,'failures':0,'errors':0,'skipped':0}
+          for x in glob.glob('q05-ci/android-app/app/build/outputs/androidTest-results/connected/**/*.xml',recursive=True):
+              try:
+                  r=E.parse(x).getroot();count=int(r.get('tests','0'))
+                  result['test_xml_files'].append({'file':os.path.basename(x),'tests':count,'failures':int(r.get('failures','0')),
+                     'errors':int(r.get('errors','0')),'skipped':int(r.get('skipped','0'))})
+                  for k in ('total','failures','errors','skipped'):
+                      result[k]+=count if k=='total' else int(r.get(k,'0'))
+              except Exception as e:result.setdefault('parse_errors',[]).append(str(e))
+          for name in ('host','build','emulator'):
+              f=pathlib.Path('q05-ci-logs')/(name+'.log')
+              if f.exists():
+                  (d/(name+'_tail.txt')).write_text('\n'.join(f.read_text(errors='replace').splitlines()[-350:]))
+                  result[name+'_log_present']=True
+              else:result[name+'_log_present']=False
+          result['android_xml_found']=bool(result['test_xml_files'])
+          (d/'latest.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n')
+          PYRESULT
+          git config user.name 'Glucopapa QA Android CI'
+          git config user.email 'qa-ci@users.noreply.github.com'
+          git add qa-results/q05
+          git diff --cached --quiet || (git commit -m "test(q05): CI proof run ${GITHUB_RUN_ID} attempt ${GITHUB_RUN_ATTEMPT}" && git push origin HEAD:qa/v3-q05-activity-20261124)
