@@ -1,0 +1,82 @@
+name: Q04 GFNutrition Android 15 native CI
+on:
+  push:
+    branches:
+      - 'qa/v3-q04-*'
+    paths:
+      - '.github/workflows/q04-v3-native-ci.yml'
+      - 'qa-transfer/q04/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  q04-native:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout QA branch
+        uses: actions/checkout@v4
+      - name: Install Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Install Gradle 8.10.2
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.10.2'
+      - name: Verify and reconstruct Q04 source
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import base64, hashlib, io, zipfile
+          from pathlib import Path
+          parts=sorted(Path('qa-transfer/q04').glob('q04-part-*.b64'))
+          assert len(parts)==19, f'Expected 19 source pieces, got {len(parts)}'
+          packed=base64.b64decode(''.join(''.join(p.read_text().split()) for p in parts),validate=True)
+          actual=hashlib.sha256(packed).hexdigest()
+          expected='4ec4fcd5c8a08cebccee728905db4d988eab35ecfa60ecf4a15d98997266e6c6'
+          assert actual==expected, f'SOURCE_HASH_FAILED {actual}'
+          with zipfile.ZipFile(io.BytesIO(packed)) as z:
+              bad=z.testzip()
+              assert bad is None, f'SOURCE_ZIP_BAD {bad}'
+              z.extractall('q04-ci')
+          print('SOURCE_SHA256', actual, 'FILES',len(z.namelist()))
+          PY
+      - name: Run Q04 host regression and Q03 source contracts
+        shell: bash
+        run: |
+          set -euxo pipefail
+          cd q04-ci
+          node tests/test_q04_native_adapter_contract.js
+          python3 tests/test_q04_sqlite_contract.py
+          python3 tests/test_q04_integration_structure.py
+          cd tests/q03/tests
+          node normalizer_node_tests.js
+          node stress_q03.js
+      - name: Compile Android Q04 APK and tests
+        shell: bash
+        run: |
+          set -euxo pipefail
+          cd q04-ci/android-app
+          gradle :app:assembleDebug :app:assembleDebugAndroidTest --stacktrace --no-daemon
+      - name: Android 15 Q04 instrumentation and Q02 encrypted v7-v8 restore
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          script: cd q04-ci/android-app && gradle :app:connectedDebugAndroidTest --stacktrace --no-daemon
+      - name: Upload native QA evidence and APK
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: q04-native-ci-evidence
+          path: |
+            q04-ci/android-app/app/build/outputs/apk/debug/
+            q04-ci/android-app/app/build/outputs/apk/androidTest/debug/
+            q04-ci/android-app/app/build/outputs/androidTest-results/
+            q04-ci/android-app/app/build/reports/androidTests/
+          if-no-files-found: warn
