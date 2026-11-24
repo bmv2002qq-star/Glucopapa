@@ -1,0 +1,57 @@
+{
+  "version": "v0.4.6",
+  "changes": [
+    {
+      "path": "android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q08LevemirNativeInstrumentedTest.kt",
+      "sha256": "7b59ab52ff00181db332824c3bc865d6dae40a68406664ee9489fcd9cc2caa30"
+    },
+    {
+      "path": "android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q08LevemirWebViewInstrumentedTest.kt",
+      "sha256": "2b101c3f2eb60f45652f04a06e840c5cc8a46c8b8c36e39cf605f6ed33317f43"
+    },
+    {
+      "path": "android-app/app/src/main/assets/db/writer_grants_v0.12.json",
+      "sha256": "c97ccfae32e5630d51ff05fbf533f266007ec90c181fcc513efbbe4afa1292bc"
+    },
+    {
+      "path": "android-app/app/src/main/assets/www/index.html",
+      "sha256": "b19904aa05283047303e1ab7b190eca6d0c0c041147b719a3850e62e762c802d"
+    },
+    {
+      "path": "android-app/app/src/main/assets/www/q08/levemir.html",
+      "sha256": "7e1369fb8f3c257a5b9eac628fd6fec15e1475ce3db7c94481ea93f066c85ff4"
+    },
+    {
+      "path": "android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3LocalAssetRoutes.kt",
+      "sha256": "3c5885707e264c9bd411f6dbb885b56a7232738c860622a7620f92df3be72e78"
+    },
+    {
+      "path": "android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3NativeModuleGateway.kt",
+      "sha256": "3bc895b92b325c722179e59257628a07ed1ece791ad57d109a1533f922e115cb"
+    },
+    {
+      "path": "android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Q08Bridge.kt",
+      "sha256": "376d58d3fe0274dcc11b3ba248c979f78f40e53351f6c0e4d762faab42706417"
+    },
+    {
+      "path": "android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Q08History.kt",
+      "sha256": "87a42af8e401748b94154e8b1e0b76f592769c884557a0e886790c70daca62b1"
+    },
+    {
+      "path": "android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Q08ModuleInstaller.kt",
+      "sha256": "a64d4e7e21ad15b8a22260cfa08132f3313987bdb6aef4433d4399fcf540e431"
+    },
+    {
+      "path": "android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Q08OwnerQueue.kt",
+      "sha256": "ec6e839a79349ecd819baa34f2fcba427a9c80945a5fdb784e1eaf84dc44cd96"
+    },
+    {
+      "path": "android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Storage.kt",
+      "sha256": "afa88f4a599e8626f573f5df01bbbc74269ad27a0841059f0d569a971f7b40b4"
+    },
+    {
+      "path": "android-app/app/src/main/java/org/glukopapa/v3/m00/MainActivity.kt",
+      "sha256": "dc2072cbe69fe18ca033cb82e746f98e74524609dc41515330498aa7c84ba75a"
+    }
+  ]
+}
