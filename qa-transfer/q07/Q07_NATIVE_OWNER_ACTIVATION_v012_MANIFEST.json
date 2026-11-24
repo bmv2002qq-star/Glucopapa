@@ -9,7 +9,7 @@
     },
     {
       "path": "android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Q07OwnerQueue.kt",
-      "sha256": "2505df41ce0c2d0315ab6f8bdda3e9a90fbdb2c611d92f18f9b8c9e39fce1b77",
+      "sha256": "05f397e3e86d7a6ee3f2b6388ffa89b48df728e349450cdacfe7e4744f6906a1",
       "new": false
     },
     {
@@ -24,7 +24,7 @@
     },
     {
       "path": "android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q07RinFastModuleInstallerInstrumentedTest.kt",
-      "sha256": "816a91e2740249e32696570169cfa5c9ffac3e79dca8f5ba4885ef6f7385eb30",
+      "sha256": "a3e5656492de3bfae6cd7a9891c37d6e982b96f6b59b9398cc95807c6ee18c47",
       "new": true
     }
   ],
