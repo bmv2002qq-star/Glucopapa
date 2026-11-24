@@ -172,7 +172,7 @@ jobs:
             q07-ci/android-app/app/build/outputs/androidTest-results/
             q07-ci/android-app/app/build/reports/androidTests/
           if-no-files-found: warn
-      - name: Store Q07 test results in QA-only branch
+      - name: Collect Q07 run-specific test results without branch push
         if: always()
         shell: bash
         run: |
@@ -203,7 +203,13 @@ jobs:
           result['gate_passed']=bool(result['test_xml_files']) and result['total']>=76 and result['failures']==0 and result['errors']==0 and result['skipped']==0
           (d/'latest.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n')
           PYRESULT
-          git config user.name 'Glucopapa QA Android CI'
-          git config user.email 'qa-ci@users.noreply.github.com'
-          git add qa-results/q07
-          git diff --cached --quiet || (git commit -m "test(q07): CI proof run ${GITHUB_RUN_ID} attempt ${GITHUB_RUN_ATTEMPT}" && git push origin HEAD:qa/v3-q07-rinfast-20261124)
+          # Evidence is uploaded per run below; never rewrite a shared "latest.json"
+          # in the branch, which races with other parallel QA runs and can go stale.
+          echo "Q07_RUN_SPECIFIC_JSON_READY"
+      - name: Upload Q07 per-run JSON and trace logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: q07-run-results
+          path: qa-results/q07/
+          if-no-files-found: warn
