@@ -77,12 +77,13 @@ Daemon will be stopped at the end of the build
 [EmulatorConsole]: Failed to start Emulator console for 5554
 
 > Task :app:connectedDebugAndroidTest
-Starting 25 tests on emulator-5554 - 15
+Starting 28 tests on emulator-5554 - 15
 
-emulator-5554 - 15 Tests 5/25 completed. (0 skipped) (0 failed)
-emulator-5554 - 15 Tests 11/25 completed. (0 skipped) (0 failed)
-Finished 25 tests on emulator-5554 - 15
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__reactivecircus_android-emulator-runner-1795531933399.json
+emulator-5554 - 15 Tests 5/28 completed. (0 skipped) (0 failed)
+emulator-5554 - 15 Tests 10/28 completed. (0 skipped) (0 failed)
+emulator-5554 - 15 Tests 28/28 completed. (0 skipped) (0 failed)
+Finished 28 tests on emulator-5554 - 15
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__reactivecircus_android-emulator-runner-1795532270767.json
 
-BUILD SUCCESSFUL in 58s
+BUILD SUCCESSFUL in 1m 10s
 61 actionable tasks: 1 executed, 60 up-to-date
