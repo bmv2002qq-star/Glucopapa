@@ -197,7 +197,8 @@
 +        JSONObject().put("state",p.state).also { x ->
 +            if(p.state !in setOf("PENDING","APPLYING")) {
 +                x.put("result",p.result?:JSONObject.NULL);pending.remove(ticket)
-+            }+        }
++            }
++        }
 +    }
 +    fun close() { synchronized(lock){closed=true;pending.clear()};worker.shutdownNow() }
 +}
@@ -396,7 +397,8 @@
 +  const api = factory();
 +  if (typeof module === "object" && module.exports) module.exports = api;
 +  if (root) root.RinfastEngine = api;
-+})(typeof globalThis !== "undefined" ? globalThis : this, function () {+  "use strict";
++})(typeof globalThis !== "undefined" ? globalThis : this, function () {
++  "use strict";
 +  const ENGINE_VERSION = "0.3.0";
 +  const DEFAULT_PROFILE = Object.freeze({
 +    drugId: "rinfast", drugName: "РинФаст", substance: "инсулин аспарт",
@@ -595,7 +597,8 @@
 +    });
 +    return {
 +      ...base, status: "MODEL_ESTIMATE", modelRemainingUnits,
-+      activityModelUnitsPerMinute, futureActionModelUnits, contributions+    };
++      activityModelUnitsPerMinute, futureActionModelUnits, contributions
++    };
 +  }
 +  /**
 +   * Исследовательская серия по времени вокруг nowIso.
