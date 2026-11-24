@@ -11,7 +11,7 @@ permissions:
   contents: read
 jobs:
   q04-native:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
     steps:
       - name: Checkout QA branch
@@ -45,6 +45,8 @@ jobs:
           PY
           install -D qa-transfer/q04/Q04WebViewSmokeInstrumentedTest.kt q04-ci/android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q04WebViewSmokeInstrumentedTest.kt
           install -D qa-transfer/q04/test_q04_legacy_restore_host.py q04-ci/tests/test_q04_legacy_restore_host.py
+          install -D qa-transfer/q04/GfV3Q04MealFacts.kt q04-ci/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Q04MealFacts.kt
+          install -D qa-transfer/q04/Q04NativeDraftsInstrumentedTest.kt q04-ci/android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q04NativeDraftsInstrumentedTest.kt
       - name: Run Q04 host regression and Q03 source contracts
         shell: bash
         run: |
@@ -63,13 +65,22 @@ jobs:
           set -euxo pipefail
           cd q04-ci/android-app
           gradle :app:assembleDebug :app:assembleDebugAndroidTest --stacktrace --no-daemon
+      - name: Grant access to KVM acceleration
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
       - name: Android 15 Q04 instrumentation and Q02 encrypted v7-v8 restore
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 35
           target: google_apis
           arch: x86_64
-          profile: pixel_6
+          profile: pixel_4
+          ram-size: 2048M
+          heap-size: 512M
+          disk-size: 4096M
+          emulator-boot-timeout: 900
           disable-animations: true
           script: cd q04-ci/android-app && gradle :app:connectedDebugAndroidTest --stacktrace --no-daemon
       - name: Upload native QA evidence and APK
