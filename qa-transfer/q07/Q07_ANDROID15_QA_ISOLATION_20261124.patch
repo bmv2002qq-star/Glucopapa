@@ -1,0 +1,65 @@
+--- /dev/null
++++ android-app/app/src/androidTest/java/org/glukopapa/v3/m00/GfV3QaActivityLifecycle.kt
+@@ -0,0 +1,20 @@
++package org.glukopapa.v3.m00
++
++import android.app.Activity
++import android.app.Instrumentation
++
++/** QA-only: finish the WebView Activity AND wait until its SQLite helper is closed.
++ * Calling finish() alone is asynchronous and deleting the shared SQLite file
++ * before onDestroy() causes SQLITE_IOERR_SHORT_READ in the following test class.
++ */
++internal object GfV3QaActivityLifecycle {
++    fun finishAndAwait(instrument: Instrumentation, activity: Activity) {
++        instrument.runOnMainSync { activity.finish() }
++        repeat(80) {
++            instrument.waitForIdleSync()
++            if (activity.isDestroyed) return
++            Thread.sleep(100)
++        }
++        check(activity.isDestroyed) { "Q07_QA_ACTIVITY_NOT_DESTROYED_BEFORE_DB_RESET" }
++    }
++}
+--- android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q04WebViewSmokeInstrumentedTest.kt
++++ android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q04WebViewSmokeInstrumentedTest.kt
+@@ -74,7 +74,7 @@
+                 }
+             }
+         } finally {
+-            instrument.runOnMainSync { activity.finish() }
++            GfV3QaActivityLifecycle.finishAndAwait(instrument, activity)
+         }
+     }
+ }
+--- android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q05ActivityWebViewInstrumentedTest.kt
++++ android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q05ActivityWebViewInstrumentedTest.kt
+@@ -59,6 +59,6 @@
+                     assertTrue(c.moveToFirst());assertEquals(0L,c.getLong(0))
+                 }
+             }
+-        } finally {instrument.runOnMainSync {activity.finish()}}
++        } finally {GfV3QaActivityLifecycle.finishAndAwait(instrument, activity)}
+     }
+ }
+--- android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q06GuidanceWebViewInstrumentedTest.kt
++++ android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q06GuidanceWebViewInstrumentedTest.kt
+@@ -59,6 +59,6 @@
+                 helper.readableDatabase.rawQuery("SELECT COUNT(*) FROM v3_condition_periods",null).use{c->c.moveToFirst();assertEquals(0L,c.getLong(0))}
+                 helper.readableDatabase.rawQuery("SELECT COUNT(*) FROM v3_events",null).use{c->c.moveToFirst();assertEquals(0L,c.getLong(0))}
+             }
+-        }finally{instr.runOnMainSync{activity.finish()}}
++        }finally{GfV3QaActivityLifecycle.finishAndAwait(instr, activity)}
+     }
+ }
+--- android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q06GuidanceInstrumentedTest.kt
++++ android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q06GuidanceInstrumentedTest.kt
+@@ -24,6 +24,8 @@
+     private val t3="2026-11-24T11:00:00Z"
+     private val t4="2026-11-24T12:00:00Z"
+     @Before fun setup(){
++        // The preceding Q05 UI test must have fully released Activity-held SQLite handles.
++        InstrumentationRegistry.getInstrumentation().waitForIdleSync()
+         ctx.deleteDatabase("glukopapa_v3.db")
+         helper=GfDbHelper(ctx)
+         storage=GfV3Storage(helper,ctx.assets.open("db/module_catalog_v1.json").bufferedReader().use{it.readText()},
