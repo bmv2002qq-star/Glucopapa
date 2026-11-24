@@ -176,7 +176,7 @@ jobs:
             errors+=int(r.get('errors','0'))
             skipped+=int(r.get('skipped','0'))
           print('Q07 ANDROID XML',tests,failures,errors,skipped)
-          assert tests>=84 and failures==0 and errors==0 and skipped==0,'Q07_ANDROID_XML_GATE_FAILED'
+          assert tests>=85 and failures==0 and errors==0 and skipped==0,'Q07_ANDROID_XML_GATE_FAILED'
           PY
       - name: Upload Android Q07 APK and XML proof
         if: always()
