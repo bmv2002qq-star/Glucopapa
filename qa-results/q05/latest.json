@@ -1,16 +1,24 @@
 {
-  "run_id": "45416868461",
+  "run_id": "45417082356",
   "run_attempt": "1",
-  "sha": "8d0f78c96c2b81e4d0cafc0f51b01a9dfa256255",
+  "sha": "9b546260b515e6a1bbac80d0c2fee4d33e77431c",
   "workflow": "Q05 GFActivity sport illness Android 15 native QA",
   "result_source": "native Android instrumentation XML, if present",
-  "test_xml_files": [],
-  "total": 0,
-  "failures": 0,
+  "test_xml_files": [
+    {
+      "file": "TEST-emulator-5554 - 15-_app-.xml",
+      "tests": 25,
+      "failures": 1,
+      "errors": 0,
+      "skipped": 0
+    }
+  ],
+  "total": 25,
+  "failures": 1,
   "errors": 0,
   "skipped": 0,
-  "host_log_present": false,
-  "build_log_present": false,
-  "emulator_log_present": false,
-  "android_xml_found": false
+  "host_log_present": true,
+  "build_log_present": true,
+  "emulator_log_present": true,
+  "android_xml_found": true
 }
