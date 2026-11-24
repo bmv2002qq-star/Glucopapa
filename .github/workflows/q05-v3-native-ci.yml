@@ -52,10 +52,10 @@ jobs:
           p=sorted(Path('qa-transfer/q05').glob('q05-part-*.b64'))
           assert len(p)==3, f'Q05 overlay parts {len(p)}'
           b=base64.b64decode(''.join(''.join(x.read_text().split()) for x in p),validate=True)
-          assert hashlib.sha256(b).hexdigest()=='0109ac3f8a5e38d7d3385eeb42ad0874c90a61716b63e8f067db77fa0a2dacca', 'Q05 OVERRIDE HASH INVALID'
+          assert hashlib.sha256(b).hexdigest()=='2acb797b73d35a2183f0c91e5ad81772360fe9a81109256b7dd8caf7e046c2fa', 'Q05 OVERRIDE HASH INVALID'
           with zipfile.ZipFile(io.BytesIO(b)) as z:
               assert z.testzip() is None
-              assert len(z.namelist())==20
+              assert len(z.namelist())==21
               z.extractall('q05-ci')
           print('Q05 OVERLAY SHA',hashlib.sha256(b).hexdigest())
           PY
