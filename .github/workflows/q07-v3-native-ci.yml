@@ -87,7 +87,15 @@ jobs:
               assert hashlib.sha256(p.read_bytes()).hexdigest()==f['after_sha256'],p
           print('Q07_REPLAY_VERIFIED: 12/12 source SHA', m['status'])
           PY
-      - name: Q07 Q07 Q06 Q05 Q04 Q03 host and source regression
+      - name: Apply Q07 QA lifecycle and native integration tests
+        shell: bash
+        run: |
+          set -euxo pipefail
+          echo 'e79ecb4a069c57f77e788840c0c04a235b8811d0b62c46293835a86fc07ef466  qa-transfer/q07/Q07_ANDROID15_QA_ISOLATION_20261124.patch' | sha256sum -c -
+          echo 'b2240e7ae36f9f254343179334c640717eb77df64a6706a8b065519b531d5506  qa-transfer/q07/Q07_ANDROID15_NATIVE_INTEGRATION_TESTS_20261124.patch' | sha256sum -c -
+          patch -d q07-ci -p0 --batch --forward -i "$GITHUB_WORKSPACE/qa-transfer/q07/Q07_ANDROID15_QA_ISOLATION_20261124.patch"
+          patch -d q07-ci -p0 --batch --forward -i "$GITHUB_WORKSPACE/qa-transfer/q07/Q07_ANDROID15_NATIVE_INTEGRATION_TESTS_20261124.patch"
+      - name: Q07 Q06 Q05 Q04 Q03 host and source regression
         shell: bash
         run: |
           set -euxo pipefail
