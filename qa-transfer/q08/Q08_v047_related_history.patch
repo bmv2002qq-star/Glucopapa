@@ -1,0 +1,146 @@
+--- a/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Storage.kt
++++ b/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Storage.kt
+@@ -389,6 +389,46 @@
+         }finally{db.endTransaction()}
+     }
+ 
++    /** Q08-only related history: retain all basal facts, but scope meal starts to the analysis window.
++     * JSON functions are feature-probed; older SQLite builds conservatively stream the unfiltered domain.
++     * No schema migration, writes, or assumptions about sensor/meal coverage.
++     */
++    internal fun readNativeQ08RelatedPage(moduleId:String,domain:String,profileId:String,expectedRevision:Long,afterRowId:Long,asOf:Instant,pageSize:Int):JSONObject=synchronized(lock){
++        require(moduleId==GfV3Q08Rules.OWNER){"Q08_READ_OWNER_DENIED"}
++        require(domain=="events"||domain=="mealSessions"){"Q08_READ_DOMAIN_DENIED"}
++        require(pageSize in 1..500&&afterRowId>=0&&expectedRevision>=0){"PAGE_ARGUMENT_INVALID"}
++        val db=helper.readableDatabase
++        db.beginTransactionNonExclusive()
++        try {
++            validateNativeRead(db,"research",moduleId)
++            val m=meta(db)
++            require(m.profileId==profileId&&m.revision==expectedRevision){"Q08_PAGE_CONTEXT_CHANGED"}
++            val zone=ZoneId.of(m.timezone?:throw IllegalStateException("PROFILE_UNCONFIGURED"))
++            val dayStart=GfV3Q08Rules.startOfHistory(asOf,zone).atZone(java.time.ZoneOffset.UTC).toLocalDate().toString()
++            val dayEnd=asOf.atZone(java.time.ZoneOffset.UTC).toLocalDate().plusDays(1).toString()
++            // Catch only missing-function errors, not I/O, corruption or permission failures.
++            val jsonSupported=try { db.rawQuery("SELECT json_valid('{}'),json_extract('{\"x\":1}','$.x')",null).use{c->c.moveToFirst()&&c.getInt(0)==1&&c.getInt(1)==1} }
++                catch(e:SQLiteException){if(e.message?.contains("no such function",ignoreCase=true)==true)false else throw e}
++            val eventBase="SELECT e.rowid,e.payload_json,e.source_module,COALESCE((SELECT MAX(h.correction_version) FROM v3_record_corrections h WHERE h.profile_id=e.profile_id AND h.domain='events' AND h.record_id=e.event_id),0) FROM v3_events e WHERE e.profile_id=? AND e.rowid>?"
++            val mealBase="SELECT m.rowid,m.payload_json,(SELECT o.source_module FROM v3_record_owners o WHERE o.profile_id=m.profile_id AND o.domain='mealSessions' AND o.record_id=m.session_id),COALESCE((SELECT MAX(h.correction_version) FROM v3_record_corrections h WHERE h.profile_id=m.profile_id AND h.domain='mealSessions' AND h.record_id=m.session_id),0) FROM v3_meal_sessions m WHERE m.profile_id=? AND m.rowid>?"
++            // Keep invalid JSON for explicit rejection; never make it silently disappear from transport.
++            val eventFilter=" AND CASE WHEN json_valid(e.payload_json)=0 THEN 1 ELSE lower(COALESCE(json_extract(e.payload_json,'$.insulinId'),''))='levemir' END"
++            // Unknown/malformed starts remain candidates. Exact UTC validation and filtering stay in Q08.
++            val mealFilter=" AND CASE WHEN json_valid(m.payload_json)=0 THEN 1 WHEN COALESCE(json_extract(m.payload_json,'$.startedAtUtc'),'')='' THEN 1 WHEN json_type(m.payload_json,'$.startedAtUtc')<>'text' THEN 1 WHEN substr(json_extract(m.payload_json,'$.startedAtUtc'),1,10) NOT GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]' THEN 1 ELSE substr(json_extract(m.payload_json,'$.startedAtUtc'),1,10)>=? AND substr(json_extract(m.payload_json,'$.startedAtUtc'),1,10)<? END"
++            val query=if(domain=="events") eventBase+(if(jsonSupported)eventFilter else "")+" ORDER BY e.rowid ASC LIMIT ?" else mealBase+(if(jsonSupported)mealFilter else "")+" ORDER BY m.rowid ASC LIMIT ?"
++            val args=if(domain=="mealSessions"&&jsonSupported)arrayOf(profileId,afterRowId.toString(),dayStart,dayEnd,(pageSize+1).toString())else arrayOf(profileId,afterRowId.toString(),(pageSize+1).toString())
++            val result=JSONArray();var last=afterRowId;var count=0;var more=false
++            db.rawQuery(query,args).use{c->
++                while(c.moveToNext()){
++                    if(count>=pageSize){more=true;break};last=c.getLong(0)
++                    result.put(JSONObject(c.getString(1)).apply{put("sourceModule",if(c.isNull(2))JSONObject.NULL else c.getString(2));put("recordVersion",c.getInt(3))});count++
++                }
++            }
++            db.setTransactionSuccessful()
++            JSONObject().put("schemaVersion",3).put("domain",domain).put("profileId",profileId).put("revision",m.revision).put("rows",result).put("nextCursor",last).put("hasMore",more).put("complete",!more).put("readScope",if(!jsonSupported)"UNFILTERED_FALLBACK" else if(domain=="events")"BASAL_HISTORY" else "UTC_DATE_WINDOW_OR_UNKNOWN_START")
++        }finally{db.endTransaction()}
++    }
++
+     /** Explicit one-time owner setup; this is NOT a medical coefficient or injection writer. */
+     fun initializeProfile(profileId: String, timeZone: String, expectedRevision: Long): JSONObject = synchronized(lock) {
+         if(!Regex("[A-Za-z0-9_-]{5,64}").matches(profileId)) throw IllegalArgumentException("PROFILE_ID_INVALID")
+--- a/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3NativeModuleGateway.kt
++++ b/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3NativeModuleGateway.kt
+@@ -18,6 +18,8 @@
+         internal fun readQ08Context():JSONObject=storage.readNativeQ08Context(moduleId)
+         internal fun readQ08CgmPage(profile:String,revision:Long,cursor:Long,asOf:java.time.Instant,limit:Int):JSONObject=
+             storage.readNativeQ08CgmPage(moduleId,profile,revision,cursor,asOf,limit)
++        internal fun readQ08RelatedPage(domain:String,profile:String,revision:Long,cursor:Long,asOf:java.time.Instant,limit:Int):JSONObject=
++            storage.readNativeQ08RelatedPage(moduleId,domain,profile,revision,cursor,asOf,limit)
+         /** Owned-module-only correction; never exposed through JavascriptInterface. */
+         fun correct(domain:String,recordId:String,correctionId:String,idempotencyKey:String,
+                     expectedRevision:Long,expectedRecordVersion:Int,changes:JSONObject,
+--- a/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Q08History.kt
++++ b/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Q08History.kt
+@@ -19,23 +19,29 @@
+         // Read all pages, filter only after parsing the actual UTC timestamp. Never silently truncate.
+         val domains = listOf("cgm", "events", "mealSessions")
+         var cgmCandidates=0
++        val relatedRead=JSONObject()
+         for (domain in domains) {
+             var cursor = 0L
+             var total = 0
++            var scope:String?=null
+             val result = JSONArray()
+             do {
+-                val p = if(domain=="cgm")port.readQ08CgmPage(profile,revision,cursor,asOf,500) else storage.readShellPage(domain,cursor,revision,500)
++                val p = if(domain=="cgm")port.readQ08CgmPage(profile,revision,cursor,asOf,500) else port.readQ08RelatedPage(domain,profile,revision,cursor,asOf,500)
+                 val rows = p.getJSONArray("rows")
+                 val meta = GfV3Q08Rules.PageMeta(p.getString("profileId"),p.getLong("revision"),p.getString("domain"),p.getLong("nextCursor"),rows.length(),p.getBoolean("hasMore"),p.getBoolean("complete"))
+                 GfV3Q08Rules.validatePage(meta,profile,revision,domain,cursor)
+                 total += rows.length()
+-                require(total <= 250000) { "Q08_HISTORY_BUDGET_EXCEEDED" }
++                val currentScope=if(domain=="cgm")"UTC_DATE_INDEX_WINDOW" else p.getString("readScope")
++                require(currentScope in (when(domain){"cgm"->setOf("UTC_DATE_INDEX_WINDOW");"events"->setOf("BASAL_HISTORY","UNFILTERED_FALLBACK");else->setOf("UTC_DATE_WINDOW_OR_UNKNOWN_START","UNFILTERED_FALLBACK")})){"Q08_PAGE_SCOPE_INVALID"}
++                require(scope==null||scope==currentScope){"Q08_PAGE_SCOPE_CHANGED"};scope=currentScope
++                // Limit the returned payload, not the lifetime of unrelated rows. Explicit fallback scan guard.
++                require(total <= if(currentScope=="UNFILTERED_FALLBACK") 2000000 else 250000) { "Q08_HISTORY_SCAN_BUDGET_EXCEEDED" }
+                 for (i in 0 until rows.length()) {
+                     val row = rows.getJSONObject(i)
+                     val raw = when(domain) {
+                         "cgm" -> row.getString("measuredAtUtc")
+                         "events" -> row.getString("occurredAtUtc")
+-                        else -> row.optString("startedAtUtc")
++                        else -> if(row.isNull("startedAtUtc")) "" else row.optString("startedAtUtc")
+                     }
+                     // A meal without a confirmed start is retained for diagnostics, not inferred.
+                     if(domain == "mealSessions" && raw.isBlank()) { result.put(row); continue }
+@@ -43,14 +49,15 @@
+                     // Keep basal history for last site and duplicate diagnostics; other events are not needed here.
+                     if(!at.isAfter(asOf) && ((domain == "events" && GfV3Q08Rules.isLevemir(row.optString("insulinId"))) || (!at.isBefore(from) && domain != "events"))) result.put(row)
+                 }
++                require(result.length()<=250000){"Q08_HISTORY_BUDGET_EXCEEDED"}
+                 cursor = meta.nextCursor
+             } while(meta.hasMore)
+             data.put(domain,result)
+-            if(domain=="cgm")cgmCandidates=total
++            if(domain=="cgm")cgmCandidates=total else relatedRead.put(domain,JSONObject().put("scope",scope).put("candidateRowsRead",total).put("rowsReturned",result.length()))
+         }
+         val finalContext = port.readQ08Context() // recheck native grant as well as profile / revision
+         require(finalContext.getString("profileId")==profile && finalContext.getLong("revision")==revision && storage.revision()==revision) { "Q08_PAGE_CONTEXT_CHANGED" }
+-        data.put("q08ReadWindow", JSONObject().put("profileId",profile).put("revision",revision).put("timeZone",zone.id).put("startUtc",from.toString()).put("endUtc",asOf.toString()).put("allStoredPagesRead",true).put("cgmCandidateRowsRead",cgmCandidates).put("cgmReadScope","UTC_DATE_INDEX_WINDOW").put("sensorCoverageProven",false))
++        data.put("q08ReadWindow", JSONObject().put("profileId",profile).put("revision",revision).put("timeZone",zone.id).put("startUtc",from.toString()).put("endUtc",asOf.toString()).put("allStoredPagesRead",true).put("cgmCandidateRowsRead",cgmCandidates).put("cgmReadScope","UTC_DATE_INDEX_WINDOW").put("relatedRead",relatedRead).put("sensorCoverageProven",false))
+         return snap
+     }
+ }
+--- a/android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q08LevemirNativeInstrumentedTest.kt
++++ b/android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q08LevemirNativeInstrumentedTest.kt
+@@ -187,4 +187,30 @@
+             val rows=queue.snapshot().getJSONObject("data").getJSONArray("events");val e=(0 until rows.length()).map(rows::getJSONObject).single{it.optString("levemirSlot")=="additional"};assertEquals("QA already recorded fact",e.getString("additionalReason"));assertTrue(e.getBoolean("additionalActual"))
+         }finally{queue.close()}
+     }
++    @Test fun scopedRelatedHistoryRetainsBasalAndUnknownMealsWithoutLifetimeNoise(){
++        accept();val db=helper.writableDatabase;val asOf=Instant.parse("2025-02-01T00:00:00Z");val rev=storage.revision()
++        fun event(id:String,child:String,insulin:String,time:String){val p=JSONObject().put("eventId",id).put("insulinId",insulin).put("occurredAtUtc",time)
++            db.execSQL("INSERT INTO v3_events(event_id,profile_id,event_type,event_status,occurred_at_utc,payload_json,source_module,idempotency_key,created_revision) VALUES(?,?,?,?,?,?,?,?,?)",arrayOf(id,child,"insulin_injection","confirmed",time,p.toString(),"qa-fixture","key-$id",rev))}
++        fun meal(id:String,child:String,time:String?){val p=JSONObject().put("sessionId",id).put("status","completed");if(time!=null)p.put("startedAtUtc",time) else if(id=="qa-null-meal")p.put("startedAtUtc",JSONObject.NULL)
++            db.execSQL("INSERT INTO v3_meal_sessions(session_id,profile_id,session_status,payload_json,created_revision) VALUES(?,?,?,?,?)",arrayOf(id,child,"completed",p.toString(),rev))}
++        db.beginTransaction();try{
++            for(i in 0 until 600){event("qa-rapid-$i",profile,"rinfast","2023-01-01T00:00:00Z");meal("qa-old-meal-$i",profile,"2023-01-01T00:00:00Z")}
++            for(i in 0 until 503)meal("qa-window-meal-$i",profile,asOf.minusSeconds((i+1)*60L).toString())
++            event("qa-old-basal",profile,"levemir","2023-01-01T00:00:00.123456789Z")
++            event("qa-other-basal","other-profile","levemir","2025-01-30T00:00:00Z")
++            meal("qa-unknown-meal",profile,null);meal("qa-null-meal",profile,null);meal("qa-future-meal",profile,"2025-02-01T01:00:00Z");meal("qa-other-meal","other-profile","2025-01-30T00:00:00Z")
++            db.setTransactionSuccessful()
++        }finally{db.endTransaction()}
++        val port=gateway.bindInstalledAdapter(GfV3Q08Rules.OWNER);val d=GfV3Q08History(port,storage).read(asOf).getJSONObject("data")
++        val related=d.getJSONObject("q08ReadWindow").getJSONObject("relatedRead")
++        assertEquals("BASAL_HISTORY",related.getJSONObject("events").getString("scope"));assertEquals(1,related.getJSONObject("events").getInt("candidateRowsRead"))
++        assertEquals("qa-old-basal",d.getJSONArray("events").getJSONObject(0).getString("eventId"))
++        assertEquals(506,related.getJSONObject("mealSessions").getInt("candidateRowsRead"));val meals=d.getJSONArray("mealSessions");assertEquals(505,meals.length())
++        assertEquals(505,(0 until meals.length()).map{meals.getJSONObject(it).getString("sessionId")}.toSet().size)
++        assertTrue((0 until meals.length()).any{meals.getJSONObject(it).getString("sessionId")=="qa-unknown-meal"});assertTrue((0 until meals.length()).any{meals.getJSONObject(it).getString("sessionId")=="qa-null-meal"&&meals.getJSONObject(it).isNull("startedAtUtc")})
++        reject{gateway.bindInstalledAdapter("GFInjectionFact").readQ08RelatedPage("events",profile,rev,0,asOf,500)}
++        reject{port.readQ08RelatedPage("settings",profile,rev,0,asOf,500)};reject{port.readQ08RelatedPage("events","other-profile",rev,0,asOf,500)};reject{port.readQ08RelatedPage("events",profile,rev+1,0,asOf,500)}
++        assertFalse(d.getJSONObject("q08ReadWindow").getBoolean("sensorCoverageProven"));assertEquals(602,count("v3_events"));assertEquals(1107,count("v3_meal_sessions"))
++    }
++
+ }
