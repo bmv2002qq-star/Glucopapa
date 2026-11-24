@@ -1,0 +1,158 @@
+[
+  {
+    "moduleId": "GFAAPSResearch",
+    "role": "forecastWriter",
+    "grantStatus": "OWNER_GRANTED_EXPERIMENTAL",
+    "implementationStatus": "PREPARED_NATIVE"
+  },
+  {
+    "moduleId": "GFAPSEnhancer",
+    "role": "forecastWriter",
+    "grantStatus": "OWNER_GRANTED_EXPERIMENTAL",
+    "implementationStatus": "PREPARED_NATIVE"
+  },
+  {
+    "moduleId": "GFCgmSource",
+    "role": "cgmAdapter",
+    "grantStatus": "OWNER_GRANTED_EXPERIMENTAL",
+    "implementationStatus": "PREPARED_NATIVE"
+  },
+  {
+    "moduleId": "GFConsensus",
+    "role": "forecastWriter",
+    "grantStatus": "OWNER_GRANTED_EXPERIMENTAL",
+    "implementationStatus": "PREPARED_NATIVE"
+  },
+  {
+    "moduleId": "GFForecast",
+    "role": "forecastWriter",
+    "grantStatus": "OWNER_GRANTED_EXPERIMENTAL",
+    "implementationStatus": "PREPARED_NATIVE"
+  },
+  {
+    "moduleId": "GFHIGH",
+    "role": "actionWriter",
+    "grantStatus": "OWNER_GRANTED_EXPERIMENTAL",
+    "implementationStatus": "PREPARED_NATIVE"
+  },
+  {
+    "moduleId": "GFHIGH",
+    "role": "forecastWriter",
+    "grantStatus": "OWNER_GRANTED_EXPERIMENTAL",
+    "implementationStatus": "PREPARED_NATIVE"
+  },
+  {
+    "moduleId": "GFIllness",
+    "role": "conditionWriter",
+    "grantStatus": "OWNER_GRANTED_EXPERIMENTAL",
+    "implementationStatus": "PREPARED_NATIVE"
+  },
+  {
+    "moduleId": "GFInjectionEntry",
+    "role": "actionWriter",
+    "grantStatus": "OWNER_GRANTED_EXPERIMENTAL",
+    "implementationStatus": "PREPARED_NATIVE"
+  },
+  {
+    "moduleId": "GFInjectionFact",
+    "role": "actionWriter",
+    "grantStatus": "OWNER_GRANTED_EXPERIMENTAL",
+    "implementationStatus": "PREPARED_NATIVE"
+  },
+  {
+    "moduleId": "GFLOW",
+    "role": "actionWriter",
+    "grantStatus": "OWNER_GRANTED_EXPERIMENTAL",
+    "implementationStatus": "PREPARED_NATIVE"
+  },
+  {
+    "moduleId": "GFLOWStorage",
+    "role": "actionWriter",
+    "grantStatus": "OWNER_GRANTED_EXPERIMENTAL",
+    "implementationStatus": "PREPARED_NATIVE"
+  },
+  {
+    "moduleId": "GFMealActualPanel",
+    "role": "actionWriter",
+    "grantStatus": "OWNER_GRANTED_EXPERIMENTAL",
+    "implementationStatus": "PREPARED_NATIVE"
+  },
+  {
+    "moduleId": "GFMealFlow",
+    "role": "actionWriter",
+    "grantStatus": "OWNER_GRANTED_EXPERIMENTAL",
+    "implementationStatus": "PREPARED_NATIVE"
+  },
+  {
+    "moduleId": "GFMealFlow",
+    "role": "mealFlow",
+    "grantStatus": "OWNER_GRANTED_EXPERIMENTAL",
+    "implementationStatus": "PREPARED_NATIVE"
+  },
+  {
+    "moduleId": "GFMealTimingService",
+    "role": "mealTimingPublisher",
+    "grantStatus": "OWNER_GRANTED_EXPERIMENTAL",
+    "implementationStatus": "PREPARED_NATIVE"
+  },
+  {
+    "moduleId": "GFMealWorkflowView",
+    "role": "actionWriter",
+    "grantStatus": "OWNER_GRANTED_EXPERIMENTAL",
+    "implementationStatus": "PREPARED_NATIVE"
+  },
+  {
+    "moduleId": "GFNutrition",
+    "role": "actionWriter",
+    "grantStatus": "OWNER_GRANTED_EXPERIMENTAL",
+    "implementationStatus": "PREPARED_NATIVE"
+  },
+  {
+    "moduleId": "GFNutrition",
+    "role": "mealFlow",
+    "grantStatus": "OWNER_GRANTED_EXPERIMENTAL",
+    "implementationStatus": "PREPARED_NATIVE"
+  },
+  {
+    "moduleId": "GFProviderCgm",
+    "role": "cgmAdapter",
+    "grantStatus": "OWNER_GRANTED_EXPERIMENTAL",
+    "implementationStatus": "PREPARED_NATIVE"
+  },
+  {
+    "moduleId": "GFResearchForecastRun",
+    "role": "forecastWriter",
+    "grantStatus": "OWNER_GRANTED_EXPERIMENTAL",
+    "implementationStatus": "PREPARED_NATIVE"
+  },
+  {
+    "moduleId": "GFSettings",
+    "role": "coefficientWriter",
+    "grantStatus": "OWNER_GRANTED_EXPERIMENTAL",
+    "implementationStatus": "PREPARED_NATIVE"
+  },
+  {
+    "moduleId": "GFSettings",
+    "role": "settingsWriter",
+    "grantStatus": "OWNER_GRANTED_EXPERIMENTAL",
+    "implementationStatus": "PREPARED_NATIVE"
+  },
+  {
+    "moduleId": "GFSport",
+    "role": "conditionWriter",
+    "grantStatus": "OWNER_GRANTED_EXPERIMENTAL",
+    "implementationStatus": "PREPARED_NATIVE"
+  },
+  {
+    "moduleId": "GFSync",
+    "role": "syncWriter",
+    "grantStatus": "OWNER_GRANTED_EXPERIMENTAL",
+    "implementationStatus": "PREPARED_NATIVE"
+  },
+  {
+    "moduleId": "GFSyncStorageAdapter",
+    "role": "syncWriter",
+    "grantStatus": "OWNER_GRANTED_EXPERIMENTAL",
+    "implementationStatus": "PREPARED_NATIVE"
+  }
+]

@@ -46,7 +46,10 @@ jobs:
           install -D qa-transfer/q04/Q04WebViewSmokeInstrumentedTest.kt q04-ci/android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q04WebViewSmokeInstrumentedTest.kt
           install -D qa-transfer/q04/test_q04_legacy_restore_host.py q04-ci/tests/test_q04_legacy_restore_host.py
           install -D qa-transfer/q04/GfV3Q04MealFacts.kt q04-ci/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Q04MealFacts.kt
-          install -D qa-transfer/q04/Q04NativeDraftsInstrumentedTest.kt q04-ci/android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q04NativeDraftsInstrumentedTest.kt
+          install -D qa-transfer/q04/Q04_v012_GfV3Q04MealFacts.kt q04-ci/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Q04MealFacts.kt
+          install -D qa-transfer/q04/Q04_v012_MainActivity.kt q04-ci/android-app/app/src/main/java/org/glukopapa/v3/m00/MainActivity.kt
+          install -D qa-transfer/q04/Q04_v012_writer_grants_v0.12.json q04-ci/android-app/app/src/main/assets/db/writer_grants_v0.12.json
+          install -D qa-transfer/q04/Q04_v012_Q04NativeDraftsInstrumentedTest.kt q04-ci/android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q04NativeDraftsInstrumentedTest.kt
       - name: Run Q04 host regression and Q03 source contracts
         shell: bash
         run: |
