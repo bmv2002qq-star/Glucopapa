@@ -62,10 +62,10 @@ jobs:
           python3 - <<'PY'
           import base64,hashlib,io,zipfile
           from pathlib import Path
-          parts=sorted(Path('qa-transfer/q06').glob('q06-part-*.b64'))
+          parts=sorted(Path('qa-transfer/q06-safety-v012').glob('q06-part-*.b64'))
           assert len(parts)==3, f'Q06 overlay parts {len(parts)}'
           payload=base64.b64decode(''.join(''.join(p.read_text().split()) for p in parts),validate=True)
-          assert hashlib.sha256(payload).hexdigest()=='4ef559ea916be467ecf0b2682b7c77579d2d617af87ca2177f98fab383269a93', 'Q06_OVERLAY_SHA_MISMATCH'
+          assert hashlib.sha256(payload).hexdigest()=='8ee0c7f2576bb6bd78e326dd14df9752c63e0e0a454a0c1127133180134a4472', 'Q06_OVERLAY_SHA_MISMATCH'
           with zipfile.ZipFile(io.BytesIO(payload)) as z:
               assert z.testzip() is None, 'Q06_OVERLAY_ZIP_BAD'
               z.extractall('q06-ci')
@@ -81,6 +81,7 @@ jobs:
           python3 tests/test_q05_schema_host.py
           python3 tests/test_q05_static_contract.py
           python3 ../qa-transfer/q06/test_q06_ci_contract.py
+          python3 ../qa-transfer/q06-safety-20261124/test_q06_failclosed_static.py
           python3 tests/test_q06_q04_integration_structure.py
           python3 tests/test_q04_legacy_restore_host.py
           python3 tests/test_q04_sqlite_contract.py
