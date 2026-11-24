@@ -22,11 +22,11 @@ Daemon will be stopped at the end of the build
 > Task :app:mergeDebugAssets
 > Task :app:desugarDebugFileDependencies
 > Task :app:compressDebugAssets
-> Task :app:mergeDebugJniLibFolders
 > Task :app:processDebugManifestForPackage
 > Task :app:checkDebugDuplicateClasses
 > Task :app:processDebugResources
 > Task :app:mergeExtDexDebug
+> Task :app:mergeDebugJniLibFolders
 > Task :app:mergeLibDexDebug
 > Task :app:mergeDebugNativeLibs NO-SOURCE
 > Task :app:stripDebugDebugSymbols NO-SOURCE
@@ -35,8 +35,8 @@ Daemon will be stopped at the end of the build
 > Task :app:writeDebugSigningConfigVersions
 > Task :app:preDebugAndroidTestBuild SKIPPED
 > Task :app:generateDebugAndroidTestResValues
-> Task :app:mapDebugAndroidTestSourceSetPaths
 > Task :app:checkDebugAndroidTestAarMetadata
+> Task :app:mapDebugAndroidTestSourceSetPaths
 > Task :app:generateDebugAndroidTestResources
 > Task :app:mergeDebugAndroidTestResources
 > Task :app:processDebugAndroidTestManifest
@@ -56,6 +56,7 @@ Daemon will be stopped at the end of the build
 > Task :app:validateSigningDebugAndroidTest
 > Task :app:writeDebugAndroidTestSigningConfigVersions
 > Task :app:mergeExtDexDebugAndroidTest
+
 > Task :app:compileDebugKotlin
 w: file:///home/runner/work/Glucopapa/Glucopapa/q07-ci/android-app/app/src/main/java/org/glukopapa/v3/m00/MainActivity.kt:103:22 'var allowFileAccessFromFileURLs: Boolean' is deprecated. Deprecated in Java.
 w: file:///home/runner/work/Glucopapa/Glucopapa/q07-ci/android-app/app/src/main/java/org/glukopapa/v3/m00/MainActivity.kt:104:22 'var allowUniversalAccessFromFileURLs: Boolean' is deprecated. Deprecated in Java.
@@ -81,7 +82,7 @@ w: file:///home/runner/work/Glucopapa/Glucopapa/q07-ci/android-app/app/src/main/
 > Task :app:packageDebugAndroidTest
 > Task :app:createDebugAndroidTestApkListingFileRedirect
 > Task :app:assembleDebugAndroidTest
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_4-1795544539107.json
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_5-1795545619526.json
 
-BUILD SUCCESSFUL in 1m 39s
+BUILD SUCCESSFUL in 1m 15s
 60 actionable tasks: 60 executed
