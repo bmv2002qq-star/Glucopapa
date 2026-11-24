@@ -1,0 +1,128 @@
+diff --git a/android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q08LevemirNativeInstrumentedTest.kt b/android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q08LevemirNativeInstrumentedTest.kt
+index 1582aa8..4cdb963 100644
+--- a/android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q08LevemirNativeInstrumentedTest.kt
++++ b/android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q08LevemirNativeInstrumentedTest.kt
+@@ -141,4 +141,16 @@ class Q08LevemirNativeInstrumentedTest {
+         assertEquals(GfV3Q08Rules.OWNER,GfV3OwnerResolver(helper).resolve(intent));val result=gateway.bindInstalledAdapter(GfV3Q08Rules.OWNER).correctJournalIntent(intent);assertTrue(result.getBoolean("applied"));assertEquals(1,count("v3_record_corrections"));val e=storage.readShellPort("journal").getJSONObject("data").getJSONArray("events").getJSONObject(0);assertEquals(id,e.getString("eventId"));assertEquals("basal",e.getString("insulinClass"));assertEquals("arm",e.getString("injectionSite"));assertEquals(2.0,e.getDouble("units"),0.00001)
+     }
+ 
++    @Test fun indexedHistorySkipsOldCgmAndEnforcesBoundOwner(){
++        accept();val db=helper.writableDatabase;val asOf=Instant.parse("2025-02-01T00:00:00Z");val rev=storage.revision()
++        db.beginTransaction();try {
++            for(i in 0 until 5000){val time=Instant.parse("2023-01-01T00:00:00Z").plusSeconds(i*300L).toString();val p=JSONObject().put("measuredAtUtc",time).put("glucoseMmolL",6.0).put("provenance","observed").put("quality","VALID");db.execSQL("INSERT INTO v3_cgm(observation_id,profile_id,measured_at_utc,glucose_mmol_l,source_device_id,provenance,quality,payload_json,created_revision) VALUES(?,?,?,?,?,?,?,?,?)",arrayOf("qa-old-$i",profile,time,6.0,"qa-device","observed","VALID",p.toString(),rev))}
++            for(i in 0 until 4320){val time=asOf.minusSeconds((i+1)*300L).toString();val p=JSONObject().put("measuredAtUtc",time).put("glucoseMmolL",6.0).put("provenance","observed").put("quality","VALID");db.execSQL("INSERT INTO v3_cgm(observation_id,profile_id,measured_at_utc,glucose_mmol_l,source_device_id,provenance,quality,payload_json,created_revision) VALUES(?,?,?,?,?,?,?,?,?)",arrayOf("qa-recent-$i",profile,time,6.0,"qa-device","observed","VALID",p.toString(),rev))}
++            db.setTransactionSuccessful()
++        }finally{db.endTransaction()}
++        val port=gateway.bindInstalledAdapter(GfV3Q08Rules.OWNER);val h=GfV3Q08History(port,storage).read(asOf).getJSONObject("data");val w=h.getJSONObject("q08ReadWindow");assertEquals(4080,h.getJSONArray("cgm").length());assertEquals(4320,w.getInt("cgmCandidateRowsRead"));assertEquals("UTC_DATE_INDEX_WINDOW",w.getString("cgmReadScope"));assertFalse(w.getBoolean("sensorCoverageProven"))
++        reject{gateway.bindInstalledAdapter("GFInjectionFact").readQ08CgmPage(profile,rev,0,asOf,500)};reject{port.readQ08CgmPage("other-profile",rev,0,asOf,500)};reject{port.readQ08CgmPage(profile,rev+1,0,asOf,500)}
++        assertEquals(9320,count("v3_cgm"))
++    }
++
+ }
+diff --git a/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3NativeModuleGateway.kt b/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3NativeModuleGateway.kt
+index fcc4d2a..800f516 100644
+--- a/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3NativeModuleGateway.kt
++++ b/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3NativeModuleGateway.kt
+@@ -15,6 +15,9 @@ internal class GfV3NativeModuleGateway(private val storage: GfV3Storage,
+ 
+     internal inner class BoundPort internal constructor(private val moduleId: String) {
+         fun read(role: String): JSONObject = storage.readNativeModulePort(role,moduleId)
++        internal fun readQ08Context():JSONObject=storage.readNativeQ08Context(moduleId)
++        internal fun readQ08CgmPage(profile:String,revision:Long,cursor:Long,asOf:java.time.Instant,limit:Int):JSONObject=
++            storage.readNativeQ08CgmPage(moduleId,profile,revision,cursor,asOf,limit)
+         /** Owned-module-only correction; never exposed through JavascriptInterface. */
+         fun correct(domain:String,recordId:String,correctionId:String,idempotencyKey:String,
+                     expectedRevision:Long,expectedRecordVersion:Int,changes:JSONObject,
+diff --git a/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Q08History.kt b/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Q08History.kt
+index 6d60d9e..5108459 100644
+--- a/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Q08History.kt
++++ b/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Q08History.kt
+@@ -9,7 +9,7 @@ import java.time.ZoneId
+ internal class GfV3Q08History(private val port: GfV3NativeModuleGateway.BoundPort,
+                               private val storage: GfV3Storage) {
+     fun read(asOf: Instant = Instant.now()): JSONObject {
+-        val snap = port.read("research") // existing registry permission gate
++        val snap = port.readQ08Context() // existing registry permission gate; no unrelated research payloads
+         require(snap.getBoolean("profileConfigured")) { "PROFILE_UNCONFIGURED" }
+         val profile = snap.getString("profileId")
+         val revision = snap.getLong("revision")
+@@ -18,12 +18,13 @@ internal class GfV3Q08History(private val port: GfV3NativeModuleGateway.BoundPor
+         val from = GfV3Q08Rules.startOfHistory(asOf, zone)
+         // Read all pages, filter only after parsing the actual UTC timestamp. Never silently truncate.
+         val domains = listOf("cgm", "events", "mealSessions")
++        var cgmCandidates=0
+         for (domain in domains) {
+             var cursor = 0L
+             var total = 0
+             val result = JSONArray()
+             do {
+-                val p = storage.readShellPage(domain,cursor,revision,500)
++                val p = if(domain=="cgm")port.readQ08CgmPage(profile,revision,cursor,asOf,500) else storage.readShellPage(domain,cursor,revision,500)
+                 val rows = p.getJSONArray("rows")
+                 val meta = GfV3Q08Rules.PageMeta(p.getString("profileId"),p.getLong("revision"),p.getString("domain"),p.getLong("nextCursor"),rows.length(),p.getBoolean("hasMore"),p.getBoolean("complete"))
+                 GfV3Q08Rules.validatePage(meta,profile,revision,domain,cursor)
+@@ -45,10 +46,11 @@ internal class GfV3Q08History(private val port: GfV3NativeModuleGateway.BoundPor
+                 cursor = meta.nextCursor
+             } while(meta.hasMore)
+             data.put(domain,result)
++            if(domain=="cgm")cgmCandidates=total
+         }
+-        val finalContext = port.read("research") // recheck native grant as well as profile / revision
++        val finalContext = port.readQ08Context() // recheck native grant as well as profile / revision
+         require(finalContext.getString("profileId")==profile && finalContext.getLong("revision")==revision && storage.revision()==revision) { "Q08_PAGE_CONTEXT_CHANGED" }
+-        data.put("q08ReadWindow", JSONObject().put("profileId",profile).put("revision",revision).put("timeZone",zone.id).put("startUtc",from.toString()).put("endUtc",asOf.toString()).put("allStoredPagesRead",true).put("sensorCoverageProven",false))
++        data.put("q08ReadWindow", JSONObject().put("profileId",profile).put("revision",revision).put("timeZone",zone.id).put("startUtc",from.toString()).put("endUtc",asOf.toString()).put("allStoredPagesRead",true).put("cgmCandidateRowsRead",cgmCandidates).put("cgmReadScope","UTC_DATE_INDEX_WINDOW").put("sensorCoverageProven",false))
+         return snap
+     }
+ }
+diff --git a/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Storage.kt b/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Storage.kt
+index 68f718b..1f93946 100644
+--- a/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Storage.kt
++++ b/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Storage.kt
+@@ -349,6 +349,46 @@ class GfV3Storage(private val helper: GfDbHelper, private val catalogJson: Strin
+         } finally { db.endTransaction() }
+     }
+ 
++    /** Narrow Q08 research context. No unrelated coefficient/history payloads are loaded. */
++    internal fun readNativeQ08Context(moduleId:String):JSONObject=synchronized(lock){
++        require(moduleId=="GFLevemirReview"){"Q08_READ_OWNER_DENIED"}
++        val db=helper.readableDatabase
++        db.beginTransactionNonExclusive()
++        try {
++            validateNativeRead(db,"research",moduleId)
++            val m=meta(db);val id=m.profileId?:throw IllegalStateException("PROFILE_UNCONFIGURED")
++            val data=JSONObject().put("profile",JSONObject().put("profileId",id).put("timeZone",m.timezone))
++                .put("measurements",rows(db,"SELECT measurement_id,measured_at_utc,weight_kg,height_cm,created_revision FROM v3_measurements WHERE profile_id=? ORDER BY measured_at_utc DESC LIMIT 2000",id){c->JSONObject().put("measurementId",c.getString(0)).put("measuredAtUtc",c.getString(1)).put("weightKg",c.getDouble(2)).put("heightCm",c.getDouble(3)).put("createdRevision",c.getLong(4))})
++            db.setTransactionSuccessful()
++            JSONObject().put("schemaVersion",3).put("profileConfigured",true).put("profileId",id).put("revision",m.revision).put("inputRevision",m.inputRevision).put("data",data)
++        }finally{db.endTransaction()}
++    }
++    /** Indexed coarse UTC-date window. Caller post-filters exact timestamps, including fractions.
++     * Only the compile-time Q08 native port may call this method. Date range is derived from
++     * persisted profile zone and asOf, not arbitrary SQL or a WebView-supplied module ID.
++     */
++    internal fun readNativeQ08CgmPage(moduleId:String,profileId:String,expectedRevision:Long,afterRowId:Long,asOf:Instant,pageSize:Int):JSONObject=synchronized(lock){
++        require(moduleId=="GFLevemirReview"){"Q08_READ_OWNER_DENIED"}
++        require(pageSize in 1..500&&afterRowId>=0&&expectedRevision>=0){"PAGE_ARGUMENT_INVALID"}
++        val db=helper.readableDatabase
++        db.beginTransactionNonExclusive()
++        try {
++            validateNativeRead(db,"research",moduleId)
++            val m=meta(db)
++            require(m.profileId==profileId&&m.revision==expectedRevision){"Q08_PAGE_CONTEXT_CHANGED"}
++            val zone=ZoneId.of(m.timezone?:throw IllegalStateException("PROFILE_UNCONFIGURED"))
++            val from=asOf.atZone(zone).toLocalDate().minusDays(14).atStartOfDay(zone).toInstant().minusSeconds(3600)
++            val dayStart=from.atZone(java.time.ZoneOffset.UTC).toLocalDate().toString()
++            val dayEnd=asOf.atZone(java.time.ZoneOffset.UTC).toLocalDate().plusDays(1).toString()
++            val result=JSONArray();var last=afterRowId;var count=0;var more=false
++            db.rawQuery("SELECT rowid,payload_json,measured_at_utc FROM v3_cgm INDEXED BY idx_v3_cgm_profile_time WHERE profile_id=? AND measured_at_utc>=? AND measured_at_utc<? AND rowid>? ORDER BY rowid ASC LIMIT ?",arrayOf(profileId,dayStart,dayEnd,afterRowId.toString(),(pageSize+1).toString())).use{c->
++                while(c.moveToNext()){if(count>=pageSize){more=true;break};last=c.getLong(0);val item=JSONObject(c.getString(1));require(item.getString("measuredAtUtc")==c.getString(2)){"Q08_CGM_TIMESTAMP_INCONSISTENT"};result.put(item);count++}
++            }
++            db.setTransactionSuccessful()
++            JSONObject().put("schemaVersion",3).put("domain","cgm").put("profileId",profileId).put("revision",m.revision).put("rows",result).put("nextCursor",last).put("hasMore",more).put("complete",!more)
++        }finally{db.endTransaction()}
++    }
++
+     /** Explicit one-time owner setup; this is NOT a medical coefficient or injection writer. */
+     fun initializeProfile(profileId: String, timeZone: String, expectedRevision: Long): JSONObject = synchronized(lock) {
+         if(!Regex("[A-Za-z0-9_-]{5,64}").matches(profileId)) throw IllegalArgumentException("PROFILE_ID_INVALID")
