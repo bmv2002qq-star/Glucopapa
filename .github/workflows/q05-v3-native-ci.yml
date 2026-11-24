@@ -1,0 +1,110 @@
+name: Q05 GFActivity sport illness Android 15 native QA
+on:
+  push:
+    branches:
+      - 'qa/v3-q05-*'
+    paths:
+      - '.github/workflows/q05-v3-native-ci.yml'
+      - 'qa-transfer/q05/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  q05-native:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 65
+    steps:
+      - name: Checkout Q05 QA branch
+        uses: actions/checkout@v4
+      - name: Install Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Install Gradle 8.10.2
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.10.2'
+      - name: Restore SHA verified Q04 baseline and Q05 overlays
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          import base64,hashlib,io,zipfile
+          from pathlib import Path
+          p=sorted(Path('qa-transfer/q04').glob('q04-part-*.b64'))
+          assert len(p)==19, f'Q04 base files {len(p)}'
+          b=base64.b64decode(''.join(x.read_text() for x in p),validate=True)
+          assert hashlib.sha256(b).hexdigest()=='4ec4fcd5c8a08cebccee728905db4d988eab35ecfa60ecf4a15d98997266e6c6', 'Q04 BASE BAD SHA'
+          with zipfile.ZipFile(io.BytesIO(b)) as z:
+              assert z.testzip() is None
+              z.extractall('q05-ci')
+          PY
+          install -D qa-transfer/q04/Q04WebViewSmokeInstrumentedTest.kt q05-ci/android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q04WebViewSmokeInstrumentedTest.kt
+          install -D qa-transfer/q04/test_q04_legacy_restore_host.py q05-ci/tests/test_q04_legacy_restore_host.py
+          install -D qa-transfer/q04/Q04_v012_GfV3Q04MealFacts.kt q05-ci/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Q04MealFacts.kt
+          install -D qa-transfer/q04/Q04_v012_MainActivity.kt q05-ci/android-app/app/src/main/java/org/glukopapa/v3/m00/MainActivity.kt
+          install -D qa-transfer/q04/Q04_v012_writer_grants_v0.12.json q05-ci/android-app/app/src/main/assets/db/writer_grants_v0.12.json
+          install -D qa-transfer/q04/Q04_v012_Q04NativeDraftsInstrumentedTest.kt q05-ci/android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q04NativeDraftsInstrumentedTest.kt
+          python3 - <<'PY'
+          import base64,hashlib,io,zipfile
+          from pathlib import Path
+          p=sorted(Path('qa-transfer/q05').glob('q05-part-*.b64'))
+          assert len(p)==3, f'Q05 overlay parts {len(p)}'
+          b=base64.b64decode(''.join(x.read_text() for x in p),validate=True)
+          assert hashlib.sha256(b).hexdigest()=='c03bee2a68d317266dfe7136dfd6385f21072e90f2588cda5b02fc0071c318e4', 'Q05 OVERRIDE HASH INVALID'
+          with zipfile.ZipFile(io.BytesIO(b)) as z:
+              assert z.testzip() is None
+              assert len(z.namelist())==20
+              z.extractall('q05-ci')
+          print('Q05 OVERLAY SHA',hashlib.sha256(b).hexdigest())
+          PY
+      - name: Q05 host contract and Q04 Q03 regressions
+        shell: bash
+        run: |
+          set -euxo pipefail
+          cd q05-ci
+          python3 tests/test_q05_schema_host.py
+          python3 tests/test_q05_static_contract.py
+          python3 tests/test_q04_integration_structure.py
+          python3 tests/test_q04_legacy_restore_host.py
+          python3 tests/test_q04_sqlite_contract.py
+          node tests/test_q04_native_adapter_contract.js
+          cd tests/q03/tests
+          node normalizer_node_tests.js
+          node stress_q03.js
+      - name: Compile Android Q05 APK and instrumented tests
+        shell: bash
+        run: |
+          set -euxo pipefail
+          cd q05-ci/android-app
+          gradle :app:assembleDebug :app:assembleDebugAndroidTest --stacktrace --no-daemon
+      - name: Enable runner KVM acceleration
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Android 15 Q05 native end-to-end and Q01 Q04 regression
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_4
+          ram-size: 2048M
+          heap-size: 512M
+          disk-size: 4096M
+          emulator-boot-timeout: 900
+          disable-animations: true
+          script: cd q05-ci/android-app && gradle :app:connectedDebugAndroidTest --stacktrace --no-daemon
+      - name: Upload Android Q05 APK and XML proof
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: q05-native-ci-evidence
+          path: |
+            q05-ci/android-app/app/build/outputs/apk/debug/
+            q05-ci/android-app/app/build/outputs/apk/androidTest/debug/
+            q05-ci/android-app/app/build/outputs/androidTest-results/
+            q05-ci/android-app/app/build/reports/androidTests/
+          if-no-files-found: warn
