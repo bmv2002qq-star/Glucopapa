@@ -99,6 +99,8 @@ jobs:
           patch -d q07-ci -p0 --batch --forward -i "$GITHUB_WORKSPACE/qa-transfer/q07/Q07_ANDROID15_WEBVIEW_AND_OWNER_PATCH_20261124.patch"
           echo 'd9cc724325da755196d1917c9a655b4c5d422b7c8fadf8d489bdd467dd722995  qa-transfer/q07/Q07_RINFAST_OWNER_WRITER_HARDENING_20261124.patch' | sha256sum -c -
           patch -d q07-ci -p0 --batch --forward -i "$GITHUB_WORKSPACE/qa-transfer/q07/Q07_RINFAST_OWNER_WRITER_HARDENING_20261124.patch"
+          echo 'e8aaad3a29c4c9b584651135ac86312cd2861277074e51d15e390940ee3adb21  qa-transfer/q07/Q07_RUNTIME_EVENT_ID_AND_AUDIT_TEST_FIX_20261124.patch' | sha256sum -c -
+          patch -d q07-ci -p0 --batch --forward -i "$GITHUB_WORKSPACE/qa-transfer/q07/Q07_RUNTIME_EVENT_ID_AND_AUDIT_TEST_FIX_20261124.patch"
       - name: Q07 Q06 Q05 Q04 Q03 host and source regression
         shell: bash
         run: |
