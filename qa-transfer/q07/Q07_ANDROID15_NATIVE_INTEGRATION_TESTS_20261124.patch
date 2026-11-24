@@ -1,0 +1,130 @@
+--- /dev/null
++++ android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q07RinFastNativeIntegrationInstrumentedTest.kt
+@@ -0,0 +1,127 @@
++package org.glukopapa.v3.m00
++
++import androidx.test.ext.junit.runners.AndroidJUnit4
++import androidx.test.platform.app.InstrumentationRegistry
++import org.junit.After
++import org.junit.Assert.*
++import org.junit.Before
++import org.junit.Test
++import org.junit.runner.RunWith
++import org.json.JSONObject
++
++/** True Android SQLite/owner-grant/journal/correction/backup tests. No clinical dose arithmetic. */
++@RunWith(AndroidJUnit4::class)
++class Q07RinFastNativeIntegrationInstrumentedTest {
++    private val ctx get() = InstrumentationRegistry.getInstrumentation().targetContext
++    private lateinit var helper:GfDbHelper
++    private lateinit var storage:GfV3Storage
++    private lateinit var gateway:GfV3NativeModuleGateway
++    private lateinit var facts:GfV3Q07InjectionFacts
++    private val whenUtc="2026-11-24T10:30:00Z"
++    @Before fun before() {
++        InstrumentationRegistry.getInstrumentation().waitForIdleSync()
++        ctx.deleteDatabase("glukopapa_v3.db")
++        helper=GfDbHelper(ctx)
++        storage=GfV3Storage(helper,
++            ctx.assets.open("db/module_catalog_v1.json").bufferedReader().use { it.readText() },
++            ctx.assets.open("db/writer_grants_v0.12.json").bufferedReader().use { it.readText() })
++        gateway=GfV3NativeModuleGateway(storage,GfV3NativeWriter(helper),GfV3CorrectionWriter(helper),helper)
++        facts=GfV3Q07InjectionFacts(gateway.bindInstalledAdapter("GFInjectionFact"))
++        helper.writableDatabase.execSQL("UPDATE v3_meta SET profile_id='q07-qa-child',timezone='Europe/Warsaw' WHERE id=1")
++    }
++    @After fun after() {helper.close();ctx.deleteDatabase("glukopapa_v3.db")}
++    private fun rev()=storage.revision()
++    private fun acceptOwner() {
++        helper.writableDatabase.execSQL("UPDATE v3_module_registry SET status='OWNER_INTEGRATION_ACCEPTED',feature_enabled=1,write_roles_json='[\"actionWriter\"]',read_roles_json='[\"journal\"]' WHERE module_id='GFInjectionFact'")
++    }
++    private fun rows(table:String):Long=helper.readableDatabase.rawQuery("SELECT COUNT(*) FROM $table",null).use { c ->
++        assertTrue(c.moveToFirst());c.getLong(0)
++    }
++    private fun confirm(id:String="q07-inj-native-1",key:String="q07-write-native-1",dose:Double=1.0,
++                        expectedRevision:Long=rev(),confirmed:Boolean=true):JSONObject =
++        facts.confirm(id,key,dose,"abdomen",whenUtc,"",expectedRevision,confirmed)
++    private fun reject(body:()->Unit) {
++        try { body();fail("Q07 SHOULD HAVE REJECTED THE OPERATION") }
++        catch(e:IllegalArgumentException) {} catch(e:SecurityException) {} catch(e:IllegalStateException) {}
++    }
++    @Test fun nativeConsentAndRegistryBothRequiredBeforeAnyWrite() {
++        val r=rev()
++        reject {confirm(confirmed=false)}
++        reject {confirm()}
++        assertEquals(r,rev());assertEquals(0L,rows("v3_events"))
++        acceptOwner()
++        reject {confirm(confirmed=false)}
++        assertEquals(0L,rows("v3_events"))
++    }
++    @Test fun confirmedRinFastCreatesSingleAuditedJournalEventAndUnknownIob() {
++        acceptOwner();val r=rev()
++        val created=confirm();assertTrue(created.getBoolean("created"));assertEquals(r+1,created.getLong("revision"))
++        val replay=confirm(expectedRevision=r)
++        assertFalse(replay.getBoolean("created"));assertEquals(r+1,replay.getLong("revision"))
++        assertEquals(1L,rows("v3_events"));assertEquals(1L,rows("v3_write_receipts"))
++        assertEquals(1L,rows("v3_audit"));assertEquals(1L,rows("v3_change_feed"))
++        val snapshot=storage.readShellPort("journal"); val data=snapshot.getJSONObject("data")
++        val shot=data.getJSONArray("events").getJSONObject(0)
++        assertEquals("GFInjectionFact",shot.getString("sourceModule"))
++        assertEquals("insulin_injection",shot.getString("eventType"))
++        assertEquals("rinfast",shot.getString("insulinId"))
++        assertEquals("CONFIRMED_ACTUAL",shot.getString("provenance"))
++        val q07=GfV3Q07OwnerQueue(facts,storage){_,callback->callback(false)}
++        try {
++            val view=q07.snapshot()
++            assertEquals(1,view.getJSONArray("shots").length())
++            assertEquals(snapshot.getLong("revision"),view.getLong("revision"))
++            assertEquals("UNKNOWN_INCOMPLETE_COVERAGE",view.getString("iobStatus"))
++            assertFalse(view.getBoolean("coverageProven"))
++            assertTrue(view.isNull("modelRemainingUnits"))
++            assertFalse(view.getBoolean("numericActivityEffectEnabled"))
++        }finally {q07.close()}
++    }
++    @Test fun invalidPenOrStaleRevisionAndDuplicateIdNeverCreateMoreEvents() {
++        acceptOwner();val r=rev()
++        reject {confirm(dose=1.25)}
++        assertEquals(r,rev())
++        confirm()
++        reject { confirm(id="q07-inj-native-2",key="q07-write-native-2",expectedRevision=r) }
++        reject { confirm(id="q07-inj-native-1",key="q07-write-native-new",expectedRevision=rev()) }
++        reject { confirm(id="q07-inj-native-2",key="q07-write-native-1",expectedRevision=rev()) }
++        assertEquals(1L,rows("v3_events"));assertEquals(r+1,rev())
++    }
++    @Test fun ownerCorrectionPreservesAuditAndEnforcesStepVersionAndOwner() {
++        acceptOwner();confirm();val r=rev()
++        reject {facts.correct("q07-inj-native-1","q07-corr-invalid","q07-key-invalid",r,0,1.25,"abdomen","Исправление дозы",true)}
++        reject {facts.correct("q07-inj-native-1","q07-corr-unconfirmed","q07-key-unconfirmed",r,0,1.5,"abdomen","Исправление дозы",false)}
++        assertEquals(r,rev());assertEquals(0L,rows("v3_record_corrections"))
++        val c=facts.correct("q07-inj-native-1","q07-corr-real","q07-key-real",r,0,1.5,"arm","Исправление факта",true)
++        assertTrue(c.getBoolean("applied"));assertEquals(1,c.getInt("version"))
++        val replay=facts.correct("q07-inj-native-1","q07-corr-real","q07-key-real",r,0,1.5,"arm","Исправление факта",true)
++        assertTrue(replay.getBoolean("replayed"))
++        reject {facts.correct("q07-inj-native-1","q07-corr-stale","q07-key-stale",r,0,2.0,"abdomen","Исправление факта",true)}
++        assertEquals(1L,rows("v3_record_corrections"))
++        val newShot=storage.readShellPort("journal").getJSONObject("data").getJSONArray("events").getJSONObject(0)
++        assertEquals(1.5,newShot.getDouble("units"),0.00001);assertEquals("arm",newShot.getString("injectionSite"))
++        assertEquals(1,newShot.getInt("recordVersion"))
++    }
++    @Test fun wrongOwnerCannotAmendRinFastEvenIfOtherModuleIsEnabled() {
++        acceptOwner();confirm();val current=rev()
++        helper.writableDatabase.execSQL("UPDATE v3_module_registry SET status='OWNER_INTEGRATION_ACCEPTED',feature_enabled=1,write_roles_json='[\"actionWriter\"]' WHERE module_id='GFHigh'")
++        reject {gateway.bindInstalledAdapter("GFHigh").correct("events","q07-inj-native-1","q07-forge-1","q07-forge-key",current,0,
++            JSONObject().put("units",2.0),"Неверный владелец","OWNER_MANUAL")}
++        assertEquals(current,rev());assertEquals(0L,rows("v3_record_corrections"))
++    }
++    @Test fun encryptedRestoreKeepsActualInjectionAndDiscardsLaterCorrection() {
++        acceptOwner();confirm();val firstRev=rev()
++        val pass="q07-only-qa-restore-secret".toCharArray()
++        val encrypted=GfV3EncryptedSnapshot(ctx,helper).createEncrypted(pass)
++        facts.correct("q07-inj-native-1","q07-corr-backup","q07-key-backup",firstRev,0,2.0,"thigh","Исправление после копии",true)
++        val beforeRestore=rev()
++        try {
++            val restored=GfV3EncryptedSnapshot(ctx,helper).restoreEncrypted(encrypted,pass,beforeRestore)
++            assertEquals(9,restored.dbVersion)
++            val shots=storage.readShellPort("journal").getJSONObject("data").getJSONArray("events")
++            assertEquals(1,shots.length());assertEquals(1.0,shots.getJSONObject(0).getDouble("units"),0.00001)
++            assertEquals(0L,rows("v3_record_corrections"))
++            assertEquals(1L,rows("v3_write_receipts"))
++        } finally {encrypted.fill(0);pass.fill(' ')}
++    }
++}
