@@ -1,0 +1,189 @@
+diff --git a/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Q08OwnerQueue.kt b/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Q08OwnerQueue.kt
+new file mode 100644
+index 0000000..238d10c
+--- /dev/null
++++ b/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Q08OwnerQueue.kt
+@@ -0,0 +1,111 @@
++package org.glukopapa.v3.m00
++
++import org.json.JSONArray
++import org.json.JSONObject
++import java.time.Instant
++import java.util.UUID
++import java.util.concurrent.Executors
++import java.util.concurrent.TimeUnit
++
++/** Request-only transport for actual historical facts; no medical calculations or browser consent. */
++internal class GfV3Q08OwnerQueue(
++    private val facts:GfV3Q08InjectionFacts,
++    private val history:GfV3Q08History,
++    private val storage:GfV3Storage,
++    private val installer:GfV3Q08ModuleInstaller,
++    private val onConfirm:(String,(Boolean)->Unit)->Unit
++) {
++    private data class Pending(val request:JSONObject,var state:String="PENDING",var result:JSONObject?=null)
++    private val lock=Any()
++    private val worker=Executors.newSingleThreadExecutor { r -> Thread(r,"Q08OwnerWorker").apply{isDaemon=true} }
++    private val pending=linkedMapOf<String,Pending>()
++    private var closed=false
++    private val sites=mapOf("Ягодица" to "buttock","Живот" to "abdomen","Плечо" to "arm","Бедро" to "thigh")
++    private fun strings(a:JSONArray)=(0 until a.length()).map(a::getString).toSet()
++    fun status():JSONObject {
++        val reg=storage.readShellPort("registry")
++        val data=reg.getJSONObject("data")
++        val m=data.getJSONArray("modules")
++        val module=(0 until m.length()).map(m::getJSONObject).single{it.getString("moduleId")==GfV3Q08Rules.OWNER}
++        val g=data.getJSONArray("experimentalWriteGrants")
++        val grant=(0 until g.length()).map(g::getJSONObject).any{it.optString("moduleId")==GfV3Q08Rules.OWNER&&it.optString("role")=="actionWriter"&&it.optString("grantStatus")=="OWNER_GRANTED_EXPERIMENTAL"&&it.optString("implementationStatus")=="PREPARED_NATIVE"}
++        val active=grant&&module.optString("status")=="OWNER_INTEGRATION_ACCEPTED"&&module.optBoolean("featureEnabled")&&strings(module.getJSONArray("readRoles"))==setOf("research")&&strings(module.getJSONArray("writeRoles"))==setOf("actionWriter")
++        val canActivate=grant&&module.optString("status")=="NOT_CONNECTED"&&!module.optBoolean("featureEnabled")&&strings(module.getJSONArray("writeRoles"))==setOf("actionWriter")
++        return JSONObject().put("profileConfigured",reg.getBoolean("profileConfigured")).put("profileId",reg.get("profileId")).put("revision",reg.getLong("revision")).put("active",active).put("canActivate",canActivate)
++    }
++    fun snapshot():JSONObject {
++        require(status().getBoolean("active")){"Q08_PRODUCER_NOT_ACTIVATED"}
++        val h=history.read()
++        val data=h.getJSONObject("data")
++        // Expose only Q08's own input contract, not other research/preferences/coefficients.
++        val safe=JSONObject()
++        val profile=data.getJSONObject("profile")
++        safe.put("profile",JSONObject().put("profileId",profile.getString("profileId")).put("timeZone",profile.getString("timeZone")))
++        for(k in listOf("events","cgm","mealSessions","measurements","q08ReadWindow"))safe.put(k,data.get(k))
++        // Authorization and revision checked again after reading, including a restore or activation race.
++        val s=status()
++        require(s.getBoolean("active")&&s.getLong("revision")==h.getLong("revision")&&s.getString("profileId")==h.getString("profileId")){"Q08_PAGE_CONTEXT_CHANGED"}
++        return JSONObject().put("schemaVersion",3).put("profileConfigured",true).put("profileId",h.getString("profileId")).put("revision",h.getLong("revision")).put("data",safe)
++    }
++    /** Convert a human wall clock using the stored profile zone, not the device zone. */
++    fun resolveLocalTime(raw:String):JSONObject {
++        require(raw.length in 20..500){"Q08_LOCAL_TIME_REQUEST_INVALID"}
++        val req=JSONObject(raw)
++        require(req.keys().asSequence().toSet()==setOf("profileId","expectedRevision","date","time")){"Q08_LOCAL_TIME_FIELDS_INVALID"}
++        val st=status(); require(st.getBoolean("active")){"Q08_PRODUCER_NOT_ACTIVATED"}
++        val settings=storage.readShellPort("settings")
++        require(settings.getBoolean("profileConfigured")&&settings.getString("profileId")==req.getString("profileId")&&settings.getLong("revision")==req.getLong("expectedRevision")&&settings.getLong("revision")==st.getLong("revision")&&settings.getString("profileId")==st.getString("profileId")){"Q08_PAGE_CONTEXT_CHANGED"}
++        val zone=settings.getJSONObject("data").getJSONObject("profile").getString("timeZone")
++        val at=GfV3LocalEditTime.toUtc(req.getString("date"),req.getString("time"),zone)
++        GfV3Q08Rules.parseUtc(at)
++        return JSONObject().put("occurredAtUtc",at).put("timeZone",zone).put("revision",settings.getLong("revision"))
++    }
++    fun enqueue(raw:String):JSONObject {
++        require(raw.length in 20..2500){"Q08_REQUEST_SIZE_INVALID"}
++        val req=JSONObject(raw);val command=req.getString("command")
++        val common=setOf("command","profileId","expectedRevision")
++        val actual=command=="recordLevemirActual"
++        require(command=="activate"||actual){"Q08_COMMAND_INVALID"}
++        val keys=req.keys().asSequence().toSet()
++        require(keys==if(actual)common+setOf("requestId","slot","units","occurredAtUtc","site") else common){"Q08_REQUEST_FIELDS_INVALID"}
++        require(req.opt("expectedRevision") is Number&&req.getDouble("expectedRevision")==req.getLong("expectedRevision").toDouble()&&req.getLong("expectedRevision")>=0){"Q08_REVISION_INVALID"}
++        val s=status();require(s.getBoolean("profileConfigured")){"PROFILE_UNCONFIGURED"}
++        require(req.getString("profileId")==s.getString("profileId")){"Q08_PROFILE_CONFLICT"}
++        val message=if(!actual){
++            require(s.getBoolean("canActivate")&&!s.getBoolean("active")){"Q08_ACTIVATION_NOT_AVAILABLE"}
++            require(req.getLong("expectedRevision")==s.getLong("revision")){"V3_REVISION_CONFLICT"}
++            "Включить запись Левемира через GFStorage? Включение не создаёт запись об уколе."
++        }else{
++            require(s.getBoolean("active")){"Q08_PRODUCER_NOT_ACTIVATED"}
++            require(req.opt("units") is Number){"Q08_DOSE_TYPE_INVALID"}
++            val requestId=req.getString("requestId");require(GfV3WriteContract.validId(requestId)&&requestId.length<=96){"Q08_REQUEST_ID_INVALID"}
++            val site=sites[req.getString("site")]?:throw IllegalArgumentException("Q08_SITE_INVALID")
++            val at=GfV3Q08Rules.parseUtc(req.getString("occurredAtUtc"));val slot=req.getString("slot")
++            GfV3Q08Rules.validateManual(req.getDouble("units"),site,slot,at,Instant.now())
++            val settings=storage.readShellPort("settings")
++            require(settings.getString("profileId")==req.getString("profileId")){"Q08_PROFILE_CONFLICT"}
++            val zone=java.time.ZoneId.of(settings.getJSONObject("data").getJSONObject("profile").getString("timeZone"))
++            val local=at.atZone(zone).format(java.time.format.DateTimeFormatter.ofPattern("dd.MM.uuuu HH:mm:ss XXX"))
++            "Подтвердите уже сделанный укол Левемира.\nКоличество: ${req.getDouble("units")} ЕД\nМесто: ${req.getString("site")}\nВремя: $local ($zone)\nЗапланированный укол не подтверждайте."
++        }
++        val ticket=UUID.randomUUID().toString()
++        synchronized(lock){require(!closed&&pending.isEmpty()){"Q08_BUSY"};pending[ticket]=Pending(req)}
++        try{onConfirm(message){approved->
++            val p=synchronized(lock){val x=pending[ticket];if(!closed&&x?.state=="PENDING"){if(!approved){x.state="CANCELLED";x.result=JSONObject().put("accepted",false).put("code","OWNER_CANCELLED");null}else{x.state="APPLYING";x}}else null}
++            if(p!=null)try{worker.execute{
++                try{val r=apply(p.request);finish(ticket,"FINISHED",r)}catch(e:Exception){finish(ticket,"REJECTED",JSONObject().put("accepted",false).put("code",e.message?:"Q08_NATIVE_REJECTED"))}
++            }}catch(_:Exception){finish(ticket,"REJECTED",JSONObject().put("accepted",false).put("code","Q08_WORKER_UNAVAILABLE"))}
++        }}catch(e:Exception){synchronized(lock){pending.remove(ticket)};throw e}
++        return JSONObject().put("ticket",ticket).put("state","PENDING")
++    }
++    private fun apply(r:JSONObject):JSONObject = if(r.getString("command")=="activate") {
++        installer.activateAfterAndroidDialog(r.getString("profileId"),r.getLong("expectedRevision"),true).put("accepted",true).put("activationOnly",true)
++    }else facts.confirm(r.getString("profileId"),r.getString("requestId"),r.getLong("expectedRevision"),r.getString("slot"),r.getDouble("units"),sites.getValue(r.getString("site")),r.getString("occurredAtUtc"),true)
++    private fun finish(ticket:String,state:String,result:JSONObject)=synchronized(lock){pending[ticket]?.let{if(!closed&&it.state=="APPLYING"){it.state=state;it.result=result}}}
++    fun poll(ticket:String):JSONObject=synchronized(lock){
++        require(ticket.length in 10..128){"Q08_TICKET_INVALID"}
++        val p=pending[ticket]?:return@synchronized JSONObject().put("state","UNKNOWN_TICKET")
++        JSONObject().put("state",p.state).also{if(p.state !in setOf("PENDING","APPLYING")){it.put("result",p.result?:JSONObject.NULL);pending.remove(ticket)}}
++    }
++    fun close(){synchronized(lock){closed=true;pending.clear()};worker.shutdown();worker.awaitTermination(5,TimeUnit.SECONDS)}
++}
+diff --git a/android-app/app/src/main/java/org/glukopapa/v3/m00/MainActivity.kt b/android-app/app/src/main/java/org/glukopapa/v3/m00/MainActivity.kt
+index 2a5dbce..9c1f24a 100644
+--- a/android-app/app/src/main/java/org/glukopapa/v3/m00/MainActivity.kt
++++ b/android-app/app/src/main/java/org/glukopapa/v3/m00/MainActivity.kt
+@@ -22,6 +22,7 @@ class MainActivity : Activity() {
+     private lateinit var nutritionDrafts:GfV3Q04NutritionDrafts
+     private lateinit var activityQueue:GfV3Q05OwnerQueue
+     private lateinit var injectionQueue:GfV3Q07OwnerQueue
++    private lateinit var levemirQueue:GfV3Q08OwnerQueue
+     private val origin = "https://appassets.androidplatform.net"
+     override fun onCreate(savedInstanceState: Bundle?) {
+         super.onCreate(savedInstanceState)
+@@ -58,6 +59,9 @@ class MainActivity : Activity() {
+         editQueue.registerAcceptedOwner("GFInjectionFact") { intent ->
+             nativeModuleGateway.bindInstalledAdapter("GFInjectionFact").correctJournalIntent(intent)
+         }
++        editQueue.registerAcceptedOwner("GFLevemirReview") { intent ->
++            nativeModuleGateway.bindInstalledAdapter("GFLevemirReview").correctJournalIntent(intent)
++        }
+         // Integration wiring is compiled but GFStorage controls enablement:
+         // QA candidate registry remains NOT_ACCEPTED; owner approval is a separate gate.
+         val settingsAdapter=GfV3SettingsTrustedAdapter(nativeModuleGateway.bindInstalledAdapter("GFSettings"))
+@@ -95,6 +99,16 @@ class MainActivity : Activity() {
+                     .setOnCancelListener{finish(false)}.show()
+             }
+         }
++        val basalPort=nativeModuleGateway.bindInstalledAdapter("GFLevemirReview")
++        levemirQueue=GfV3Q08OwnerQueue(GfV3Q08InjectionFacts(basalPort),GfV3Q08History(basalPort,v3),v3,GfV3Q08ModuleInstaller(helper)){msg,finish->
++            runOnUiThread {
++                if(isFinishing||isDestroyed){finish(false);return@runOnUiThread}
++                AlertDialog.Builder(this).setTitle("Левемир — подтверждение владельца")
++                    .setMessage(msg).setPositiveButton("Подтвердить"){_,_->finish(true)}
++                    .setNegativeButton("Отмена"){_,_->finish(false)}
++                    .setOnCancelListener{finish(false)}.show()
++            }
++        }
+         web=WebView(this).apply {
+             layoutParams=ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.MATCH_PARENT)
+             settings.javaScriptEnabled=true
+@@ -109,7 +123,7 @@ class MainActivity : Activity() {
+             settings.mixedContentMode=WebSettings.MIXED_CONTENT_NEVER_ALLOW
+             webViewClient=object:WebViewClient(){
+                 override fun shouldOverrideUrlLoading(view:WebView?, request:WebResourceRequest?):Boolean =
+-                    request?.url?.let{ it.scheme!="https" || it.host!="appassets.androidplatform.net" || it.path!="/" && it.path!="/index.html" && it.path!="/q01/settings.html" && it.path!="/q02/backup.html" && it.path!="/q03/normalized-facts.html" && it.path!="/q04/nutrition.html" && it.path!="/q05/activity.html" && it.path!="/q06/guidance.html" && it.path!="/q07/rinfast.html" }?:true
++                    request?.url?.let{ it.scheme!="https" || it.host!="appassets.androidplatform.net" || it.path!="/" && it.path!="/index.html" && it.path!="/q01/settings.html" && it.path!="/q02/backup.html" && it.path!="/q03/normalized-facts.html" && it.path!="/q04/nutrition.html" && it.path!="/q05/activity.html" && it.path!="/q06/guidance.html" && it.path!="/q07/rinfast.html" && it.path!="/q08/levemir.html" }?:true
+                 override fun shouldInterceptRequest(view:WebView?,request:WebResourceRequest?):WebResourceResponse? {
+                     val u=request?.url ?: return blocked()
+                     // loadDataWithBaseURL sets the offline origin but DOES NOT map
+@@ -130,6 +144,7 @@ class MainActivity : Activity() {
+             addJavascriptInterface(GfV3Q05Bridge(activityQueue),"GPV3Q05Native")
+             addJavascriptInterface(GfV3Q06Bridge(GfV3Q06ContextAdapter(v3)),"GPV3Q06Native")
+             addJavascriptInterface(GfV3Q07Bridge(injectionQueue),"GPV3Q07Native")
++            addJavascriptInterface(GfV3Q08Bridge(levemirQueue),"GPV3Q08Native")
+         }
+         setContentView(web)
+         val html=assets.open("www/index.html").bufferedReader().use{it.readText()}
+@@ -142,6 +157,7 @@ class MainActivity : Activity() {
+         settingsQueue.cancelPendingOnDestroy()
+         activityQueue.close()
+         injectionQueue.close()
++        levemirQueue.close()
+         backupOwnerUi.shutdown()
+         web.removeJavascriptInterface("GPV3V3Bridge")
+         web.removeJavascriptInterface("GPV3Q02Native")
+@@ -149,6 +165,7 @@ class MainActivity : Activity() {
+         web.removeJavascriptInterface("GPV3Q05Native")
+         web.removeJavascriptInterface("GPV3Q06Native")
+         web.removeJavascriptInterface("GPV3Q07Native")
++        web.removeJavascriptInterface("GPV3Q08Native")
+         web.destroy()
+         helper.close()
+         super.onDestroy()

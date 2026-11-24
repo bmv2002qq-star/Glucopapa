@@ -162,6 +162,15 @@ jobs:
           cd q07-ci
           git apply --check "$GITHUB_WORKSPACE/qa-transfer/q08/Q08_native_source_only_v042.patch"
           git apply "$GITHUB_WORKSPACE/qa-transfer/q08/Q08_native_source_only_v042.patch"
+      - name: Apply Q08 v043 native UI and owner confirmation overlay
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat qa-transfer/q08/q08-ui-v043-part-*.patch > /tmp/q08-ui-v043.patch
+          echo '4ffbe56c218265b044c48a314e90939d052770cb1d3d6b5e48bcb32edd14d3e5  /tmp/q08-ui-v043.patch' | sha256sum -c -
+          cd q07-ci
+          git apply --check /tmp/q08-ui-v043.patch
+          git apply /tmp/q08-ui-v043.patch
       - name: Q08 v042 exact UTC and transport regression (synthetic fixtures only)
         shell: bash
         run: |
@@ -196,9 +205,9 @@ jobs:
         if: always()
         run: |
           set -euo pipefail
-          echo '9059478fe243c85bbca4efc5adee5ea7ba8809902efda924d5937987119921bd  qa-transfer/q08/verify_q08_android_xml_v042.py' | sha256sum -c -
+          echo 'd61f68042bf583cc2593356452bf9b616fd12622a54e971e6cd8c3f8436238ff  qa-transfer/q08/verify_q08_android_xml_v043.py' | sha256sum -c -
           mkdir -p qa-results/q08
-          python3 qa-transfer/q08/verify_q08_android_xml_v042.py q07-ci/android-app/app/build/outputs/androidTest-results/connected | tee qa-results/q08/gate.json
+          python3 qa-transfer/q08/verify_q08_android_xml_v043.py q07-ci/android-app/app/build/outputs/androidTest-results/connected | tee qa-results/q08/gate.json
       - name: Upload Android Q08 APK and XML proof
         if: always()
         uses: actions/upload-artifact@v4

@@ -1,0 +1,200 @@
+diff --git a/android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q08LevemirNativeInstrumentedTest.kt b/android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q08LevemirNativeInstrumentedTest.kt
+index 6c3c5d7..1582aa8 100644
+--- a/android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q08LevemirNativeInstrumentedTest.kt
++++ b/android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q08LevemirNativeInstrumentedTest.kt
+@@ -97,4 +97,48 @@ class Q08LevemirNativeInstrumentedTest {
+             assertEquals(0,count("v3_record_corrections"));assertEquals(1,count("v3_write_receipts"))
+         } finally {encrypted.fill(0);pass.fill(' ')}
+     }
++    private fun terminal(queue:GfV3Q08OwnerQueue,ticket:String):JSONObject {
++        repeat(120){val x=queue.poll(ticket);if(x.getString("state") !in setOf("PENDING","APPLYING"))return x;Thread.sleep(25)}
++        error("Q08 owner queue timed out")
++    }
++    private fun activation():JSONObject=JSONObject().put("command","activate").put("profileId",profile).put("expectedRevision",storage.revision())
++    private fun actual(requestId:String="qa-native-ui-one"):JSONObject=JSONObject().put("command","recordLevemirActual").put("profileId",profile).put("expectedRevision",storage.revision()).put("slot","morning").put("units",1.5).put("site","Ягодица").put("occurredAtUtc",at).put("requestId",requestId)
++    @Test fun nativeInstallerActivationSeparateFromActualAndGrantBound(){
++        val ins=GfV3Q08ModuleInstaller(helper);val r=storage.revision()
++        reject{ins.activateAfterAndroidDialog(profile,r,false)};reject{ins.activateAfterAndroidDialog("other-profile",r,true)};reject{ins.activateAfterAndroidDialog(profile,r+1,true)}
++        assertEquals(r,storage.revision());assertEquals(0,count("v3_events"))
++        val installed=ins.activateAfterAndroidDialog(profile,r,true);assertTrue(installed.getBoolean("activated"));assertFalse(installed.getBoolean("injectionRecorded"))
++        assertEquals(r+1,storage.revision());assertEquals(0,count("v3_events"));assertEquals(0,count("v3_write_receipts"))
++        val again=ins.activateAfterAndroidDialog(profile,storage.revision(),true);assertTrue(again.getBoolean("alreadyActive"));assertEquals(r+1,storage.revision())
++        helper.writableDatabase.execSQL("DELETE FROM v3_write_grants WHERE module_id=?",arrayOf(GfV3Q08Rules.OWNER));reject{ins.activateAfterAndroidDialog(profile,storage.revision(),true)}
++    }
++    @Test fun ownerQueueRejectsForgedConsentAndSeparatesCancelActivateActualReplay(){
++        var callback:((Boolean)->Unit)?=null
++        val queue=GfV3Q08OwnerQueue(facts,GfV3Q08History(gateway.bindInstalledAdapter(GfV3Q08Rules.OWNER),storage),storage,GfV3Q08ModuleInstaller(helper)){_,done->callback=done}
++        try{
++            assertFalse(queue.status().getBoolean("active"));reject{queue.snapshot()};reject{queue.enqueue(actual().toString())};reject{queue.enqueue(activation().put("approved",true).toString())}
++            var ticket=queue.enqueue(activation().toString()).getString("ticket");assertEquals("PENDING",queue.poll(ticket).getString("state"));assertEquals(0,count("v3_events"));callback!!(false)
++            assertEquals("CANCELLED",terminal(queue,ticket).getString("state"));assertFalse(queue.status().getBoolean("active"))
++            ticket=queue.enqueue(activation().toString()).getString("ticket");callback!!(true);callback!!(false);val activated=terminal(queue,ticket);assertEquals("FINISHED",activated.getString("state"));assertTrue(activated.getJSONObject("result").getBoolean("activationOnly"));assertEquals(0,count("v3_events"));assertTrue(queue.status().getBoolean("active"))
++            val actual=actual();reject{queue.enqueue(JSONObject(actual.toString()).put("approved",true).toString())}
++            ticket=queue.enqueue(actual.toString()).getString("ticket");assertEquals(0,count("v3_events"));callback!!(true);val done=terminal(queue,ticket).getJSONObject("result");assertTrue(done.getBoolean("created"));assertEquals(1,count("v3_events"));assertEquals(1,count("v3_write_receipts"))
++            ticket=queue.enqueue(actual.toString()).getString("ticket");callback!!(true);val replay=terminal(queue,ticket).getJSONObject("result");assertFalse(replay.getBoolean("created"));assertEquals(done.getString("eventId"),replay.getString("eventId"));assertEquals(1,count("v3_events"))
++            val h=queue.snapshot();assertEquals(profile,h.getString("profileId"));assertFalse(h.getJSONObject("data").has("coefficients"));assertEquals(1,h.getJSONObject("data").getJSONArray("events").length())
++        }finally{queue.close()}
++    }
++    @Test fun nativeLocalTimeUsesProfileZoneAndRejectsInvalidWallClock(){
++        GfV3Q08ModuleInstaller(helper).activateAfterAndroidDialog(profile,storage.revision(),true)
++        val queue=GfV3Q08OwnerQueue(facts,GfV3Q08History(gateway.bindInstalledAdapter(GfV3Q08Rules.OWNER),storage),storage,GfV3Q08ModuleInstaller(helper)){_,done->done(false)}
++        try{
++            val request=JSONObject().put("profileId",profile).put("expectedRevision",storage.revision()).put("date","2025-01-30").put("time","08:00")
++            val x=queue.resolveLocalTime(request.toString());assertEquals("2025-01-30T05:00:00Z",x.getString("occurredAtUtc"));assertEquals("Europe/Minsk",x.getString("timeZone"));reject{queue.resolveLocalTime(JSONObject(request.toString()).put("date","2025-02-30").toString())};reject{queue.resolveLocalTime(JSONObject(request.toString()).put("expectedRevision",storage.revision()+1).toString())}
++            assertEquals(0,count("v3_events"))
++        }finally{queue.close()}
++    }
++    @Test fun journalOwnerCorrectionKeepsActualBasalIdentity(){
++        GfV3Q08ModuleInstaller(helper).activateAfterAndroidDialog(profile,storage.revision(),true)
++        val id=shot().getString("eventId");val intent=JSONObject().put("type","JOURNAL_EDIT_INTENT_V1").put("source","M01_JOURNAL").put("recordId",id).put("kind","injection").put("ownerModule",GfV3Q08Rules.OWNER).put("profileId",profile).put("timeZone","Europe/Minsk").put("expectedRevision",storage.revision()).put("expectedRecordVersion",0).put("reason","QA actual correction").put("changes",JSONObject().put("dose",2.0).put("insulin","levemir").put("site","Плечо"))
++        assertEquals(GfV3Q08Rules.OWNER,GfV3OwnerResolver(helper).resolve(intent));val result=gateway.bindInstalledAdapter(GfV3Q08Rules.OWNER).correctJournalIntent(intent);assertTrue(result.getBoolean("applied"));assertEquals(1,count("v3_record_corrections"));val e=storage.readShellPort("journal").getJSONObject("data").getJSONArray("events").getJSONObject(0);assertEquals(id,e.getString("eventId"));assertEquals("basal",e.getString("insulinClass"));assertEquals("arm",e.getString("injectionSite"));assertEquals(2.0,e.getDouble("units"),0.00001)
++    }
++
+ }
+diff --git a/android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q08LevemirWebViewInstrumentedTest.kt b/android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q08LevemirWebViewInstrumentedTest.kt
+new file mode 100644
+index 0000000..d3add34
+--- /dev/null
++++ b/android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q08LevemirWebViewInstrumentedTest.kt
+@@ -0,0 +1,64 @@
++package org.glukopapa.v3.m00
++
++import android.content.Intent
++import android.view.ViewGroup
++import android.view.accessibility.AccessibilityNodeInfo
++import android.webkit.WebView
++import androidx.test.ext.junit.runners.AndroidJUnit4
++import androidx.test.platform.app.InstrumentationRegistry
++import org.junit.Assert.*
++import org.junit.Test
++import org.junit.runner.RunWith
++import org.json.JSONArray
++import org.json.JSONObject
++import java.util.concurrent.CountDownLatch
++import java.util.concurrent.TimeUnit
++import java.util.concurrent.atomic.AtomicReference
++
++/** Actual bundled WebView + Android dialog + GFStorage. Synthetic instrumentation database only. */
++@RunWith(AndroidJUnit4::class)
++class Q08LevemirWebViewInstrumentedTest {
++    private val instr get()=InstrumentationRegistry.getInstrumentation()
++    private val ctx get()=instr.targetContext
++    private fun js(web:WebView,code:String):String{
++        val done=CountDownLatch(1);val result=AtomicReference("null")
++        instr.runOnMainSync{web.evaluateJavascript(code){v->result.set(v);done.countDown()}}
++        assertTrue("Q08 JS timeout",done.await(25,TimeUnit.SECONDS));return result.get()
++    }
++    private fun until(web:WebView,code:String,expected:String){repeat(70){if(js(web,code)==expected)return;Thread.sleep(250)};fail("Q08 WebView expected $expected for $code; got ${js(web,code)}")}
++    private fun decoded(raw:String)=JSONObject(JSONArray("[$raw]").getString(0))
++    private fun eventCount():Int=GfDbHelper(ctx).use{h->h.readableDatabase.rawQuery("SELECT COUNT(*) FROM v3_events",null).use{c->c.moveToFirst();c.getInt(0)}}
++    private fun dialogButton(label:String){
++        repeat(80){
++            val root=instr.uiAutomation.rootInActiveWindow
++            val nodes=root?.findAccessibilityNodeInfosByText(label)?:emptyList()
++            for(n in nodes){if(n.text?.toString()==label&&n.isClickable&&n.performAction(AccessibilityNodeInfo.ACTION_CLICK))return}
++            Thread.sleep(250)
++        }
++        fail("Q08 native dialog button missing: $label")
++    }
++    @Test fun approvedScreenNativeActivationAndActualConfirmationAreSeparate(){
++        instr.waitForIdleSync();ctx.deleteDatabase("glukopapa_v3.db")
++        GfDbHelper(ctx).use{h->h.writableDatabase.execSQL("UPDATE v3_meta SET profile_id='q08-web-qa',timezone='Europe/Minsk' WHERE id=1")}
++        val activity=instr.startActivitySync(Intent(ctx,MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) as MainActivity
++        try{
++            val web=activity.findViewById<ViewGroup>(android.R.id.content).getChildAt(0) as WebView
++            until(web,"document.readyState","\"complete\"")
++            js(web,"document.querySelector('[data-module=GFInjectionEntry]').click();true")
++            until(web,"location.pathname","\"/q08/levemir.html\"");until(web,"document.readyState","\"complete\"")
++            assertEquals("\"undefined\"",js(web,"typeof GPV3Q08Native.append"));assertEquals("\"undefined\"",js(web,"typeof GPV3Q08Native.setCoverageComplete"))
++            until(web,"document.getElementById('q08-activation').hidden","false");assertEquals(0,eventCount());assertFalse(decoded(js(web,"GPV3Q08Native.readStatus()")).getBoolean("active"))
++            assertEquals( "true",js(web,"document.querySelectorAll('details[open]').length===0"))
++            js(web,"document.getElementById('q08-activate').click();true");dialogButton("Отмена");until(web,"document.getElementById('q08-activation-status').textContent.includes('OWNER_CANCELLED')","true");assertEquals(0,eventCount())
++            js(web,"document.getElementById('q08-activate').click();true");dialogButton("Подтвердить");until(web,"document.getElementById('q08-activation')?.hidden===true","true");until(web,"JSON.parse(GPV3Q08Native.readStatus()).active===true","true");assertEquals(0,eventCount())
++            until(web,"document.getElementById('zone-morning')?.textContent==='Europe/Minsk'","true")
++            js(web,"document.getElementById('dose-morning').value='1.5';document.getElementById('date-morning').value='2025-01-30';document.getElementById('time-morning').value='08:00';document.getElementById('site-morning').value='Ягодица';document.querySelector('#form-morning button[type=submit]').click();true")
++            // Pending owner confirmation must not create a fact.
++            assertEquals(0,eventCount());dialogButton("Подтвердить")
++            until(web,"document.getElementById('message-morning').textContent.includes('Записано в GFStorage')","true");assertEquals(1,eventCount())
++            val snapshot=decoded(js(web,"GPV3Q08Native.readState()"));val e=snapshot.getJSONObject("data").getJSONArray("events").getJSONObject(0)
++            assertEquals("levemir",e.getString("insulinId"));assertEquals("basal",e.getString("insulinClass"));assertEquals("2025-01-30T05:00:00Z",e.getString("occurredAtUtc"));assertEquals("buttock",e.getString("injectionSite"));assertEquals(1.5,e.getDouble("units"),0.000001)
++            assertEquals("\"\"",js(web,"document.getElementById('dose-morning').value"))
++        }finally{GfV3QaActivityLifecycle.finishAndAwait(instr,activity);ctx.deleteDatabase("glukopapa_v3.db")}
++    }
++}
+diff --git a/android-app/app/src/main/assets/db/writer_grants_v0.12.json b/android-app/app/src/main/assets/db/writer_grants_v0.12.json
+index ea4a6a2..0df70ee 100644
+--- a/android-app/app/src/main/assets/db/writer_grants_v0.12.json
++++ b/android-app/app/src/main/assets/db/writer_grants_v0.12.json
+@@ -154,5 +154,11 @@
+     "role": "syncWriter",
+     "grantStatus": "OWNER_GRANTED_EXPERIMENTAL",
+     "implementationStatus": "PREPARED_NATIVE"
++  },
++  {
++    "moduleId": "GFLevemirReview",
++    "role": "actionWriter",
++    "grantStatus": "OWNER_GRANTED_EXPERIMENTAL",
++    "implementationStatus": "PREPARED_NATIVE"
+   }
+-]
+\ No newline at end of file
++]
+diff --git a/android-app/app/src/main/assets/www/index.html b/android-app/app/src/main/assets/www/index.html
+index 82ba692..5a49473 100644
+--- a/android-app/app/src/main/assets/www/index.html
++++ b/android-app/app/src/main/assets/www/index.html
+@@ -158,7 +158,7 @@ html{background:#f4f8f8}
+         </div>
+         <p class="micro-text" id="forecastPreviewNote">Здесь будет 4 линии: GFConsensus, GFForecast, GFxDrip, GFAPSEnhancer. Пока расчётов нет.</p>
+         <div class="two-actions"><button data-module="GFLOW" class="action-btn low" type="button"><span>↓ Низкий сахар</span><small>→ GFLOW</small></button><button data-module="GFHIGH" class="action-btn high" type="button"><span>↑ Высокий сахар</span><small>→ GFHIGH</small></button></div>
+-        <button data-module="GFInjectionEntry" class="action-btn insulin wide" type="button"><span class="action-icon">✦</span><span class="action-copy"><b>Записать Левемир</b><small>→ GFInjectionEntry / Levemir</small></span><span aria-hidden="true" class="chevron">›</span></button>
++        <button data-module="GFInjectionEntry" class="action-btn insulin wide" type="button"><span class="action-icon">✦</span><span class="action-copy"><b>Записать Левемир</b><small>→ Q08 / фактическое введение</small></span><span aria-hidden="true" class="chevron">›</span></button>
+         <button data-module="GFRinFast" class="action-btn insulin wide" type="button"><span class="action-icon">✦</span><span class="action-copy"><b>Записать РинФаст</b><small>→ Q07 / фактическое введение</small></span><span aria-hidden="true" class="chevron">›</span></button>
+       </article>
+       <div class="two-actions action-margin"><button data-module="GFSport" type="button" class="action-btn neutral"><span>◷ Спорт</span><small>→ GFSport</small></button><button data-module="GFIllness" type="button" class="action-btn neutral"><span>✳ Болезнь</span><small>→ GFIllness</small></button></div>
+@@ -783,6 +783,10 @@ document.addEventListener('click',function(ev){
+   ev.preventDefault();ev.stopImmediatePropagation();
+   location.assign('/q06/guidance.html');return;
+  }
++ if(button.dataset.module==='GFInjectionEntry'){
++  ev.preventDefault();ev.stopImmediatePropagation();
++  location.assign('/q08/levemir.html');return;
++ }
+  if(button.dataset.module==='GFRinFast'){
+   ev.preventDefault();ev.stopImmediatePropagation();
+   location.assign('/q07/rinfast.html');return;
+diff --git a/android-app/app/src/main/assets/www/q08/levemir.html b/android-app/app/src/main/assets/www/q08/levemir.html
+new file mode 100644
+index 0000000..9f81f9f
+--- /dev/null
++++ b/android-app/app/src/main/assets/www/q08/levemir.html
+@@ -0,0 +1,305 @@
++<!DOCTYPE html>
++
++<html lang="ru"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/><meta content="light" name="color-scheme"/><title>ГлюкоПапа V3 · Q08 Левемир — дизайн</title>
++<style>
++:root{font-family:Inter,'Segoe UI',system-ui,-apple-system,sans-serif;--ink:#17273a;--muted:#6c7a8a;--line:#dde7ec;--mint:#0a827a;--mintlite:#e3f5f1;--bg:#f4f7fa;--card:white;--amber:#946018;--amblite:#fff5e4;--dark:#243e56;--danger:#b94e43;font-synthesis:none}
++*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-size:14px}button,input,select{font:inherit}button{cursor:pointer}button:disabled{cursor:not-allowed;opacity:.55}.page{max-width:1080px;margin:0 auto;padding:26px 20px 80px}.top{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;margin-bottom:22px}.eyebrow{font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:800;color:var(--mint)}h1{font-size:34px;letter-spacing:-.035em;margin:4px 0 4px;font-weight:770}.subtitle{color:var(--muted);line-height:1.45}.badge{white-space:nowrap;border:1px solid #d0eae5;background:#e9f8f3;color:#25796d;border-radius:99px;padding:8px 12px;font-size:12px;font-weight:700}.topnote{border:1px solid #d6e3ed;border-left:4px solid #89a6bb;border-radius:12px;background:#fafdff;color:#486073;padding:12px 14px;font-size:12px;line-height:1.5;margin-bottom:20px}.cards{display:grid;grid-template-columns:1fr 1fr;gap:16px}.card{background:var(--card);border:1px solid var(--line);border-radius:20px;box-shadow:0 3px 16px #1a416709;padding:20px}.slot{position:relative;min-height:214px}.slotHeader{display:flex;align-items:center;justify-content:space-between;gap:10px}.slotTitle{display:flex;align-items:center;gap:10px;font-weight:760;font-size:17px}.slotIcon{width:39px;height:39px;border-radius:12px;background:#e3f3f6;display:grid;place-items:center;color:#247894;font-size:20px}.pill{font-size:11px;font-weight:720;border-radius:100px;background:var(--amblite);color:var(--amber);padding:6px 9px}.slotTime{font-size:33px;font-weight:775;letter-spacing:-.04em;margin:14px 0 0}.hint{color:var(--muted);font-size:12px;margin:2px 0 14px;line-height:1.45}.slotfoot{display:flex;gap:10px;align-items:center;justify-content:space-between}.primary{border:0;border-radius:11px;background:var(--mint);color:white;font-weight:750;padding:11px 16px;box-shadow:0 3px 8px #007b6830}.primary:hover{background:#006d65}.ghost{background:white;border:1px solid var(--line);color:#365069;border-radius:11px;padding:10px 12px;font-weight:710}.ghost:hover{background:#f2f9f8}.dots{font-size:21px;line-height:20px;padding:9px 12px;border:1px solid var(--line);background:#fff;border-radius:10px;color:#64788d}.sep{margin:22px 0 12px;display:flex;justify-content:space-between;align-items:center;gap:12px}h2{font-size:18px;margin:0;letter-spacing:-.015em}.mini{font-size:12px;color:var(--muted)}.strip{display:flex;gap:12px}.metric{flex:1;padding:15px 16px;border:1px solid var(--line);border-radius:15px;background:#fff}.metric .l{font-size:11px;color:var(--muted);font-weight:650}.metric .v{font-size:21px;font-weight:780;margin-top:5px}.metric .v.info{font-size:13px;color:#385e77;margin-top:7px}.graphCard{padding:19px 20px}.graphHead{display:flex;align-items:flex-start;justify-content:space-between;gap:18px}.graphHint{font-size:12px;line-height:1.5;color:var(--muted);margin-top:6px}.graphOuter{height:220px;position:relative;margin-top:18px;border-radius:13px;background:linear-gradient(180deg,#fafdfd,#f6f9fc);border:1px solid #e5ebf0;overflow:hidden}.plot{width:100%;height:100%;display:block}.plot text{fill:#91a1b1;font-size:11px}.plot .grid{stroke:#e4ebf2;stroke-width:1}.legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:13px;font-size:11px;color:#657a89}.legend span{display:flex;align-items:center;gap:6px}.dot{width:11px;height:3px;display:inline-block;border-radius:3px}.graphEmpty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;text-align:center}.emptyBox{background:#ffffffdf;border:1px solid #e3eaf0;border-radius:13px;padding:13px 18px;max-width:300px;font-size:13px;line-height:1.5;color:#586d7c;box-shadow:0 4px 18px #2b4a6812}.warning{margin-top:12px;color:#846329;font-size:11px;line-height:1.6;background:#fff9e9;border-radius:10px;padding:10px 13px}.timeline{display:flex;flex-direction:column;gap:10px}.event{border:1px solid var(--line);border-radius:13px;padding:13px 16px;background:#fff;display:flex;align-items:center;gap:13px}.eventBullet{width:9px;height:9px;background:#0e9481;border-radius:50%}.eventContent{flex:1}.eventHead{font-weight:700}.eventSub{font-size:12px;color:var(--muted);margin-top:3px}.emptyEvents{border:1px dashed #cad9e2;color:#718393;border-radius:12px;background:#fafcfd;padding:19px;text-align:center;line-height:1.5}.mutedSmall{color:#7b8a97;font-size:11px}.overlay{position:fixed;inset:0;background:#16273991;display:none;z-index:9;align-items:center;justify-content:center;padding:16px}.overlay.show{display:flex}.modal{background:white;border-radius:20px;width:min(450px,100%);max-height:92vh;overflow:auto;box-shadow:0 24px 70px #10263942}.modalHeader{display:flex;justify-content:space-between;align-items:center;gap:15px;padding:20px 22px 8px}.modal h3{margin:0;font-size:20px;letter-spacing:-.02em}.close{border:0;background:#f1f5f8;color:#637d91;border-radius:9px;padding:7px 11px;font-size:18px}.modalBody{padding:14px 22px 22px}.notice{color:#76602a;background:#fffae9;border:1px solid #ffedc6;font-size:12px;border-radius:10px;padding:10px 12px;line-height:1.5;margin:0 0 14px}.field{margin:12px 0}.field label{display:block;font-weight:720;color:#415569;font-size:12px;margin-bottom:7px}.field input,.field select{width:100%;height:43px;border:1px solid #d3dfe7;border-radius:10px;color:var(--ink);background:#fff;padding:0 12px;outline:none}.field input:focus,.field select:focus{border-color:var(--mint);box-shadow:0 0 0 2px #0a827a20}.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}.modalFoot{margin-top:18px;display:flex;justify-content:flex-end;gap:10px}.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#1d4453;color:#fff;border-radius:13px;padding:11px 16px;max-width:calc(100% - 32px);font-size:12px;line-height:1.5;display:none;z-index:20;box-shadow:0 9px 24px #13364c33}.toast.show{display:block}.exampleFlag{display:none;color:#a06419;font-size:11px;margin-left:8px}.exampleFlag.show{display:inline}.footer{font-size:11px;color:#8a97a3;margin-top:25px;line-height:1.5}
++@media(max-width:700px){.page{padding:17px 12px 75px}.top{margin-bottom:15px}.top h1{font-size:28px}.badge{font-size:10px;padding:7px 9px}.cards{grid-template-columns:1fr;gap:12px}.slot{min-height:auto;padding:17px}.slotTime{font-size:30px;margin-top:10px}.card{border-radius:16px}.strip{display:grid;grid-template-columns:1fr 1fr;gap:9px}.metric{padding:13px}.metric:last-child{grid-column:1/-1}.graphHead{display:block}.graphHead button{margin-top:12px}.graphCard{padding:16px}.modalHeader{padding:17px 16px 6px}.modalBody{padding:10px 16px 18px}.row{grid-template-columns:1fr}.graphOuter{height:184px}}
++@media(max-width:355px){.top{display:block}.badge{display:inline-block;margin-top:9px}.slotfoot .primary{padding:11px}.mini{font-size:10px}.slotTitle{font-size:16px}}
++.calcbar{margin-bottom:12px}.full{width:100%}.doseRow{display:grid;grid-template-columns:44px 1fr 44px;gap:8px}.doseRow input{min-width:0;text-align:center}.inlineRow{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.inlineRow input{min-width:0;padding:0 7px}.result{margin:12px 0;background:var(--mintlite)}.field{margin:10px 0}.slot form>.hint{margin-bottom:0}.slot .pill{white-space:nowrap;font-size:10px}.slotTitle{font-size:16px}.headRight{text-align:right;max-width:185px}.headRight .subtitle{font-size:11px;line-height:1.35}.headRight .badge{display:inline-block;margin-top:5px;font-size:10px;padding:4px 8px}.calcDetails{margin:6px 0 0;color:#365069;font-size:12px}.calcDetails summary{cursor:pointer;padding:5px 0;font-weight:700;width:fit-content}.calcInner{background:#f6fafb;border:1px solid var(--line);border-radius:10px;padding:10px 12px;line-height:1.45}.calcInner dl{margin:8px 0 0}.calcInner dt{font-weight:700;margin-top:8px}.calcInner dd{margin:2px 0;color:var(--muted)}.calcNotice{color:var(--amber)}@media(max-width:355px){.top{display:flex}.headRight{max-width:145px}} .periodPicker{display:flex;gap:6px;margin:8px 0 12px;border:0;padding:0;min-width:0}.periodPicker legend{font-size:12px;color:var(--muted);padding:0 0 5px}.periodPicker label{flex:1;display:flex;align-items:center;justify-content:center;gap:4px;border:1px solid var(--line);border-radius:9px;padding:10px 3px;cursor:pointer;font-size:13px}.periodPicker label:has(input:checked){background:#e3f1f3;border-color:#33838a}.periodPicker input{width:auto!important;accent-color:#24787e;margin:0}.demoSwitch{display:flex;gap:8px;align-items:center;font-size:13px;margin:10px 0}.demoSwitch input{width:auto!important}.demoNotice{font-size:12px;color:#946018;margin:6px 0}</style></head><body><div class="page">
++<header class="top"><div><div class="eyebrow">ГлюкоПапа V3 / Q08 · SYS-07</div><h1>Левемир</h1></div><div class="headRight"><div class="subtitle">Длительный инсулин<br/>Расписание · подтверждение уколов</div></div></header>
++<section class="card" hidden="" id="q08-activation" style="margin:0 0 12px"><button class="primary full" id="q08-activate" type="button">Включить модуль Левемир</button><p class="hint" id="q08-activation-status"></p></section><section aria-label="Два времени Левемира" class="cards"><article class="card slot" data-slot="morning"><div class="slotHeader"><div class="slotTitle"><span aria-hidden="true" class="slotIcon">☀</span> Утренний укол</div><span class="pill" id="status-morning">Статус неизвестен</span></div><div class="hint">По расписанию: 08:00</div><button class="primary full" id="calculate-morning" type="button">Рассчитать количество инсулина</button><fieldset class="periodPicker" id="period-morning"><legend>Период анализа</legend><label><input checked="" name="period-morning" type="radio" value="3"/> 3 дня</label><label><input name="period-morning" type="radio" value="7"/> 7 дней</label><label><input name="period-morning" type="radio" value="14"/> 14 дней</label></fieldset><details class="calcDetails" id="details-morning"><summary>Расчёт</summary><div class="calcInner"><div class="calcNotice" id="calcStatus-morning" role="status">Расчёт ещё не выполнен.</div><dl></dl></div></details><div class="metric result"><div class="l">Результат расчёта</div><div class="v" id="result-morning">— ЕД</div></div><form id="form-morning"><div class="field"><label for="dose-morning">Фактически введено, ЕД</label><div class="doseRow"><button aria-label="Уменьшить дозу" class="ghost" data-step="-0.5" type="button">−</button><input id="dose-morning" inputmode="decimal" min="0.5" placeholder="Доза" required="" step="0.5" type="number"/><button aria-label="Увеличить дозу" class="ghost" data-step="0.5" type="button">+</button></div></div><div class="row inlineRow"><div class="field"><label for="date-morning">Дата укола</label><input id="date-morning" required="" type="date"/></div><div class="field"><label for="time-morning">Время укола</label><input id="time-morning" required="" type="time"/><span class="mini" id="zone-morning"></span></div></div><div class="field"><label for="site-morning">Место укола</label><select id="site-morning" required=""><option value="">Выбрать место</option><option>Живот</option><option>Бедро</option><option>Плечо</option><option>Ягодица</option></select></div><button class="primary full" type="submit">Подтвердить укол</button><div class="hint" id="message-morning" role="status"></div></form></article><article class="card slot" data-slot="evening"><div class="slotHeader"><div class="slotTitle"><span aria-hidden="true" class="slotIcon">☾</span> Вечерний укол</div><span class="pill" id="status-evening">Статус неизвестен</span></div><div class="hint">По расписанию: 20:00</div><button class="primary full" id="calculate-evening" type="button">Рассчитать количество инсулина</button><fieldset class="periodPicker" id="period-evening"><legend>Период анализа</legend><label><input checked="" name="period-evening" type="radio" value="3"/> 3 дня</label><label><input name="period-evening" type="radio" value="7"/> 7 дней</label><label><input name="period-evening" type="radio" value="14"/> 14 дней</label></fieldset><details class="calcDetails" id="details-evening"><summary>Расчёт</summary><div class="calcInner"><div class="calcNotice" id="calcStatus-evening" role="status">Расчёт ещё не выполнен.</div><dl></dl></div></details><div class="metric result"><div class="l">Результат расчёта</div><div class="v" id="result-evening">— ЕД</div></div><form id="form-evening"><div class="field"><label for="dose-evening">Фактически введено, ЕД</label><div class="doseRow"><button aria-label="Уменьшить дозу" class="ghost" data-step="-0.5" type="button">−</button><input id="dose-evening" inputmode="decimal" min="0.5" placeholder="Доза" required="" step="0.5" type="number"/><button aria-label="Увеличить дозу" class="ghost" data-step="0.5" type="button">+</button></div></div><div class="row inlineRow"><div class="field"><label for="date-evening">Дата укола</label><input id="date-evening" required="" type="date"/></div><div class="field"><label for="time-evening">Время укола</label><input id="time-evening" required="" type="time"/><span class="mini" id="zone-evening"></span></div></div><div class="field"><label for="site-evening">Место укола</label><select id="site-evening" required=""><option value="">Выбрать место</option><option>Живот</option><option>Бедро</option><option>Плечо</option><option>Ягодица</option></select></div><button class="primary full" type="submit">Подтвердить укол</button><div class="hint" id="message-evening" role="status"></div></form></article></section>
++<div class="sep"><h2>График действия Левемира</h2><span class="mini">Отдельно от IOB РинФаста</span></div>
++<section class="card graphCard"><div class="graphHead"><div><b>Левемир · отдельные инъекции и сумма</b><div class="graphHint">Отдельный исследовательский профиль Левемира из подтверждённой истории.</div></div></div>
++<div class="graphOuter"><svg aria-label="График действия Левемира" class="plot" id="graph" preserveaspectratio="none" role="img" viewbox="0 0 760 215"><g class="grid"><path d="M40 25H736 M40 65H736 M40 105H736 M40 145H736 M40 185H736 M40 25V185 M214 25V185 M388 25V185 M562 25V185 M736 25V185" fill="none"></path></g><g><text x="35" y="204">−12 ч</text><text x="205" y="204">−6 ч</text><text x="382" y="204">Сейчас</text><text x="552" y="204">+6 ч</text><text x="706" y="204">+12 ч</text></g></svg><div class="graphEmpty" id="graphEmpty"><div class="emptyBox">Нет проверенной истории для численного профиля.<br/><span class="mutedSmall">IOB не приравнивается к нулю</span></div></div></div><div class="legend"><span><i class="dot" style="background:#2196a2"></i>Утренний укол</span><span><i class="dot" style="background:#b985d4"></i>Вечерний укол</span><span><i class="dot" style="background:#203f59"></i>Условная сумма</span></div><div class="warning">Профиль действия — оценочная модель, не измеренное действие инсулина.</div></section>
++<div class="sep"><h2>Подтверждённые записи</h2><span class="mini">В рабочей версии — через журнал</span></div>
++<section class="timeline" id="events"><div class="emptyEvents">Пока нет подтверждённых уколов Левемира.<br/><span class="mutedSmall">Плановые 08:00 и 20:00 автоматически сюда не переносятся.</span></div></section>
++<div class="footer">Q08 · v0.4.3 · кандидат интеграции. Записи только через подтверждённый порт GFStorage.</div>
++</div>
++<div aria-live="polite" class="toast" id="toast" role="status"></div><script>
++/* Q08 observation-only review. Proposed normalized GFStorage snapshot, not a native bridge. */
++(function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else root.Q08Review=api})(globalThis,function(){
++'use strict';
++const SLOTS=['morning','evening'], PERIODS=[3,7,14], SITES=['Живот','Бедро','Плечо','Ягодица'];
++function validDate(s){return typeof s==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(s)&&Number.isFinite(Date.parse(s+'T00:00:00Z'))&&new Date(s+'T00:00:00Z').toISOString().slice(0,10)===s}
++function ms(s){if(typeof s!=='string'||!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?(?:Z|[+-]\d{2}:\d{2})$/.test(s)||!validDate(s.slice(0,10))||Number(s.slice(11,13))>23||Number(s.slice(14,16))>59||Number(s.slice(17,19))>59)return NaN;return Date.parse(s)}
++function dates(end,n){if(!validDate(end)||!PERIODS.includes(n))throw Error('INVALID_PERIOD');return Array.from({length:n},(_,i)=>new Date(Date.parse(end+'T00:00:00Z')-(n-1-i)*86400000).toISOString().slice(0,10))}
++function snapshot(s){if(!s||!Number.isSafeInteger(s.revision)||s.revision<0||typeof s.profileId!=='string'||!s.profileId||!Number.isFinite(ms(s.asOfUtc))||!validDate(s.lastCompleteLocalDate)||!Array.isArray(s.meals)||!Array.isArray(s.cgm)||!Array.isArray(s.injections))throw Error('INVALID_SNAPSHOT');return s}
++function review(raw,slot,n){const s=snapshot(raw);if(!SLOTS.includes(slot))throw Error('INVALID_SLOT');const kind=slot==='morning'?'dinner':'breakfast', days=dates(s.lastCompleteLocalDate,n), cutoff=ms(s.asOfUtc);const rows=[];
++const cgm=s.cgm.filter(x=>x&&x.provenance==='OBSERVED'&&x.quality==='VALID'&&Number.isFinite(x.mmolL)&&x.mmolL>=1.5&&x.mmolL<=30&&Number.isFinite(ms(x.measuredAtUtc))&&ms(x.measuredAtUtc)<=cutoff).map(x=>({...x,t:ms(x.measuredAtUtc)})).sort((a,b)=>a.t-b.t);

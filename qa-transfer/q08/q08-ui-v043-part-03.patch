@@ -1,0 +1,200 @@
++      remain+=rem;activity+=rate;
++      return {...r,phase:current.phase,remainingFraction:current.remainingFraction,
++        usedFraction:current.usedFraction, remainingModelActionUnits:rem,
++        currentModelActivityUnitsPerHour:rate,
++        modelWindowEndsAtIso:new Date(parseTimestamp(r.administeredAt)+r.populationMeanDurationHours*3600000).toISOString(),
++        futureActionModelUnits:next};
++    });
++    return {...base,status:'MODEL_ESTIMATE',remainingModelActionUnits:remain,
++      currentModelActivityUnitsPerHour:activity,futureActionModelUnits:future,contributions};
++  }
++  return Object.freeze({VERSION,SOURCE,LABEL,DOSE_ANCHORS,PROFILE,WARNINGS,parseTimestamp,
++    estimateDuration,curveGeometry,curve,calculate});
++});
++
++</script><script>
++/* Projection of the Q07 QA2 GFStorage v9 research response. No writes, no network. */
++(function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else root.Q08StorageProjection=api})(globalThis,function(){'use strict';
++const sites={abdomen:'Живот',arm:'Плечо',thigh:'Бедро',buttock:'Ягодица'};
++// Match Kotlin's strict UTC calendar input; JS Date.parse alone normalizes invalid days.
++const validIso=x=>typeof x==='string'&&/^\d{4}-\d{2}-\d{2}T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d{1,9})?Z$/.test(x)&&Number.isFinite(Date.parse(x))&&new Date(Date.parse(x)).toISOString().slice(0,10)===x.slice(0,10);
++// Earliest instant of the local date, using the profile timezone rather than device timezone.
++// Reject a skipped local date rather than claim full transport on an unverified interval.
++function historyStart(asOf,zone){const day=localDate(asOf,zone), target=new Date(Date.parse(day+'T00:00:00Z')-14*86400000).toISOString().slice(0,10);const center=Date.parse(target+'T00:00:00Z');let lo=center-48*3600000,hi=center+48*3600000;while(lo<hi){const mid=lo+Math.floor((hi-lo)/2);if(localDate(mid,zone)<target)lo=mid+1;else hi=mid}if(localDate(lo,zone)!==target)return NaN;return lo-3600000;}
++// Preserve fraction beyond JS milliseconds for the native end-of-window equality check.
++const instantKey=x=>validIso(x)?x.slice(0,19)+'.'+(x.slice(19,-1).replace(/^\./,'').padEnd(9,'0'))+'Z':null;
++function localDate(at,tz){const p=new Intl.DateTimeFormat('en-CA',{timeZone:tz,year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date(at));return ['year','month','day'].map(k=>p.find(x=>x.type===k).value).join('-')}
++function projectResearch(response,asOfUtc){if(!response||response.schemaVersion!==3||response.profileConfigured!==true||typeof response.profileId!=='string'||!response.profileId||!Number.isSafeInteger(response.revision)||response.revision<0||!validIso(asOfUtc))throw Error('INVALID_STORAGE_RESPONSE');const d=response.data;if(!d||d.profile?.profileId!==response.profileId||typeof d.profile.timeZone!=='string'||!['events','cgm','mealSessions','measurements'].every(k=>Array.isArray(d[k])))throw Error('INVALID_STORAGE_DATA');const zone=d.profile.timeZone, today=localDate(asOfUtc,zone), end=new Date(Date.parse(today+'T00:00:00Z')-86400000).toISOString().slice(0,10), asOf=Date.parse(asOfUtc), cutoff=instantKey(asOfUtc);
++const beforeOrAt=x=>validIso(x)&&instantKey(x)<=cutoff;
++const newestFirst=(a,b)=>a===b?0:a>b?-1:1;
++const confirmed=e=>e&&e.eventType==='insulin_injection'&&e.insulinId==='levemir'&&e.status==='confirmed'&&e.provenance==='CONFIRMED_ACTUAL'&&e.userConfirmed===true&&typeof e.eventId==='string'&&beforeOrAt(e.occurredAtUtc)&&typeof e.units==='number'&&Number.isFinite(e.units)&&e.units>0;
++const injections=d.events.filter(confirmed).map(e=>({eventId:e.eventId,insulinId:e.insulinId,status:'CONFIRMED_ACTUAL',units:e.units,occurredAtUtc:e.occurredAtUtc,slot:['morning','evening','additional'].includes(e.levemirSlot)?e.levemirSlot:null,additionalActual:e.levemirSlot==='additional'&&e.additionalActual===true,site:sites[e.injectionSite]||null,doseErrorSuspected:e.doseErrorSuspected===true})).sort((a,b)=>newestFirst(instantKey(a.occurredAtUtc),instantKey(b.occurredAtUtc)));
++// Q04 current schema does not publish mealKind. Do not guess it from time or glucose.
++const meals=d.mealSessions.filter(e=>e&&e.status==='completed'&&e.userConfirmed===true&&['breakfast','dinner'].includes(e.mealKind)&&beforeOrAt(e.startedAtUtc)).map(e=>({kind:e.mealKind,status:'CONFIRMED_ACTUAL',localDate:localDate(e.startedAtUtc,zone),startedAtUtc:e.startedAtUtc}));
++// Source quality contract is deferred to Q09. Only explicitly valid values are projected.
++const cgm=d.cgm.filter(e=>e&&e.provenance==='observed'&&e.quality==='VALID'&&beforeOrAt(e.measuredAtUtc)&&typeof e.glucoseMmolL==='number'&&Number.isFinite(e.glucoseMmolL)&&e.glucoseMmolL>=1.5&&e.glucoseMmolL<=30).map(e=>({measuredAtUtc:e.measuredAtUtc,mmolL:e.glucoseMmolL,provenance:'OBSERVED',quality:'VALID'}));
++const measures=d.measurements.filter(e=>e&&beforeOrAt(e.measuredAtUtc)&&Number.isFinite(e.weightKg)&&e.weightKg>0).sort((a,b)=>newestFirst(instantKey(a.measuredAtUtc),instantKey(b.measuredAtUtc)));
++// Transport completeness is not sensor coverage; only native history responses can attest read completion.
++const w=d.q08ReadWindow, expectedStart=historyStart(asOfUtc,zone), readWindowComplete=!!w&&w.allStoredPagesRead===true&&w.sensorCoverageProven===false&&w.profileId===response.profileId&&w.revision===response.revision&&w.timeZone===zone&&validIso(w.startUtc)&&validIso(w.endUtc)&&Number.isFinite(expectedStart)&&Date.parse(w.startUtc)<Date.parse(w.endUtc)&&instantKey(w.startUtc)<=instantKey(new Date(expectedStart).toISOString())&&instantKey(w.endUtc)===instantKey(asOfUtc);
++return {profileId:response.profileId,revision:response.revision,asOfUtc,lastCompleteLocalDate:end,timeZone:zone,meals,cgm,injections,lastInjectionSite:injections.find(x=>x.site)?.site||null,weightKg:measures[0]?.weightKg??null,modelCoverage:null,limitations:{cgmMayBeTruncated:!readWindowComplete&&d.cgm.length>=2000,allStoredPagesRead:readWindowComplete,mealKindsMissing:d.mealSessions.some(e=>e&&e.status==='completed'&&!e.mealKind),coverage:'NOT_PROVEN',qualityContract:'Q09_PENDING'}};
++}return Object.freeze({projectResearch,localDate,validIso,historyStart});});
++
++</script><script>
++/* Q08 native transport: the Android owner dialog is the sole write-confirmation authority. */
++(()=>{'use strict';if(!window.GPV3Q08Native)return;const native=window.GPV3Q08Native;
++const parse=raw=>{const r=JSON.parse(raw);if(!r||typeof r!=='object'||r.error)throw Error(r?.error?.code||'Q08_NATIVE_RESPONSE_INVALID');return r};
++const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
++async function request(command){const p=parse(native.requestOwnerAction(JSON.stringify(command)));if(p.state!=='PENDING'||typeof p.ticket!=='string'||p.ticket.length<10)throw Error('Q08_TICKET_INVALID');for(let i=0;i<600;i++){const x=parse(native.pollOwnerAction(p.ticket));if(['FINISHED','REJECTED','CANCELLED'].includes(x.state)){if(!x.result||typeof x.result.accepted!=='boolean')throw Error('Q08_NATIVE_RECEIPT_INVALID');return x.result}if(!['PENDING','APPLYING'].includes(x.state))throw Error('Статус записи неизвестен. Проверьте журнал перед повтором.');await pause(250)}throw Error('Ожидание подтверждения истекло. Проверьте журнал перед повтором.');}
++window.GFLevemirPort=Object.freeze({readSnapshot(){const x=parse(native.readState());return Q08StorageProjection.projectResearch(x,x.data.q08ReadWindow.endUtc)},recordActual(raw){return request(JSON.parse(raw))},resolveLocalTime(raw){return parse(native.resolveLocalTime(raw))}});
++const a=document.getElementById('q08-activation'), btn=document.getElementById('q08-activate'),msg=document.getElementById('q08-activation-status');
++function state(){const s=parse(native.readStatus());if(s.active===true){a.hidden=true;return}a.hidden=false;btn.disabled=!(s.profileConfigured&&s.canActivate);msg.textContent=s.profileConfigured?'Для первой записи включите модуль. Это не создаёт укол.':'Сначала заполните профиль.';}
++btn.onclick=async()=>{btn.disabled=true;try{const s=parse(native.readStatus());const r=await request({command:'activate',profileId:s.profileId,expectedRevision:s.revision});if(r.accepted!==true||r.activationOnly!==true||r.injectionRecorded!==false)throw Error(r.code||'Q08_ACTIVATION_NOT_CONFIRMED');state();window.dispatchEvent(new Event('q08:activated'))}catch(e){msg.textContent=e.message;btn.disabled=false}};
++try{state()}catch(e){a.hidden=false;btn.disabled=true;msg.textContent=e.message}
++})();
++
++</script><script>
++/* UI binds only to a native-owned adapter; no local medical persistence or fake fallback. */
++(()=>{'use strict';const $=id=>document.getElementById(id), slots=['morning','evening'], pad=n=>String(n).padStart(2,'0');let snap=null,boundProfile=null,boundZone=null,busy=false;
++const localDate=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`,localTime=d=>`${pad(d.getHours())}:${pad(d.getMinutes())}`;
++function profileClock(zone){const parts=new Intl.DateTimeFormat('en-CA',{timeZone:zone,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date());const v=k=>parts.find(p=>p.type===k).value;return {date:[v('year'),v('month'),v('day')].join('-'),time:v('hour')+':'+v('minute')}}
++function setProfileClock(zone){const v=profileClock(zone);for(const k of slots){$('date-'+k).value=v.date;$('date-'+k).max=v.date;$('time-'+k).value=v.time;const z=$('zone-'+k);if(z)z.textContent=zone}}
++const fmt=n=>n===null?'—':n.toLocaleString('ru-RU',{maximumFractionDigits:2});
++const siteValues=['Ягодица','Живот','Плечо','Бедро'];
++function bridge(){const b=window.GFLevemirPort;if(!b||typeof b.readSnapshot!=='function'||typeof b.recordActual!=='function')throw Error('GFStorage: порт Q08 не подключён');return b}
++function clearSnapshot(){snap=null; $('events').replaceChildren();$('events').textContent='История недоступна';$('graph').querySelector('#profileLines')?.remove();$('graphEmpty').style.display='flex';$('graphEmpty').querySelector('.emptyBox').textContent='Нет подтверждённой истории';for(const k of slots){$('result-'+k).textContent='— ЕД';$('details-'+k).querySelector('dl').replaceChildren();$('calcStatus-'+k).textContent='Данные недоступны';$('status-'+k).textContent='Статус неизвестен';}}
++function read(){try{const raw=bridge().readSnapshot();const next=Q08Review.snapshot(typeof raw==='string'?JSON.parse(raw):raw);if(boundProfile!==null&&boundProfile!==next.profileId){boundProfile=next.profileId;boundZone=null;clearSnapshot();for(const k of slots){$('dose-'+k).value='';$('site-'+k).value='Ягодица'}throw Error('Профиль изменился. Проверьте данные.')}if(snap&&snap.revision!==next.revision)clearSnapshot();boundProfile=next.profileId;if(typeof bridge().resolveLocalTime==='function'){if(boundZone!==null&&boundZone!==next.timeZone){boundZone=next.timeZone;setProfileClock(boundZone);for(const k of slots)$('dose-'+k).value='';throw Error('Часовой пояс профиля изменился. Проверьте время укола.')}if(boundZone===null){boundZone=next.timeZone;setProfileClock(boundZone)}}snap=next;return snap}catch(e){clearSnapshot();throw e}}
++function status(k,msg){$('message-'+k).textContent=msg}
++function renderHistory(){const list=$('events');list.replaceChildren();const actual=snap.injections.filter(e=>e&&e.insulinId==='levemir'&&e.status==='CONFIRMED_ACTUAL'&&Number.isFinite(e.units)&&e.units>0&&Number.isFinite(Q08Review.ms(e.occurredAtUtc))&&Q08Review.ms(e.occurredAtUtc)<=Date.now()).sort((a,b)=>Q08Review.ms(b.occurredAtUtc)-Q08Review.ms(a.occurredAtUtc));let dateInZone=null;try{const zone=snap.timeZone;if(typeof zone==='string'&&zone){const fmtDate=new Intl.DateTimeFormat('en-CA',{timeZone:zone,year:'numeric',month:'2-digit',day:'2-digit'});dateInZone=x=>fmtDate.format(new Date(x));}}catch(_){}for(const k of slots){const known=dateInZone&&actual.some(x=>x.slot===k&&dateInZone(x.occurredAtUtc)===dateInZone(snap.asOfUtc));$('status-'+k).textContent=known?'Подтверждено':'Статус неизвестен'}if(!actual.length){list.textContent='Нет подтверждённых уколов в доступной истории.';return}for(const x of actual){const el=document.createElement('div');el.className='event';el.textContent=`${new Date(x.occurredAtUtc).toLocaleString('ru-RU')} · ${fmt(x.units)} ЕД · ${x.site||'место не указано'}${x.slot==='additional'?' · Дополнительный фактический укол':''}`;list.append(el)}}
++function renderGraph(){const g=$('graph');g.querySelector('#profileLines')?.remove();$('graphEmpty').style.display='flex';let p;try{p=Q08Review.modelProfile(snap,window.LevemirEngine)}catch(_){return}if(p.status!=='MODEL_ESTIMATE'){ $('graphEmpty').querySelector('.emptyBox').textContent=p.reason;return }const max=Math.max(...p.points.map(x=>x.total));if(!(max>0))return;const ns='http://www.w3.org/2000/svg', group=document.createElementNS(ns,'g');group.id='profileLines';for(const [key,color] of [['morning','#2196a2'],['evening','#b985d4'],['total','#203f59']]){const line=document.createElementNS(ns,'path');line.setAttribute('d',p.points.map((x,i)=>`${i?'L':'M'}${40+(x.minute+720)*696/1440} ${185-x[key]/max*160}`).join(' '));line.setAttribute('fill','none');line.setAttribute('stroke',color);line.setAttribute('stroke-width','3');if(key==='total')line.setAttribute('stroke-dasharray','7 4');group.append(line)}g.append(group);$('graphEmpty').style.display='none'}
++function update(){try{read();renderHistory();renderGraph();if(siteValues.includes(snap.lastInjectionSite))for(const k of slots)$('site-'+k).value=snap.lastInjectionSite}catch(e){for(const k of slots)status(k,e.message)}}
++function explain(k,r){const inner=$('details-'+k).querySelector('dl');inner.replaceChildren();function add(t,v){let a=document.createElement('dt'),b=document.createElement('dd');a.textContent=t;b.textContent=v;inner.append(a,b)}add('Период',`${r.days} полных дней; ревизия ${r.revision}`);for(const x of r.rows)add(x.day,x.reason||`${fmt(x.nearest)} ммоль/л; за ${fmt(x.ageMinutes)} мин; точек: ${x.points}; Δ ${fmt(x.delta)}; min ${fmt(x.min)}; max ${fmt(x.max)}${x.oldReading?' · давний замер':''}`);add('Среднее наблюдение',fmt(r.mean)+' ммоль/л');add('Контроль',`${r.complete?'Все дни найдены':'Неполные данные'}; ${r.low?'есть низкие; ':''}${r.high?'есть высокие; ':''}${r.conflict?'противоречие; ':''}${r.stale?'давние замеры; ':''}числовая дозировка не валидирована`);add('Методика','Окно 60 минут, наблюдение до зарегистрированного приёма пищи. Таблица Thalange — исследовательская основа; период 7/14 дней — расширение интерфейса, не исследованный алгоритм титрации.')}
++for(const k of slots){const form=$('form-'+k),dose=$('dose-'+k),date=$('date-'+k),time=$('time-'+k),site=$('site-'+k),now=new Date();date.value=localDate(now);date.max=date.value;time.value=localTime(now);date.addEventListener('focus',()=>{date.max=boundZone?profileClock(boundZone).date:localDate(new Date())});site.value='Ягодица';site.onchange=()=>{for(const other of slots)$('site-'+other).value=site.value};$('calculate-'+k).onclick=()=>{try{const fresh=read();renderHistory();renderGraph();const r=Q08Review.review(fresh,k,Number(document.querySelector(`[name=period-${k}]:checked`).value));explain(k,r);$('calcStatus-'+k).textContent='Анализ выполнен. '+(r.complete?'':'Неполные данные. ')+'Дозировка не валидирована.';$('result-'+k).textContent='— ЕД';status(k,'Наблюдательный расчёт готов. Откройте «Расчёт».')}catch(e){$('result-'+k).textContent='— ЕД';$('calcStatus-'+k).textContent=e.message;$('details-'+k).querySelector('dl').replaceChildren();status(k,e.message)} };
++form.querySelectorAll('[data-step]').forEach(btn=>btn.onclick=()=>{const v=dose.valueAsNumber;if(!Number.isFinite(v))return;dose.value=Math.max(.5,v+Number(btn.dataset.step))});
++let pending=null;form.addEventListener('input',()=>{pending=null});form.onsubmit=async e=>{e.preventDefault();if(busy||!form.reportValidity())return;busy=true;const controls=Array.from(document.querySelectorAll('.slot input,.slot select,.slot button'));const previous=controls.map(x=>x.disabled);controls.forEach(x=>x.disabled=true);try{const draft={date:date.value,time:time.value,units:dose.valueAsNumber,site:site.value};const s=read();let atUtc;const b=bridge();if(typeof b.resolveLocalTime==='function'){const r=b.resolveLocalTime(JSON.stringify({profileId:s.profileId,expectedRevision:s.revision,date:draft.date,time:draft.time}));if(r.revision!==s.revision||r.timeZone!==s.timeZone||!Number.isFinite(Q08Review.ms(r.occurredAtUtc)))throw Error('Некорректная квитанция времени');atUtc=r.occurredAtUtc}else{const d=new Date(draft.date+'T'+draft.time);if(!Number.isFinite(+d)||localDate(d)!==draft.date||localTime(d)!==draft.time)throw Error('Некорректное локальное время');const offsets=new Set([new Date(+d-36*3600000).getTimezoneOffset(),new Date(+d+36*3600000).getTimezoneOffset()]);for(const offset of offsets){const other=new Date(+d+(offset-d.getTimezoneOffset())*60000);if(+other!==+d&&localDate(other)===draft.date&&localTime(other)===draft.time)throw Error('Неоднозначное время при переводе часов. Уточните время укола.')}const deviceZone=Intl.DateTimeFormat().resolvedOptions().timeZone;let profileZone;try{profileZone=new Intl.DateTimeFormat('en',{timeZone:s.timeZone}).resolvedOptions().timeZone}catch(_){throw Error('Часовой пояс профиля неизвестен')}if(typeof s.timeZone!=='string'||!s.timeZone||profileZone!==deviceZone)throw Error('Часовой пояс устройства не совпадает с профилем. Проверьте время укола.');atUtc=d.toISOString()}const values={slot:k,units:draft.units,occurredAtUtc:atUtc,site:draft.site};const fingerprint=JSON.stringify(values);if(pending&&pending.command.profileId!==s.profileId){pending=null;throw Error('Профиль изменился. Проверьте введённые данные.')}if(!pending||pending.fingerprint!==fingerprint){pending={fingerprint,command:Q08Review.command(s,{...values,requestId:Array.from(crypto.getRandomValues(new Uint8Array(16)),b=>b.toString(16).padStart(2,'0')).join('')},Date.now())}}const reply=await bridge().recordActual(JSON.stringify(pending.command));const receipt=typeof reply==='string'?JSON.parse(reply):reply;if(!receipt||receipt.accepted!==true){if(['REVISION_CONFLICT','V3_REVISION_CONFLICT'].includes(receipt?.code))pending=null;throw Error(receipt?.code||'Запись не подтверждена хранилищем')}if(receipt.eventId!=='q08-event-'+pending.command.requestId||!Number.isSafeInteger(receipt.revision)||receipt.revision<=pending.command.expectedRevision||typeof receipt.created!=='boolean')throw Error('Некорректная квитанция GFStorage');pending=null;dose.value='';const freshTime=new Date();const clock=boundZone?profileClock(boundZone):{date:localDate(freshTime),time:localTime(freshTime)};date.value=clock.date;date.max=clock.date;time.value=clock.time;try{read();renderHistory();renderGraph();status(k,'Записано в GFStorage')}catch(_){status(k,'Запись подтверждена; актуальная история недоступна')}}catch(err){status(k,err.message)}finally{controls.forEach((x,i)=>x.disabled=previous[i]);busy=false}};
++}window.addEventListener('q08:activated',update);update();})();
++
++</script></body></html>
+\ No newline at end of file
+diff --git a/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3LocalAssetRoutes.kt b/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3LocalAssetRoutes.kt
+index 89b0c8e..a65f789 100644
+--- a/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3LocalAssetRoutes.kt
++++ b/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3LocalAssetRoutes.kt
+@@ -21,6 +21,7 @@ internal object GfV3LocalAssetRoutes {
+     fun resolve(scheme: String?, host: String?, path: String?, query: String?, fragment: String?): Resource? {
+         if (scheme != "https" || host != "appassets.androidplatform.net" || query != null || fragment != null) return null
+         if (path == "/" || path == "/index.html") return Resource("www/index.html", "text/html")
++        if (path == "/q08/levemir.html") return Resource("www/q08/levemir.html", "text/html")
+         if (path == "/q07/rinfast.html") return Resource("www/q07/rinfast.html", "text/html")
+         if (path == "/q06/guidance.html") return Resource("www/q06/guidance.html", "text/html")
+         if (path == "/q05/activity.html") return Resource("www/q05/activity.html", "text/html")
+diff --git a/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Q08Bridge.kt b/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Q08Bridge.kt
+new file mode 100644
+index 0000000..b70f26c
+--- /dev/null
++++ b/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Q08Bridge.kt
+@@ -0,0 +1,14 @@
++package org.glukopapa.v3.m00
++
++import android.webkit.JavascriptInterface
++import org.json.JSONObject
++
++/** Only read / request / poll; never exposes native writer or a consent boolean. */
++internal class GfV3Q08Bridge(private val queue:GfV3Q08OwnerQueue){
++    @JavascriptInterface fun readStatus():String=wrap{queue.status()}
++    @JavascriptInterface fun readState():String=wrap{queue.snapshot()}
++    @JavascriptInterface fun resolveLocalTime(raw:String):String=wrap{queue.resolveLocalTime(raw)}
++    @JavascriptInterface fun requestOwnerAction(raw:String):String=wrap{queue.enqueue(raw)}
++    @JavascriptInterface fun pollOwnerAction(ticket:String):String=wrap{queue.poll(ticket)}
++    private fun wrap(block:()->JSONObject):String=try{block().toString()}catch(e:Exception){JSONObject().put("error",JSONObject().put("code",e.message?:"Q08_ERROR")).toString()}
++}
+diff --git a/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Q08ModuleInstaller.kt b/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Q08ModuleInstaller.kt
+new file mode 100644
+index 0000000..85fdd52
+--- /dev/null
++++ b/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Q08ModuleInstaller.kt
+@@ -0,0 +1,85 @@
++package org.glukopapa.v3.m00
++
++import android.content.ContentValues
++import org.json.JSONArray
++import org.json.JSONObject
++import java.time.Instant
++
++/**
++ * Q08: explicit Android-owner-initiated module activation. No injection is created.
++ * Never invoke during startup or interpret a browser-supplied boolean as consent.
++ */
++internal class GfV3Q08ModuleInstaller(private val helper: GfDbHelper) {
++    companion object {
++        const val MODULE = "GFLevemirReview"
++        const val VERSION = "v0.4.3"
++    }
++
++    fun activateAfterAndroidDialog(expectedProfile: String, expectedRevision: Long, nativeOwnerApproved: Boolean): JSONObject {
++        if (!nativeOwnerApproved) throw SecurityException("Q08_ACTIVATION_REQUIRES_ANDROID_OWNER")
++        require(expectedRevision >= 0) { "Q08_ACTIVATION_REVISION_INVALID" }
++        val db = helper.writableDatabase
++        db.beginTransaction()
++        try {
++            val meta = db.rawQuery("SELECT revision,profile_id,input_revision FROM v3_meta WHERE id=1", null).use { c ->
++                if (!c.moveToFirst()) throw IllegalStateException("V3_META_MISSING")
++                Triple(c.getLong(0), if (c.isNull(1)) null else c.getString(1), c.getLong(2))
++            }
++            if (meta.second == null) throw IllegalStateException("PROFILE_UNCONFIGURED")
++            require(meta.second == expectedProfile) { "Q08_PROFILE_CONFLICT" }
++            if (meta.first != expectedRevision) throw IllegalStateException("V3_REVISION_CONFLICT")
++            val state = db.rawQuery(
++                "SELECT status,feature_enabled,write_roles_json FROM v3_module_registry WHERE module_id=?",
++                arrayOf(MODULE)
++            ).use { c ->
++                if (!c.moveToFirst()) throw SecurityException("Q08_MODULE_NOT_IN_CATALOG")
++                Triple(c.getString(0), c.getInt(1), c.getString(2))
++            }
++            val roles = JSONArray(state.third)
++            if ((0 until roles.length()).map { roles.getString(it) }.toSet() != setOf("actionWriter"))
++                throw SecurityException("Q08_ACTIVATION_WRITE_ROLES_INVALID")
++            val granted = db.rawQuery(
++                "SELECT 1 FROM v3_write_grants WHERE module_id=? AND role='actionWriter' " +
++                    "AND grant_status='OWNER_GRANTED_EXPERIMENTAL' " +
++                    "AND implementation_status='PREPARED_NATIVE' LIMIT 1", arrayOf(MODULE)
++            ).use { it.moveToFirst() }
++            if (!granted) throw SecurityException("Q08_ACTIVATION_GRANT_NOT_READY")
++
++            if (state.first == "OWNER_INTEGRATION_ACCEPTED" && state.second == 1) {
++                db.setTransactionSuccessful()
++                return JSONObject().put("activated", false).put("alreadyActive", true)
++                    .put("revision", meta.first).put("moduleId", MODULE)
++            }
++            if (state.first != "NOT_CONNECTED" || state.second != 0)
++                throw SecurityException("Q08_ACTIVATION_ILLEGAL_REGISTRY_STATE")
++
++            val next = meta.first + 1
++            val update = db.update("v3_module_registry", ContentValues().apply {
++                put("status", "OWNER_INTEGRATION_ACCEPTED")
++                put("feature_enabled", 1)
++                put("version", VERSION)
++                put("adapter_version", VERSION)
++                put("read_roles_json", "[\"research\"]")
++                // Do not widen or invent additional write privileges.
++            }, "module_id=? AND status='NOT_CONNECTED' AND feature_enabled=0", arrayOf(MODULE))
++            if (update != 1) throw IllegalStateException("Q08_ACTIVATION_REGISTRY_CAS_FAILED")
++            val m = db.update("v3_meta", ContentValues().apply { put("revision", next) },
++                "id=1 AND revision=?", arrayOf(meta.first.toString()))
++            if (m != 1) throw IllegalStateException("Q08_ACTIVATION_REVISION_CAS_FAILED")
++            val now = Instant.now().toString()
++            db.insertOrThrow("v3_audit", null, ContentValues().apply {
++                put("revision", next);put("domain", "registry");put("record_id", MODULE)
++                put("action", "Q08_OWNER_DIALOG_ACTIVATION");put("source_module", "GFShell")
++                put("at_utc", now)
++            })
++            db.insertOrThrow("v3_change_feed", null, ContentValues().apply {
++                put("revision", next);put("domain", "registry");put("record_id", MODULE)
++                put("source_module", "GFShell");put("created_at_utc", now)
++            })
++            db.setTransactionSuccessful()
++            return JSONObject().put("activated", true).put("alreadyActive", false)
++                .put("revision", next).put("moduleId", MODULE)
++                .put("injectionRecorded", false).put("inputRevisionUnchanged", meta.third)
++        } finally { db.endTransaction() }
++    }
++}
