@@ -1,16 +1,24 @@
 {
-  "run_id": "45435825515",
+  "run_id": "45437565297",
   "run_attempt": "1",
-  "sha": "f0a7986d9b91dcb8261ee5896aa99e391751209e",
+  "sha": "f6c24897536d52857c0338f7b7a50982798d1e60",
   "workflow": "Q06 GFActivityGuidance context-only Android 15 QA",
   "result_source": "native Android instrumentation XML, if present",
-  "test_xml_files": [],
-  "total": 0,
+  "test_xml_files": [
+    {
+      "file": "TEST-emulator-5554 - 15-_app-.xml",
+      "tests": 55,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  ],
+  "total": 55,
   "failures": 0,
   "errors": 0,
   "skipped": 0,
   "host_log_present": true,
-  "build_log_present": false,
-  "emulator_log_present": false,
-  "android_xml_found": false
+  "build_log_present": true,
+  "emulator_log_present": true,
+  "android_xml_found": true
 }
