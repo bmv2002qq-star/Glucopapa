@@ -1,0 +1,52 @@
+--- a/android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q05ActivityWebViewInstrumentedTest.kt
++++ b/android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q05ActivityWebViewInstrumentedTest.kt
+@@ -38,7 +38,9 @@
+         try {
+             val web=activity.findViewById<ViewGroup>(android.R.id.content).getChildAt(0) as WebView
+             // Real M00 button must navigate to the approved Q05 screen.
+-            poll(web,"document.readyState","\"complete\"")
++            // A freshly created WebView can report complete for about:blank.
++            // Wait for the actual offline home document AND the navigation target.
++            poll(web,"location.origin==='https://appassets.androidplatform.net' && location.pathname==='/' && document.readyState==='complete' && !!document.querySelector('[data-module=GFSport]')","true")
+             js(web,"document.querySelector('[data-module=GFSport]').click(); true")
+             poll(web,"location.pathname","\"/q05/activity.html\"")
+             poll(web,"document.readyState","\"complete\"")
+--- a/android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q06GuidanceWebViewInstrumentedTest.kt
++++ b/android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q06GuidanceWebViewInstrumentedTest.kt
+@@ -35,7 +35,9 @@
+         val activity=instr.startActivitySync(Intent(ctx,MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) as MainActivity
+         try{
+             val web=activity.findViewById<ViewGroup>(android.R.id.content).getChildAt(0) as WebView
+-            poll(web,"document.readyState","\"complete\"")
++            // A freshly created WebView can report complete for about:blank.
++            // Wait for the actual offline home document AND the navigation target.
++            poll(web,"location.origin==='https://appassets.androidplatform.net' && location.pathname==='/' && document.readyState==='complete' && !!document.querySelector('[data-module=GFActivitySettings]')","true")
+             assertEquals("true",js(web,"!!document.querySelector('[data-module=GFActivitySettings]')"))
+             js(web,"document.querySelector('[data-module=GFActivitySettings]').click(); true")
+             poll(web,"location.pathname","\"/q06/guidance.html\"")
+--- a/android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q07RinFastWebViewInstrumentedTest.kt
++++ b/android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q07RinFastWebViewInstrumentedTest.kt
+@@ -38,7 +38,9 @@
+         val activity=instr.startActivitySync(Intent(ctx,MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) as MainActivity
+         try {
+             val web=activity.findViewById<ViewGroup>(android.R.id.content).getChildAt(0) as WebView
+-            poll(web,"document.readyState","\"complete\"")
++            // A freshly created WebView can report complete for about:blank.
++            // Wait for the actual offline home document AND the navigation target.
++            poll(web,"location.origin==='https://appassets.androidplatform.net' && location.pathname==='/' && document.readyState==='complete' && !!document.querySelector('[data-module=GFRinFast]')","true")
+             assertEquals("true",js(web,"!!document.querySelector('[data-module=GFRinFast]')"))
+             js(web,"document.querySelector('[data-module=GFRinFast]').click();true")
+             poll(web,"location.pathname","\"/q07/rinfast.html\"")
+--- a/android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q08LevemirWebViewInstrumentedTest.kt
++++ b/android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q08LevemirWebViewInstrumentedTest.kt
+@@ -51,7 +51,9 @@
+         val activity=instr.startActivitySync(Intent(ctx,MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) as MainActivity
+         try{
+             val web=activity.findViewById<ViewGroup>(android.R.id.content).getChildAt(0) as WebView
+-            until(web,"document.readyState","\"complete\"")
++            // A freshly created WebView can report complete for about:blank.
++            // Wait for the actual offline home document AND the navigation target.
++            until(web,"location.origin==='https://appassets.androidplatform.net' && location.pathname==='/' && document.readyState==='complete' && !!document.querySelector('[data-module=GFInjectionEntry]')","true")
+             js(web,"document.querySelector('[data-module=GFInjectionEntry]').click();true")
+             until(web,"location.pathname","\"/q08/levemir.html\"");until(web,"document.readyState","\"complete\"")
+             assertEquals("\"undefined\"",js(web,"typeof GPV3Q08Native.append"));assertEquals("\"undefined\"",js(web,"typeof GPV3Q08Native.setCoverageComplete"))

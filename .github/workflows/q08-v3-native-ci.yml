@@ -265,6 +265,25 @@ jobs:
               assert hashlib.sha256(p.read_bytes()).hexdigest()==x['sha256'],p
           print('Q08_V048_SOURCE_SHA_13of13_PASS')
           PY
+      - name: Apply v049 WebView readiness test-only repair and verify all sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'd9f298b66fa035222197e27a9dd356147f5ae74aa95c8a42be65babee0c63500  qa-transfer/q08/Q08_v049_webview_readiness.patch' | sha256sum -c -
+          patch -d q07-ci -p1 --batch --forward --dry-run -i "$GITHUB_WORKSPACE/qa-transfer/q08/Q08_v049_webview_readiness.patch"
+          patch -d q07-ci -p1 --batch --forward -i "$GITHUB_WORKSPACE/qa-transfer/q08/Q08_v049_webview_readiness.patch"
+          echo 'a4c6ff767d459dd6e49584ff7d0ea95da900f4ce4b1a74a386ea89dcb160e5f4  qa-transfer/q08/Q08_v049_SOURCE_SHA.json' | sha256sum -c -
+          python3 - <<'PY'
+          import json,hashlib
+          from pathlib import Path
+          m=json.loads(Path('qa-transfer/q08/Q08_v049_SOURCE_SHA.json').read_text())
+          assert len(m['changes'])==16
+          for x in m['changes']:
+              p=Path('q07-ci')/x['path']
+              assert p.is_file(),p
+              assert hashlib.sha256(p.read_bytes()).hexdigest()==x['sha256'],p
+          print('Q08_V049_SOURCE_SHA_16of16_PASS')
+          PY
       - name: Q08 v042 exact UTC and transport regression (synthetic fixtures only)
         shell: bash
         run: |
