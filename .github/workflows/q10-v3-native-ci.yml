@@ -479,13 +479,13 @@ jobs:
               assert hashlib.sha256(p.read_bytes()).hexdigest()==x['afterSha256'],p
           print('Q10_V033_SOURCE_SHA_4of4_PASS')
           PY
-      - name: Install immutable GFSafety donor and V3 observational adapter for QA
+      - name: Install immutable GFSafety donor and strict V3 parity adapter for QA
         shell: bash
         run: |
           set -euxo pipefail
           node qa-transfer/q10/donor-audit/audit.js
           node qa-transfer/q10/v034/test_v034.js
-          python3 qa-transfer/q10/v034/install_v034.py
+          python3 qa-transfer/q10/v035/install_v035.py
       - name: Compile Android Q10 candidate and instrumented tests
         shell: bash
         run: |
@@ -510,7 +510,7 @@ jobs:
           emulator-boot-timeout: 900
           disable-animations: true
           script: bash -o pipefail -c 'adb shell svc power stayon true && adb shell input keyevent KEYCODE_WAKEUP && adb shell wm dismiss-keyguard && cd q07-ci/android-app && gradle :app:connectedDebugAndroidTest --stacktrace --no-daemon 2>&1 | tee ../../q07-ci-logs/emulator.log'
-      - name: Verify Q10 v034 and 127 baseline Android case identities and results
+      - name: Verify Q10 v035 and 127 baseline Android case identities and results
         shell: bash
         if: always()
         run: |
