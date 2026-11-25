@@ -497,7 +497,7 @@ jobs:
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
-      - name: Android 15 Q08 and baseline regression
+      - name: Android 15 Q10 v035 and baseline regression
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 35
@@ -517,7 +517,7 @@ jobs:
           set -euo pipefail
           mkdir -p qa-results/q08
           python3 qa-transfer/q10/v033/verify_q10_v033_xml.py q07-ci/android-app/app/build/outputs/androidTest-results/connected qa-transfer/q10/v033/Q10_v033_cases.json | tee qa-results/q08/gate.json
-      - name: Upload Android Q08 APK and XML proof
+      - name: Upload Android Q10 APK and XML proof
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -528,7 +528,7 @@ jobs:
             q07-ci/android-app/app/build/outputs/androidTest-results/
             q07-ci/android-app/app/build/reports/androidTests/
           if-no-files-found: warn
-      - name: Collect Q07 run-specific test results without branch push
+      - name: Collect Q10 run-specific test results without branch push
         if: always()
         shell: bash
         run: |
