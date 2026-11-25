@@ -454,6 +454,31 @@ jobs:
               assert hashlib.sha256(p.read_bytes()).hexdigest()==x['afterSha256'],p
           print('Q10_V032_SOURCE_SHA_1of1_PASS')
           PY
+      - name: Apply Q10 v033 scoped research projection and native producer tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import base64,hashlib,io,zipfile,json,subprocess
+          from pathlib import Path
+          root=Path('qa-transfer/q10/v033')
+          blob=base64.b64decode(''.join((root/'Q10_v033_transfer.b64').read_text().split()),validate=True)
+          assert hashlib.sha256(blob).hexdigest()=='797882658395ccb7f8c756e6d6a6725af7adb9cbe387a238ee0e7c32ebfe6593'
+          with zipfile.ZipFile(io.BytesIO(blob)) as z:
+              assert z.testzip() is None
+              assert set(z.namelist())=={'Q10_v033.patch','Q10_v033_cases.json','Q10_v033_SOURCE_SHA.json','verify_q10_v033_xml.py'}
+              z.extractall(root)
+          m=json.loads((root/'Q10_v033_SOURCE_SHA.json').read_text())
+          assert len(m)==4
+          for x in m:
+              p=Path('q07-ci')/x['path']
+              assert hashlib.sha256(p.read_bytes()).hexdigest()==x['beforeSha256'],p
+          subprocess.run(['patch','-d','q07-ci','-p1','--batch','--forward','-i',str((root/'Q10_v033.patch').resolve())],check=True)
+          for x in m:
+              p=Path('q07-ci')/x['path']
+              assert hashlib.sha256(p.read_bytes()).hexdigest()==x['afterSha256'],p
+          print('Q10_V033_SOURCE_SHA_4of4_PASS')
+          PY
       - name: Compile Android Q08 candidate and instrumented tests
         shell: bash
         run: |
@@ -478,13 +503,13 @@ jobs:
           emulator-boot-timeout: 900
           disable-animations: true
           script: bash -o pipefail -c 'adb shell svc power stayon true && adb shell input keyevent KEYCODE_WAKEUP && adb shell wm dismiss-keyguard && cd q07-ci/android-app && gradle :app:connectedDebugAndroidTest --stacktrace --no-daemon 2>&1 | tee ../../q07-ci-logs/emulator.log'
-      - name: Verify Q10 v032 and 127 baseline Android case identities and results
+      - name: Verify Q10 v033 and 127 baseline Android case identities and results
         shell: bash
         if: always()
         run: |
           set -euo pipefail
           mkdir -p qa-results/q08
-          python3 qa-transfer/q10/v032/verify_q10_v032_xml.py q07-ci/android-app/app/build/outputs/androidTest-results/connected qa-transfer/q10/v032/Q10_v032_cases.json | tee qa-results/q08/gate.json
+          python3 qa-transfer/q10/v033/verify_q10_v033_xml.py q07-ci/android-app/app/build/outputs/androidTest-results/connected qa-transfer/q10/v033/Q10_v033_cases.json | tee qa-results/q08/gate.json
       - name: Upload Android Q08 APK and XML proof
         if: always()
         uses: actions/upload-artifact@v4
