@@ -1,0 +1,25 @@
+name: Q10 immutable V2 donor compatibility audit
+on:
+  push:
+    branches:
+      - 'qa/q10-donor-audit-*'
+    paths:
+      - 'qa-transfer/q10/donor-audit/**'
+      - '.github/workflows/q10-donor-audit.yml'
+permissions:
+  contents: read
+jobs:
+  donor-audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify donor blobs and execute isolated synthetic fixtures
+        run: node qa-transfer/q10/donor-audit/audit.js
+      - name: Save source and audit results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: q10-exact-donor-audit
+          path: qa-transfer/q10/donor-audit/
+          if-no-files-found: error
