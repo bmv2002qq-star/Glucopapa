@@ -1,7 +1,11 @@
     @Test fun q10ExactDonorRunsOnRealNativeSnapshotReadOnly(){
+        // The existing QA fixture authorizes the two installed adapters only in this isolated test database.
+        accept(C.OWNER);accept(E.OWNER)
         write()
         val before=storage.revision()
         val auditBefore=count("v3_audit")
+        val receiptBefore=count("v3_write_receipts")+count("v3_extended_receipts")
+        val cgmBefore=count("v3_cgm")
         val snap=snapshot()
         val instr=androidx.test.platform.app.InstrumentationRegistry.getInstrumentation()
         val ctx=instr.targetContext
@@ -34,5 +38,7 @@
             for(k in listOf("forecastInputEligible","clinicalUseAllowed","insulinDoseDecisionAllowed","automaticInjectionAllowed"))assertFalse(report.getBoolean(k))
             assertEquals(before,storage.revision())
             assertEquals(auditBefore,count("v3_audit"))
+            assertEquals(receiptBefore,count("v3_write_receipts")+count("v3_extended_receipts"))
+            assertEquals(cgmBefore,count("v3_cgm"))
         } finally {instr.runOnMainSync{view.get()?.destroy()}}
     }
