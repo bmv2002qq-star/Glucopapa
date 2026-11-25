@@ -1,0 +1,13 @@
+diff --git a/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3NativeModuleGateway.kt b/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3NativeModuleGateway.kt
+index 0eaa9c1..1a7188e 100644
+--- a/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3NativeModuleGateway.kt
++++ b/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3NativeModuleGateway.kt
+@@ -20,6 +20,8 @@ internal class GfV3NativeModuleGateway(private val storage: GfV3Storage,
+             storage.readNativeQ08CgmPage(moduleId,profile,revision,cursor,asOf,limit)
+         internal fun readQ08RelatedPage(domain:String,profile:String,revision:Long,cursor:Long,asOf:java.time.Instant,limit:Int):JSONObject=
+             storage.readNativeQ08RelatedPage(moduleId,domain,profile,revision,cursor,asOf,limit)
++        internal fun ingestQ09(profile:String,revision:Long,points:List<GfV3Q09Contract.Point>):JSONObject =
++            nativeWriter.ingestQ09Batch(moduleId,profile,revision,points)
+         /** Owned-module-only correction; never exposed through JavascriptInterface. */
+         fun correct(domain:String,recordId:String,correctionId:String,idempotencyKey:String,
+                     expectedRevision:Long,expectedRecordVersion:Int,changes:JSONObject,

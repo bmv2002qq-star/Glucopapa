@@ -1,0 +1,96 @@
+diff --git a/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Q09Contract.kt b/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Q09Contract.kt
+new file mode 100644
+index 0000000..2012585
+--- /dev/null
++++ b/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Q09Contract.kt
+@@ -0,0 +1,90 @@
++package org.glukopapa.v3.m00
++
++import java.security.MessageDigest
++import java.time.Instant
++import java.time.Duration
++
++/** Q09 ingestion contract. No network, Android, calculations of treatment, or storage side effects. */
++internal object GfV3Q09Contract {
++    const val OWNER = "GFCgmSource"
++    const val VERSION = "v0.3.1"
++    const val SOURCE = "xdrip-local-follower"
++    const val MAX_ROWS = 288
++    private val earliest = Instant.parse("2000-01-01T00:00:00Z")
++    private val directions = setOf("DoubleUp", "SingleUp", "FortyFiveUp", "Flat", "FortyFiveDown", "SingleDown", "DoubleDown", "NOT_COMPUTABLE")
++    enum class Transport { WEB_SERVICE, CONTENT_PROVIDER }
++    enum class Freshness { FRESH, STALE, UNKNOWN }
++    enum class Quality { VALID, UNVERIFIED_SOURCE }
++    data class Raw(val measuredAtMs: Long, val receivedAtMs: Long, val glucose: Double,
++                   val unit: String, val direction: String?, val providerStale: Boolean?, val transport: Transport)
++    data class Point internal constructor(val observationId: String, val profile: String, val measured: Instant,
++        val received: Instant, val mgdl: Double, val rawValue: Double, val rawUnit: String,
++        val mmol: Double, val direction: String?, val freshness: Freshness, val quality: Quality,
++        val transport: Transport)
++    data class Window(val from: Instant, val to: Instant, val count: Int, val maximumGapSeconds: Long?,
++        val coverage: String = "NOT_PROVEN")
++    private fun digest(text: String) = MessageDigest.getInstance("SHA-256").digest(text.toByteArray(Charsets.UTF_8)).joinToString("") { "%02x".format(it) }
++    // Canonical source identifier represents the configured local Follower channel, NOT a physical sensor serial.
++    fun observationId(profile: String, measured: Instant): String {
++        require(GfV3WriteContract.validId(profile)) { "Q09_PROFILE_ID_INVALID" }
++        return "cgm-"+digest("$profile|$SOURCE|${measured.toEpochMilli()}")
++    }
++    fun freshness(measured: Instant, now: Instant, providerStale: Boolean?): Freshness {
++        require(!measured.isAfter(now)) { "Q09_FUTURE_MEASUREMENT" }
++        return when {
++            providerStale == true || Duration.between(measured,now) > Duration.ofMinutes(15) -> Freshness.STALE
++            providerStale == null -> Freshness.UNKNOWN
++            else -> Freshness.FRESH
++        }
++    }
++    /** Convert once; preserve raw precision and units. Donor Web Service publishes integral mg/dL. */
++    fun normalize(profile: String, raw: Raw, now: Instant, quality: Quality): Point {
++        val measured = Instant.ofEpochMilli(raw.measuredAtMs)
++        val received = Instant.ofEpochMilli(raw.receivedAtMs)
++        require(measured >= earliest && measured <= received && received <= now) { "Q09_TIMESTAMP_INVALID" }
++        require(raw.glucose.isFinite() && raw.glucose > 0) { "Q09_GLUCOSE_INVALID" }
++        val mgdl = when(raw.unit) { "mg/dL" -> raw.glucose; "mmol/L" -> raw.glucose * 18.0; else -> error("Q09_UNIT_INVALID") }
++        val mmol = mgdl / 18.0
++        GfV3WriteContract.validateObservedCgm("observed", mmol, SOURCE, measured.toString())
++        val trend=raw.direction?.takeIf { it in directions && it != "NOT_COMPUTABLE" }
++        return Point(observationId(profile,measured),profile,measured,received,mgdl,raw.glucose,raw.unit,mmol,trend,
++            freshness(measured,now,raw.providerStale),quality,raw.transport)
++    }
++    /** Only known donor integer truncation across transports is permitted, not broad epsilon matching. */
++    fun equivalent(a: Point, b: Point): Boolean {
++        if(a.observationId!=b.observationId || a.profile!=b.profile || a.measured!=b.measured) return false
++        if(a.direction!=null && b.direction!=null && a.direction!=b.direction) return false
++        if(a.mgdl==b.mgdl) return true
++        if(a.transport==b.transport) return false
++        val web=if(a.transport==Transport.WEB_SERVICE)a else b
++        val cp=if(a.transport==Transport.CONTENT_PROVIDER)a else b
++        return web.rawUnit=="mg/dL" && web.mgdl==web.mgdl.toInt().toDouble() &&
++            cp.rawUnit=="mg/dL" && cp.mgdl.toInt().toDouble()==web.mgdl
++    }
++    /** Select provider precision for overlapping points. Conflict aborts the entire candidate batch. */
++    fun merge(points: List<Point>): List<Point> {
++        require(points.size<=MAX_ROWS+1) { "Q09_HISTORY_LIMIT" }
++        require(points.map{it.profile}.distinct().size<=1) { "Q09_PROFILE_CONFLICT" }
++        val map=linkedMapOf<String,Point>()
++        val groups=mutableMapOf<String,MutableList<Point>>()
++        for(p in points) {
++            val group=groups.getOrPut(p.observationId){mutableListOf()}
++            require(group.all { equivalent(it,p) }) { "Q09_INPUT_CONFLICT" }
++            group.add(p)
++            val previous=map[p.observationId]
++            if(previous==null) map[p.observationId]=p else {
++                require(equivalent(previous,p)) { "Q09_INPUT_CONFLICT" }
++                if(p.quality==Quality.VALID&&previous.quality!=Quality.VALID ||
++                    p.quality==previous.quality&&p.transport==Transport.CONTENT_PROVIDER&&previous.transport!=p.transport) map[p.observationId]=p
++            }
++        }
++        return map.values.sortedBy { it.measured }
++    }
++    fun window(points: List<Point>, from: Instant, to: Instant): Window {
++        require(from<to && Duration.between(from,to)<=Duration.ofHours(24)) { "Q09_WINDOW_INVALID" }
++        val times=merge(points).map{it.measured}.filter{it>=from&&it<=to}.distinct().sorted()
++        val bounds=listOf(from)+times+listOf(to)
++        val max=bounds.zipWithNext().maxOfOrNull{Duration.between(it.first,it.second).seconds}
++        return Window(from,to,times.size,max)
++    }
++}

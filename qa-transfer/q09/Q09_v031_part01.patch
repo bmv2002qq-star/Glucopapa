@@ -1,0 +1,64 @@
+diff --git a/android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q09CgmNativeInstrumentedTest.kt b/android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q09CgmNativeInstrumentedTest.kt
+new file mode 100644
+index 0000000..cda1081
+--- /dev/null
++++ b/android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q09CgmNativeInstrumentedTest.kt
+@@ -0,0 +1,58 @@
++package org.glukopapa.v3.m00
++
++import androidx.test.ext.junit.runners.AndroidJUnit4
++import androidx.test.platform.app.InstrumentationRegistry
++import org.junit.After
++import org.junit.Before
++import org.junit.Test
++import org.junit.Assert.*
++import org.junit.runner.RunWith
++import java.time.Instant
++import org.glukopapa.v3.m00.GfV3Q09Contract as C
++
++/** Isolated emulator fixture only; never installed as a live CGM source. */
++@RunWith(AndroidJUnit4::class)
++class Q09CgmNativeInstrumentedTest {
++    private val ctx get()=InstrumentationRegistry.getInstrumentation().targetContext
++    private lateinit var helper:GfDbHelper
++    private lateinit var storage:GfV3Storage
++    private lateinit var gateway:GfV3NativeModuleGateway
++    private val profile="q09-qa-profile"
++    private val now=Instant.parse("2026-01-01T12:00:00Z")
++    private fun open(){
++        helper=GfDbHelper(ctx)
++        storage=GfV3Storage(helper,ctx.assets.open("db/module_catalog_v1.json").bufferedReader().use{it.readText()},ctx.assets.open("db/writer_grants_v0.12.json").bufferedReader().use{it.readText()})
++        gateway=GfV3NativeModuleGateway(storage,GfV3NativeWriter(helper),GfV3CorrectionWriter(helper),helper)
++    }
++    @Before fun setup(){ctx.deleteDatabase("glukopapa_v3.db");open();storage.initializeProfile(profile,"Europe/Minsk",storage.revision())}
++    @After fun cleanup(){helper.close();ctx.deleteDatabase("glukopapa_v3.db")}
++    private fun accept(id:String=C.OWNER){helper.writableDatabase.execSQL("UPDATE v3_module_registry SET status='OWNER_INTEGRATION_ACCEPTED',feature_enabled=1,read_roles_json='[\"research\"]' WHERE module_id=?",arrayOf(id))}
++    private fun count(table:String)=helper.readableDatabase.rawQuery("SELECT COUNT(*) FROM $table",null).use{it.moveToFirst();it.getInt(0)}
++    private fun reject(block:()->Unit){try{block();fail("expected rejection")}catch(_:IllegalArgumentException){}catch(_:IllegalStateException){}catch(_:SecurityException){}}
++    private fun p(age:Long=120,mgdl:Double=115.0,transport:C.Transport=C.Transport.CONTENT_PROVIDER,received:Instant=now,quality:C.Quality=C.Quality.VALID,who:String=profile)=C.normalize(who,C.Raw(now.minusSeconds(age).toEpochMilli(),received.toEpochMilli(),mgdl,"mg/dL","Flat",false,transport),now,quality)
++    private fun write(points:List<C.Point>,revision:Long=storage.revision(),owner:String=C.OWNER,who:String=profile)=gateway.bindInstalledAdapter(owner).ingestQ09(who,revision,points)
++    @Test fun q09InactiveWrongOwnerAndProfileNeverWrite(){
++        val rev=storage.revision();reject{write(listOf(p()))};accept();accept("GFProviderCgm");reject{write(listOf(p()),owner="GFProviderCgm")};reject{write(listOf(p(who="different-profile")),who="different-profile")};assertEquals(rev,storage.revision());assertEquals(0,count("v3_cgm"))
++    }
++    @Test fun q09BatchRevisionProjectionAndCrossTransportRepeat(){
++        accept();val rev=storage.revision();val web=p(mgdl=115.0,transport=C.Transport.WEB_SERVICE,quality=C.Quality.UNVERIFIED_SOURCE);val cp=p(mgdl=115.7)
++        val result=write(listOf(web,cp,p(age=420)));assertEquals(2,result.getInt("inserted"));assertEquals(rev+2,result.getLong("revision"));assertEquals(2,count("v3_cgm"));assertEquals(2,count("v3_write_receipts"))
++        val rows=storage.readShellPort("graph").getJSONObject("data").getJSONArray("cgm");assertEquals(2,rows.length());val newest=rows.getJSONObject(0);assertEquals(cp.observationId,newest.getString("observationId"));assertEquals("VALID",newest.getString("quality"));assertEquals(cp.mmol,newest.getDouble("glucoseMmolL"),1e-9)
++        val replay=write(listOf(web));assertEquals(0,replay.getInt("inserted"));assertEquals(1,replay.getInt("duplicates"));assertEquals(rev+2,storage.revision());assertEquals(rev+2,storage.readShellPort("graph").getLong("inputRevision"))
++    }
++    @Test fun q09ConflictRollsBackWholeBatchAndStaleRevision(){
++        accept();val initial=storage.revision();write(listOf(p()));val rev=storage.revision();reject{write(listOf(p(age=420)),initial)};reject{write(listOf(p(age=420),p(mgdl=120.0)))};assertEquals(rev,storage.revision());assertEquals(1,count("v3_cgm"));assertEquals(1,count("v3_write_receipts"))
++    }
++    @Test fun q09UnverifiedNotSilentlyPromotedAndRestartPersists(){
++        accept();val web=p(transport=C.Transport.WEB_SERVICE,quality=C.Quality.UNVERIFIED_SOURCE);write(listOf(web));val rev=storage.revision();helper.close();open();assertEquals(rev,storage.revision());val receipt=write(listOf(p()));assertEquals(1,receipt.getInt("unverifiedRetained"));assertEquals(0,receipt.getInt("inserted"));assertEquals("UNVERIFIED_SOURCE",storage.readShellPort("graph").getJSONObject("data").getJSONArray("cgm").getJSONObject(0).getString("quality"))
++    }
++    @Test fun q09EncryptedRestoreKeepsFactsAndReceipts(){
++        accept();val first=p();write(listOf(first));val password="q09-isolated-test-key".toCharArray();val backup=GfV3EncryptedSnapshot(ctx,helper).createEncrypted(password)
++        try{write(listOf(p(age=420)));GfV3EncryptedSnapshot(ctx,helper).restoreEncrypted(backup,password,storage.revision());assertEquals(1,count("v3_cgm"));assertEquals(1,count("v3_write_receipts"));assertEquals(first.observationId,storage.readShellPort("graph").getJSONObject("data").getJSONArray("cgm").getJSONObject(0).getString("observationId"));assertEquals(1,write(listOf(first)).getInt("duplicates"))}finally{password.fill('\u0000')}
++    }
++    @Test fun q09Q08HistoryReadsNativeCgmWithoutInventedCoverage(){
++        accept();accept("GFLevemirReview");val row=p();write(listOf(row));val data=GfV3Q08History(gateway.bindInstalledAdapter("GFLevemirReview"),storage).read(now).getJSONObject("data")
++        val cgm=data.getJSONArray("cgm");assertEquals(1,cgm.length());assertEquals(row.observationId,cgm.getJSONObject(0).getString("observationId"));assertEquals("VALID",cgm.getJSONObject(0).getString("quality"));assertFalse(data.getJSONObject("q08ReadWindow").getBoolean("sensorCoverageProven"))
++    }
++
++}

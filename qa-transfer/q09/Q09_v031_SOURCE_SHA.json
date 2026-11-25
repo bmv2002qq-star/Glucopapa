@@ -1,0 +1,29 @@
+{
+  "base": "350d12cfb2732b178a7628b98d6b592def139ce6",
+  "changes": [
+    {
+      "path": "android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q09CgmNativeInstrumentedTest.kt",
+      "sha256": "91dc6570fae406c2e6a366d08a1d248a9a01641ba7e01910b7f4e394a1d7d6a3",
+      "patch": "Q09_v031_part01.patch",
+      "patchSha256": "14c90f87ba5f6e651806d7ae38fd76fba1baa447ca24e80186e09f5ed81dbe2d"
+    },
+    {
+      "path": "android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3NativeModuleGateway.kt",
+      "sha256": "ba78387888efaf0de0a12a62101b43e6a21525ef941f0226638a00260ad5c404",
+      "patch": "Q09_v031_part02.patch",
+      "patchSha256": "76aacd788ad5578e8eb063ab64dca6ad5bdddbd3f6cf01714b1d0d9671515e21"
+    },
+    {
+      "path": "android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3NativeWriter.kt",
+      "sha256": "63cdc7becf9f7ee9281e7dc5e3e1b5ddee9f374958143de1b2e715aed2d2c2e7",
+      "patch": "Q09_v031_part03.patch",
+      "patchSha256": "e3c40bb3f8ff329d61f79b026cfba08e83c1fba6a9c807ba41a2f4f7f351fc15"
+    },
+    {
+      "path": "android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Q09Contract.kt",
+      "sha256": "e404907142a23b170ee1c4945e6a60471759d04f19ae53ec18cbfccd5cd3b3a1",
+      "patch": "Q09_v031_part04.patch",
+      "patchSha256": "f1d88a95587e4e8db0442dd44e06aaa3184ab35698b820342320b44f5af7638e"
+    }
+  ]
+}

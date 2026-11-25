@@ -1,0 +1,85 @@
+diff --git a/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3NativeWriter.kt b/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3NativeWriter.kt
+index 89ab3cd..dd8758a 100644
+--- a/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3NativeWriter.kt
++++ b/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3NativeWriter.kt
+@@ -204,4 +204,80 @@ internal class GfV3NativeWriter(private val helper: GfDbHelper) {
+                 .put("occurredAtUtc",occurred).put("domain",domain)
+         } finally { db.endTransaction() }
+     }
++
++    /** Q09 native batch, only the bound source may write. All new facts, receipts and revisions
++     * roll back together if a single measurement conflicts. Repeated reads do not advance revision. */
++    internal fun ingestQ09Batch(owner: String, profile: String, expectedRevision: Long,
++        incoming: List<GfV3Q09Contract.Point>): JSONObject = synchronized(mutex) {
++        val c = GfV3Q09Contract
++        if(owner != c.OWNER) throw SecurityException("Q09_WRONG_NATIVE_OWNER")
++        require(incoming.all { it.profile==profile }) { "Q09_PROFILE_CONFLICT" }
++        val points=c.merge(incoming)
++        val now=Instant.now()
++        for(p in points) {
++            require(p.observationId==c.observationId(profile,p.measured) && p.measured<=p.received && p.received<=now) { "Q09_POINT_INVALID" }
++            val again=c.normalize(profile,GfV3Q09Contract.Raw(p.measured.toEpochMilli(),p.received.toEpochMilli(),p.rawValue,p.rawUnit,p.direction,null,p.transport),now,p.quality)
++            require(again.mmol==p.mmol && again.mgdl==p.mgdl && again.direction==p.direction) { "Q09_POINT_INVALID" }
++        }
++        val db=helper.writableDatabase
++        db.beginTransaction()
++        try {
++            if(!moduleHasWriteRole(db,owner,"cgmAdapter")) throw SecurityException("NATIVE_WRITER_PERMISSION_DENIED")
++            val meta=db.rawQuery("SELECT revision,profile_id,input_revision FROM v3_meta WHERE id=1",null).use { r ->
++                require(r.moveToFirst()&&!r.isNull(1)){"PROFILE_UNCONFIGURED"}; Triple(r.getLong(0),r.getString(1),r.getLong(2))
++            }
++            require(meta.second==profile){"Q09_PROFILE_CONFLICT"}
++            GfV3WriteContract.requireExpectedRevision(expectedRevision,meta.first)
++            var revision=meta.first;var inserted=0;var repeats=0;var unverifiedRetained=0
++            for(p in points){
++                val key=p.observationId
++                val existing=db.rawQuery("SELECT observation_id,profile_id,source_device_id,measured_at_utc,glucose_mmol_l,provenance,quality,payload_json FROM v3_cgm WHERE observation_id=? OR (profile_id=? AND source_device_id=? AND measured_at_utc=?)",arrayOf(key,profile,c.SOURCE,p.measured.toString())).use{r ->
++                    if(!r.moveToFirst()) null else {
++                        require(r.getString(0)==key&&r.getString(1)==profile&&r.getString(2)==c.SOURCE&&r.getString(3)==p.measured.toString()&&r.getString(5)=="observed"){"Q09_STORED_ID_CONFLICT"}
++                        val data=JSONObject(r.getString(7))
++                        require(data.getString("observationId")==key&&data.getString("measuredAtUtc")==p.measured.toString()&&data.getString("sourceDeviceId")==c.SOURCE&&data.getString("provenance")=="observed"&&data.getString("quality")==r.getString(6)&&data.getDouble("glucoseMmolL")==r.getDouble(4)){"Q09_STORED_POINT_INVALID"}
++                        val raw=GfV3Q09Contract.Raw(p.measured.toEpochMilli(),Instant.parse(data.getString("receivedAtUtc")).toEpochMilli(),data.getDouble("rawValue"),data.getString("rawUnit"),if(data.isNull("direction"))null else data.getString("direction"),null,GfV3Q09Contract.Transport.valueOf(data.getString("transport")))
++                        val old=c.normalize(profile,raw,now,GfV3Q09Contract.Quality.valueOf(r.getString(6)))
++                        require(old.mmol==r.getDouble(4)&&!r.moveToNext()){ "Q09_STORED_POINT_INVALID" };old
++                    }
++                }
++                if(existing!=null){
++                    require(c.equivalent(existing,p)){"Q09_INPUT_CONFLICT"}
++                    if(existing.quality==GfV3Q09Contract.Quality.UNVERIFIED_SOURCE&&p.quality==GfV3Q09Contract.Quality.VALID)unverifiedRetained++
++                    repeats++;continue
++                }
++                // A receipt without its fact, or a cross-domain reused key, is not a retry.
++                require(!db.rawQuery("SELECT 1 FROM v3_write_receipts WHERE idempotency_key=? UNION ALL SELECT 1 FROM v3_extended_receipts WHERE idempotency_key=?",arrayOf(key,key)).use{it.moveToFirst()}){"Q09_RECEIPT_CONFLICT"}
++                revision++
++                val data=JSONObject().put("observationId",key).put("profileId",profile)
++                    .put("sourceDeviceId",c.SOURCE).put("source","xdrip_local").put("measuredAtUtc",p.measured.toString())
++                    .put("receivedAtUtc",p.received.toString()).put("glucoseMmolL",p.mmol).put("rawValue",p.rawValue).put("rawUnit",p.rawUnit)
++                    .put("direction",p.direction?:JSONObject.NULL).put("freshnessAtReceipt",p.freshness.name)
++                    .put("transport",p.transport.name).put("quality",p.quality.name).put("provenance","observed")
++                    .put("identityScope","LOCAL_FOLLOWER_CHANNEL_NOT_SENSOR_SERIAL").put("adapterVersion",c.VERSION)
++                db.insertOrThrow("v3_cgm",null,ContentValues().apply{
++                    put("observation_id",key);put("profile_id",profile);put("measured_at_utc",p.measured.toString());put("glucose_mmol_l",p.mmol)
++                    put("source_device_id",c.SOURCE);put("provenance","observed");put("quality",p.quality.name);put("payload_json",data.toString());put("created_revision",revision)
++                })
++                db.insertOrThrow("v3_write_receipts",null,ContentValues().apply{
++                    put("idempotency_key",key);put("profile_id",profile);put("domain","cgm");put("record_id",key)
++                    put("fingerprint",sha256("cgmAdapter|$key|$data"));put("revision",revision);put("source_module",owner)
++                })
++                db.insertOrThrow("v3_audit",null,ContentValues().apply{
++                    put("revision",revision);put("domain","cgm");put("record_id",key);put("action","cgmAdapter");put("source_module",owner);put("at_utc",now.toString())
++                })
++                db.insertOrThrow("v3_change_feed",null,ContentValues().apply{
++                    put("revision",revision);put("domain","cgm");put("record_id",key);put("source_module",owner);put("created_at_utc",now.toString())
++                });inserted++
++            }
++            if(inserted>0) {
++                val changed=db.update("v3_meta",ContentValues().apply{put("revision",revision);put("input_revision",revision)},"id=1 AND revision=? AND input_revision=? AND profile_id=?",arrayOf(meta.first.toString(),meta.third.toString(),profile))
++                require(changed==1){"V3_REVISION_CONFLICT"}
++            }
++            db.setTransactionSuccessful()
++            JSONObject().put("profileId",profile).put("revision",revision).put("inserted",inserted).put("duplicates",repeats)
++                .put("unverifiedRetained",unverifiedRetained).put("coverage","NOT_PROVEN")
++        } finally { db.endTransaction() }
++    }
++
+ }
