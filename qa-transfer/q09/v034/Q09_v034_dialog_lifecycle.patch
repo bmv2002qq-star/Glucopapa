@@ -1,0 +1,225 @@
+--- a/android-app/app/src/main/java/org/glukopapa/v3/m00/MainActivity.kt
++++ b/android-app/app/src/main/java/org/glukopapa/v3/m00/MainActivity.kt
+@@ -24,6 +24,30 @@
+     private lateinit var injectionQueue:GfV3Q07OwnerQueue
+     private lateinit var levemirQueue:GfV3Q08OwnerQueue
+     private lateinit var cgmController:GfV3Q09Controller
++    private var scopedOwnerDialog:AlertDialog?=null
++    private var scopedOwnerCancel:(()->Unit)?=null
++    private var activityResumed=false
++    /** Q08/Q09 owner consent is valid only while this Activity owns the foreground window.
++     * Dismissal without an explicit positive button is cancellation, exactly once. */
++    private fun confirmScopedOwner(title:String,message:String,finish:(Boolean)->Unit){
++        runOnUiThread {
++            if(!activityResumed||isFinishing||isDestroyed||scopedOwnerDialog!=null){finish(false);return@runOnUiThread}
++            var resolved=false
++            fun resolve(approved:Boolean){if(!resolved){resolved=true;finish(approved)}}
++            val dialog=AlertDialog.Builder(this).setTitle(title).setMessage(message)
++                .setPositiveButton("Подтвердить"){_,_->resolve(true)}
++                .setNegativeButton("Отмена"){_,_->resolve(false)}.create()
++            scopedOwnerDialog=dialog;scopedOwnerCancel={resolve(false)}
++            fun clear(){if(scopedOwnerDialog===dialog){scopedOwnerDialog=null;scopedOwnerCancel=null}}
++            dialog.setOnDismissListener{clear();resolve(false)}
++            try{dialog.show()}catch(_:Exception){clear();resolve(false);dialog.dismiss()}
++        }
++    }
++    private fun dismissScopedOwner(){
++        val dialog=scopedOwnerDialog;val cancel=scopedOwnerCancel
++        scopedOwnerDialog=null;scopedOwnerCancel=null
++        try{cancel?.invoke()}finally{dialog?.dismiss()}
++    }
+     private val origin = "https://appassets.androidplatform.net"
+     override fun onCreate(savedInstanceState: Bundle?) {
+         super.onCreate(savedInstanceState)
+@@ -103,21 +127,11 @@
+         }
+         val basalPort=nativeModuleGateway.bindInstalledAdapter("GFLevemirReview")
+         levemirQueue=GfV3Q08OwnerQueue(GfV3Q08InjectionFacts(basalPort),GfV3Q08History(basalPort,v3),v3,GfV3Q08ModuleInstaller(helper)){msg,finish->
+-            runOnUiThread {
+-                if(isFinishing||isDestroyed){finish(false);return@runOnUiThread}
+-                AlertDialog.Builder(this).setTitle("Левемир — подтверждение владельца")
+-                    .setMessage(msg).setPositiveButton("Подтвердить"){_,_->finish(true)}
+-                    .setNegativeButton("Отмена"){_,_->finish(false)}
+-                    .setOnCancelListener{finish(false)}.show()
+-            }
++            confirmScopedOwner("Левемир — подтверждение владельца",msg,finish)
+         }
+         val q09Transport=GfV3Q09Transport(applicationContext)
+         cgmController=GfV3Q09Controller(nativeModuleGateway.bindInstalledAdapter(GfV3Q09Contract.OWNER),settingsAdapter,GfV3Q09ModuleInstaller(helper),q09Transport::fetch,q09Transport::close,confirm={msg,finish->
+-            runOnUiThread {
+-                if(isFinishing||isDestroyed){finish(false);return@runOnUiThread}
+-                AlertDialog.Builder(this).setTitle("Источник CGM — подтверждение владельца").setMessage(msg)
+-                    .setPositiveButton("Подтвердить"){_,_->finish(true)}.setNegativeButton("Отмена"){_,_->finish(false)}.setOnCancelListener{finish(false)}.show()
+-            }
++            confirmScopedOwner("Источник CGM — подтверждение владельца",msg,finish)
+         },backgroundPolicy={enabled->GfV3Q09BackgroundPolicy.reconcile(applicationContext,enabled)})
+         web=WebView(this).apply {
+             layoutParams=ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.MATCH_PARENT)
+@@ -163,9 +177,10 @@
+     }
+     @Deprecated("Back routed to WebView hash history on M00")
+     override fun onBackPressed() { if(web.canGoBack())web.goBack() else super.onBackPressed() }
+-    override fun onResume(){super.onResume();if(::cgmController.isInitialized)cgmController.resume()}
+-    override fun onPause(){if(::cgmController.isInitialized)cgmController.pause();super.onPause()}
++    override fun onResume(){super.onResume();activityResumed=true;if(::cgmController.isInitialized)cgmController.resume()}
++    override fun onPause(){activityResumed=false;dismissScopedOwner();if(::cgmController.isInitialized)cgmController.pause();super.onPause()}
+     override fun onDestroy() {
++        activityResumed=false;dismissScopedOwner()
+         editQueue.cancelPendingOnDestroy()
+         settingsQueue.cancelPendingOnDestroy()
+         activityQueue.close()
+--- a/android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q08LevemirWebViewInstrumentedTest.kt
++++ b/android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q08LevemirWebViewInstrumentedTest.kt
+@@ -2,7 +2,10 @@
+ 
+ import android.content.Intent
+ import android.view.ViewGroup
+-import android.view.accessibility.AccessibilityNodeInfo
++import android.view.View
++import android.view.inspector.WindowInspector
++import android.widget.Button
++import android.widget.TextView
+ import android.webkit.WebView
+ import androidx.test.ext.junit.runners.AndroidJUnit4
+ import androidx.test.platform.app.InstrumentationRegistry
+@@ -28,28 +31,39 @@
+     private fun until(web:WebView,code:String,expected:String){repeat(70){if(js(web,code)==expected)return;Thread.sleep(250)};fail("Q08 WebView expected $expected for $code; got ${js(web,code)}")}
+     private fun decoded(raw:String)=JSONObject(JSONArray("[$raw]").getString(0))
+     private fun eventCount():Int=GfDbHelper(ctx).use{h->h.readableDatabase.rawQuery("SELECT COUNT(*) FROM v3_events",null).use{c->c.moveToFirst();c.getInt(0)}}
+-    private fun dialogButton(web:WebView,label:String,buttonId:String){
++    // Inspect the real attached native dialog in the app process. This does not
++    // invoke queue callbacks or expose a test bridge; the actual Button is clicked.
++    private fun hasTitle(view:View):Boolean {
++        if(view is TextView && view.text?.toString()?.equals("Левемир — подтверждение владельца",ignoreCase=true)==true)return true
++        return view is ViewGroup && (0 until view.childCount).any{hasTitle(view.getChildAt(it))}
++    }
++    private fun dialogButton(web:WebView,label:String,buttonId:String,click:Boolean=true){
+         var lastNodes=""
+         repeat(80){
+-            val root=instr.uiAutomation.rootInActiveWindow
+-            val title=root?.findAccessibilityNodeInfosByText("Левемир — подтверждение владельца")?:emptyList()
+-            val nodes=root?.findAccessibilityNodeInfosByViewId("android:id/$buttonId")?:emptyList()
+-            val byText=root?.findAccessibilityNodeInfosByText(label)?:emptyList()
+-            lastNodes="title=${title.map{it.text}}; id=${nodes.map{it.text}}; text=${byText.map{it.text}}"
+-            if(title.any{it.text?.toString()?.equals("Левемир — подтверждение владельца",ignoreCase=true)==true}){
+-                for(n in (nodes+byText)){
+-                    if(n.text?.toString()?.trim()?.equals(label,ignoreCase=true)==true&&n.isEnabled&&n.isClickable&&n.performAction(AccessibilityNodeInfo.ACTION_CLICK))return
++            var found=false
++            instr.runOnMainSync {
++                val roots=WindowInspector.getGlobalWindowViews().filter{it.isAttachedToWindow&&it.isShown&&hasTitle(it)}
++                val id=if(buttonId=="button1")android.R.id.button1 else android.R.id.button2
++                lastNodes=roots.joinToString { root->val b=root.findViewById<Button>(id);"focus=${root.hasWindowFocus()},button=${b?.text},shown=${b?.isShown},enabled=${b?.isEnabled}" }
++                for(root in roots){
++                    val b=root.findViewById<Button>(id)?:continue
++                    if(root.hasWindowFocus()&&b.isShown&&b.isEnabled&&b.text?.toString()?.trim()?.equals(label,ignoreCase=true)==true){
++                        found=if(click)b.performClick() else true
++                        if(found)break
++                    }
+                 }
+             }
++            if(found)return
+             Thread.sleep(250)
+         }
+-        fail("Q08 native dialog button missing: $label; $lastNodes; activation="+js(web,"document.getElementById('q08-activation-status')?.textContent")+"; morning="+js(web,"document.getElementById('message-morning')?.textContent"))
++        fail("Native dialog button missing: $label; $lastNodes; state="+js(web,"document.getElementById('q08-activation-status')?.textContent"))
+     }
+     @Test fun approvedScreenNativeActivationAndActualConfirmationAreSeparate(){
+         instr.waitForIdleSync();ctx.deleteDatabase("glukopapa_v3.db")
+         GfDbHelper(ctx).use{h->h.writableDatabase.execSQL("UPDATE v3_meta SET profile_id='q08-web-qa',timezone='Europe/Minsk' WHERE id=1")}
+         val activity=instr.startActivitySync(Intent(ctx,MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) as MainActivity
+         try{
++            instr.runOnMainSync{activity.window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)}
+             val web=activity.findViewById<ViewGroup>(android.R.id.content).getChildAt(0) as WebView
+             // A freshly created WebView can report complete for about:blank.
+             // Wait for the actual offline home document AND the navigation target.
+--- a/android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q09CgmWebViewInstrumentedTest.kt
++++ b/android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q09CgmWebViewInstrumentedTest.kt
+@@ -2,7 +2,10 @@
+ 
+ import android.content.Intent
+ import android.view.ViewGroup
+-import android.view.accessibility.AccessibilityNodeInfo
++import android.view.View
++import android.view.inspector.WindowInspector
++import android.widget.Button
++import android.widget.TextView
+ import android.webkit.WebView
+ import androidx.test.ext.junit.runners.AndroidJUnit4
+ import androidx.test.platform.app.InstrumentationRegistry
+@@ -28,28 +31,39 @@
+     private fun until(web:WebView,code:String,expected:String){repeat(70){if(js(web,code)==expected)return;Thread.sleep(250)};fail("Q09 WebView expected $expected for $code; got ${js(web,code)}")}
+     private fun decoded(raw:String)=JSONObject(JSONArray("[$raw]").getString(0))
+     private fun cgmCount():Int=GfDbHelper(ctx).use{h->h.readableDatabase.rawQuery("SELECT COUNT(*) FROM v3_cgm",null).use{c->c.moveToFirst();c.getInt(0)}}
+-    private fun dialogButton(web:WebView,label:String,buttonId:String){
++    // Inspect the real attached native dialog in the app process. This does not
++    // invoke queue callbacks or expose a test bridge; the actual Button is clicked.
++    private fun hasTitle(view:View):Boolean {
++        if(view is TextView && view.text?.toString()?.equals("Источник CGM — подтверждение владельца",ignoreCase=true)==true)return true
++        return view is ViewGroup && (0 until view.childCount).any{hasTitle(view.getChildAt(it))}
++    }
++    private fun dialogButton(web:WebView,label:String,buttonId:String,click:Boolean=true){
+         var lastNodes=""
+         repeat(80){
+-            val root=instr.uiAutomation.rootInActiveWindow
+-            val title=root?.findAccessibilityNodeInfosByText("Источник CGM — подтверждение владельца")?:emptyList()
+-            val nodes=root?.findAccessibilityNodeInfosByViewId("android:id/$buttonId")?:emptyList()
+-            val byText=root?.findAccessibilityNodeInfosByText(label)?:emptyList()
+-            lastNodes="title=${title.map{it.text}}; id=${nodes.map{it.text}}; text=${byText.map{it.text}}"
+-            if(title.any{it.text?.toString()?.equals("Источник CGM — подтверждение владельца",ignoreCase=true)==true}){
+-                for(n in (nodes+byText)){
+-                    if(n.text?.toString()?.trim()?.equals(label,ignoreCase=true)==true&&n.isEnabled&&n.isClickable&&n.performAction(AccessibilityNodeInfo.ACTION_CLICK))return
++            var found=false
++            instr.runOnMainSync {
++                val roots=WindowInspector.getGlobalWindowViews().filter{it.isAttachedToWindow&&it.isShown&&hasTitle(it)}
++                val id=if(buttonId=="button1")android.R.id.button1 else android.R.id.button2
++                lastNodes=roots.joinToString { root->val b=root.findViewById<Button>(id);"focus=${root.hasWindowFocus()},button=${b?.text},shown=${b?.isShown},enabled=${b?.isEnabled}" }
++                for(root in roots){
++                    val b=root.findViewById<Button>(id)?:continue
++                    if(root.hasWindowFocus()&&b.isShown&&b.isEnabled&&b.text?.toString()?.trim()?.equals(label,ignoreCase=true)==true){
++                        found=if(click)b.performClick() else true
++                        if(found)break
++                    }
+                 }
+             }
++            if(found)return
+             Thread.sleep(250)
+         }
+-        fail("Q09 native dialog button missing: $label; $lastNodes; state="+js(web,"document.getElementById('state')?.textContent"))
++        fail("Native dialog button missing: $label; $lastNodes; state="+js(web,"document.getElementById('state')?.textContent"))
+     }
+     @Test fun q09ApprovedScreenUsesRealNativeRequestsWithoutFixtureData(){
+         instr.waitForIdleSync();ctx.deleteDatabase("glukopapa_v3.db")
+         GfDbHelper(ctx).use{h->val st=GfV3Storage(h,ctx.assets.open("db/module_catalog_v1.json").bufferedReader().use{it.readText()},ctx.assets.open("db/writer_grants_v0.12.json").bufferedReader().use{it.readText()});st.initializeProfile("q09-webview-profile","Europe/Minsk",st.revision());h.writableDatabase.execSQL("UPDATE v3_module_registry SET status='OWNER_INTEGRATION_ACCEPTED',feature_enabled=1,read_roles_json='[\"settings\"]' WHERE module_id='GFSettings'")}
+         val activity=instr.startActivitySync(Intent(ctx,MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) as MainActivity
+         try{
++            instr.runOnMainSync{activity.window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)}
+             val web=activity.findViewById<ViewGroup>(android.R.id.content).getChildAt(0) as WebView
+             until(web,"location.origin==='https://appassets.androidplatform.net' && location.pathname==='/' && document.readyState==='complete' && !!document.querySelector('[data-module=GFCgmSource]')","true")
+             js(web,"document.querySelector('[data-module=GFCgmSource]').click();true")
+@@ -61,4 +75,26 @@
+             js(web,"document.getElementById('auto').click();true");dialogButton(web,"Подтвердить","button1");until(web,"JSON.parse(GPV3Q09Native.readState()).autoReceive===false && JSON.parse(GPV3Q09Native.readState()).busy===false","true");until(web,"document.getElementById('autoState').textContent.includes('выключен')","true");assertEquals("true",js(web,"!document.getElementById('check').disabled && !document.getElementById('auto').checked"));assertEquals(0,cgmCount())
+         }finally{GfV3QaActivityLifecycle.finishAndAwait(instr,activity);ctx.deleteDatabase("glukopapa_v3.db")}
+     }
++    @Test fun q09ClosingActivityDismissesPendingOwnerDialogWithoutActivation(){
++        instr.waitForIdleSync();ctx.deleteDatabase("glukopapa_v3.db")
++        GfDbHelper(ctx).use{h->val st=GfV3Storage(h,ctx.assets.open("db/module_catalog_v1.json").bufferedReader().use{it.readText()},ctx.assets.open("db/writer_grants_v0.12.json").bufferedReader().use{it.readText()});st.initializeProfile("q09-close-dialog","Europe/Minsk",st.revision());h.writableDatabase.execSQL("UPDATE v3_module_registry SET status='OWNER_INTEGRATION_ACCEPTED',feature_enabled=1,read_roles_json='[\"settings\"]' WHERE module_id='GFSettings'")}
++        val activity=instr.startActivitySync(Intent(ctx,MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) as MainActivity
++        var finished=false
++        try{
++            instr.runOnMainSync{activity.window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)}
++            val web=activity.findViewById<ViewGroup>(android.R.id.content).getChildAt(0) as WebView
++            until(web,"location.origin==='https://appassets.androidplatform.net' && location.pathname==='/' && document.readyState==='complete' && !!document.querySelector('[data-module=GFCgmSource]')","true")
++            js(web,"document.querySelector('[data-module=GFCgmSource]').click();true")
++            until(web,"location.pathname==='/q09/cgm.html' && document.readyState==='complete' && !!document.getElementById('check') && !document.getElementById('check').disabled","true")
++            js(web,"document.getElementById('check').click();true")
++            dialogButton(web,"Отмена","button2",click=false)
++            assertEquals(0,cgmCount())
++            GfV3QaActivityLifecycle.finishAndAwait(instr,activity);finished=true
++            instr.waitForIdleSync()
++            instr.runOnMainSync{assertFalse("Owner dialog leaked after Activity finish",WindowInspector.getGlobalWindowViews().any{it.isAttachedToWindow&&hasTitle(it)})}
++            GfDbHelper(ctx).use{h->val st=GfV3Storage(h,ctx.assets.open("db/module_catalog_v1.json").bufferedReader().use{it.readText()},ctx.assets.open("db/writer_grants_v0.12.json").bufferedReader().use{it.readText()});val port=GfV3NativeModuleGateway(st,GfV3NativeWriter(h),GfV3CorrectionWriter(h),h).bindInstalledAdapter(GfV3Q09Contract.OWNER);assertFalse(port.readQ09Context().getBoolean("active"))}
++            assertEquals(0,cgmCount())
++        }finally{if(!finished)GfV3QaActivityLifecycle.finishAndAwait(instr,activity);ctx.deleteDatabase("glukopapa_v3.db")}
++    }
++
+ }

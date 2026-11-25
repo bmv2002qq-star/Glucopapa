@@ -1,0 +1,16 @@
+{
+  "changes": [
+    {
+      "path": "android-app/app/src/main/java/org/glukopapa/v3/m00/MainActivity.kt",
+      "sha256": "d3823ded184c9d50ed8b11b68a6f1b4566b2de643b9d2363c4b5cd7bfa4379e9"
+    },
+    {
+      "path": "android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q08LevemirWebViewInstrumentedTest.kt",
+      "sha256": "41e88ea7707f2988331625bd3bd7ac614ac98a6d87b31721c9733cccff483b29"
+    },
+    {
+      "path": "android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q09CgmWebViewInstrumentedTest.kt",
+      "sha256": "7bcd4c6e2ec3eea504b5c7acee892506bf442dbb5ed7b2347f6aff1172f9d997"
+    }
+  ]
+}

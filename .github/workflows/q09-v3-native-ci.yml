@@ -357,6 +357,23 @@ jobs:
               assert hashlib.sha256((Path('q07-ci')/x['path']).read_bytes()).hexdigest()==x['sha256'],x['path']
           print('Q09_V033_SOURCE_SHA_9of9_PASS')
           PY
+      - name: Apply Q09 v034 scoped native owner dialog lifecycle and regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo '053ac215d58d5c105270e3fe30fb72309c12ac4a71ed383a0928a3ccd8a65444  qa-transfer/q09/v034/Q09_v034_dialog_lifecycle.patch' | sha256sum -c -
+          patch -d q07-ci -p1 --batch --forward -i "$GITHUB_WORKSPACE/qa-transfer/q09/v034/Q09_v034_dialog_lifecycle.patch"
+          echo '44c12b3b51e361f7228c49737dde8cfa7a9fb9d50deb7fb65b03453bb85fdb67  qa-transfer/q09/v034/Q09_v034_SOURCE_SHA.json' | sha256sum -c -
+          python3 - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          m=json.loads(Path('qa-transfer/q09/v034/Q09_v034_SOURCE_SHA.json').read_text())
+          assert len(m['changes'])==3
+          for x in m['changes']:
+              p=Path('q07-ci')/x['path']
+              assert hashlib.sha256(p.read_bytes()).hexdigest()==x['sha256'],p
+          print('Q09_V034_SOURCE_SHA_3of3_PASS')
+          PY
       - name: Compile Android Q08 candidate and instrumented tests
         shell: bash
         run: |
@@ -380,16 +397,16 @@ jobs:
           disk-size: 4096M
           emulator-boot-timeout: 900
           disable-animations: true
-          script: bash -o pipefail -c 'cd q07-ci/android-app && gradle :app:connectedDebugAndroidTest --stacktrace --no-daemon 2>&1 | tee ../../q07-ci-logs/emulator.log'
+          script: bash -o pipefail -c 'adb shell svc power stayon true && adb shell input keyevent KEYCODE_WAKEUP && adb shell wm dismiss-keyguard && cd q07-ci/android-app && gradle :app:connectedDebugAndroidTest --stacktrace --no-daemon 2>&1 | tee ../../q07-ci-logs/emulator.log'
       - name: Verify Q08 and baseline Android case identities and results
         shell: bash
         if: always()
         run: |
           set -euo pipefail
-          test -f qa-transfer/q09/v033/verify_q09_v033_xml.py
-          test -f qa-transfer/q09/v033/Q09_v033_cases.json
+          echo 'd5839fb1b93c0c29a36f37dac54084439d25a8b82cd2e3936eb851e7a1ec201a  qa-transfer/q09/v034/Q09_v034_cases.json' | sha256sum -c -
+          test -f qa-transfer/q09/v034/verify_q09_v034_xml.py
           mkdir -p qa-results/q08
-          python3 qa-transfer/q09/v033/verify_q09_v033_xml.py q07-ci/android-app/app/build/outputs/androidTest-results/connected qa-transfer/q09/v033/Q09_v033_cases.json | tee qa-results/q08/gate.json
+          python3 qa-transfer/q09/v034/verify_q09_v034_xml.py q07-ci/android-app/app/build/outputs/androidTest-results/connected qa-transfer/q09/v034/Q09_v034_cases.json | tee qa-results/q08/gate.json
       - name: Upload Android Q08 APK and XML proof
         if: always()
         uses: actions/upload-artifact@v4
