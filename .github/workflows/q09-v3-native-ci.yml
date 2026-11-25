@@ -307,6 +307,31 @@ jobs:
               assert hashlib.sha256((Path('q07-ci')/x['path']).read_bytes()).hexdigest()==x['sha256'],x['path']
           print('Q09_V031_SOURCE_SHA_4of4_PASS')
           PY
+      - name: Apply Q09 v032 local transport, owner controller and approved screen
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import base64,hashlib,io,zipfile,json,subprocess
+          from pathlib import Path
+          root=Path('qa-transfer/q09/v032')
+          parts=sorted(root.glob('q09-v032-part-*.b64'))
+          assert len(parts)==3
+          blob=base64.b64decode(''.join(''.join(p.read_text().split()) for p in parts),validate=True)
+          assert hashlib.sha256(blob).hexdigest()=='6b962422fb10cf5768b1d9969e5ee9b2845012a57190ea79619010e61aee3b19'
+          with zipfile.ZipFile(io.BytesIO(blob)) as z:
+              assert z.testzip() is None
+              assert set(z.namelist())=={'Q09_v032.patch','Q09_v032_SOURCE_SHA.json','Q09_v032_cases.json','verify_q09_v032_xml.py'}
+              z.extractall(root)
+          m=json.loads((root/'Q09_v032_SOURCE_SHA.json').read_text())
+          assert len(m['changes'])==21
+          p=(root/'Q09_v032.patch').resolve()
+          assert hashlib.sha256(p.read_bytes()).hexdigest()==m['patchSha256']
+          subprocess.run(['patch','-d','q07-ci','-p1','--batch','--forward','-i',str(p)],check=True)
+          for x in m['changes']:
+              assert hashlib.sha256((Path('q07-ci')/x['path']).read_bytes()).hexdigest()==x['sha256'],x['path']
+          print('Q09_V032_SOURCE_SHA_21of21_PASS')
+          PY
       - name: Compile Android Q08 candidate and instrumented tests
         shell: bash
         run: |
@@ -336,10 +361,10 @@ jobs:
         if: always()
         run: |
           set -euo pipefail
-          echo '75c9882067acbe4fc6490706df1a691379de829448ea1573dfe84ad4bf7aa580  qa-transfer/q09/verify_q09_xml.py' | sha256sum -c -
-          echo 'f0e7e642e0099990b06b868ff0d5e86fd1a850604f2eb90d013a10582e982971  qa-transfer/q09/Q09_v031_cases.json' | sha256sum -c -
+          test -f qa-transfer/q09/v032/verify_q09_v032_xml.py
+          test -f qa-transfer/q09/v032/Q09_v032_cases.json
           mkdir -p qa-results/q08
-          python3 qa-transfer/q09/verify_q09_xml.py q07-ci/android-app/app/build/outputs/androidTest-results/connected qa-transfer/q09/Q09_v031_cases.json | tee qa-results/q08/gate.json
+          python3 qa-transfer/q09/v032/verify_q09_v032_xml.py q07-ci/android-app/app/build/outputs/androidTest-results/connected qa-transfer/q09/v032/Q09_v032_cases.json | tee qa-results/q08/gate.json
       - name: Upload Android Q08 APK and XML proof
         if: always()
         uses: actions/upload-artifact@v4
