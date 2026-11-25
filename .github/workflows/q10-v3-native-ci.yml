@@ -401,6 +401,34 @@ jobs:
                   (root/n).write_bytes(z.read(n))
           print('Q10_V030_SOURCE_SHA_3of3_PASS')
           PY
+      - name: Apply Q10 v031 read-only native screen and revision lifecycle
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import base64,hashlib,io,zipfile,json,subprocess
+          from pathlib import Path
+          root=Path('qa-transfer/q10/v031')
+          parts=sorted(root.glob('q10-v031-delta-*.b64'))
+          assert len(parts)==2
+          blob=base64.b64decode(''.join(''.join(p.read_text().split()) for p in parts),validate=True)
+          assert hashlib.sha256(blob).hexdigest()=='eab83c61256e7b85aa3790cee067991af13d65a4d15193b3f55428824fe7a766'
+          with zipfile.ZipFile(io.BytesIO(blob)) as z:
+              assert z.testzip() is None
+              assert set(z.namelist())=={'Q10_v031.patch','Q10_v031_cases.json','Q10_v031_SOURCE_SHA.json','verify_q10_v031_xml.py'}
+              z.extractall(root)
+          m=json.loads((root/'Q10_v031_SOURCE_SHA.json').read_text())
+          assert len(m)==12
+          for x in m:
+              p=Path('q07-ci')/x['path']
+              if x['beforeSha256'] is None: assert not p.exists(),p
+              else: assert hashlib.sha256(p.read_bytes()).hexdigest()==x['beforeSha256'],p
+          subprocess.run(['patch','-d','q07-ci','-p1','--batch','--forward','-i',str((root/'Q10_v031.patch').resolve())],check=True)
+          for x in m:
+              p=Path('q07-ci')/x['path']
+              assert hashlib.sha256(p.read_bytes()).hexdigest()==x['afterSha256'],p
+          print('Q10_V031_SOURCE_SHA_12of12_PASS')
+          PY
       - name: Compile Android Q08 candidate and instrumented tests
         shell: bash
         run: |
@@ -425,13 +453,13 @@ jobs:
           emulator-boot-timeout: 900
           disable-animations: true
           script: bash -o pipefail -c 'adb shell svc power stayon true && adb shell input keyevent KEYCODE_WAKEUP && adb shell wm dismiss-keyguard && cd q07-ci/android-app && gradle :app:connectedDebugAndroidTest --stacktrace --no-daemon 2>&1 | tee ../../q07-ci-logs/emulator.log'
-      - name: Verify Q10 and 127 baseline Android case identities and results
+      - name: Verify Q10 v031 and 127 baseline Android case identities and results
         shell: bash
         if: always()
         run: |
           set -euo pipefail
           mkdir -p qa-results/q08
-          python3 qa-transfer/q10/verify_q10_v030_xml.py q07-ci/android-app/app/build/outputs/androidTest-results/connected qa-transfer/q10/Q10_v030_cases.json | tee qa-results/q08/gate.json
+          python3 qa-transfer/q10/v031/verify_q10_v031_xml.py q07-ci/android-app/app/build/outputs/androidTest-results/connected qa-transfer/q10/v031/Q10_v031_cases.json | tee qa-results/q08/gate.json
       - name: Upload Android Q08 APK and XML proof
         if: always()
         uses: actions/upload-artifact@v4
