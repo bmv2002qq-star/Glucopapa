@@ -491,6 +491,7 @@ jobs:
           python3 qa-transfer/q10/v038/install_v038.py
           python3 qa-transfer/q10/v039/install_v039.py
           python3 qa-transfer/q10/v040/install_earlier.py
+          python3 qa-transfer/q10/v042/prepare.py integrated
       - name: Compile Android Q10 candidate and instrumented tests
         shell: bash
         run: |
@@ -502,7 +503,7 @@ jobs:
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
-      - name: Android 15 Q10 v040 full Q01-Q10 regression
+      - name: Android 15 Q10 v042 integrated regression plus offline Q02
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 35
@@ -514,24 +515,21 @@ jobs:
           disk-size: 4096M
           emulator-boot-timeout: 900
           disable-animations: true
-          script: bash -o pipefail -c 'adb shell svc power stayon true && adb shell input keyevent KEYCODE_WAKEUP && adb shell wm dismiss-keyguard && cd q07-ci/android-app && gradle :app:connectedDebugAndroidTest --stacktrace --no-daemon 2>&1 | tee ../../q07-ci-logs/emulator.log'
-      - name: Verify 158 original Android case identities and results
+          script: bash qa-transfer/q10/v042/run.sh
+      - name: Verify integrated 158 plus offline 8 original Q02 cases
         shell: bash
         if: always()
         run: |
           set -euo pipefail
           mkdir -p qa-results/q08
-          python3 qa-transfer/q10/v040/verify_v040_xml.py q07-ci/android-app/app/build/outputs/androidTest-results/connected qa-transfer/q10/v033/Q10_v033_cases.json | tee qa-results/q08/gate.json
+          python3 qa-transfer/q10/v042/verify.py | tee qa-results/q08/gate.json
       - name: Upload Android Q10 APK and XML proof
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: q10-native-ci-evidence
           path: |
-            q07-ci/android-app/app/build/outputs/apk/debug/
-            q07-ci/android-app/app/build/outputs/apk/androidTest/debug/
-            q07-ci/android-app/app/build/outputs/androidTest-results/
-            q07-ci/android-app/app/build/reports/androidTests/
+            qa-results/v042/
           if-no-files-found: warn
       - name: Collect Q10 run-specific test results without branch push
         if: always()
@@ -546,7 +544,7 @@ jobs:
               'sha':os.getenv('GITHUB_SHA'),'workflow':os.getenv('GITHUB_WORKFLOW'),
               'result_source':'native Android instrumentation XML, if present',
               'test_xml_files':[],'total':0,'failures':0,'errors':0,'skipped':0}
-          for x in glob.glob('q07-ci/android-app/app/build/outputs/androidTest-results/connected/**/*.xml',recursive=True):
+          for x in glob.glob('qa-results/v042/*/outputs/androidTest-results/connected/**/*.xml',recursive=True):
               try:
                   r=E.parse(x).getroot();count=int(r.get('tests','0'))
                   result['test_xml_files'].append({'file':os.path.basename(x),'tests':count,'failures':int(r.get('failures','0')),
