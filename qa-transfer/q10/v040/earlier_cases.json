@@ -1,0 +1,18 @@
+[
+  "org.glukopapa.v3.m00.Q01AndroidRuntimeTest#actualWebViewShellProfileAndUnacceptedGuard",
+  "org.glukopapa.v3.m00.Q01AndroidRuntimeTest#nativeGuardedSettingsPersistAndReadAfterReopen",
+  "org.glukopapa.v3.m00.Q01AndroidRuntimeTest#invalidQ01IntentsNeverChangeRevisionOrSavedPreferences",
+  "org.glukopapa.v3.m00.Q01AndroidRuntimeTest#q01SettingsReachM02AndM01FromOneNativeRevision",
+  "org.glukopapa.v3.m00.Q01AndroidRuntimeTest#webViewOwnerDialogSettingsSqliteAndCancellation",
+  "org.glukopapa.v3.m00.Q02AndroidBackupTest#q02ApprovedHtmlNativeOwnerCancelKeepsDatabaseUnchanged",
+  "org.glukopapa.v3.m00.Q02AndroidBackupTest#autoJobScheduleRunsWithoutNetworkPermission",
+  "org.glukopapa.v3.m00.Q02AndroidBackupTest#deviceKeyAutoBackupRoundtripAndTamperProtection",
+  "org.glukopapa.v3.m00.Q02AndroidBackupTest#encryptedBackupWALAndWholeDatabaseRoundTrip",
+  "org.glukopapa.v3.m00.Q02AndroidBackupTest#staleRevisionCannotOverwriteLiveData",
+  "org.glukopapa.v3.m00.Q02AndroidBackupTest#privateFileCanBeSavedReadAndRestored",
+  "org.glukopapa.v3.m00.Q02AndroidBackupTest#wrongPasswordTamperTruncationLeaveDatabaseUntouched",
+  "org.glukopapa.v3.m00.Q02AndroidBackupTest#authenticatedInvalidForeignKeySnapshotRollsBackEveryTable",
+  "org.glukopapa.v3.m00.Q03AndroidReadOnlyTest#q03WebViewReadsOneStorageRevisionWithoutWrites",
+  "org.glukopapa.v3.m00.Q03AndroidReadOnlyTest#q03RoutesAreAllowlistedAndNetworkDisabled",
+  "org.glukopapa.v3.m00.Q03AndroidReadOnlyTest#q03MissingProfileFailsClosedNoDemoRecords"
+]

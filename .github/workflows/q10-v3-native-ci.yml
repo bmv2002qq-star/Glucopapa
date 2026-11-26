@@ -490,6 +490,7 @@ jobs:
           python3 qa-transfer/q10/v037/install_v037.py
           python3 qa-transfer/q10/v038/install_v038.py
           python3 qa-transfer/q10/v039/install_v039.py
+          python3 qa-transfer/q10/v040/install_earlier.py
       - name: Compile Android Q10 candidate and instrumented tests
         shell: bash
         run: |
@@ -501,7 +502,7 @@ jobs:
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
-      - name: Android 15 Q10 v039 owner-dialog and baseline regression
+      - name: Android 15 Q10 v040 full Q01-Q10 regression
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 35
@@ -514,13 +515,13 @@ jobs:
           emulator-boot-timeout: 900
           disable-animations: true
           script: bash -o pipefail -c 'adb shell svc power stayon true && adb shell input keyevent KEYCODE_WAKEUP && adb shell wm dismiss-keyguard && cd q07-ci/android-app && gradle :app:connectedDebugAndroidTest --stacktrace --no-daemon 2>&1 | tee ../../q07-ci-logs/emulator.log'
-      - name: Verify Q10 v039 and 127 baseline Android case identities and results
+      - name: Verify 158 original Android case identities and results
         shell: bash
         if: always()
         run: |
           set -euo pipefail
           mkdir -p qa-results/q08
-          python3 qa-transfer/q10/v033/verify_q10_v033_xml.py q07-ci/android-app/app/build/outputs/androidTest-results/connected qa-transfer/q10/v033/Q10_v033_cases.json | tee qa-results/q08/gate.json
+          python3 qa-transfer/q10/v040/verify_v040_xml.py q07-ci/android-app/app/build/outputs/androidTest-results/connected qa-transfer/q10/v033/Q10_v033_cases.json | tee qa-results/q08/gate.json
       - name: Upload Android Q10 APK and XML proof
         if: always()
         uses: actions/upload-artifact@v4
