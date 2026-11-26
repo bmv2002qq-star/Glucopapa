@@ -27,3 +27,12 @@ for src,blob in sources:
 assert actual==expected,(actual-expected,expected-actual)
 assert len(expected)==16
 print('Q10_V040_16_ORIGINAL_CASE_IDS_ADDED; 142 prior IDs unchanged; only test schema expectation updated')
+
+# Restore test-only libraries used by the original Q01/Q02 instrumentation.
+gradle=Path('q07-ci/android-app/app/build.gradle.kts')
+g=gradle.read_text()
+assert g.count('dependencies {')==1
+assert 'espresso-core' not in g and 'uiautomator' not in g
+g=g.replace('dependencies {','dependencies {\n    androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")\n    androidTestImplementation("androidx.test.uiautomator:uiautomator:2.3.0")',1)
+gradle.write_text(g)
+print('Q10_V041_TEST_ONLY_DEPENDENCIES_RESTORED')
