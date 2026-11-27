@@ -1,0 +1,1581 @@
+name: Q13 exact reconstructed writer source audit
+on:
+  push:
+    branches:
+      - 'qa/v3-q13-fact-evidence-20261127'
+    paths:
+      - '.github/workflows/q13-writer-source-audit.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  q11-qa:
+    strategy:
+      fail-fast: false
+      matrix:
+        api: [31]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 65
+    steps:
+      - name: Checkout isolated Q11 QA branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Preserve Q11 transfer and detach to exact verified Q10 baseline
+        shell: bash
+        run: |
+          set -euxo pipefail
+          cp audit/gfstorage-v11/settings-fixture.patch "$RUNNER_TEMP/settings-fixture.patch"
+          cp qa-transfer/q13/preflight/GfV3Q13HistoryPreflight.kt.b64 "$RUNNER_TEMP/q13-preflight.b64"
+          cp qa-transfer/q13/cgm-evidence/payload.json.gz.b64 "$RUNNER_TEMP/q13-cgm-evidence.b64"
+          cp qa-transfer/q13/fact-evidence/payload.json.gz.b64 "$RUNNER_TEMP/q13-fact-evidence.b64"
+          cp qa-transfer/q13/preflight/Q13HistoryPreflightInstrumentedTest.kt "$RUNNER_TEMP/q13-native-test.kt"
+          cp audit/gfstorage-v11/source.sha256 "$RUNNER_TEMP/v11-audit-source.sha256"
+          cp qa-transfer/gfstorage/compat-v12/payload.json.gz.b64 "$RUNNER_TEMP/compat-v12.b64"
+          cp qa-transfer/gfstorage/compat-v122/payload.json.gz.b64 "$RUNNER_TEMP/compat-v122.b64"
+          cp qa-transfer/gfstorage/block2-v13/payload.json.gz.b64 "$RUNNER_TEMP/block2-v13.b64"
+          cp qa-transfer/gfstorage/block3-v14/payload.json.gz.b64 "$RUNNER_TEMP/block3-v14.b64"
+          cp qa-transfer/q11/v011/candidate_transfer.b64 "$RUNNER_TEMP/q11_candidate.b64"
+          cp qa-transfer/q11/v011/restore_fence_candidate.b64 "$RUNNER_TEMP/restore_fence.b64"
+          cp qa-transfer/q11/v012/epoch_candidate.b64 "$RUNNER_TEMP/epoch_candidate.b64"
+          cp qa-transfer/q11/v0121/webview_candidate.b64 "$RUNNER_TEMP/webview_candidate.b64"
+          cp qa-transfer/q11/v0122/qa_repair.b64 "$RUNNER_TEMP/qa_repair.b64"
+          cp qa-transfer/q11/v013/route_candidate.b64 "$RUNNER_TEMP/route_candidate.b64"
+          cp qa-transfer/q11/v0131/compact_candidate.b64 "$RUNNER_TEMP/compact_candidate.b64"
+          cp qa-transfer/q11/v0132/route_repair.b64 "$RUNNER_TEMP/route_repair.b64"
+          cp qa-transfer/q11/v0133/preferences_candidate.b64 "$RUNNER_TEMP/preferences_candidate.b64"
+          cp qa-transfer/q11/v0134/rapid_candidate.b64 "$RUNNER_TEMP/rapid_candidate.b64"
+          cp qa-transfer/q11/v0135/future_candidate.b64 "$RUNNER_TEMP/future_candidate.b64"
+          cp qa-transfer/q11/v0136/bounds_candidate.b64 "$RUNNER_TEMP/bounds_candidate.b64"
+          cp qa-transfer/q12/v022/native_projection_candidate.b64 "$RUNNER_TEMP/q12_native_projection.b64"
+          cp qa-transfer/q12/v024/architecture_candidate.b64 "$RUNNER_TEMP/q12_architecture.b64"
+          cat qa-transfer/q12/v025/part-0{1,2,3,4}.b64 > "$RUNNER_TEMP/q12_owner_routes.b64"
+          cp qa-transfer/q12/v026/restore_candidate.b64 "$RUNNER_TEMP/q12_restore.b64"
+          cp qa-transfer/q12/v027/ui_lifecycle_candidate.b64 "$RUNNER_TEMP/q12_ui_lifecycle.b64"
+          cp qa-transfer/gfstorage/year-v01/candidate.b64 "$RUNNER_TEMP/gfstorage_year.b64"
+          cp qa-transfer/gfstorage/year-v02/candidate.b64 "$RUNNER_TEMP/gfstorage_year_v02.b64"
+          cp qa-transfer/gfstorage/year-v03/candidate.b64 "$RUNNER_TEMP/gfstorage_year_v03.b64"
+          cat qa-transfer/gfstorage/year-v04/part-{01,02,03,04}.b64 > "$RUNNER_TEMP/gfstorage_year_v04.b64"
+          cp qa-transfer/gfstorage/year-v05/candidate.b64 "$RUNNER_TEMP/gfstorage_year_v05.b64"
+          cp qa-transfer/gfstorage/year-v06/candidate.b64 "$RUNNER_TEMP/gfstorage_year_v06.b64"
+          git checkout --detach '47ddb51fb9886bf2502b971c58845ca18e5ee1d4'
+          test "$(git rev-parse HEAD)" = '47ddb51fb9886bf2502b971c58845ca18e5ee1d4'
+          test -z "$(git status --porcelain)"
+
+      - name: Install Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Install Gradle 8.10.2
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.10.2'
+      - name: Restore SHA verified Q04 baseline and Q05 overlays
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          import base64,hashlib,io,zipfile
+          from pathlib import Path
+          p=sorted(Path('qa-transfer/q04').glob('q04-part-*.b64'))
+          assert len(p)==19, f'Q04 base files {len(p)}'
+          b=base64.b64decode(''.join(''.join(x.read_text().split()) for x in p),validate=True)
+          assert hashlib.sha256(b).hexdigest()=='4ec4fcd5c8a08cebccee728905db4d988eab35ecfa60ecf4a15d98997266e6c6', 'Q04 BASE BAD SHA'
+          with zipfile.ZipFile(io.BytesIO(b)) as z:
+              assert z.testzip() is None
+              z.extractall('q07-ci')
+          PY
+          install -D qa-transfer/q04/Q04WebViewSmokeInstrumentedTest.kt q07-ci/android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q04WebViewSmokeInstrumentedTest.kt
+          install -D qa-transfer/q04/test_q04_legacy_restore_host.py q07-ci/tests/test_q04_legacy_restore_host.py
+          install -D qa-transfer/q04/Q04_v012_GfV3Q04MealFacts.kt q07-ci/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Q04MealFacts.kt
+          install -D qa-transfer/q04/Q04_v012_MainActivity.kt q07-ci/android-app/app/src/main/java/org/glukopapa/v3/m00/MainActivity.kt
+          install -D qa-transfer/q04/Q04_v012_writer_grants_v0.12.json q07-ci/android-app/app/src/main/assets/db/writer_grants_v0.12.json
+          install -D qa-transfer/q04/Q04_v012_Q04NativeDraftsInstrumentedTest.kt q07-ci/android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q04NativeDraftsInstrumentedTest.kt
+          python3 - <<'PY'
+          import base64,hashlib,io,zipfile
+          from pathlib import Path
+          p=sorted(Path('qa-transfer/q05').glob('q05-part-*.b64'))
+          assert len(p)==5, f'Q05 overlay parts {len(p)}'
+          b=base64.b64decode(''.join(''.join(x.read_text().split()) for x in p),validate=True)
+          assert hashlib.sha256(b).hexdigest()=='862e3c9e566c7c7d96cd4ba68fc167c9fbdd3244db7d9eba9c73e84b28c45b0a', 'Q05 OVERRIDE HASH INVALID'
+          with zipfile.ZipFile(io.BytesIO(b)) as z:
+              assert z.testzip() is None
+              assert len(z.namelist())==22
+              z.extractall('q07-ci')
+          print('Q05 OVERLAY SHA',hashlib.sha256(b).hexdigest())
+          PY
+          python3 - <<'PY'
+          import base64,hashlib,io,zipfile
+          from pathlib import Path
+          parts=sorted(Path('qa-transfer/q06-safety-v012').glob('q06-part-*.b64'))
+          assert len(parts)==3, f'Q06 overlay parts {len(parts)}'
+          payload=base64.b64decode(''.join(''.join(p.read_text().split()) for p in parts),validate=True)
+          assert hashlib.sha256(payload).hexdigest()=='8ee0c7f2576bb6bd78e326dd14df9752c63e0e0a454a0c1127133180134a4472', 'Q06_OVERLAY_SHA_MISMATCH'
+          with zipfile.ZipFile(io.BytesIO(payload)) as z:
+              assert z.testzip() is None, 'Q06_OVERLAY_ZIP_BAD'
+              z.extractall('q07-ci')
+          print('Q06_CONTEXT_ONLY_OVERLAY_VERIFIED',hashlib.sha256(payload).hexdigest())
+          PY
+      - name: Apply hash-verified Q07 native-only RinFast overlay (not auto accepted)
+        shell: bash
+        run: |
+          set -euxo pipefail
+          patch -d q07-ci -p0 --batch --forward -i "$GITHUB_WORKSPACE/qa-transfer/q07/Q07_SOURCE_ONLY_OVERLAY_20261124.patch"
+          python3 - <<'PY'
+          from pathlib import Path
+          import json,hashlib
+          m=json.loads(Path('qa-transfer/q07/Q07_QA_MANIFEST_20261124.json').read_text())
+          assert len(m['changes'])==12
+          for f in m['changes']:
+              p=Path('q07-ci')/f['path']
+              assert p.is_file(),p
+              assert hashlib.sha256(p.read_bytes()).hexdigest()==f['after_sha256'],p
+          print('Q07_REPLAY_VERIFIED: 12/12 source SHA', m['status'])
+          PY
+      - name: Apply Q07 QA lifecycle and native integration tests
+        shell: bash
+        run: |
+          set -euxo pipefail
+          echo 'e79ecb4a069c57f77e788840c0c04a235b8811d0b62c46293835a86fc07ef466  qa-transfer/q07/Q07_ANDROID15_QA_ISOLATION_20261124.patch' | sha256sum -c -
+          echo 'b2240e7ae36f9f254343179334c640717eb77df64a6706a8b065519b531d5506  qa-transfer/q07/Q07_ANDROID15_NATIVE_INTEGRATION_TESTS_20261124.patch' | sha256sum -c -
+          patch -d q07-ci -p0 --batch --forward -i "$GITHUB_WORKSPACE/qa-transfer/q07/Q07_ANDROID15_QA_ISOLATION_20261124.patch"
+          patch -d q07-ci -p0 --batch --forward -i "$GITHUB_WORKSPACE/qa-transfer/q07/Q07_ANDROID15_NATIVE_INTEGRATION_TESTS_20261124.patch"
+          echo '26e856ce126bcaca8a57b4b858ee6e2aecb48cdd684ce5140a40d48e72b3acc0  qa-transfer/q07/Q07_ANDROID15_WEBVIEW_AND_OWNER_PATCH_20261124.patch' | sha256sum -c -
+          patch -d q07-ci -p0 --batch --forward -i "$GITHUB_WORKSPACE/qa-transfer/q07/Q07_ANDROID15_WEBVIEW_AND_OWNER_PATCH_20261124.patch"
+          echo 'd9cc724325da755196d1917c9a655b4c5d422b7c8fadf8d489bdd467dd722995  qa-transfer/q07/Q07_RINFAST_OWNER_WRITER_HARDENING_20261124.patch' | sha256sum -c -
+          patch -d q07-ci -p0 --batch --forward -i "$GITHUB_WORKSPACE/qa-transfer/q07/Q07_RINFAST_OWNER_WRITER_HARDENING_20261124.patch"
+          echo 'e8aaad3a29c4c9b584651135ac86312cd2861277074e51d15e390940ee3adb21  qa-transfer/q07/Q07_RUNTIME_EVENT_ID_AND_AUDIT_TEST_FIX_20261124.patch' | sha256sum -c -
+          patch -d q07-ci -p0 --batch --forward -i "$GITHUB_WORKSPACE/qa-transfer/q07/Q07_RUNTIME_EVENT_ID_AND_AUDIT_TEST_FIX_20261124.patch"
+      - name: Apply Q07 explicit native owner activation overlay
+        shell: bash
+        run: |
+          set -euxo pipefail
+          echo 'SHA-verified Q07 owner activation source (never auto-activate at startup)'
+          patch -d q07-ci -p0 --batch --forward -i "$GITHUB_WORKSPACE/qa-transfer/q07/Q07_NATIVE_OWNER_ACTIVATION_v012.patch"
+          python3 - <<'PY'
+          import json,hashlib
+          from pathlib import Path
+          m=json.loads(Path('qa-transfer/q07/Q07_NATIVE_OWNER_ACTIVATION_v012_MANIFEST.json').read_text())
+          assert len(m['sourceSha256'])==5
+          for e in m['sourceSha256']:
+              p=Path('q07-ci')/e['path']
+              assert p.is_file(),p
+              assert hashlib.sha256(p.read_bytes()).hexdigest()==e['sha256'],p
+          print("Q07_OWNER_ACTIVATION_SOURCE_SHA_5of5_PASS")
+          PY
+      - name: Check WebView v0.1.2 activation no-write contract regression
+        shell: bash
+        run: |
+          set -euxo pipefail
+          echo '4454907cfd90b88c487eb2f9217920b298a7a88d048dcb4f8078a2990cd91f09  qa-transfer/q07/Q07_v012_WEBVIEW_PENDING_NATIVE_ACTIVATION_TEST_FIX_20261124.patch' | sha256sum -c -
+          patch -d q07-ci -p0 --batch --forward -i "$GITHUB_WORKSPACE/qa-transfer/q07/Q07_v012_WEBVIEW_PENDING_NATIVE_ACTIVATION_TEST_FIX_20261124.patch"
+          python3 - <<'PY'
+          import json,hashlib
+          from pathlib import Path
+          manifest=json.loads(Path('qa-transfer/q07/Q07_v012_WEBVIEW_TEST_FIX_MANIFEST_20261124.json').read_text())
+          p=Path('q07-ci')/manifest['testFile']
+          assert p.is_file()
+          assert hashlib.sha256(p.read_bytes()).hexdigest()==manifest['updatedSha256']
+          print('Q07_WEBVIEW_V012_VERIFIED',manifest['finding'])
+          PY
+      - name: Q07 Q06 Q05 Q04 Q03 host and source regression
+        shell: bash
+        run: |
+          set -euxo pipefail
+          cd q07-ci
+          mkdir -p ../q07-ci-logs
+          exec > >(tee -a ../q07-ci-logs/host.log) 2>&1
+          python3 tests/test_q05_schema_host.py
+          python3 tests/test_q05_static_contract.py
+          python3 ../qa-transfer/q06/test_q06_ci_contract.py
+          python3 ../qa-transfer/q06-safety-20261124/test_q06_failclosed_static.py
+          python3 tests/test_q06_q04_integration_structure.py
+          python3 tests/test_q04_legacy_restore_host.py
+          python3 tests/test_q04_sqlite_contract.py
+          node tests/test_q04_native_adapter_contract.js
+          cd tests/q03/tests
+          node normalizer_node_tests.js
+          node stress_q03.js
+      - name: Apply SHA-verified Q08 candidate (no registry activation, no live dose calculation)
+        shell: bash
+        run: |
+          set -euxo pipefail
+          echo '48eee3cceeb7bf7c91ce88764727408df9628d89242d6b4d0dc1da864ce5bf7e  qa-transfer/q08/Q08_native_source_only_v042.patch' | sha256sum -c -
+          cd q07-ci
+          git apply --check "$GITHUB_WORKSPACE/qa-transfer/q08/Q08_native_source_only_v042.patch"
+          git apply "$GITHUB_WORKSPACE/qa-transfer/q08/Q08_native_source_only_v042.patch"
+      - name: Apply Q08 v043 native UI and owner confirmation overlay
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat qa-transfer/q08/q08-ui-v043-part-*.patch > /tmp/q08-ui-v043.patch
+          echo '4ffbe56c218265b044c48a314e90939d052770cb1d3d6b5e48bcb32edd14d3e5  /tmp/q08-ui-v043.patch' | sha256sum -c -
+          patch -d q07-ci -p1 --batch --forward --dry-run -i /tmp/q08-ui-v043.patch
+          patch -d q07-ci -p1 --batch --forward -i /tmp/q08-ui-v043.patch
+      - name: Apply v044 indexed CGM history and verify every changed source
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo '52a55c0b85b8f5269d46550c07455654d3db7a871c549e7de9197d0ed4048dbc  qa-transfer/q08/Q08_indexed_history_overlay_v044.patch' | sha256sum -c -
+          patch -d q07-ci -p1 --batch --forward --dry-run -i "$GITHUB_WORKSPACE/qa-transfer/q08/Q08_indexed_history_overlay_v044.patch"
+          patch -d q07-ci -p1 --batch --forward -i "$GITHUB_WORKSPACE/qa-transfer/q08/Q08_indexed_history_overlay_v044.patch"
+          echo '1f977c2ebed00bbf319ab2276b4d1fb902b12ed1c4a65b8870b55b9fce098360  qa-transfer/q08/Q08_v044_SOURCE_SHA.json' | sha256sum -c -
+          python3 - <<'PY'
+          import json,hashlib
+          from pathlib import Path
+          m=json.loads(Path('qa-transfer/q08/Q08_v044_SOURCE_SHA.json').read_text())
+          assert len(m['changes'])==13
+          for x in m['changes']:
+              p=Path('q07-ci')/x['path']
+              assert p.is_file(),p
+              assert hashlib.sha256(p.read_bytes()).hexdigest()==x['sha256'],p
+          print('Q08_V044_SOURCE_SHA_13of13_PASS')
+          PY
+      - name: Apply v045 dialog instrumentation and explicit activation lifecycle regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo '9cfd03f45936fb99965f36c8e64cdfa591723fb305bdf71330066806899d74c6  qa-transfer/q08/Q08_v045_dialog_and_lifecycle.patch' | sha256sum -c -
+          patch -d q07-ci -p1 --batch --forward --dry-run -i "$GITHUB_WORKSPACE/qa-transfer/q08/Q08_v045_dialog_and_lifecycle.patch"
+          patch -d q07-ci -p1 --batch --forward -i "$GITHUB_WORKSPACE/qa-transfer/q08/Q08_v045_dialog_and_lifecycle.patch"
+          echo 'c3d4ea7761fc4db1ef81c2372ae09607fa73a4358281548c27b43eea14b261fe  qa-transfer/q08/Q08_v045_SOURCE_SHA.json' | sha256sum -c -
+          python3 - <<'PY'
+          import json,hashlib
+          from pathlib import Path
+          m=json.loads(Path('qa-transfer/q08/Q08_v045_SOURCE_SHA.json').read_text())
+          assert len(m['changes'])==13
+          for x in m['changes']:
+              p=Path('q07-ci')/x['path']
+              assert p.is_file(),p
+              assert hashlib.sha256(p.read_bytes()).hexdigest()==x['sha256'],p
+          print('Q08_V045_SOURCE_SHA_13of13_PASS')
+          PY
+      - name: Apply v046 additional actual owner queue and profile history timezone
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'd9ec109f79cdee6604b30e942b2907ed9bd5fd2dfcd8bec56f4fb9a7c526b960  qa-transfer/q08/Q08_v046_additional_and_timezone.patch' | sha256sum -c -
+          patch -d q07-ci -p1 --batch --forward --dry-run -i "$GITHUB_WORKSPACE/qa-transfer/q08/Q08_v046_additional_and_timezone.patch"
+          patch -d q07-ci -p1 --batch --forward -i "$GITHUB_WORKSPACE/qa-transfer/q08/Q08_v046_additional_and_timezone.patch"
+          echo '74200d639cd172938df22ebf709dfc400d5feabe70e2bf60eeebc324953d53a8  qa-transfer/q08/Q08_v046_SOURCE_SHA.json' | sha256sum -c -
+          python3 - <<'PY'
+          import json,hashlib
+          from pathlib import Path
+          m=json.loads(Path('qa-transfer/q08/Q08_v046_SOURCE_SHA.json').read_text())
+          assert len(m['changes'])==13
+          for x in m['changes']:
+              p=Path('q07-ci')/x['path']
+              assert p.is_file(),p
+              assert hashlib.sha256(p.read_bytes()).hexdigest()==x['sha256'],p
+          print('Q08_V046_SOURCE_SHA_13of13_PASS')
+          PY
+      - name: Apply v047 related history scoping and verify final sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo '5411b9db26a8ed85e14d3cc57af2795ca7193555e82796376cc89ab67d131e35  qa-transfer/q08/Q08_v047_related_history.patch' | sha256sum -c -
+          patch -d q07-ci -p1 --batch --forward --dry-run -i "$GITHUB_WORKSPACE/qa-transfer/q08/Q08_v047_related_history.patch"
+          patch -d q07-ci -p1 --batch --forward -i "$GITHUB_WORKSPACE/qa-transfer/q08/Q08_v047_related_history.patch"
+          echo 'ae02b43bdff0bca3c872cdd19b36c6dcd37cb26f8f0181652ef5feae516f1247  qa-transfer/q08/Q08_v047_SOURCE_SHA.json' | sha256sum -c -
+          python3 - <<'PY'
+          import json,hashlib
+          from pathlib import Path
+          m=json.loads(Path('qa-transfer/q08/Q08_v047_SOURCE_SHA.json').read_text())
+          assert len(m['changes'])==13
+          for x in m['changes']:
+              p=Path('q07-ci')/x['path']
+              assert p.is_file(),p
+              assert hashlib.sha256(p.read_bytes()).hexdigest()==x['sha256'],p
+          print('Q08_V047_SOURCE_SHA_13of13_PASS')
+          PY
+      - name: Apply v048 terminal receipt queue and explicit version provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'bec10fd07d70e63c91371ae2bc549d3708ec299ef346a5bd32c1e85c5d0848d7  qa-transfer/q08/Q08_v048_terminal_queue_version.patch' | sha256sum -c -
+          patch -d q07-ci -p1 --batch --forward --dry-run -i "$GITHUB_WORKSPACE/qa-transfer/q08/Q08_v048_terminal_queue_version.patch"
+          patch -d q07-ci -p1 --batch --forward -i "$GITHUB_WORKSPACE/qa-transfer/q08/Q08_v048_terminal_queue_version.patch"
+          echo 'b40031da23bfdaf153a2b5de08cd36d8cea0ee11f71a7af89899e68aa379717e  qa-transfer/q08/Q08_v048_SOURCE_SHA.json' | sha256sum -c -
+          python3 - <<'PY'
+          import json,hashlib
+          from pathlib import Path
+          m=json.loads(Path('qa-transfer/q08/Q08_v048_SOURCE_SHA.json').read_text())
+          assert len(m['changes'])==13
+          for x in m['changes']:
+              p=Path('q07-ci')/x['path']
+              assert p.is_file(),p
+              assert hashlib.sha256(p.read_bytes()).hexdigest()==x['sha256'],p
+          print('Q08_V048_SOURCE_SHA_13of13_PASS')
+          PY
+      - name: Apply v049 WebView readiness test-only repair and verify all sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'd9f298b66fa035222197e27a9dd356147f5ae74aa95c8a42be65babee0c63500  qa-transfer/q08/Q08_v049_webview_readiness.patch' | sha256sum -c -
+          patch -d q07-ci -p1 --batch --forward --dry-run -i "$GITHUB_WORKSPACE/qa-transfer/q08/Q08_v049_webview_readiness.patch"
+          patch -d q07-ci -p1 --batch --forward -i "$GITHUB_WORKSPACE/qa-transfer/q08/Q08_v049_webview_readiness.patch"
+          echo 'a4c6ff767d459dd6e49584ff7d0ea95da900f4ce4b1a74a386ea89dcb160e5f4  qa-transfer/q08/Q08_v049_SOURCE_SHA.json' | sha256sum -c -
+          python3 - <<'PY'
+          import json,hashlib
+          from pathlib import Path
+          m=json.loads(Path('qa-transfer/q08/Q08_v049_SOURCE_SHA.json').read_text())
+          assert len(m['changes'])==16
+          for x in m['changes']:
+              p=Path('q07-ci')/x['path']
+              assert p.is_file(),p
+              assert hashlib.sha256(p.read_bytes()).hexdigest()==x['sha256'],p
+          print('Q08_V049_SOURCE_SHA_16of16_PASS')
+          PY
+      - name: Q08 v042 exact UTC and transport regression (synthetic fixtures only)
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --test qa-transfer/q08/v042/tests/test_review.js
+      - name: Apply Q09 v031 native CGM contract and batch writer
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'a210bf847c5efc678055aaf6087bce0d044cfb324fa56077a9dbbfc42b9c350b  qa-transfer/q09/Q09_v031_SOURCE_SHA.json' | sha256sum -c -
+          python3 - <<'PY'
+          import json,hashlib,subprocess
+          from pathlib import Path
+          root=Path('qa-transfer/q09')
+          m=json.loads((root/'Q09_v031_SOURCE_SHA.json').read_text())
+          assert len(m['changes'])==4
+          for x in m['changes']:
+              patch=(root/x['patch']).resolve()
+              assert hashlib.sha256(patch.read_bytes()).hexdigest()==x['patchSha256'],patch
+              subprocess.run(['patch','-d','q07-ci','-p1','--batch','--forward','-i',str(patch)],check=True)
+              assert hashlib.sha256((Path('q07-ci')/x['path']).read_bytes()).hexdigest()==x['sha256'],x['path']
+          print('Q09_V031_SOURCE_SHA_4of4_PASS')
+          PY
+      - name: Apply Q09 v032 local transport, owner controller and approved screen
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import base64,hashlib,io,zipfile,json,subprocess
+          from pathlib import Path
+          root=Path('qa-transfer/q09/v032')
+          parts=sorted(root.glob('q09-v032-part-*.b64'))
+          assert len(parts)==3
+          blob=base64.b64decode(''.join(''.join(p.read_text().split()) for p in parts),validate=True)
+          assert hashlib.sha256(blob).hexdigest()=='6b962422fb10cf5768b1d9969e5ee9b2845012a57190ea79619010e61aee3b19'
+          with zipfile.ZipFile(io.BytesIO(blob)) as z:
+              assert z.testzip() is None
+              assert set(z.namelist())=={'Q09_v032.patch','Q09_v032_SOURCE_SHA.json','Q09_v032_cases.json','verify_q09_v032_xml.py'}
+              z.extractall(root)
+          m=json.loads((root/'Q09_v032_SOURCE_SHA.json').read_text())
+          assert len(m['changes'])==21
+          p=(root/'Q09_v032.patch').resolve()
+          assert hashlib.sha256(p.read_bytes()).hexdigest()==m['patchSha256']
+          subprocess.run(['patch','-d','q07-ci','-p1','--batch','--forward','-i',str(p)],check=True)
+          for x in m['changes']:
+              assert hashlib.sha256((Path('q07-ci')/x['path']).read_bytes()).hexdigest()==x['sha256'],x['path']
+          print('Q09_V032_SOURCE_SHA_21of21_PASS')
+          PY
+      - name: Apply Q09 v033 background catch-up and receipt integrity
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import base64,hashlib,io,zipfile,json,subprocess
+          from pathlib import Path
+          root=Path('qa-transfer/q09/v033')
+          parts=sorted(root.glob('q09-v033-part-*.b64'))
+          assert len(parts)==2
+          blob=base64.b64decode(''.join(''.join(p.read_text().split()) for p in parts),validate=True)
+          assert hashlib.sha256(blob).hexdigest()=='0de98ce1e7d376eb9fedc8ea8d604a50f1d4cea4f1b12ddc2db000723beecec8'
+          with zipfile.ZipFile(io.BytesIO(blob)) as z:
+              assert z.testzip() is None
+              assert set(z.namelist())=={'Q09_v033.patch','Q09_v033_SOURCE_SHA.json','Q09_v033_cases.json','verify_q09_v033_xml.py'}
+              z.extractall(root)
+          m=json.loads((root/'Q09_v033_SOURCE_SHA.json').read_text())
+          assert len(m['changes'])==9
+          p=(root/'Q09_v033.patch').resolve()
+          assert hashlib.sha256(p.read_bytes()).hexdigest()==m['patchSha256']
+          subprocess.run(['patch','-d','q07-ci','-p1','--batch','--forward','-i',str(p)],check=True)
+          for x in m['changes']:
+              assert hashlib.sha256((Path('q07-ci')/x['path']).read_bytes()).hexdigest()==x['sha256'],x['path']
+          print('Q09_V033_SOURCE_SHA_9of9_PASS')
+          PY
+      - name: Apply Q09 v034 scoped native owner dialog lifecycle and regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo '053ac215d58d5c105270e3fe30fb72309c12ac4a71ed383a0928a3ccd8a65444  qa-transfer/q09/v034/Q09_v034_dialog_lifecycle.patch' | sha256sum -c -
+          patch -d q07-ci -p1 --batch --forward -i "$GITHUB_WORKSPACE/qa-transfer/q09/v034/Q09_v034_dialog_lifecycle.patch"
+          echo '44c12b3b51e361f7228c49737dde8cfa7a9fb9d50deb7fb65b03453bb85fdb67  qa-transfer/q09/v034/Q09_v034_SOURCE_SHA.json' | sha256sum -c -
+          python3 - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          m=json.loads(Path('qa-transfer/q09/v034/Q09_v034_SOURCE_SHA.json').read_text())
+          assert len(m['changes'])==3
+          for x in m['changes']:
+              p=Path('q07-ci')/x['path']
+              assert hashlib.sha256(p.read_bytes()).hexdigest()==x['sha256'],p
+          print('Q09_V034_SOURCE_SHA_3of3_PASS')
+          PY
+      - name: Apply Q10 v030 read-only evidence diagnostics (no production activation)
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import base64,hashlib,io,zipfile,json
+          from pathlib import Path
+          root=Path('qa-transfer/q10')
+          blob=base64.b64decode(''.join((root/'Q10_v030_transfer.b64').read_text().split()),validate=True)
+          assert hashlib.sha256(blob).hexdigest()=='f73d795c58727b1d2cf6f8f73e95fcea11be0b960d83357050085d0770405a5e'
+          with zipfile.ZipFile(io.BytesIO(blob)) as z:
+              assert z.testzip() is None
+              m=json.loads(z.read('Q10_v030_SOURCE_SHA.json'))
+              assert len(m)==3
+              assert set(z.namelist())==set(m)|{'Q10_v030_SOURCE_SHA.json','Q10_v030_cases.json','verify_q10_v030_xml.py'}
+              for name,sha in m.items():
+                  assert name.startswith('android-app/app/src/')
+                  p=Path('q07-ci')/name
+                  assert not p.exists(),p
+                  b=z.read(name)
+                  assert hashlib.sha256(b).hexdigest()==sha,p
+                  p.parent.mkdir(parents=True,exist_ok=True)
+                  p.write_bytes(b)
+              for n in ['Q10_v030_cases.json','verify_q10_v030_xml.py','Q10_v030_SOURCE_SHA.json']:
+                  (root/n).write_bytes(z.read(n))
+          print('Q10_V030_SOURCE_SHA_3of3_PASS')
+          PY
+      - name: Apply Q10 v031 read-only native screen and revision lifecycle
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import base64,hashlib,io,zipfile,json,subprocess
+          from pathlib import Path
+          root=Path('qa-transfer/q10/v031')
+          parts=sorted(root.glob('q10-v031-delta-*.b64'))
+          assert len(parts)==2
+          blob=base64.b64decode(''.join(''.join(p.read_text().split()) for p in parts),validate=True)
+          assert hashlib.sha256(blob).hexdigest()=='eab83c61256e7b85aa3790cee067991af13d65a4d15193b3f55428824fe7a766'
+          with zipfile.ZipFile(io.BytesIO(blob)) as z:
+              assert z.testzip() is None
+              assert set(z.namelist())=={'Q10_v031.patch','Q10_v031_cases.json','Q10_v031_SOURCE_SHA.json','verify_q10_v031_xml.py'}
+              z.extractall(root)
+          m=json.loads((root/'Q10_v031_SOURCE_SHA.json').read_text())
+          assert len(m)==12
+          for x in m:
+              p=Path('q07-ci')/x['path']
+              if x['beforeSha256'] is None: assert not p.exists(),p
+              else: assert hashlib.sha256(p.read_bytes()).hexdigest()==x['beforeSha256'],p
+          subprocess.run(['patch','-d','q07-ci','-p1','--batch','--forward','-i',str((root/'Q10_v031.patch').resolve())],check=True)
+          for x in m:
+              p=Path('q07-ci')/x['path']
+              assert hashlib.sha256(p.read_bytes()).hexdigest()==x['afterSha256'],p
+          print('Q10_V031_SOURCE_SHA_12of12_PASS')
+          PY
+      - name: Apply Q10 v032 exact permission denial test
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import base64,hashlib,io,zipfile,json,subprocess
+          from pathlib import Path
+          root=Path('qa-transfer/q10/v032')
+          blob=base64.b64decode(''.join((root/'Q10_v032_transfer.b64').read_text().split()),validate=True)
+          assert hashlib.sha256(blob).hexdigest()=='4f143a7eae351a1810391983a23e6aae1c7c7366a3178ed7ede10afe8b0d8cfa'
+          with zipfile.ZipFile(io.BytesIO(blob)) as z:
+              assert z.testzip() is None
+              assert set(z.namelist())=={'Q10_v032.patch','Q10_v032_cases.json','Q10_v032_SOURCE_SHA.json','verify_q10_v032_xml.py'}
+              z.extractall(root)
+          m=json.loads((root/'Q10_v032_SOURCE_SHA.json').read_text())
+          assert len(m)==1
+          for x in m:
+              p=Path('q07-ci')/x['path']
+              assert hashlib.sha256(p.read_bytes()).hexdigest()==x['beforeSha256'],p
+          subprocess.run(['patch','-d','q07-ci','-p1','--batch','--forward','-i',str((root/'Q10_v032.patch').resolve())],check=True)
+          for x in m:
+              p=Path('q07-ci')/x['path']
+              assert hashlib.sha256(p.read_bytes()).hexdigest()==x['afterSha256'],p
+          print('Q10_V032_SOURCE_SHA_1of1_PASS')
+          PY
+      - name: Apply Q10 v033 scoped research projection and native producer tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import base64,hashlib,io,zipfile,json,subprocess
+          from pathlib import Path
+          root=Path('qa-transfer/q10/v033')
+          blob=base64.b64decode(''.join((root/'Q10_v033_transfer.b64').read_text().split()),validate=True)
+          assert hashlib.sha256(blob).hexdigest()=='797882658395ccb7f8c756e6d6a6725af7adb9cbe387a238ee0e7c32ebfe6593'
+          with zipfile.ZipFile(io.BytesIO(blob)) as z:
+              assert z.testzip() is None
+              assert set(z.namelist())=={'Q10_v033.patch','Q10_v033_cases.json','Q10_v033_SOURCE_SHA.json','verify_q10_v033_xml.py'}
+              z.extractall(root)
+          m=json.loads((root/'Q10_v033_SOURCE_SHA.json').read_text())
+          assert len(m)==4
+          for x in m:
+              p=Path('q07-ci')/x['path']
+              assert hashlib.sha256(p.read_bytes()).hexdigest()==x['beforeSha256'],p
+          subprocess.run(['patch','-d','q07-ci','-p1','--batch','--forward','-i',str((root/'Q10_v033.patch').resolve())],check=True)
+          for x in m:
+              p=Path('q07-ci')/x['path']
+              assert hashlib.sha256(p.read_bytes()).hexdigest()==x['afterSha256'],p
+          print('Q10_V033_SOURCE_SHA_4of4_PASS')
+          PY
+      - name: Install immutable GFSafety donor and strict V3 parity adapter for QA
+        shell: bash
+        run: |
+          set -euxo pipefail
+          node qa-transfer/q10/donor-audit/audit.js
+          node qa-transfer/q10/v034/test_v034.js
+          python3 qa-transfer/q10/v035/install_v035.py
+          python3 qa-transfer/q10/v036/install_v036.py
+          python3 qa-transfer/q10/v037/install_v037.py
+          python3 qa-transfer/q10/v038/install_v038.py
+          python3 qa-transfer/q10/v039/install_v039.py
+          python3 qa-transfer/q10/v040/install_earlier.py
+          python3 qa-transfer/q10/v042/prepare.py integrated
+      - name: Verify and apply Q11 read-only candidate, no registry activation
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p "$RUNNER_TEMP/q11-candidate" qa-results/q11
+          python3 - <<'PY'
+          from pathlib import Path
+          import os,base64,hashlib,zipfile,io
+          t=Path(os.environ['RUNNER_TEMP'])
+          b=base64.b64decode(''.join((t/'q11_candidate.b64').read_text().split()),validate=True)
+          assert hashlib.sha256(b).hexdigest()=='c13f2587dd13708a4b58a21ca6292f450ce0fed3b9f184a7db10572b0c08a5f1'
+          with zipfile.ZipFile(io.BytesIO(b)) as z:
+              assert z.testzip() is None
+              assert set(z.namelist())=={'GfV3Q11ReadContract.kt','GfV3Q11SnapshotReader.kt','GfV3Storage_Q11.fragment.kt','Q11ReadOnlyInstrumentedTest.kt','install_q11_candidate.py'}
+              z.extractall(t/'q11-candidate')
+          PY
+          python3 "$RUNNER_TEMP/q11-candidate/install_q11_candidate.py" q07-ci/android-app | tee qa-results/q11/native_delta_sha.json
+          echo "Q11 candidate source only; no activation, no WebView route, no new medical calculation"
+      - name: Configure test-only Android Test Orchestrator and clear data between tests
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p "$HOME/.gradle/init.d" qa-results/q11
+          cat > "$HOME/.gradle/init.d/q11-qa-isolation.gradle" <<'GROOVY'
+          gradle.beforeProject { p ->
+              p.pluginManager.withPlugin('com.android.application') {
+                  def android = p.extensions.getByName('android')
+                  android.testOptions.execution = 'ANDROIDX_TEST_ORCHESTRATOR'
+                  android.defaultConfig.testInstrumentationRunnerArguments.put('clearPackageData', 'true')
+                  p.dependencies.add('androidTestUtil', 'androidx.test:orchestrator:1.5.1')
+                  p.afterEvaluate {
+                      assert android.testOptions.execution.toString().equalsIgnoreCase('ANDROIDX_TEST_ORCHESTRATOR')
+                      assert android.defaultConfig.testInstrumentationRunnerArguments['clearPackageData'] == 'true'
+                      println('Q11_QA_ORCHESTRATOR_CONFIGURED clearPackageData=true; runtime source unchanged')
+                  }
+              }
+          }
+          GROOVY
+          cp "$HOME/.gradle/init.d/q11-qa-isolation.gradle" qa-results/q11/qa-isolation.gradle
+      - name: Apply verified Q09 fence and scoped Q10 Q11 epoch candidate
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p qa-results/q11
+          python3 - <<'PY'
+          import hashlib,zipfile,base64,os,json,io
+          from pathlib import Path
+          t=Path(os.environ['RUNNER_TEMP']); app=Path('q07-ci/android-app')
+          h=lambda b:hashlib.sha256(b).hexdigest()
+          for name,sha,count in [('restore_fence','673592034765683412415b7da60ca67f8b50a3160ce0bc50327bcae8f504b645',6),('epoch_candidate','58f1d208d74c0a11f9905adde9bc57756a8bec5fc8f9bae32b389e1a63262559',7)]:
+              b=base64.b64decode(''.join((t/(name+'.b64')).read_text().split()),validate=True)
+              assert h(b)==sha,name
+              with zipfile.ZipFile(io.BytesIO(b)) as z:
+                  assert z.testzip() is None
+                  m=json.loads(z.read('manifest.json'))
+                  assert len(m)==count and set(z.namelist())==set(m)|{'manifest.json'}
+                  for n,v in m.items():
+                      p=app/n
+                      assert Path(n).parts[0]=='app' and '..' not in Path(n).parts and n.endswith('.kt')
+                      assert (h(p.read_bytes()) if p.exists() else None)==v['before'],n
+                      assert h(z.read(n))==v['after'],n
+                      p.write_bytes(z.read(n))
+                  Path('qa-results/q11/'+name+'-source-manifest.json').write_text(json.dumps(m,indent=2))
+          PY
+      - name: Install exact WebView harness into androidTest only
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          import base64,hashlib,io,json,os,zipfile
+          from pathlib import Path
+          root=Path('q07-ci/android-app')
+          h=lambda b:hashlib.sha256(b).hexdigest()
+          b=base64.b64decode(''.join((Path(os.environ['RUNNER_TEMP'])/'webview_candidate.b64').read_text().split()),validate=True)
+          assert h(b)=='c23c326621911e99be5d20fa6b819035cf2671085cf8dc3734dac168bae9b63f'
+          with zipfile.ZipFile(io.BytesIO(b)) as z:
+              assert z.testzip() is None
+              m=json.loads(z.read('manifest.json'))
+              assert set(m)=={'app/src/androidTest/java/org/glukopapa/v3/m00/Q11WebViewReadOnlyInstrumentedTest.kt','app/src/androidTest/assets/q11/runtime_readonly_v0121.html'}
+              assert set(z.namelist())==set(m)|{'manifest.json'}
+              for n,v in m.items():
+                  p=root/n
+                  assert not p.exists() and v['before'] is None
+                  assert h(z.read(n))==v['after']
+                  p.parent.mkdir(parents=True,exist_ok=True)
+                  p.write_bytes(z.read(n))
+              Path('qa-results/q11/webview-source-manifest.json').write_text(json.dumps(m,indent=2))
+          PY
+      - name: Apply test-only readiness and exact offline route repair
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          import base64,hashlib,io,json,os,zipfile
+          from pathlib import Path
+          root=Path('q07-ci/android-app'); h=lambda b:hashlib.sha256(b).hexdigest()
+          b=base64.b64decode(''.join((Path(os.environ['RUNNER_TEMP'])/'qa_repair.b64').read_text().split()),validate=True)
+          assert h(b)=='b017920b306e284db2ebe9884467d4eb8ba5a0392eb278caa97c52ebf245bb3f'
+          with zipfile.ZipFile(io.BytesIO(b)) as z:
+              assert z.testzip() is None
+              m=json.loads(z.read('manifest.json'))
+              assert set(m)=={'app/src/androidTest/java/org/glukopapa/v3/m00/Q11WebViewReadOnlyInstrumentedTest.kt','app/src/androidTest/java/org/glukopapa/v3/m00/Q01AndroidRuntimeTest.kt'}
+              assert set(z.namelist())==set(m)|{'manifest.json'}
+              for n,v in m.items():
+                  p=root/n
+                  assert h(p.read_bytes())==v['before'],n
+                  assert h(z.read(n))==v['after'],n
+                  p.write_bytes(z.read(n))
+              Path('qa-results/q11/qa-repair-source-manifest.json').write_text(json.dumps(m,indent=2))
+          PY
+      - name: Apply guarded Q11 shell route candidate, no registry activation
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          import base64,hashlib,io,json,os,zipfile
+          from pathlib import Path
+          root=Path('q07-ci/android-app'); h=lambda b:hashlib.sha256(b).hexdigest()
+          b=base64.b64decode(''.join((Path(os.environ['RUNNER_TEMP'])/'route_candidate.b64').read_text().split()),validate=True)
+          assert h(b)=='238419fa4bf2523e277adf3c70ede5cd52dbedbb045d5f54ac774fc8945532eb'
+          with zipfile.ZipFile(io.BytesIO(b)) as z:
+              assert z.testzip() is None
+              m=json.loads(z.read('manifest.json'))
+              assert len(m)==7 and set(z.namelist())==set(m)|{'manifest.json','index_patch.json'}
+              for n,v in m.items():
+                  p=root/n
+                  assert Path(n).parts[0]=='app' and '..' not in Path(n).parts
+                  assert (h(p.read_bytes()) if p.exists() else None)==v['before'],n
+                  assert h(z.read(n))==v['after'],n
+                  p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(z.read(n))
+              x=json.loads(z.read('index_patch.json'))
+              assert x['path']=='app/src/main/assets/www/index.html'
+              p=root/x['path'];assert h(p.read_bytes())==x['before']
+              s=p.read_bytes().decode();assert s.count(x['old'])==1
+              out=s.replace(x['old'],x['new']).encode();assert h(out)==x['after'];p.write_bytes(out)
+              m[x['path']]={'before':x['before'],'after':x['after']}
+              Path('qa-results/q11/shell-route-source-manifest.json').write_text(json.dumps(m,indent=2))
+          PY
+      - name: Apply native compact home candidate after verified v013 route
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          import base64,hashlib,io,json,os,zipfile
+          from pathlib import Path
+          root=Path('q07-ci/android-app'); h=lambda b:hashlib.sha256(b).hexdigest()
+          b=base64.b64decode(''.join((Path(os.environ['RUNNER_TEMP'])/'compact_candidate.b64').read_text().split()),validate=True)
+          assert h(b)=='5f8e358f00ed1bb5f5b8bbb8d5c11d893a9cb8aa8e5164d1c73ce633e0a40723'
+          with zipfile.ZipFile(io.BytesIO(b)) as z:
+              assert z.testzip() is None
+              m=json.loads(z.read('manifest.json'))
+              assert len(m)==4 and set(z.namelist())==set(m)|{'manifest.json','index_patch.json'}
+              for n,v in m.items():
+                  p=root/n
+                  assert Path(n).parts[0]=='app' and '..' not in Path(n).parts
+                  assert (h(p.read_bytes()) if p.exists() else None)==v['before'],n
+                  assert h(z.read(n))==v['after'],n
+                  p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(z.read(n))
+              x=json.loads(z.read('index_patch.json'))
+              assert x['path']=='app/src/main/assets/www/index.html'
+              p=root/x['path'];assert h(p.read_bytes())==x['before']
+              s=p.read_bytes().decode();assert s.count(x['old'])==1
+              out=s.replace(x['old'],x['new']).encode();assert h(out)==x['after'];p.write_bytes(out)
+              m[x['path']]={'before':x['before'],'after':x['after']}
+              Path('qa-results/q11/compact-home-source-manifest.json').write_text(json.dumps(m,indent=2))
+          PY
+      - name: Apply exact v0132 local document and callback lifecycle repair
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          import base64,hashlib,io,json,os,zipfile
+          from pathlib import Path
+          root=Path('q07-ci/android-app'); h=lambda b:hashlib.sha256(b).hexdigest()
+          b=base64.b64decode(''.join((Path(os.environ['RUNNER_TEMP'])/'route_repair.b64').read_text().split()),validate=True)
+          assert h(b)=='2aacdf01d42335cfba02a554f1e8f1dc4c6875170bbbf079397581ad265c1afe'
+          with zipfile.ZipFile(io.BytesIO(b)) as z:
+              assert z.testzip() is None
+              m=json.loads(z.read('manifest.json'))
+              assert set(m)=={'app/src/main/java/org/glukopapa/v3/m00/MainActivity.kt','app/src/main/java/org/glukopapa/v3/m00/GfV3Q11HomePresenter.kt','app/src/androidTest/java/org/glukopapa/v3/m00/Q11ShellRouteInstrumentedTest.kt'}
+              assert set(z.namelist())==set(m)|{'manifest.json'}
+              for n,v in m.items():
+                  p=root/n
+                  assert h(p.read_bytes())==v['before'],n
+                  assert h(z.read(n))==v['after'],n
+                  p.write_bytes(z.read(n))
+              Path('qa-results/q11/compact-repair-source-manifest.json').write_text(json.dumps(m,indent=2))
+          PY
+      - name: Apply owner-bound five-field display preferences with exact source hashes
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          import base64,hashlib,io,json,os,zipfile
+          from pathlib import Path
+          root=Path('q07-ci/android-app'); h=lambda b:hashlib.sha256(b).hexdigest()
+          b=base64.b64decode(''.join((Path(os.environ['RUNNER_TEMP'])/'preferences_candidate.b64').read_text().split()),validate=True)
+          assert h(b)=='4b868feb4b848adb8c4855d9cfa2474b4298e7dc89ad92db951d6aa3b7d09680'
+          with zipfile.ZipFile(io.BytesIO(b)) as z:
+              assert z.testzip() is None
+              m=json.loads(z.read('manifest.json'))
+              assert len(m)==10 and set(z.namelist())==set(m)|{'manifest.json'}
+              for n,v in m.items():
+                  p=root/n
+                  assert Path(n).parts[0]=='app' and '..' not in Path(n).parts
+                  assert (h(p.read_bytes()) if p.exists() else None)==v['before'],n
+                  assert h(z.read(n))==v['after'],n
+                  p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(z.read(n))
+              Path('qa-results/q11/graph-preferences-source-manifest.json').write_text(json.dumps(m,indent=2))
+          PY
+      - name: Pin Node for immutable Q07 sample generation
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.16.0'
+      - name: Apply exact Q07 display projection candidate and regenerate approved donor samples
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          import base64,hashlib,io,json,os,zipfile
+          from pathlib import Path
+          root=Path('q07-ci/android-app'); h=lambda b:hashlib.sha256(b).hexdigest()
+          b=base64.b64decode(''.join((Path(os.environ['RUNNER_TEMP'])/'rapid_candidate.b64').read_text().split()),validate=True)
+          assert h(b)=='a9cb2bce83fdee1a556c91625ba94f2716ce1f22a2656ea1bcc2069a5af4060a'
+          with zipfile.ZipFile(io.BytesIO(b)) as z:
+              assert z.testzip() is None
+              m=json.loads(z.read('manifest.json'))
+              assert len(m)==8 and set(z.namelist())==set(m)|{'manifest.json','generate_samples.cjs'}
+              for n,v in m.items():
+                  p=root/n
+                  assert Path(n).parts[0]=='app' and '..' not in Path(n).parts
+                  assert (h(p.read_bytes()) if p.exists() else None)==v['before'],n
+                  assert h(z.read(n))==v['after'],n
+                  p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(z.read(n))
+              Path('qa-results/q11/rapid-display-source-manifest.json').write_text(json.dumps(m,indent=2))
+              (Path(os.environ['RUNNER_TEMP'])/'generate_samples.cjs').write_bytes(z.read('generate_samples.cjs'))
+          PY
+          node "$RUNNER_TEMP/generate_samples.cjs" q07-ci/android-app/app/src/main/assets/www/q07/rinfast.html > "$RUNNER_TEMP/verified-samples.kt"
+          cmp "$RUNNER_TEMP/verified-samples.kt" q07-ci/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Q07DisplaySamples.kt
+          sha256sum "$RUNNER_TEMP/verified-samples.kt" | tee qa-results/q11/rapid-donor-samples-sha.txt
+      - name: Apply hash-verified bounded Q07 continuation after historical projection
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          import base64,hashlib,io,json,os,zipfile
+          from pathlib import Path
+          root=Path('q07-ci/android-app'); h=lambda b:hashlib.sha256(b).hexdigest()
+          b=base64.b64decode(''.join((Path(os.environ['RUNNER_TEMP'])/'future_candidate.b64').read_text().split()),validate=True)
+          assert h(b)=='a3a2e00c962de3272465c019c8bbac47f41879a3a43b94eaa27e4f3418c25b5b'
+          with zipfile.ZipFile(io.BytesIO(b)) as z:
+              assert z.testzip() is None
+              m=json.loads(z.read('manifest.json'))
+              assert set(m)=={'app/src/main/java/org/glukopapa/v3/m00/GfV3Q07DisplayProjection.kt','app/src/main/java/org/glukopapa/v3/m00/GfV3Storage.kt','app/src/main/assets/www/q11/chart.html','app/src/androidTest/java/org/glukopapa/v3/m00/Q11ShellRouteInstrumentedTest.kt'}
+              assert set(z.namelist())==set(m)|{'manifest.json'}
+              for n,v in m.items():
+                  p=root/n
+                  assert h(p.read_bytes())==v['before'],n
+                  assert h(z.read(n))==v['after'],n
+                  p.write_bytes(z.read(n))
+              Path('qa-results/q11/rapid-future-source-manifest.json').write_text(json.dumps(m,indent=2))
+          PY
+      - name: Apply exact SHA verified Q01 Q11 display-only bounds candidate
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          import base64,hashlib,io,json,os,zipfile
+          from pathlib import Path
+          root=Path('q07-ci/android-app'); h=lambda b:hashlib.sha256(b).hexdigest()
+          b=base64.b64decode(''.join((Path(os.environ['RUNNER_TEMP'])/'bounds_candidate.b64').read_text().split()),validate=True)
+          assert h(b)=='2faefd31d895a9b5740b92b5703b307d85d7cb3dc713f7711ddffac28812748e'
+          with zipfile.ZipFile(io.BytesIO(b)) as z:
+              assert z.testzip() is None
+              m=json.loads(z.read('manifest.json'))
+              assert set(m)==set(["app/src/main/java/org/glukopapa/v3/m00/GfV3GraphPreferences.kt","app/src/main/assets/www/q01/GFSettingsV3_v0.2.0.js","app/src/main/assets/www/q01/settings_ui_v3.js","app/src/main/assets/www/q01/settings.html","app/src/main/assets/www/q11/chart.html","app/src/androidTest/java/org/glukopapa/v3/m00/Q11ShellRouteInstrumentedTest.kt"])
+              assert set(z.namelist())==set(m)|{'manifest.json'}
+              for n,v in m.items():
+                  p=root/n
+                  assert h(p.read_bytes())==v['before'],n
+                  assert h(z.read(n))==v['after'],n
+                  p.write_bytes(z.read(n))
+              Path('qa-results/q11/display-bounds-source-manifest.json').write_text(json.dumps(m,indent=2))
+          PY
+      - name: Apply exact Q12 native projection without policy, grants or registered route
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          import base64,hashlib,io,json,os,zipfile
+          from pathlib import Path
+          root=Path('q07-ci/android-app'); h=lambda b:hashlib.sha256(b).hexdigest()
+          b=base64.b64decode(''.join((Path(os.environ['RUNNER_TEMP'])/'q12_native_projection.b64').read_text().split()),validate=True)
+          assert h(b)=='e3f40b11d5af91f8ff4c8cf605d9c9369cc8acf54e81e6ab9749bcce0af376ae'
+          with zipfile.ZipFile(io.BytesIO(b)) as z:
+              assert z.testzip() is None
+              m=json.loads(z.read('manifest.json'))
+              assert len(m)==9 and set(z.namelist())==set(m)|{'manifest.json'}
+              assert set(m)==set(['app/src/androidTest/java/org/glukopapa/v3/m00/Q12ObservationNativeInstrumentedTest.kt','app/src/main/java/org/glukopapa/v3/m00/GfV3Storage.kt','app/src/main/java/org/glukopapa/v3/m00/GfV3Q12ObservationReader.kt','app/src/main/java/org/glukopapa/v3/m00/GfV3Q12ReadSession.kt']+['app/src/main/assets/www/q12/'+n for n in ['gf_high_low_v011.js','gf_high_low_v3_adapter.js','q12.html','q12_runtime.js','sha256_ascii.js']])
+              for n,v in m.items():
+                  p=root/n
+                  assert (h(p.read_bytes()) if p.exists() else None)==v['before'],n
+                  assert h(z.read(n))==v['after'],n
+                  p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(z.read(n))
+              Path('qa-results/q11/q12-projection-source-manifest.json').write_text(json.dumps(m,indent=2))
+          PY
+      - name: Apply exact Q12 architecture v024 candidate, no production policy provider or route
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          import base64,hashlib,io,json,os,zipfile
+          from pathlib import Path
+          root=Path('q07-ci/android-app'); h=lambda b:hashlib.sha256(b).hexdigest()
+          b=base64.b64decode(''.join((Path(os.environ['RUNNER_TEMP'])/'q12_architecture.b64').read_text().split()),validate=True)
+          assert h(b)=='3a3e89c1cacb43e1e03275e5e748e0f060394ec33d5b20df6622e4eb5697e17b'
+          with zipfile.ZipFile(io.BytesIO(b)) as z:
+              assert z.testzip() is None
+              m=json.loads(z.read('manifest.json'))
+              assert len(m)==8 and set(z.namelist())==set(m)|{'manifest.json'}
+              assert set(m)==set(['app/src/main/java/org/glukopapa/v3/m00/'+n for n in ['GfV3Storage.kt','GfV3Q12ContextContract.kt','GfV3Q12ContextSqlProjection.kt','GfV3Q12ConditionProjection.kt','GfV3Q12SnapshotComposer.kt']]+['app/src/main/assets/www/q12/'+n for n in ['gf_high_low_v3_adapter.js','q12_runtime.js']]+['app/src/androidTest/java/org/glukopapa/v3/m00/Q12ArchitectureNativeInstrumentedTest.kt'])
+              for n,v in m.items():
+                  p=root/n
+                  assert (h(p.read_bytes()) if p.exists() else None)==v['before'],n
+                  assert h(z.read(n))==v['after'],n
+                  p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(z.read(n))
+              Path('qa-results/q11/q12-architecture-source-manifest.json').write_text(json.dumps(m,indent=2))
+          PY
+      - name: Apply exact Q12 v025 owner policy storage and two offline routes
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          import base64,hashlib,io,json,os,zipfile
+          from pathlib import Path
+          root=Path('q07-ci/android-app'); h=lambda b:hashlib.sha256(b).hexdigest()
+          b=base64.b64decode(''.join((Path(os.environ['RUNNER_TEMP'])/'q12_owner_routes.b64').read_text().split()),validate=True)
+          assert h(b)=='0e9040cd6a8972bec70263c519608237d1cb27233ea856f236d564672fc68b49'
+          with zipfile.ZipFile(io.BytesIO(b)) as z:
+              assert z.testzip() is None
+              m=json.loads(z.read('manifest.json'))
+              assert len(m)==15 and set(z.namelist())==set(m)|{'manifest.json'}
+              assert set(m)==set(['app/src/main/java/org/glukopapa/v3/m00/'+n for n in ['GfV3Storage.kt','MainActivity.kt','GfV3Q12AnalyticsBridge.kt','GfV3Q12OfflineActivity.kt','GfV3Q12PolicyContract.kt','GfV3Q12PolicyOwnerQueue.kt','GfV3Q12PolicyStore.kt','GfV3Q12RoutePolicy.kt']]+['app/src/main/assets/www/q12/'+n for n in ['policy.html','q12.html','q12_runtime.js']]+['app/src/main/AndroidManifest.xml','app/src/main/assets/www/index.html']+['app/src/androidTest/java/org/glukopapa/v3/m00/'+n for n in ['Q12PolicyNativeInstrumentedTest.kt','Q12ShellRouteInstrumentedTest.kt']])
+              for n,v in m.items():
+                  p=root/n
+                  assert (h(p.read_bytes()) if p.exists() else None)==v['before'],n
+                  assert h(z.read(n))==v['after'],n
+                  p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(z.read(n))
+              Path('qa-results/q11/q12-owner-routes-source-manifest.json').write_text(json.dumps(m,indent=2))
+          PY
+      - name: Apply exact Q12 v026 receiver fix and encrypted restore tests
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          import base64,hashlib,io,json,os,zipfile
+          from pathlib import Path
+          root=Path('q07-ci/android-app'); h=lambda b:hashlib.sha256(b).hexdigest()
+          b=base64.b64decode(''.join((Path(os.environ['RUNNER_TEMP'])/'q12_restore.b64').read_text().split()),validate=True)
+          assert h(b)=='d110c598db348f8a5090b7e5463798d82609a66758b52d16ec0753495852e769'
+          with zipfile.ZipFile(io.BytesIO(b)) as z:
+              assert z.testzip() is None
+              m=json.loads(z.read('manifest.json'))
+              assert set(m)=={'app/src/main/java/org/glukopapa/v3/m00/GfV3Q12OfflineActivity.kt','app/src/androidTest/java/org/glukopapa/v3/m00/Q12PolicyNativeInstrumentedTest.kt','app/src/androidTest/java/org/glukopapa/v3/m00/Q12ShellRouteInstrumentedTest.kt'}
+              assert set(z.namelist())==set(m)|{'manifest.json'}
+              for n,v in m.items():
+                  p=root/n
+                  assert h(p.read_bytes())==v['before'],n
+                  assert h(z.read(n))==v['after'],n
+                  p.write_bytes(z.read(n))
+              Path('qa-results/q11/q12-restore-source-manifest.json').write_text(json.dumps(m,indent=2))
+          PY
+      - name: Apply exact Q12 v027 lifecycle and nonempty WebView candidate
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          import base64,hashlib,io,json,os,zipfile
+          from pathlib import Path
+          root=Path('q07-ci/android-app'); h=lambda b:hashlib.sha256(b).hexdigest()
+          b=base64.b64decode(''.join((Path(os.environ['RUNNER_TEMP'])/'q12_ui_lifecycle.b64').read_text().split()),validate=True)
+          assert h(b)=='c82da3bdc404d97e4b57b6212075a6d60f8a2d6fe995c0047765952a2687cdcc'
+          with zipfile.ZipFile(io.BytesIO(b)) as z:
+              assert z.testzip() is None
+              m=json.loads(z.read('manifest.json'))
+              assert set(m)=={'app/src/main/assets/www/q12/policy.html','app/src/androidTest/java/org/glukopapa/v3/m00/Q12ShellRouteInstrumentedTest.kt'}
+              assert set(z.namelist())==set(m)|{'manifest.json'}
+              for n,v in m.items():
+                  p=root/n
+                  assert h(p.read_bytes())==v['before'],n
+                  assert h(z.read(n))==v['after'],n
+                  p.write_bytes(z.read(n))
+              Path('qa-results/q11/q12-ui-lifecycle-source-manifest.json').write_text(json.dumps(m,indent=2))
+          PY
+      - name: Apply exact GFStorage year v01 native reader
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          import base64,hashlib,io,json,os,zipfile
+          from pathlib import Path
+          root=Path('q07-ci/android-app'); h=lambda b:hashlib.sha256(b).hexdigest()
+          b=base64.b64decode(''.join((Path(os.environ['RUNNER_TEMP'])/'gfstorage_year.b64').read_text().split()),validate=True)
+          assert h(b)=='6b788c1ece9e31e12b318c079aa222e2ffc4f4e53b9c39855fe2c90f57eba138'
+          with zipfile.ZipFile(io.BytesIO(b)) as z:
+              assert z.testzip() is None
+              m=json.loads(z.read('manifest.json'))
+              assert set(m)=={'app/src/main/java/org/glukopapa/v3/m00/GfV3Storage.kt','app/src/main/java/org/glukopapa/v3/m00/GfV3YearHistory.kt','app/src/androidTest/java/org/glukopapa/v3/m00/GfV3YearHistoryInstrumentedTest.kt'}
+              assert set(z.namelist())==set(m)|{'manifest.json'}
+              for n,v in m.items():
+                  p=root/n
+                  assert (h(p.read_bytes()) if p.exists() else None)==v['before'],n
+                  assert h(z.read(n))==v['after'],n
+                  p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(z.read(n))
+              Path('qa-results/q11/gfstorage-year-source-manifest.json').write_text(json.dumps(m,indent=2))
+          PY
+          grep -RinE 'DELETE FROM v3_|\.delete\("v3_|retention|minusMonths\(' q07-ci/android-app/app/src/main/java > qa-results/q11/gfstorage-year-retention-review.txt || true
+      - name: Apply exact GFStorage year v02 correction candidate
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          import base64,hashlib,io,json,os,zipfile
+          from pathlib import Path
+          root=Path('q07-ci/android-app'); h=lambda b:hashlib.sha256(b).hexdigest()
+          b=base64.b64decode(''.join((Path(os.environ['RUNNER_TEMP'])/'gfstorage_year_v02.b64').read_text().split()),validate=True)
+          assert h(b)=='0bbde34995710d71077af662ff1f68ea84cce63ed32d4eedfc8e7c69b9a01990'
+          with zipfile.ZipFile(io.BytesIO(b)) as z:
+              assert z.testzip() is None
+              m=json.loads(z.read('manifest.json'))
+              assert set(m)=={'app/src/main/java/org/glukopapa/v3/m00/GfV3Storage.kt','app/src/main/java/org/glukopapa/v3/m00/GfV3YearHistory.kt','app/src/androidTest/java/org/glukopapa/v3/m00/GfV3YearHistoryInstrumentedTest.kt'}
+              assert set(z.namelist())==set(m)|{'manifest.json'}
+              for n,v in m.items():
+                  p=root/n
+                  assert h(p.read_bytes())==v['before'],n
+                  assert h(z.read(n))==v['after'],n
+                  p.write_bytes(z.read(n))
+              Path('qa-results/q11/gfstorage-year-v02-source-manifest.json').write_text(json.dumps(m,indent=2))
+          PY
+      - name: Apply exact GFStorage year v03 chronological candidate
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          import base64,hashlib,io,json,os,zipfile
+          from pathlib import Path
+          root=Path('q07-ci/android-app'); h=lambda b:hashlib.sha256(b).hexdigest()
+          b=base64.b64decode(''.join((Path(os.environ['RUNNER_TEMP'])/'gfstorage_year_v03.b64').read_text().split()),validate=True)
+          assert h(b)=='8f7b2c19882076ae304dcaa862315e970ab7d8d43e64bc3b0dcc0ed6ad7d18ae'
+          with zipfile.ZipFile(io.BytesIO(b)) as z:
+              assert z.testzip() is None
+              m=json.loads(z.read('manifest.json'))
+              assert set(m)=={'app/src/main/java/org/glukopapa/v3/m00/GfV3Storage.kt','app/src/main/java/org/glukopapa/v3/m00/GfV3YearHistory.kt','app/src/androidTest/java/org/glukopapa/v3/m00/GfV3YearHistoryInstrumentedTest.kt'}
+              assert set(z.namelist())==set(m)|{'manifest.json'}
+              for n,v in m.items():
+                  p=root/n
+                  assert h(p.read_bytes())==v['before'],n
+                  assert h(z.read(n))==v['after'],n
+                  p.write_bytes(z.read(n))
+              Path('qa-results/q11/gfstorage-year-v03-source-manifest.json').write_text(json.dumps(m,indent=2))
+          PY
+      - name: Apply exact GFStorage year v04 checked shell candidate
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          import base64,hashlib,io,json,os,zipfile
+          from pathlib import Path
+          root=Path('q07-ci/android-app'); h=lambda b:hashlib.sha256(b).hexdigest()
+          b=base64.b64decode(''.join((Path(os.environ['RUNNER_TEMP'])/'gfstorage_year_v04.b64').read_text().split()),validate=True)
+          assert h(b)=='43d1b9908a05a09714312d64ea9b167a344fb0c1ab800d131bf78076fe9380da'
+          with zipfile.ZipFile(io.BytesIO(b)) as z:
+              assert z.testzip() is None
+              m=json.loads(z.read('manifest.json'))
+              assert set(m)=={'app/src/main/java/org/glukopapa/v3/m00/GfV3Storage.kt','app/src/main/java/org/glukopapa/v3/m00/GfV3Bridge.kt','app/src/main/assets/www/index.html','app/src/androidTest/java/org/glukopapa/v3/m00/GfV3YearHistoryInstrumentedTest.kt'}
+              assert set(z.namelist())==set(m)|{'manifest.json'}
+              for n,v in m.items():
+                  p=root/n
+                  assert h(p.read_bytes())==v['before'],n
+                  assert h(z.read(n))==v['after'],n
+                  p.write_bytes(z.read(n))
+              Path('qa-results/q11/gfstorage-year-v04-source-manifest.json').write_text(json.dumps(m,indent=2))
+          PY
+      - name: Apply exact GFStorage year v05 research guard and native tests
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          import base64,hashlib,io,json,os,zipfile
+          from pathlib import Path
+          root=Path('q07-ci/android-app'); h=lambda b:hashlib.sha256(b).hexdigest()
+          b=base64.b64decode(''.join((Path(os.environ['RUNNER_TEMP'])/'gfstorage_year_v05.b64').read_text().split()),validate=True)
+          assert h(b)=='0fb5b2ab1c1a5e504af2c139a097f2729386bc24cf31acca9669cc01e9100bbf'
+          with zipfile.ZipFile(io.BytesIO(b)) as z:
+              assert z.testzip() is None
+              m=json.loads(z.read('manifest.json'))
+              assert set(m)=={'app/src/main/java/org/glukopapa/v3/m00/GfV3Storage.kt','app/src/androidTest/java/org/glukopapa/v3/m00/GfV3YearHistoryInstrumentedTest.kt'}
+              assert set(z.namelist())==set(m)|{'manifest.json'}
+              for n,v in m.items():
+                  p=root/n
+                  assert h(p.read_bytes())==v['before'],n
+                  assert h(z.read(n))==v['after'],n
+                  p.write_bytes(z.read(n))
+              Path('qa-results/q11/gfstorage-year-v05-source-manifest.json').write_text(json.dumps(m,indent=2))
+          PY
+      - name: Apply exact GFStorage year v06 additional history domains
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          import base64,hashlib,io,json,os,zipfile
+          from pathlib import Path
+          root=Path('q07-ci/android-app'); h=lambda b:hashlib.sha256(b).hexdigest()
+          b=base64.b64decode(''.join((Path(os.environ['RUNNER_TEMP'])/'gfstorage_year_v06.b64').read_text().split()),validate=True)
+          assert h(b)=='d7b92acb5d5f222f1f6b673163f19276c0291bc5e7007042757cdf0760cd5816'
+          with zipfile.ZipFile(io.BytesIO(b)) as z:
+              assert z.testzip() is None
+              m=json.loads(z.read('manifest.json'))
+              assert set(m)=={'app/src/main/java/org/glukopapa/v3/m00/GfV3Storage.kt','app/src/main/java/org/glukopapa/v3/m00/GfV3YearHistory.kt','app/src/androidTest/java/org/glukopapa/v3/m00/GfV3YearHistoryInstrumentedTest.kt'}
+              assert set(z.namelist())==set(m)|{'manifest.json'}
+              for n,v in m.items():
+                  p=root/n
+                  assert h(p.read_bytes())==v['before'],n
+                  assert h(z.read(n))==v['after'],n
+                  p.write_bytes(z.read(n))
+              Path('qa-results/q11/gfstorage-year-v06-source-manifest.json').write_text(json.dumps(m,indent=2))
+          PY
+      - name: Add exact test-only v07 encrypted restore regression
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          root=Path('q07-ci/android-app')
+          p=root/'app/src/androidTest/java/org/glukopapa/v3/m00/GfV3YearHistoryInstrumentedTest.kt'
+          h=lambda b:hashlib.sha256(b).hexdigest()
+          old=p.read_bytes()
+          assert h(old)=='266aae73ba30623e2e43e450d91e28236f71f075f19ba7f549cc0be4689c8fda'
+          assert old.rstrip().endswith(b'}')
+          new_test=r'''
+              @Test fun yearNewDomainsEncryptedRestoreExactRowsAndScopes()=fixture{h,s->
+                  val db=h.writableDatabase
+                  val end=Instant.parse("2024-02-29T12:00:00Z");val start=Instant.parse("2023-02-28T12:00:00Z")
+                  val proposalOwner="GFCoefficients";val syncOwner="GFSyncStorageAdapter"
+                  val tables=listOf("v3_coefficient_proposals","v3_sync_inbox")
+                  val n=2101
+                  var rev=s.revision()
+                  fun grantFor(m:String,role:String){db.execSQL("UPDATE v3_module_registry SET status='OWNER_INTEGRATION_ACCEPTED',feature_enabled=1,read_roles_json=? WHERE module_id=?",arrayOf(JSONArray().put(role).toString(),m))}
+                  grantFor(proposalOwner,"settings");grantFor(syncOwner,"syncInbox")
+                  fun proposal(id:String,p:String,t:String){db.execSQL("INSERT INTO v3_coefficient_proposals VALUES(?,?,?,?,?,?,?,?)",arrayOf(id,p,"carb_ratio","00-06","qa-v07",0L,org.json.JSONObject().put("calculatedAtUtc",t).put("qaId",id).toString(),++rev))}
+                  fun sync(id:String,p:String,t:String){db.execSQL("INSERT INTO v3_sync_inbox VALUES(?,?,?,?,?,?,?,?,?)",arrayOf(id,p,"qa-device",id,t,"event",org.json.JSONObject().put("qaId",id).toString(),"NATIVE_AUTH_VERIFIED",++rev))}
+                  fun id(prefix:String,i:Int)=prefix+i.toString().padStart(5,'0')
+                  db.beginTransaction();try{
+                      for(i in n-1 downTo 0){
+                          val t=start.plusSeconds((end.epochSecond-start.epochSecond)*i/(n-1)).toString()
+                          proposal(id("p-",i),profile,t);sync(id("s-",i),profile,t)
+                      }
+                      proposal("p-foreign","foreign",start.toString())
+                      sync("s-foreign","foreign",start.toString())
+                      sync("s-old",profile,start.minusNanos(1).toString());sync("s-future",profile,end.plusNanos(1).toString());sync("s-unknown",profile,"unknown")
+                      db.execSQL("UPDATE v3_meta SET revision=? WHERE id=1",arrayOf(rev));db.setTransactionSuccessful()
+                  }finally{db.endTransaction()}
+                  fun count(table:String):Long=db.rawQuery("SELECT count(*) FROM "+table,null).use{c->assertTrue(c.moveToFirst());c.getLong(0)}
+                  fun digest(table:String):String{
+                      val hash=java.security.MessageDigest.getInstance("SHA-256")
+                      db.rawQuery("SELECT * FROM "+table+" ORDER BY 1",null).use{c->while(c.moveToNext()){
+                          val a=JSONArray();for(i in 0 until c.columnCount)a.put(if(c.isNull(i))org.json.JSONObject.NULL else c.getString(i))
+                          hash.update(a.toString().toByteArray(Charsets.UTF_8));hash.update(10.toByte())
+                      }}
+                      return hash.digest().joinToString(""){"%02x".format(it.toInt() and 255)}
+                  }
+                  val before=tables.associateWith{digest(it)};assertEquals((n+1).toLong(),count(tables[0]));assertEquals((n+4).toLong(),count(tables[1]))
+                  val staleP=s.openNativeYearSession(proposalOwner,mapOf("coefficientProposals" to "settings"),end)
+                  val staleS=s.openNativeYearSession(syncOwner,mapOf("syncInbox" to "syncInbox"),end)
+                  staleP.read("coefficientProposals",1);staleS.read("syncInbox",1)
+                  val backup=GfV3EncryptedSnapshot(ctx,h);val pass="qa-new-domains-v07".toCharArray();val bytes=backup.createEncrypted(pass)
+                  try{
+                      db.beginTransaction();try{for(t in tables)db.execSQL("DELETE FROM "+t);db.setTransactionSuccessful()}finally{db.endTransaction()}
+                      for(t in tables){assertEquals(0L,count(t));assertNotEquals(before.getValue(t),digest(t))}
+                      backup.restoreEncrypted(bytes,pass,rev)
+                      assertEquals(rev,s.revision());assertEquals(before,tables.associateWith{digest(it)})
+                      assertEquals((n+1).toLong(),count(tables[0]));assertEquals((n+4).toLong(),count(tables[1]))
+                      deny{staleP.read("coefficientProposals",1)};deny{staleS.read("syncInbox",1)}
+                      deny{s.openNativeYearSession(proposalOwner,mapOf("syncInbox" to "syncInbox"),end)}
+                      deny{s.openNativeYearSession(syncOwner,mapOf("coefficientProposals" to "settings"),end)}
+                      val ps=s.openNativeYearSession(proposalOwner,mapOf("coefficientProposals" to "settings"),end)
+                      var more=true;var i=0
+                      while(more){
+                          val page=ps.read("coefficientProposals",500);assertEquals("NOT_PROVEN",page.getString("coverage"));assertEquals(0,page.getJSONArray("rows").length())
+                          val a=page.getJSONArray("unplacedRows");for(j in 0 until a.length()){
+                              val row=a.getJSONObject(j);assertEquals(id("p-",i++),row.getString("proposal_id"));assertTrue(row.isNull("historyEpochSecond"));assertTrue(row.isNull("historyNano"));assertEquals("qa-v07",row.getString("model_version"))
+                              assertEquals(row.getString("proposal_id"),org.json.JSONObject(row.getString("payload_json")).getString("qaId"))
+                          };more=page.getBoolean("hasMore")
+                      }
+                      assertEquals(n,i)
+                      val pc=ps.finish().getJSONObject("domainCounts").getJSONObject("coefficientProposals");assertEquals(0L,pc.getLong("rows"));assertEquals(n.toLong(),pc.getLong("unplaced"));assertEquals(n.toLong(),pc.getLong("sourceScanned"));assertEquals(5L,pc.getLong("pages"))
+                      val ss=s.openNativeYearSession(syncOwner,mapOf("syncInbox" to "syncInbox"),end)
+                      i=0;var unknown=0;more=true
+                      while(more){
+                          val page=ss.read("syncInbox",500);assertEquals("NOT_PROVEN",page.getString("coverage"));assertTrue(page.getBoolean("chronologicalOrder"))
+                          val a=page.getJSONArray("rows");for(j in 0 until a.length()){
+                              val row=a.getJSONObject(j);assertEquals(id("s-",i++),row.getString("inbox_id"));assertEquals("qa-device",row.getString("source_device_id"));assertEquals(row.getString("inbox_id"),row.getString("source_event_id"));assertEquals("NATIVE_AUTH_VERIFIED",row.getString("verification_status"));assertEquals(Instant.parse(row.getString("received_at_utc")).epochSecond,row.getLong("historyEpochSecond"))
+                          }
+                          val u=page.getJSONArray("unplacedRows");for(j in 0 until u.length()){val row=u.getJSONObject(j);assertEquals("s-unknown",row.getString("inbox_id"));assertTrue(row.isNull("historyEpochSecond"));unknown++}
+                          more=page.getBoolean("hasMore")
+                      }
+                      assertEquals(n,i);assertEquals(1,unknown)
+                      val sc=ss.finish().getJSONObject("domainCounts").getJSONObject("syncInbox");assertEquals(n.toLong(),sc.getLong("rows"));assertEquals(1L,sc.getLong("unplaced"));assertEquals((n+3).toLong(),sc.getLong("sourceScanned"));assertEquals(5L,sc.getLong("pages"))
+                      val revoked=s.openNativeYearSession(syncOwner,mapOf("syncInbox" to "syncInbox"),end)
+                      db.execSQL("UPDATE v3_module_registry SET read_roles_json='[]' WHERE module_id=?",arrayOf(syncOwner));deny{revoked.read("syncInbox",1)}
+                  }finally{bytes.fill(0);pass.fill('\u0000')}
+              }
+          '''
+          # Python heredoc indentation is stripped by YAML; preserve exact Kotlin bytes.
+          assert old.count(b'yearNewDomainsEncryptedRestoreExactRowsAndScopes')==0
+          new=old.rstrip()[:-1]+b'\n'+new_test.encode()+b'}\n'
+          p.write_bytes(new)
+          Path('qa-results/q11/gfstorage-year-v07-test-manifest.json').write_text(json.dumps({'path':str(p),'before':h(old),'after':h(new),'test_sha256':h(new_test.encode()),'production_files_changed':False},indent=2))
+          PY
+      - name: Apply exact schema10 and shared resource candidate after preflight
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          import base64,gzip,hashlib,json,subprocess
+          from pathlib import Path
+          root=Path('q07-ci/android-app'); evidence=Path('qa-results/q11')
+          evidence.mkdir(parents=True,exist_ok=True)
+          h=lambda b:hashlib.sha256(b).hexdigest()
+          m=json.loads('{"app/src/main/java/org/glukopapa/v3/m00/GfV3YearHistory.kt":["82d48bb377cf47f3ca5ff4cfa51265cf31d48022642a836efa08910d1aec3f09","f0825c445f7baf908cbed0cc85acd4f6b3b4888987b8940e5df920f43e61ab3a"],"app/src/main/java/org/glukopapa/v3/m00/GfV3Storage.kt":["4717e57961e853105f59ef3f52de931e5e169d6a3e4055e579a660676896ae93","09372bdb9e2f2e82994c2663817401454d07bccff92e93e1176883a264b8ebf0"],"app/src/main/java/org/glukopapa/v3/m00/GfV3EncryptedSnapshot.kt":["a00717a110d4656840d543fa4a19aaa1caae908b6f600a320fe37d3cbe147349","2e07937eda78ca1de08a384e431f2daee63e60b8c9c2afd22406e9ab6e2935a4"],"app/src/main/java/org/glukopapa/v3/m00/GfDbHelper.kt":["a16a62aec2b6d07751f91ee8dd6b26b2fef0de02cde86bd41ff63b11796cd4cd","f615b3a5928469c01d5e254de9539f252222f17da4ea86a26bc4ff873248a49f"],"app/src/main/java/org/glukopapa/v3/m00/GfV3YearBudget.kt":[null,"c24a9d300e2590b2f52df67c991c2a9172e8ad04620d59a769b493ed8513dab4"],"app/src/androidTest/java/org/glukopapa/v3/m00/GfV3YearBudgetInstrumentedTest.kt":[null,"1fd1a5182e20a990b5c4797b156b6d37bf57117ac0238b82977ca6dade29bbde"],"app/src/main/assets/db/schema_v10.sql":[null,"3d7caf02a42107f7032ce296ed0820dfbfb0bbc0d2bc9ddaa831e0b1661b2ed2"],"app/src/androidTest/java/org/glukopapa/v3/m00/GfV3Schema10InstrumentedTest.kt":[null,"20a68aca95d59911be1cc26256f76c8bfa0e78608ccf828661a29d4f728549a6"]}')
+          current={n:h((root/n).read_bytes()) if (root/n).is_file() else None for n in m}
+          (evidence/'gfstorage-v08-preflight.json').write_text(json.dumps({n:{'expected':v[0],'actual':current[n],'match':current[n]==v[0]} for n,v in m.items()},indent=2))
+          assert all(current[n]==v[0] for n,v in m.items()),'STOP: exact before SHA mismatch'
+          b=base64.b64decode('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',validate=True)
+          assert h(b)=='5653dbe2f865fc661723d302bb8e72728a89877b26a091bda1c693e9a849e9c4'
+          patch=gzip.decompress(b)
+          assert h(patch)=='1e7c4982156aedf841ce2f46be948778dec4796725d6f41d59a378f410de3a22'
+          subprocess.run(['patch','-p1','--batch','--forward'],cwd=root,input=patch,check=True)
+          assert all(h((root/n).read_bytes())==v[1] for n,v in m.items())
+          (evidence/'gfstorage-v08-source-manifest.json').write_text(json.dumps(m,indent=2))
+          testdir=root/'app/src/androidTest/java/org/glukopapa/v3/m00'
+          changes={
+          'Q04NativeDraftsInstrumentedTest.kt':[('live store remains v9','live store remains v10'),('assertEquals(9,helper.readableDatabase.version)','assertEquals(10,helper.readableDatabase.version)'),('assertEquals(9,result.dbVersion)','assertEquals(10,result.dbVersion)')],
+          'Q05ActivityInstrumentedTest.kt':[('assertEquals(9,ret.dbVersion)','assertEquals(10,ret.dbVersion)'),('assertEquals(9,helper.readableDatabase.version)','assertEquals(10,helper.readableDatabase.version)')]}
+          audit={}
+          for n,pairs in changes.items():
+              p=testdir/n; old=p.read_bytes(); t=old.decode()
+              for a,b in pairs:
+                  assert t.count(a)==1,(n,a)
+                  t=t.replace(a,b)
+              p.write_bytes(t.encode());audit[n]={'before':h(old),'after':h(p.read_bytes()),'changes':pairs}
+          (evidence/'gfstorage-v08-test-version-expectations.json').write_text(json.dumps(audit,indent=2))
+          PY
+      - name: Repair three exact schema assertions and add existing-file upgrade tests
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          import re,json,hashlib,base64,gzip
+          from pathlib import Path
+          root=Path('q07-ci/android-app/app/src/androidTest/java/org/glukopapa/v3/m00')
+          h=lambda b:hashlib.sha256(b).hexdigest()
+          changes=[
+          ('Q01AndroidRuntimeTest.kt',60,'nativeGuardedSettingsPersistAndReadAfterReopen'),
+          ('Q07RinFastNativeIntegrationInstrumentedTest.kt',128,'encryptedRestoreKeepsActualInjectionAndDiscardsLaterCorrection'),
+          ('Q08LevemirNativeInstrumentedTest.kt',94,'encryptedRestoreKeepsBasalFactAndReceiptAndRemovesLaterCorrection')]
+          audit={}
+          for n,line,method in changes:
+              p=root/n; old=p.read_bytes(); lines=old.decode().splitlines(keepends=True)
+              assert any(method in x for x in lines[:line]),(n,method)
+              a=lines[line-1]
+              assert re.search(r'assertEquals\(\s*9\s*,',a) and re.search(r'version',a,re.I),(n,line,a)
+              b,count=re.subn(r'(assertEquals\(\s*)9(\s*,)',r'\g<1>10\2',a)
+              assert count==1,(n,line,a)
+              lines[line-1]=b; new=''.join(lines).encode()
+              p.write_bytes(new);audit[n]={'before':h(old),'after':h(new),'line':line,'old':a.strip(),'new':b.strip()}
+
+          compressed=base64.b64decode('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',validate=True)
+          assert h(compressed)=='9be68f06563c4117c4b1872165ffd0916f8e55f188c7c2fd32616d0cf5d4a9f8'
+          b=gzip.decompress(compressed)
+          assert h(b)=='b9b158de84d2f49a5407116c91aed75694f07daa61c1eb7344a7fac337901fcc'
+          p=root/'GfV3Schema10UpgradeInstrumentedTest.kt';assert not p.exists();p.write_bytes(b)
+          audit[p.name]={'before':None,'after':h(b)}
+          Path('qa-results/q11/gfstorage-v09-test-only-manifest.json').write_text(json.dumps(audit,indent=2))
+          PY
+      - name: Apply exact Q08 epoch-bound read and pending confirmation candidate
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          import base64,gzip,hashlib,json,subprocess
+          from pathlib import Path
+          root=Path('q07-ci/android-app')
+          out=Path('qa-results/q11')
+          h=lambda b:hashlib.sha256(b).hexdigest()
+          m=json.loads('{"app/src/main/java/org/glukopapa/v3/m00/GfV3Q08History.kt":["56796c0b8b4d23d88bc5fb4cded25633e69088b68c748f3f9aa8901467f8a012","e1e0af26ee7bc426ee78a9cf68671d33ef18231c842583af406522577942be07"],"app/src/main/java/org/glukopapa/v3/m00/GfV3Q08OwnerQueue.kt":["841e5d1b7470fbad8d27b60d327e934ef1c6b116b1da68500c83794a638cb146","9e087761305717190669f9e30b1d91ec28b36cdaa2877e40a3bda03a751333be"],"app/src/androidTest/java/org/glukopapa/v3/m00/Q08LevemirNativeInstrumentedTest.kt":["4d51bd1c79e36fca74a5840ce3697daf3088cedf3394e3e60682643ea8e3dff5","1c262e9294afca6a4f8e7319ff096a1d01893e1597ac78ec3e8d6c1497409157"]}')
+          pre={n:{'expected':v[0],'actual':h((root/n).read_bytes()) if (root/n).is_file() else None} for n,v in m.items()}
+          (out/'gfstorage-v10-q08-epoch-preflight.json').write_text(json.dumps(pre,indent=2))
+          assert all(x['expected']==x['actual'] for x in pre.values()),'STOP: Q08 source identity mismatch'
+          compressed=base64.b64decode('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',validate=True)
+          assert h(compressed)=='e35ea71338dd102f75e958aac8f9ee4ae1a25739bc4b16f6f29e67a74e92f0da'
+          patch=gzip.decompress(compressed)
+          assert h(patch)=='fd30309b53b3d393f457ed433b675da4bffad6304168de83f8f2a8735b074866'
+          subprocess.run(['patch','-p1','--batch','--forward'],cwd=root,input=patch,check=True)
+          assert all(h((root/n).read_bytes())==v[1] for n,v in m.items())
+          (out/'gfstorage-v10-q08-epoch-source-manifest.json').write_text(json.dumps(m,indent=2))
+          PY
+      - name: Apply exact shared restore generation guards to four owner queues
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          import base64,gzip,hashlib,json,subprocess
+          from pathlib import Path
+          root=Path('q07-ci/android-app');out=Path('qa-results/q11')
+          h=lambda b:hashlib.sha256(b).hexdigest()
+          c=base64.b64decode('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',validate=True)
+          assert h(c)=='4f6d7960efd87a199d22561ed4a4ec51cd49a588b47281a9c955ca293436fd8e'
+          b=gzip.decompress(c);assert h(b)=='972a510f417e88ff7a48375990d524d6d25edd56e7099407f146aee6a300be64'
+          d=json.loads(b);m=d['manifest'];assert len(m)==5
+          pre={n:{'expected':v['before'],'actual':h((root/n).read_bytes()) if (root/n).is_file() else None} for n,v in m.items()}
+          (out/'gfstorage-v11-legacy-owner-preflight.json').write_text(json.dumps(pre,indent=2))
+          assert all(v['expected']==v['actual'] for v in pre.values()),'STOP: legacy owner source identity mismatch'
+          subprocess.run(['patch','-p1','--batch','--forward'],cwd=root,input=d['patch'].encode(),check=True)
+          test=[n for n,v in m.items() if v['before'] is None];assert len(test)==1
+          p=root/test[0];assert not p.exists();p.write_bytes(d['test'].encode())
+          assert all(h((root/n).read_bytes())==v['after'] for n,v in m.items())
+          (out/'gfstorage-v11-legacy-owner-source-manifest.json').write_text(json.dumps(m,indent=2))
+          PY
+      - name: Apply settings fixture repair to androidTest
+        run: cd q07-ci && git apply --check "$RUNNER_TEMP/settings-fixture.patch" && git apply "$RUNNER_TEMP/settings-fixture.patch"
+      - name: Apply v12 compatibility to exact audited source and run host contracts
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          import base64,gzip,hashlib,json,os
+          from pathlib import Path
+          p=Path(os.environ['RUNNER_TEMP']);h=lambda b:hashlib.sha256(b).hexdigest()
+          z=base64.b64decode((p/'compat-v12.b64').read_text().strip(),validate=True)
+          assert h(z)=='2239101a6d11508fe45c7abb3b0d115aef28d7120f9ff77cf4f6985cc68ebedc'
+          b=gzip.decompress(z);assert h(b)=='3014a85bddbdbab115aafb0ea25936f5c09d5124079ed44e087fd860a2a06b33'
+          d=json.loads(b);assert set(d)=={'apply.py','compat.js','test_compat.cjs','TimeHost.kt','test_q08_filter.py'}
+          out=p/'compat-v12';out.mkdir(exist_ok=False)
+          for n,s in d.items():(out/n).write_text(s)
+          # Audit prose reported 172; authoritative manifest contains 173 unique paths.
+          lines=(p/'v11-audit-source.sha256').read_text().splitlines()
+          names=[x.split()[1] for x in lines if x.strip()]
+          assert len(names)==len(set(names))==173
+          assert sum(n.startswith('main/') for n in names)==136
+          assert sum(n.startswith('androidTest/') for n in names)==37
+          script=out/'apply.py';t=script.read_text();a='assert len(known)==172,len(known)'
+          assert t.count(a)==1
+          script.write_text(t.replace(a,'assert len(known)==173,len(known)'))
+          print('Verified actual manifest cardinality: 173 unique entries (136 main, 37 test)')
+          PY
+          node "$RUNNER_TEMP/compat-v12/test_compat.cjs" | tee qa-results/q11/compat-js.log
+          python3 "$RUNNER_TEMP/compat-v12/test_q08_filter.py" | tee qa-results/q11/compat-q08-model.log
+          python3 "$RUNNER_TEMP/compat-v12/apply.py" q07-ci/android-app/app/src "$RUNNER_TEMP/v11-audit-source.sha256" qa-results/q11
+      - name: Apply v12.2 exact CSP and offset compatibility and donor parity harness
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          import base64,gzip,hashlib,json,os
+          from pathlib import Path
+          p=Path(os.environ['RUNNER_TEMP']);h=lambda b:hashlib.sha256(b).hexdigest()
+          z=base64.b64decode((p/'compat-v122.b64').read_text().strip(),validate=True)
+          assert h(z)=='dc1d66b9a1e7a317592f0c852b8f8d88256eabdc40125bcba606657e180b86b3'
+          b=gzip.decompress(z);assert h(b)=='59c5bfd58bdd268b42bf63afe8e33a15c346ff2e16319c6dfe64824628765159'
+          d=json.loads(b);assert set(d)=={'apply.py','compat.js','offset.js','test_offset.cjs'}
+          out=p/'compat-v122';out.mkdir(exist_ok=False)
+          for n,s in d.items():(out/n).write_text(s)
+          PY
+          node "$RUNNER_TEMP/compat-v122/test_offset.cjs" | tee qa-results/q11/compat-v122-offset.log
+          python3 "$RUNNER_TEMP/compat-v122/apply.py" q07-ci/android-app/app/src qa-results/q11
+      - name: Apply exact v13 data integrity patch and six new native cases
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          import base64,gzip,hashlib,json,os,subprocess,re
+          from pathlib import Path
+          p=Path(os.environ['RUNNER_TEMP']);root=Path('q07-ci/android-app/app/src');out=Path('qa-results/q11');h=lambda b:hashlib.sha256(b).hexdigest()
+          z=base64.b64decode((p/'block2-v13.b64').read_text().strip(),validate=True)
+          assert h(z)=='9cd65894fedf046361832c2be67b52415deb5fdeef5424d6c850ee6241e7b98e'
+          b=gzip.decompress(z);assert h(b)=='879412fc0ff6739db80588a6a681c70e52e35d2ebfb8ba49521bba32f3f28878'
+          d=json.loads(b);m=json.loads(d['manifest.json']);tm=json.loads(d['test_manifest.json'])
+          assert len(m)==6 and len(tm)==4
+          pre={n:{'expected':v['before'],'actual':h((root/n).read_bytes()) if (root/n).is_file() else None} for n,v in {**m,**tm}.items()}
+          (out/'gfstorage-v13-preflight.json').write_text(json.dumps(pre,indent=2))
+          assert all(x['expected']==x['actual'] for x in pre.values()),'STOP: v13 source identity mismatch'
+          patch=d['production.patch'].encode()
+          subprocess.run(['patch','-p1','--batch','--forward','--dry-run'],cwd=root,input=patch,check=True)
+          subprocess.run(['patch','-p1','--batch','--forward'],cwd=root,input=patch,check=True)
+          assert all(h((root/n).read_bytes())==v['after'] for n,v in m.items())
+          for n,v in tm.items():
+              f=root/n;s=d[f.name];b=s.encode()
+              assert h(b)==v['after']
+              ids=re.findall(r'@Test fun (\w+)',s)
+              assert ids==v['ids'] and len(ids)==len(set(ids))
+              if f.exists():
+                  old=re.findall(r'@Test fun (\w+)',f.read_text())
+                  assert set(old).issubset(ids)
+              f.write_bytes(b)
+          assert all(h((root/n).read_bytes())==v['after'] for n,v in tm.items())
+          (out/'gfstorage-v13-source-manifest.json').write_text(json.dumps({**m,**tm},indent=2))
+          (out/'gfstorage-v13-new-ids.json').write_text(d['new_ids.json'])
+          print('All six production sources and four test sources verified; existing test IDs retained')
+          PY
+      - name: Apply exact v14 bounded history and lifecycle with Q04 fixture correction
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          import base64,gzip,hashlib,json,os,re
+          from pathlib import Path
+          p=Path(os.environ['RUNNER_TEMP']);root=Path('q07-ci/android-app/app/src');out=Path('qa-results/q11');h=lambda b:hashlib.sha256(b).hexdigest()
+          z=base64.b64decode((p/'block3-v14.b64').read_text().strip(),validate=True)
+          assert h(z)=='a6c5c3a511de2811e87a289f8ccf9fd6f1f883bc0c8799633ee84801a043cc74'
+          b=gzip.decompress(z);assert h(b)=='f111b94cb943969ae0412aa57a0d75df84d11f1804b29df5a0f0e3fd86b84d75'
+          d=json.loads(b);m=d['manifest'];a=d['activity'];assert len(m)==5 and set(m)==set(d['files'])
+          pre={n:{'expected':v['before'],'actual':h((root/n).read_bytes()) if (root/n).is_file() else None} for n,v in m.items()}
+          pre[a['path']]={'expected':a['before'],'actual':h((root/a['path']).read_bytes())}
+          (out/'gfstorage-v14-preflight.json').write_text(json.dumps(pre,indent=2))
+          assert all(x['expected']==x['actual'] for x in pre.values()),'STOP: v14 source identity mismatch'
+          for n,v in m.items():
+              f=root/n;t=d['files'][n];b=t.encode();assert h(b)==v['after']
+              if n.startswith('androidTest/') and f.exists():
+                  assert re.findall(r'@Test fun (\w+)',f.read_text())==re.findall(r'@Test fun (\w+)',t)
+              f.write_bytes(b)
+          f=root/a['path'];old=f.read_bytes();t=old.decode()
+          for before,after in a['replacements']:
+              assert t.count(before)==1,(before,t.count(before));t=t.replace(before,after)
+          f.write_text(t);m[a['path']]={'before':h(old),'after':h(f.read_bytes())}
+          assert all(h((root/n).read_bytes())==v['after'] for n,v in m.items())
+          (out/'gfstorage-v14-source-manifest.json').write_text(json.dumps(m,indent=2))
+          (out/'gfstorage-v14-new-ids.json').write_text(json.dumps(d['new_ids'],indent=2))
+          print('Exact v14 lifecycle + chunked history + Q04 fixture applied; all prior IDs retained')
+          PY
+      - name: Correct v14.1 test-only owner scope and assert Q08 denial
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib,json,re
+          f=Path('q07-ci/android-app/app/src/androidTest/java/org/glukopapa/v3/m00/GfV3StorageLifecycleInstrumentedTest.kt')
+          h=lambda b:hashlib.sha256(b).hexdigest()
+          b=f.read_bytes();assert h(b)=='5153d633fa6e8193cd743c876bd8e009d07e6657ebb85cbe1469985318ed207d'
+          s=b.decode()
+          changes=json.loads(r'''[["private fun accept(helper:GfDbHelper){","private fun accept(helper:GfDbHelper,moduleId:String=GfV3Q08Rules.OWNER){"],["arrayOf(GfV3Q08Rules.OWNER))","arrayOf(moduleId))"],["val storage=GfV3Storage(helper,catalog(),grants().toString());val profile=\"qa-year-chunk\"\n            storage.initializeProfile(profile,\"UTC\",storage.revision());accept(helper)","val storage=GfV3Storage(helper,catalog(),grants().toString());val profile=\"qa-year-chunk\"\n            val owner=\"GFHighLowReadOnlyAdapter\"\n            storage.initializeProfile(profile,\"UTC\",storage.revision());accept(helper,owner)\n            try{storage.openNativeYearHistory(GfV3Q08Rules.OWNER,\"research\",\"cgm\");fail(\"Q08 must not obtain year research scope\")}catch(e:SecurityException){assertEquals(\"YEAR_HISTORY_RESEARCH_SCOPE_DENIED\",e.message)}"],["storage.openNativeYearHistory(GfV3Q08Rules.OWNER,\"research\",\"cgm\",end)","storage.openNativeYearHistory(owner,\"research\",\"cgm\",end)"],["storage.openNativeYearSession(GfV3Q08Rules.OWNER,mapOf(\"cgm\" to \"research\"),end)","storage.openNativeYearSession(owner,mapOf(\"cgm\" to \"research\"),end)"]]''')
+          for old,new in changes:
+              assert s.count(old)==1,(old,s.count(old))
+              s=s.replace(old,new)
+          assert re.findall(r'@Test fun (\w+)',b.decode())==re.findall(r'@Test fun (\w+)',s)
+          assert h(s.encode())=='f7c10670cb08b05137df57c42d650cd381604ddc55d70ab80c4ed3509ec9c158'
+          f.write_text(s)
+          Path('qa-results/q11/gfstorage-v141-fixture.json').write_text(json.dumps({'before':h(b),'after':h(s.encode()),'testOwner':'GFHighLowReadOnlyAdapter','Q08':'explicit deny'},indent=2))
+          PY
+      - name: Wait for rendered Q03 state and preserve original assertions
+        shell: bash
+        run: |
+          python3 - <<'PYCODE'
+          from pathlib import Path
+          import hashlib
+          p = Path('q07-ci/android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q03AndroidReadOnlyTest.kt')
+          before = p.read_bytes()
+          assert hashlib.sha256(before).hexdigest() == '88f4c10401f74d47ced5302ff9866b2aa66213efca7db1551a6bc66aae8e6a43'
+          source = before.decode()
+          start = source.index('        var ready=false')
+          end = source.index('\n    }', start)
+          new = '        var state = ""\n        repeat(50) {\n            state = eval(scenario, """JSON.stringify({\n                path: location.pathname,\n                ready: document.readyState,\n                core: !!window.GFNormalizedFactsV3,\n                bridge: !!window.GPV3V3Bridge,\n                rendered: !!document.querySelector(\'#eventList\')?.firstElementChild,\n                warning: document.querySelector(\'#summary .metric\')?.parentElement?.nextElementSibling?.textContent ?? \'\'\n            })""")\n            val snapshot = JSONObject(state)\n            if (snapshot.getString("path") == "/q03/normalized-facts.html" &&\n                snapshot.getString("ready") == "complete" && snapshot.getBoolean("core") &&\n                snapshot.getBoolean("rendered")) return\n            Thread.sleep(150)\n        }\n        fail("Q03 did not render its native result: $state")'
+          # The assertion helper already exists through org.junit.Assert.*.
+          source = source[:start] + new.replace('\n                  ', '\n        ') + source[end:]
+          old = 'assertTrue(warning.contains("Q03_PROFILE_MISMATCH"))'
+          assert source.count(old) == 1
+          source = source.replace(old, 'assertTrue("Expected missing profile warning, actual: $warning", warning.contains("Q03_PROFILE_MISMATCH"))')
+          p.write_text(source)
+          PYCODE
+      - name: Install exact Q13 history preflight in androidTest only
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          import base64,hashlib,json,os,re
+          from pathlib import Path
+          p=Path(os.environ['RUNNER_TEMP']);root=Path('q07-ci/android-app/app/src');out=Path('qa-results/q11')
+          h=lambda b:hashlib.sha256(b).hexdigest()
+          k='java/org/glukopapa/v3/m00/'
+          m={root/'main'/k/'GfV3Storage.kt':'ff7f68276f0c24f2b0ec30117fad256490c369953570b295f9ae1323fd0e6d40',root/'main'/k/'GfV3YearHistory.kt':'f04bec8f5a51f325a8b6265f459e4dce7c98b99eafb9ac38d0f20527fd907aa9'}
+          assert all(h(f.read_bytes())==sha for f,sha in m.items()),'exact GFStorage baseline required'
+          adapter=base64.b64decode((p/'q13-preflight.b64').read_text().strip(),validate=True)
+          assert h(adapter)=='7134674a38a95aa5211c255138c56ecbefe04533c2385852400091a90751d359'
+          test=(p/'q13-native-test.kt').read_bytes()
+          assert hashlib.sha1(b'blob '+str(len(test)).encode()+b'\0'+test).hexdigest()=='8528e01544c4020846ac459a52dcee4ff4ab9fb3'
+          ids=re.findall(r'@Test\s+fun\s+(\w+)',test.decode())
+          assert ids==['q13NativePreflightKeepsSixMonthBoundaryAcrossPagesAndExcludesForeignProfile','q13NativePreflightRejectsMissingGrantAndSameRevisionRestoreBetweenDomains']
+          for n,b in [('GfV3Q13HistoryPreflight.kt',adapter),('Q13HistoryPreflightInstrumentedTest.kt',test)]:
+              f=root/'androidTest'/k/n
+              assert not f.exists() and not (root/'main'/k/n).exists()
+              f.write_bytes(b)
+              m[f]=h(b)
+          out.mkdir(parents=True,exist_ok=True)
+          (out/'q13-preflight-source-manifest.json').write_text(json.dumps({str(f):sha for f,sha in m.items()},indent=2))
+          print('Verified exact two storage sources and both androidTest-only Q13 files. No production activation.')
+          PY
+      - name: Apply Q13 scoped receipt projection and evidence tests
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          import base64,gzip,hashlib,json,os,re
+          from pathlib import Path
+          p=Path(os.environ['RUNNER_TEMP']);root=Path('q07-ci/android-app/app/src');out=Path('qa-results/q11')
+          h=lambda b:hashlib.sha256(b).hexdigest()
+          z=base64.b64decode((p/'q13-cgm-evidence.b64').read_text().strip(),validate=True)
+          assert h(z)=='bb5733e761af18f0662f9ae7cfff45189745dad94133ab64cbdb84f400819043'
+          b=gzip.decompress(z);assert h(b)=='99f971364b06edcc9d8bdf62b0248d2315bbb9bf421648c301847cafe92f0d28'
+          d=json.loads(b);m=d['manifest'];assert len(m)==3 and set(m)==set(d['files']) and len(d['unchanged'])==3
+          for n,sha in d['unchanged'].items():assert h((root/n).read_bytes())==sha,n
+          pre={n:{'expected':v['before'],'actual':h((root/n).read_bytes()) if (root/n).is_file() else None} for n,v in m.items()}
+          (out/'q13-cgm-evidence-preflight.json').write_text(json.dumps(pre,indent=2))
+          assert all(x['expected']==x['actual'] for x in pre.values()),'STOP: source identity mismatch'
+          for n,v in m.items():
+              f=root/n;b=d['files'][n].encode();assert h(b)==v['after']
+              if n.startswith('androidTest/'):assert not (root/n.replace('androidTest/','main/',1)).exists()
+              f.write_bytes(b)
+          assert all(h((root/n).read_bytes())==v['after'] for n,v in m.items())
+          (out/'q13-cgm-evidence-manifest.json').write_text(json.dumps({'files':m,'unchanged':d['unchanged']},indent=2))
+          print('Exact scoped year receipt projection + two androidTest-only Q13 files; original Q09 writer unchanged')
+          PY
+      - name: Install exact test-only Q13 meal and injection fact evidence
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          import base64,gzip,hashlib,json,os,re
+          from pathlib import Path
+          p=Path(os.environ['RUNNER_TEMP']);root=Path('q07-ci/android-app/app/src');out=Path('qa-results/q11')
+          h=lambda b:hashlib.sha256(b).hexdigest()
+          z=base64.b64decode((p/'q13-fact-evidence.b64').read_text().strip(),validate=True)
+          assert h(z)=='2c4f5aca1ee53d525ad371d6dfa7bcf70a644b54466f3f4fbbfd7c5adc812b40'
+          b=gzip.decompress(z);assert h(b)=='2a83a59a6fdba0ac7ee76c2e4ed36991bf7fe5602ffe8ad16dea73513410331b'
+          d=json.loads(b);expected={'GfV3Q13FactEvidence.kt':'c9a86f2870d82892cdc4a0f05c5f492ea1fb61586eb310ef981213f6d04fa5ba','Q13FactEvidenceInstrumentedTest.kt':'683fae00603375464cf26cfc7fc3e4a2ed5dda9216e6d2ab4f2c5170fe8a91f3'}
+          src={'GfV3Q04MealFacts.kt':'3af70e8a15f49d3f9489b9d70f705f79566d20296884ba5f5c813323eb803154','GfV3Q07InjectionFacts.kt':'2b70d19f63063fe973b61db168255d2d1860078a9447661a3b098bb9a97c348b','GfV3Q07InjectionContract.kt':'fc60805d35cb1e27e9cc5b402f24cf9fde15747e2a3b88f426e77f54d73447cc','GfV3PlateContract.kt':'3c897f9a1418eb2d22bf180b4682b6a5c267d0ed8433988d715ff35ac4446b14','GfV3WriteContract.kt':'b7b212d5bf2737c6f0dd409557c2fc705a8f683a30ebb450827db16af1aa29cd','GfV3DomainWriter.kt':'3ab017497200c6c23b27d255d2f570f8c6d2c76390579a878266752a4b00b2e7','GfV3YearHistory.kt':'1ffea445f263cf548485085ea176c423c5355848b5e9ec5329f6d930b03ba462'}
+          k=Path('java/org/glukopapa/v3/m00')
+          for n,v in src.items():assert h((root/'main'/k/n).read_bytes())==v,n
+          assert set(d)==set(expected)
+          for n,t in d.items():
+           f=root/'androidTest'/k/n
+           assert not f.exists() and not (root/'main'/k/n).exists() and h(t.encode())==expected[n]
+           f.write_bytes(t.encode())
+          assert re.findall(r'@Test\s+fun\s+(\w+)',d['Q13FactEvidenceInstrumentedTest.kt'])==['q13ActualQ04Q07FactsStayIndependentAndRejectAmbiguousRows']
+          (out/'q13-fact-evidence-manifest.json').write_text(json.dumps({'unchanged':src,'testOnly':expected},indent=2))
+          print('Q13 facts: exact producer contracts, two androidTest-only files, no production activation')
+          PY
+      - name: Repair Q13 test-only future history endpoint (preserve storage guard)
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          p=Path('q07-ci/android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q13FactEvidenceInstrumentedTest.kt')
+          h=lambda b:hashlib.sha256(b).hexdigest()
+          before=p.read_bytes()
+          assert h(before)=='683fae00603375464cf26cfc7fc3e4a2ed5dda9216e6d2ab4f2c5170fe8a91f3'
+          old=b'val rev=storage.revision();val end=Instant.now().plusSeconds(2);'
+          new=b'val rev=storage.revision();val end=Instant.now();'
+          assert before.count(old)==1
+          after=before.replace(old,new)
+          assert h(after)=='c77ecab48592b27e415d78d083558b9b353ac74d7160270ff42e8a0988f4b8be'
+          assert after.replace(new,old)==before
+          p.write_bytes(after)
+          out=Path('qa-results/q11/q13-fact-fixture-fix.json')
+          out.write_text(json.dumps({'before':h(before),'after':h(after),'scope':'androidTest only','reason':'YEAR_HISTORY_FUTURE_END','assertions_preserved':True},indent=2))
+          PY
+      - name: Install exact Q13 historical context diagnostics in androidTest only
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          import base64,gzip,hashlib,json,re
+          from pathlib import Path
+          root=Path('q07-ci/android-app/app/src')
+          k=Path('java/org/glukopapa/v3/m00')
+          out=Path('qa-results/q11')
+          h=lambda b:hashlib.sha256(b).hexdigest()
+          z=base64.b64decode('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',validate=True)
+          assert h(z)=='3fc90840986c82e4eaab48dc9d6088f46716e6eefaf60ff90ae8ad500d8931c9'
+          raw=gzip.decompress(z);assert h(raw)=='a74749b3dbe42efbbc43d6583b80b55b73d3de0e098068759132bd72b80416f2'
+          d=json.loads(raw);m=d['manifest'];files=d['files']
+          expected={'Q13ContextEvidenceInstrumentedTest.kt':'17bcf90c705466a8824e00d36c4454332f8b9da4bd46e9bfb4f890f3880c9472','GfV3Q13ContextEvidence.kt':'f73605a0be7db1b283a85350c8cd08cfaff30b7e00f4fbcfb0795eec1716835a'}
+          src={'GfV3Q05ActivityFacts.kt':'613d5993a2f9bb3e981704d4cbf4302e481935919992aaba9495555a1e0c4d5a','GfV3Q05ContextResolver.kt':'5d6bf4f220bcc80158a7d68d13f702fd7fbf38df09f56ec2c67ffc2b243ceabe','GfV3Q07InjectionFacts.kt':'2b70d19f63063fe973b61db168255d2d1860078a9447661a3b098bb9a97c348b','GfV3WriteContract.kt':'b7b212d5bf2737c6f0dd409557c2fc705a8f683a30ebb450827db16af1aa29cd','GfV3PortContract.kt':'f02a8f2662258a20dc246a0337e728fc8b3f455488800c1a4e0956f4bf044161','GfV3DomainWriter.kt':'3ab017497200c6c23b27d255d2f570f8c6d2c76390579a878266752a4b00b2e7','GfV3SettingsModeContract.kt':'5959f0b96cf1b2dc0a3be394d18b2ba9d055c369aecdfd36ed2984ca39d8707d','GfV3SettingsTrustedAdapter.kt':'02e7657970d95ecd3146a1fdff724dc54489b1651f128d8262b538a7112585d3','GfV3YearHistory.kt':'1ffea445f263cf548485085ea176c423c5355848b5e9ec5329f6d930b03ba462'}
+          assert m['requiredNativeSourceHashes']==src and m['testOnly']==expected and set(files)==set(expected)
+          for n,v in src.items():assert h((root/'main'/k/n).read_bytes())==v,n
+          t=files['Q13ContextEvidenceInstrumentedTest.kt']
+          old='val at=Instant.now();val end=at;val rev=storage.revision()'
+          new='val at=Instant.now();val end=at.plusSeconds(1);val rev=storage.revision()'
+          assert t.count(old)==1 and h(t.replace(old,new).encode())=='0731c776064ea30a04cdf118b877ca656b3ac9f366d369485a9e0d6b21c629bd'
+          assert re.findall(r'@Test\s+fun\s+(\w+)',t)==['q13HistoricalContextUsesActualSettingsAndPeriodsWithoutInferringPhysiology']
+          for n,t in files.items():
+           f=root/'androidTest'/k/n
+           assert not f.exists() and not (root/'main'/k/n).exists() and h(t.encode())==expected[n]
+           f.write_bytes(t.encode())
+          (out/'q13-context-evidence-manifest.json').write_text(json.dumps({'unchanged':src,'testOnly':expected,'fixtureRepair':'at==end; original test SHA verified','productionActivation':False},indent=2))
+          PY
+      - name: Export verified writer and authorization source only
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib,json,shutil
+          root=Path('q07-ci/android-app/app/src/main')
+          k=root/'java/org/glukopapa/v3/m00'
+          h=lambda b:hashlib.sha256(b).hexdigest()
+          out=Path('qa-results/q13-writer-source')
+          out.mkdir(parents=True,exist_ok=True)
+          expected={'GfV3DomainWriter.kt':'3ab017497200c6c23b27d255d2f570f8c6d2c76390579a878266752a4b00b2e7','GfV3WriteContract.kt':'b7b212d5bf2737c6f0dd409557c2fc705a8f683a30ebb450827db16af1aa29cd','GfV3PortContract.kt':'f02a8f2662258a20dc246a0337e728fc8b3f455488800c1a4e0956f4bf044161','GfV3YearHistory.kt':'1ffea445f263cf548485085ea176c423c5355848b5e9ec5329f6d930b03ba462'}
+          for n,d in expected.items():
+           assert h((k/n).read_bytes())==d,n
+          names=set(expected)|{'GfV3Storage.kt','GfV3NativeModuleGateway.kt','GfV3NativeWriter.kt','GfDbHelper.kt'}
+          names.update(x.name for x in k.glob('GfV3*.kt') if any(s in x.name for s in ('Revision','Epoch','Restore','Backup','Registry','Profile','MealTiming')))
+          assets=['module_catalog_v1.json','writer_grants_v0.12.json','schema_v5.sql','schema_v10.sql']
+          manifest={}
+          for f in [k/n for n in sorted(names)]+[root/'assets/db'/n for n in assets]:
+           assert f.is_file(),str(f)
+           b=f.read_bytes()
+           (out/f.name).write_bytes(b);manifest[f.name]={'sha256':h(b),'bytes':len(b),'path':str(f.relative_to(root))}
+          (out/'manifest.json').write_text(json.dumps(manifest,indent=2,sort_keys=True))
+          print('EXACT_Q13_SOURCE_MANIFEST',json.dumps(manifest,sort_keys=True))
+          for n in ('GfV3DomainWriter.kt','GfV3NativeModuleGateway.kt'):
+           print('BEGIN_Q13_SOURCE '+n);print((out/n).read_text());print('END_Q13_SOURCE '+n)
+          PY
+      - name: Upload exact source audit evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: q13-writer-source-audit
+          path: qa-results/q13-writer-source/
+          if-no-files-found: error
