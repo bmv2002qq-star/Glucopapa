@@ -1923,13 +1923,15 @@ jobs:
               }
 
           '''+marker)
-          f.write_text(s)
-          f=main/'GfV3Storage.kt'
+          m='    fun cursor(domain:String):Long?'
+          assert s.count(m)==1
+          f.write_text(s.replace(m,'    fun requireOpen(domain:String) { check(!closed && domain in cursors){"YEAR_SESSION_CURSOR_INVALID"} }\n'+m))
+          f=main/'GfV3Storage.kt' 
           s=f.read_text()
           marker='        @Synchronized fun read(domain:String,pageSize:Int):JSONObject = try {'
           assert s.count(marker)==1
           f.write_text(s.replace(marker,'''        @Synchronized internal fun verifyQ09CgmSnapshot(ids:List<String>):List<GfV3Q13CgmEvidence.Point> {
-                      progress.cursor("cgm")
+                      progress.requireOpen("cgm")
                       require(scope["cgm"]=="research"){"Q13_CGM_SCOPE_REQUIRED"}
                       return checked { db -> GfV3YearHistory.verifyQ09CgmSnapshot(db,stamp.copy(domain="cgm",role="research"),ids) }
                   }
@@ -1941,7 +1943,10 @@ jobs:
           assert s.count(marker)==1
           s=s.replace(marker,'''    private fun verify(ids:List<String>,module:String=owner):List<GfV3Q13CgmEvidence.Point>{
                   val session=storage.openNativeYearSession(module,mapOf("cgm" to "research"),end)
-                  return try { session.verifyQ09CgmSnapshot(ids) } finally { session.close() }
+                  return try {
+                      while(session.read("cgm",GfV3YearHistory.MAX_PAGE).getBoolean("hasMore")) {}
+                      session.verifyQ09CgmSnapshot(ids)
+                  } finally { session.close() }
               }
           '''+marker)
           marker='        assertTrue(rows("GFHighLowReadOnlyAdapter")'
