@@ -1,8 +1,8 @@
-name: Q13 writer current readback API31
+name: Q13 writer current readback API31-36
 on:
   push:
     branches:
-      - 'qa/v3-q13-current-readback'
+      - 'qa/v3-q13-android-matrix'
     paths:
       - '.github/workflows/q13-writer-current-readback.yml'
   workflow_dispatch:
@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        api: [31]
+        api: [31, 34, 35, 36]
     runs-on: ubuntu-24.04
     timeout-minutes: 65
     steps:
