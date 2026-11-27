@@ -1,0 +1,40 @@
+{
+  "baseline": {
+    "sha256": "012acf7e01527de608a6b3e48bace23b29a31ef3507681e6c81c194fb47e0ee8",
+    "gate": true,
+    "runnerExit": 0,
+    "crashBuffer": "",
+    "suites": {
+      "integrated": {
+        "total": 215,
+        "passed": 215,
+        "failures": {}
+      },
+      "offline": {
+        "total": 8,
+        "passed": 8,
+        "failures": {}
+      }
+    }
+  },
+  "candidate": {
+    "sha256": "52816ac5faf12086c37644c172aa80d1b83383a791d29b9eea1bbf56de0d88d6",
+    "gate": true,
+    "runnerExit": 0,
+    "crashBuffer": "",
+    "suites": {
+      "integrated": {
+        "total": 215,
+        "passed": 215,
+        "failures": {}
+      },
+      "offline": {
+        "total": 8,
+        "passed": 8,
+        "failures": {}
+      }
+    }
+  },
+  "exactIDs": true,
+  "appPayloadUnchanged": true
+}

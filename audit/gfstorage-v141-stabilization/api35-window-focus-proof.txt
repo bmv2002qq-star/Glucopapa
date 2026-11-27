@@ -1,0 +1,47 @@
+google/sdk_gphone64_x86_64/emu64xa:15/AE3A.240806.043/12960925:userdebug/dev-keys
+Current WebView Update Service state
+  Current WebView package (name, version): (com.google.android.webview, 124.0.6367.219)
+  Minimum targetSdkVersion: 33
+  Minimum WebView version code: 636771938
+  Number of relros started: 1
+  Number of relros finished: 1
+  WebView package dirty: false
+  Any WebView package installed: true
+  Preferred WebView package (name, version): (com.google.android.webview, 124.0.6367.219)
+  WebView packages:
+    Valid package com.google.android.webview (versionName: 124.0.6367.219, versionCode: 636771938, targetSdkVersion: 34) is  installed/enabled for all users
+    com.google.android.webview.beta is NOT installed.
+    com.google.android.webview.dev is NOT installed.
+    com.google.android.webview.canary is NOT installed.
+    com.google.android.webview.debug is NOT installed.
+    com.android.webview is NOT installed.
+true
+Fri Nov 27 17:28:27 UTC 2026
+  mCurrentFocus=Window{78d4836 u0 Application Not Responding: com.google.android.apps.nexuslauncher}
+  mFocusedApp=ActivityRecord{e4f1d37 u0 com.google.android.apps.nexuslauncher/.NexusLauncherActivity t7}
+  mTopFocusedDisplayId=0
+Fri Nov 27 17:28:30 UTC 2026
+  mCurrentFocus=Window{78d4836 u0 Application Not Responding: com.google.android.apps.nexuslauncher}
+  mFocusedApp=ActivityRecord{e4f1d37 u0 com.google.android.apps.nexuslauncher/.NexusLauncherActivity t7}
+  mTopFocusedDisplayId=0
+Fri Nov 27 17:28:33 UTC 2026
+  mCurrentFocus=Window{78d4836 u0 Application Not Responding: com.google.android.apps.nexuslauncher}
+  mFocusedApp=ActivityRecord{e4f1d37 u0 com.google.android.apps.nexuslauncher/.NexusLauncherActivity t7}
+  mTopFocusedDisplayId=0
+Fri Nov 27 17:28:37 UTC 2026
+
+Total focus samples: 212
+Samples focused on Nexus Launcher ANR: 212
+
+Fri Nov 27 17:39:06 UTC 2026
+  mCurrentFocus=Window{78d4836 u0 Application Not Responding: com.google.android.apps.nexuslauncher}
+  mFocusedApp=ActivityRecord{e4f1d37 u0 com.google.android.apps.nexuslauncher/.NexusLauncherActivity t7}
+  mTopFocusedDisplayId=0
+Fri Nov 27 17:39:09 UTC 2026
+  mCurrentFocus=Window{78d4836 u0 Application Not Responding: com.google.android.apps.nexuslauncher}
+  mFocusedApp=ActivityRecord{e4f1d37 u0 com.google.android.apps.nexuslauncher/.NexusLauncherActivity t7}
+  mTopFocusedDisplayId=0
+Fri Nov 27 17:39:12 UTC 2026
+  mCurrentFocus=Window{78d4836 u0 Application Not Responding: com.google.android.apps.nexuslauncher}
+  mFocusedApp=ActivityRecord{e4f1d37 u0 com.google.android.apps.nexuslauncher/.NexusLauncherActivity t7}
+  mTopFocusedDisplayId=0
