@@ -1424,6 +1424,39 @@ jobs:
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
+      - name: Prepare Bash runner and focus diagnostics
+        shell: bash
+        run: |
+          cat > "$RUNNER_TEMP/gfstorage-focus-runner.sh" <<'BASH'
+          set -euo pipefail
+          mkdir -p qa-results/q11
+          log=qa-results/q11/window-focus.log
+          adb shell settings put system screen_off_timeout 2147483647
+          adb shell svc power stayon true
+          adb shell locksettings set-disabled true
+          adb shell input keyevent KEYCODE_WAKEUP
+          adb shell wm dismiss-keyguard
+          {
+            adb shell getprop ro.build.fingerprint
+            adb shell dumpsys webviewupdate
+            adb shell locksettings get-disabled
+          } > "$log" 2>&1
+          (
+            while true; do
+              date -u
+              timeout 4 adb shell dumpsys window | awk '/mCurrentFocus|mFocusedApp|mTopFocusedDisplayId|mShowingLockscreen|mKeyguardShowing/'
+              sleep 3
+            done
+          ) >> "$log" 2>&1 &
+          monitor=$!
+          trap 'kill "$monitor" 2>/dev/null || true' EXIT
+          rc=0
+          bash qa-transfer/q10/v042/run.sh || rc=$?
+          adb logcat -b crash -d > qa-results/q11/crash-buffer.log
+          printf '%s\n' "$rc" > qa-results/q11/runner-exit.txt
+          exit "$rc"
+          BASH
+          bash -n "$RUNNER_TEMP/gfstorage-focus-runner.sh"
       - name: Android API ${{ matrix.api }} verify 215 integrated and 8 offline
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -1436,34 +1469,7 @@ jobs:
           disk-size: 4096M
           emulator-boot-timeout: 900
           disable-animations: true
-          script: |
-            set -euo pipefail
-            mkdir -p qa-results/q11
-            log=qa-results/q11/window-focus.log
-            adb shell settings put system screen_off_timeout 2147483647
-            adb shell svc power stayon true
-            adb shell locksettings set-disabled true
-            adb shell input keyevent KEYCODE_WAKEUP
-            adb shell wm dismiss-keyguard
-            {
-              adb shell getprop ro.build.fingerprint
-              adb shell dumpsys webviewupdate
-              adb shell locksettings get-disabled
-            } > "$log" 2>&1
-            (
-              while true; do
-                date -u
-                timeout 4 adb shell dumpsys window | awk '/mCurrentFocus|mFocusedApp|mTopFocusedDisplayId|mShowingLockscreen|mKeyguardShowing/'
-                sleep 3
-              done
-            ) >> "$log" 2>&1 &
-            monitor=$!
-            trap 'kill "$monitor" 2>/dev/null || true' EXIT
-            rc=0
-            bash qa-transfer/q10/v042/run.sh || rc=$?
-            adb logcat -b crash -d > qa-results/q11/crash-buffer.log
-            printf '%s\n' "$rc" > qa-results/q11/runner-exit.txt
-            exit "$rc"
+          script: bash "$RUNNER_TEMP/gfstorage-focus-runner.sh"
       - name: Verify exact 215 integrated and 8 offline native test IDs
         if: always()
         shell: bash
