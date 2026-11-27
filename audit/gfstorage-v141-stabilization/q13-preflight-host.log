@@ -1,0 +1,46 @@
+PASS six UTC calendar months, month end clamped and preboundary retained
+PASS 52,560 CGM rows paginated without 2,000-row truncation
+PASS empty dated domains do not claim coverage
+PASS foreign profile
+PASS same revision restore
+PASS revision changed
+PASS input revision changed
+PASS zone changed
+PASS different session
+PASS incorrect page index
+PASS wrong domain
+PASS incorrect schema
+PASS nonchronological
+PASS untrusted coverage claim
+PASS unstaged page
+PASS wrong year start
+PASS page row count inconsistent
+PASS scan incomplete flag
+PASS empty next page
+PASS source total changed across pages
+PASS chronology regression
+PASS future row
+PASS invalid nanos
+PASS finish context mismatch
+PASS finish missing domain
+PASS finish counts mismatch
+PASS finish denies completeness
+PASS finish different owner
+PASS native exception closes session without result
+PASS 29 host tests (JSON/storage test doubles; no Android)
+PASS allow cgm
+PASS allow events
+PASS allow mealSessions
+PASS allow mealHistory
+PASS allow conditionPeriods
+PASS deny conditionHistory
+PASS allow settingHistory
+PASS deny coefficients
+PASS deny coefficientHistory
+PASS deny measurements
+PASS deny forecasts
+PASS deny mealTiming
+PASS deny corrections
+PASS deny coefficientProposals
+PASS deny syncInbox
+PASS 15 exact source scope checks; runtime registry activation not tested

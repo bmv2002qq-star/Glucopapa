@@ -1,0 +1,54 @@
+{
+  "baseline": {
+    "sha256": "ad1dae35055f5f3ef45cc75bef7766f73d018495d93afee0612469a1e040bc86",
+    "gate": false,
+    "runnerExit": 1,
+    "crashBuffer": "",
+    "suites": {
+      "integrated": {
+        "total": 215,
+        "passed": 208,
+        "failures": {
+          "org.glukopapa.v3.m00.Q01AndroidRuntimeTest#webViewOwnerDialogSettingsSqliteAndCancellation": {
+            "kind": "failure",
+            "trace": "androidx.test.espresso.base.RootViewPicker$RootViewWithoutFocusException: Waited for the root of the view hierarchy to have window focus and not request layout for 10 seconds. If you specified a non default root matcher, it may be picking a root that never takes focus. Root:\nRoot{application-window-token=android.view.ViewRootImpl$W@412f93a, window-token=android.view.ViewRootImpl$W@412f93a, has-window-focus=false, layout-params-type=2, layout-params-string={(0,0)(wrapxwrap) gr=CENTER sim={adjust=pan} ty=APPLICATION fmt=TRANSLUCENT wanim=0x103030a\nfl=DIM_BEHIND ALT_FOCUSABLE_IM SPLIT_TOUCH HARDWARE_ACCELERATED\npfl=EDGE_TO_EDGE_ENFORCED\nbhv=DEFAULT\nfitTypes=STATUS_BARS NAVIGATION_BARS CAPTION_BAR\nframeRateBoostOnTouch=true\ndvrrWindowFrameRateHint=true}, decor-view-string=DecorView{id=-1, visibility=VISIBLE, width=1026, height=619, has-focus=false, has-focusable=true, has-window-focus=false, is-clickable=false, is-enabled=true, is-focused=false, is-focusable=false, is-layout-requested=false, is-selected=false, layout-params={(0,0)(wrapxwrap) gr=CENTER sim={adjust=pan} ty=APPLICATION fmt=TRANSLUCENT wanim=0x103030a\nfl=DIM_BEHIND ALT_FOCUSABLE_IM SPLIT_TOUCH HARDWARE_ACCELERATED\npfl=EDGE_TO_EDGE_ENFORCED\nbhv=DEFAULT\nfitTypes=STATUS_BARS NAVIGATION_BARS CAPTION_BAR\nframeRateBoostOnTouch=true\ndvrrWindowFrameRateHint=true}, tag=null, root-is-layout-requested=false, has-input-connection=false, x=0.0, y=0.0, child-count=1}}\nat dalvik.system.VMStack.getThreadStackTrace(Native Method)\nat java.lang.Thread.getStackTrace(Thread.java:1841)\nat androidx.test.espresso.base.EspressoExceptionHandler.handleSafely(EspressoExceptionHandler.java:34)\nat androidx.test.espresso.base.EspressoExceptionHandler.handleSafely(EspressoExceptionHandler.java:26)\nat androidx.test.espresso.base.DefaultFailureHandler$TypedFailureHandler.handle(DefaultFailureHandler.java:158)\nat androidx.test.espresso.base.DefaultFailureHandler.handle(DefaultFailureHandler.java:120)\nat androidx.test.espresso.ViewInteraction.waitForAndHandleInteractionResults(ViewInteraction.java:385)\nat androidx.test.espresso.ViewInteraction.desugaredPerform(ViewInteraction.java:212)\nat androidx.test.espresso.ViewInteraction.perform(ViewInteraction.java:140)\nat org.glukopapa.v3.m00.Q01AndroidRuntimeTest.webViewOwnerDialogSettingsSqliteAndCancellation(Q01AndroidRuntimeTest.kt:176)\n"
+          },
+          "org.glukopapa.v3.m00.Q02AndroidBackupTest#q02ApprovedHtmlNativeOwnerCancelKeepsDatabaseUnchanged": {
+            "kind": "failure",
+            "trace": "java.lang.AssertionError: Native dialog action not visible: Отмена\nat org.junit.Assert.fail(Assert.java:89)\nat org.junit.Assert.assertTrue(Assert.java:42)\nat org.junit.Assert.assertNotNull(Assert.java:713)\nat org.glukopapa.v3.m00.Q02AndroidBackupTest.clickNative(Q02AndroidBackupTest.kt:63)\nat org.glukopapa.v3.m00.Q02AndroidBackupTest.q02ApprovedHtmlNativeOwnerCancelKeepsDatabaseUnchanged(Q02AndroidBackupTest.kt:179)\n"
+          },
+          "org.glukopapa.v3.m00.Q08LevemirWebViewInstrumentedTest#approvedScreenNativeActivationAndActualConfirmationAreSeparate": {
+            "kind": "failure",
+            "trace": "java.lang.AssertionError: Native dialog button missing: Отмена; focus=false,button=Отмена,shown=true,enabled=true; state=\"Для первой записи включите модуль. Это не создаёт укол.\"\nat org.junit.Assert.fail(Assert.java:89)\nat org.glukopapa.v3.m00.Q08LevemirWebViewInstrumentedTest.dialogButton(Q08LevemirWebViewInstrumentedTest.kt:59)\nat org.glukopapa.v3.m00.Q08LevemirWebViewInstrumentedTest.dialogButton$default(Q08LevemirWebViewInstrumentedTest.kt:40)\nat org.glukopapa.v3.m00.Q08LevemirWebViewInstrumentedTest.approvedScreenNativeActivationAndActualConfirmationAreSeparate(Q08LevemirWebViewInstrumentedTest.kt:76)\n"
+          },
+          "org.glukopapa.v3.m00.Q09CgmWebViewInstrumentedTest#q09ApprovedScreenUsesRealNativeRequestsWithoutFixtureData": {
+            "kind": "failure",
+            "trace": "java.lang.AssertionError: Native dialog button missing: Отмена; focus=false,button=Отмена,shown=true,enabled=true; state=\"Проверяем…\"\nat org.junit.Assert.fail(Assert.java:89)\nat org.glukopapa.v3.m00.Q09CgmWebViewInstrumentedTest.dialogButton(Q09CgmWebViewInstrumentedTest.kt:59)\nat org.glukopapa.v3.m00.Q09CgmWebViewInstrumentedTest.dialogButton$default(Q09CgmWebViewInstrumentedTest.kt:40)\nat org.glukopapa.v3.m00.Q09CgmWebViewInstrumentedTest.q09ApprovedScreenUsesRealNativeRequestsWithoutFixtureData(Q09CgmWebViewInstrumentedTest.kt:73)\n"
+          },
+          "org.glukopapa.v3.m00.Q09CgmWebViewInstrumentedTest#q09ClosingActivityDismissesPendingOwnerDialogWithoutActivation": {
+            "kind": "failure",
+            "trace": "java.lang.AssertionError: Native dialog button missing: Отмена; focus=false,button=Отмена,shown=true,enabled=true; state=\"Проверяем…\"\nat org.junit.Assert.fail(Assert.java:89)\nat org.glukopapa.v3.m00.Q09CgmWebViewInstrumentedTest.dialogButton(Q09CgmWebViewInstrumentedTest.kt:59)\nat org.glukopapa.v3.m00.Q09CgmWebViewInstrumentedTest.q09ClosingActivityDismissesPendingOwnerDialogWithoutActivation(Q09CgmWebViewInstrumentedTest.kt:90)\n"
+          },
+          "org.glukopapa.v3.m00.Q10EvidenceWebViewInstrumentedTest#q10ApprovedScreenReadsNativeDiagnosticsWithoutFixtureOrWriter": {
+            "kind": "failure",
+            "trace": "java.lang.AssertionError: Native dialog button missing: Отмена; focus=false,button=Отмена,shown=true,enabled=true; state=\"Проверяем…\"\nat org.junit.Assert.fail(Assert.java:89)\nat org.glukopapa.v3.m00.Q10EvidenceWebViewInstrumentedTest.dialogButton(Q10EvidenceWebViewInstrumentedTest.kt:59)\nat org.glukopapa.v3.m00.Q10EvidenceWebViewInstrumentedTest.dialogButton$default(Q10EvidenceWebViewInstrumentedTest.kt:40)\nat org.glukopapa.v3.m00.Q10EvidenceWebViewInstrumentedTest.q10ApprovedScreenReadsNativeDiagnosticsWithoutFixtureOrWriter(Q10EvidenceWebViewInstrumentedTest.kt:73)\n"
+          },
+          "org.glukopapa.v3.m00.Q12ShellRouteInstrumentedTest#q12ActualDiarySettingsRoutesNativeConfirmationAndReadOnlySeparation": {
+            "kind": "failure",
+            "trace": "java.lang.AssertionError: Q12 native confirmation button missing: Отмена\nat org.junit.Assert.fail(Assert.java:89)\nat org.glukopapa.v3.m00.Q12ShellRouteInstrumentedTest.dialog(Q12ShellRouteInstrumentedTest.kt:33)\nat org.glukopapa.v3.m00.Q12ShellRouteInstrumentedTest.q12ActualDiarySettingsRoutesNativeConfirmationAndReadOnlySeparation(Q12ShellRouteInstrumentedTest.kt:44)\n"
+          }
+        }
+      },
+      "offline": {
+        "total": 8,
+        "passed": 7,
+        "failures": {
+          "org.glukopapa.v3.m00.Q02AndroidBackupTest#q02ApprovedHtmlNativeOwnerCancelKeepsDatabaseUnchanged": {
+            "kind": "failure",
+            "trace": "java.lang.AssertionError: Native dialog action not visible: Отмена\nat org.junit.Assert.fail(Assert.java:89)\nat org.junit.Assert.assertTrue(Assert.java:42)\nat org.junit.Assert.assertNotNull(Assert.java:713)\nat org.glukopapa.v3.m00.Q02AndroidBackupTest.clickNative(Q02AndroidBackupTest.kt:63)\nat org.glukopapa.v3.m00.Q02AndroidBackupTest.q02ApprovedHtmlNativeOwnerCancelKeepsDatabaseUnchanged(Q02AndroidBackupTest.kt:179)\n"
+          }
+        }
+      }
+    }
+  }
+}

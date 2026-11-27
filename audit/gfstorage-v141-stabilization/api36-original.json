@@ -1,0 +1,25 @@
+{
+  "baseline": {
+    "sha256": "a5a7c7ef586c17e5b96ca1813b3a0ca016af10dce2c97ff021ca41fc668cbcd6",
+    "gate": false,
+    "runnerExit": 1,
+    "crashBuffer": "",
+    "suites": {
+      "integrated": {
+        "total": 215,
+        "passed": 214,
+        "failures": {
+          "org.glukopapa.v3.m00.Q03AndroidReadOnlyTest#q03MissingProfileFailsClosedNoDemoRecords": {
+            "kind": "failure",
+            "trace": "java.lang.AssertionError\nat org.junit.Assert.fail(Assert.java:87)\nat org.junit.Assert.assertTrue(Assert.java:42)\nat org.junit.Assert.assertTrue(Assert.java:53)\nat org.glukopapa.v3.m00.Q03AndroidReadOnlyTest.q03MissingProfileFailsClosedNoDemoRecords(Q03AndroidReadOnlyTest.kt:152)\n"
+          }
+        }
+      },
+      "offline": {
+        "total": 8,
+        "passed": 8,
+        "failures": {}
+      }
+    }
+  }
+}
