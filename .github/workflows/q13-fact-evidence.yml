@@ -1494,6 +1494,27 @@ jobs:
           (out/'q13-fact-evidence-manifest.json').write_text(json.dumps({'unchanged':src,'testOnly':expected},indent=2))
           print('Q13 facts: exact producer contracts, two androidTest-only files, no production activation')
           PY
+      - name: Repair Q13 test-only future history endpoint (preserve storage guard)
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          p=Path('q07-ci/android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q13FactEvidenceInstrumentedTest.kt')
+          h=lambda b:hashlib.sha256(b).hexdigest()
+          before=p.read_bytes()
+          assert h(before)=='683fae00603375464cf26cfc7fc3e4a2ed5dda9216e6d2ab4f2c5170fe8a91f3'
+          old=b'val rev=storage.revision();val end=Instant.now().plusSeconds(2);'
+          new=b'val rev=storage.revision();val end=Instant.now();'
+          assert before.count(old)==1
+          after=before.replace(old,new)
+          assert h(after)=='c77ecab48592b27e415d78d083558b9b353ac74d7160270ff42e8a0988f4b8be'
+          assert after.replace(new,old)==before
+          p.write_bytes(after)
+          out=Path('qa-results/q11/q13-fact-fixture-fix.json')
+          out.write_text(json.dumps({'before':h(before),'after':h(after),'scope':'androidTest only','reason':'YEAR_HISTORY_FUTURE_END','assertions_preserved':True},indent=2))
+          PY
       - name: Compile Q13 fact evidence candidate
         shell: bash
         run: |
