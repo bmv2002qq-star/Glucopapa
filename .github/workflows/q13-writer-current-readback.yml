@@ -2,7 +2,7 @@ name: Q13 writer current readback API31
 on:
   push:
     branches:
-      - 'qa/v3-q13-current-readback'
+      - 'qa/v3-q13-native-q09-port'
     paths:
       - '.github/workflows/q13-writer-current-readback.yml'
   workflow_dispatch:
@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        api: [31]
+        api: [31, 34, 35, 36]
     runs-on: ubuntu-24.04
     timeout-minutes: 65
     steps:
@@ -1891,6 +1891,70 @@ jobs:
           s=s.replace(old,old+'\n        assertEquals("TIMING_READBACK_CONTEXT_CHANGED",runCatching { readAfterRestore() }.exceptionOrNull()?.message)')
           f.write_text(s)
           PYTEST
+      - name: Install native Q13 verified receipt port
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          root=Path('q07-ci/android-app/app/src')
+          pkg=Path('java/org/glukopapa/v3/m00')
+          main=root/'main'/pkg
+          tests=root/'androidTest'/pkg
+          (tests/'GfV3Q13CgmEvidence.kt').replace(main/'GfV3Q13CgmEvidence.kt')
+          f=main/'GfV3YearHistory.kt'
+          s=f.read_text()
+          marker='    private fun extraColumns('
+          assert s.count(marker)==1
+          s=s.replace(marker,'''    internal fun verifyQ09CgmSnapshot(db:SQLiteDatabase, stamp:Stamp, ids:List<String>): List<GfV3Q13CgmEvidence.Point> {
+                  require(stamp.moduleId=="GFMealTimingService" && stamp.role=="research" && stamp.domain=="cgm"){"Q13_CGM_SCOPE_REQUIRED"}
+                  require(ids.isNotEmpty() && ids.size<=MAX_PAGE && ids.toSet().size==ids.size){"Q13_CGM_BATCH_INVALID"}
+                  val d=domain("cgm","research")
+                  val columns=d.columns+extraColumns("cgm",stamp.moduleId,stamp.role)
+                  return ids.map { id ->
+                      val row=db.rawQuery("SELECT $columns FROM v3_cgm WHERE profile_id=? AND observation_id=?",arrayOf(stamp.profile,id)).use { c ->
+                          check(c.moveToFirst()){"Q13_CGM_OBSERVATION_MISSING"}
+                          readRow(c)
+                      }
+                      addChronology(row,d)
+                      val point=checkNotNull(GfV3Q13CgmEvidence.inspect(row,stamp.profile,stamp.revision,stamp.end).point){"Q13_CGM_RECEIPT_UNVERIFIED"}
+                      check(point.measured>=stamp.start){"Q13_CGM_OUTSIDE_HISTORY"}
+                      point
+                  }
+              }
+
+          '''+marker)
+          f.write_text(s)
+          f=main/'GfV3Storage.kt'
+          s=f.read_text()
+          marker='        @Synchronized fun read(domain:String,pageSize:Int):JSONObject = try {'
+          assert s.count(marker)==1
+          f.write_text(s.replace(marker,'''        @Synchronized internal fun verifyQ09CgmSnapshot(ids:List<String>):List<GfV3Q13CgmEvidence.Point> {
+                      progress.cursor("cgm")
+                      require(scope["cgm"]=="research"){"Q13_CGM_SCOPE_REQUIRED"}
+                      return checked { db -> GfV3YearHistory.verifyQ09CgmSnapshot(db,stamp.copy(domain="cgm",role="research"),ids) }
+                  }
+
+          '''+marker))
+          f=tests/'Q13CgmEvidenceInstrumentedTest.kt'
+          s=f.read_text()
+          marker='    @Test fun q13NativeReceiptProofPreservesActualQ09IdentityAndIsScoped(){'
+          assert s.count(marker)==1
+          s=s.replace(marker,'''    private fun verify(ids:List<String>,module:String=owner):List<GfV3Q13CgmEvidence.Point>{
+                  val session=storage.openNativeYearSession(module,mapOf("cgm" to "research"),end)
+                  return try { session.verifyQ09CgmSnapshot(ids) } finally { session.close() }
+              }
+          '''+marker)
+          marker='        assertTrue(rows("GFHighLowReadOnlyAdapter")'
+          assert s.count(marker)==1
+          s=s.replace(marker,'''        assertEquals(fresh.observationId,verify(listOf(fresh.observationId)).single().observationId)
+                  assertTrue(runCatching { verify(listOf(fresh.observationId),"GFHighLowReadOnlyAdapter") }.isFailure)
+                  assertTrue(runCatching { verify(listOf(web.observationId)) }.isFailure)
+          '''+marker)
+          marker='        val result=rows(owner).associate'
+          assert s.count(marker)==1
+          f.write_text(s.replace(marker,'''        for (point in p) assertTrue(runCatching { verify(listOf(point.observationId)) }.isFailure)
+          '''+marker))
+          PY
       - name: Compile Q13 writer audit candidate
         shell: bash
         run: |
