@@ -1,0 +1,1107 @@
+name: GFStorage year history v05 - isolated QA
+on:
+  push:
+    branches:
+      - 'qa/v3-gfstorage-year-v05-20261127'
+    paths:
+      - '.github/workflows/gfstorage-year-v05-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  q11-qa:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 65
+    steps:
+      - name: Checkout isolated Q11 QA branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Preserve Q11 transfer and detach to exact verified Q10 baseline
+        shell: bash
+        run: |
+          set -euxo pipefail
+          cp qa-transfer/q11/v011/candidate_transfer.b64 "$RUNNER_TEMP/q11_candidate.b64"
+          cp qa-transfer/q11/v011/restore_fence_candidate.b64 "$RUNNER_TEMP/restore_fence.b64"
+          cp qa-transfer/q11/v012/epoch_candidate.b64 "$RUNNER_TEMP/epoch_candidate.b64"
+          cp qa-transfer/q11/v0121/webview_candidate.b64 "$RUNNER_TEMP/webview_candidate.b64"
+          cp qa-transfer/q11/v0122/qa_repair.b64 "$RUNNER_TEMP/qa_repair.b64"
+          cp qa-transfer/q11/v013/route_candidate.b64 "$RUNNER_TEMP/route_candidate.b64"
+          cp qa-transfer/q11/v0131/compact_candidate.b64 "$RUNNER_TEMP/compact_candidate.b64"
+          cp qa-transfer/q11/v0132/route_repair.b64 "$RUNNER_TEMP/route_repair.b64"
+          cp qa-transfer/q11/v0133/preferences_candidate.b64 "$RUNNER_TEMP/preferences_candidate.b64"
+          cp qa-transfer/q11/v0134/rapid_candidate.b64 "$RUNNER_TEMP/rapid_candidate.b64"
+          cp qa-transfer/q11/v0135/future_candidate.b64 "$RUNNER_TEMP/future_candidate.b64"
+          cp qa-transfer/q11/v0136/bounds_candidate.b64 "$RUNNER_TEMP/bounds_candidate.b64"
+          cp qa-transfer/q12/v022/native_projection_candidate.b64 "$RUNNER_TEMP/q12_native_projection.b64"
+          cp qa-transfer/q12/v024/architecture_candidate.b64 "$RUNNER_TEMP/q12_architecture.b64"
+          cat qa-transfer/q12/v025/part-0{1,2,3,4}.b64 > "$RUNNER_TEMP/q12_owner_routes.b64"
+          cp qa-transfer/q12/v026/restore_candidate.b64 "$RUNNER_TEMP/q12_restore.b64"
+          cp qa-transfer/q12/v027/ui_lifecycle_candidate.b64 "$RUNNER_TEMP/q12_ui_lifecycle.b64"
+          cp qa-transfer/gfstorage/year-v01/candidate.b64 "$RUNNER_TEMP/gfstorage_year.b64"
+          cp qa-transfer/gfstorage/year-v02/candidate.b64 "$RUNNER_TEMP/gfstorage_year_v02.b64"
+          cp qa-transfer/gfstorage/year-v03/candidate.b64 "$RUNNER_TEMP/gfstorage_year_v03.b64"
+          cat qa-transfer/gfstorage/year-v04/part-{01,02,03,04}.b64 > "$RUNNER_TEMP/gfstorage_year_v04.b64"
+          cp qa-transfer/gfstorage/year-v05/candidate.b64 "$RUNNER_TEMP/gfstorage_year_v05.b64"
+          git checkout --detach '47ddb51fb9886bf2502b971c58845ca18e5ee1d4'
+          test "$(git rev-parse HEAD)" = '47ddb51fb9886bf2502b971c58845ca18e5ee1d4'
+          test -z "$(git status --porcelain)"
+
+      - name: Install Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Install Gradle 8.10.2
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.10.2'
+      - name: Restore SHA verified Q04 baseline and Q05 overlays
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          import base64,hashlib,io,zipfile
+          from pathlib import Path
+          p=sorted(Path('qa-transfer/q04').glob('q04-part-*.b64'))
+          assert len(p)==19, f'Q04 base files {len(p)}'
+          b=base64.b64decode(''.join(''.join(x.read_text().split()) for x in p),validate=True)
+          assert hashlib.sha256(b).hexdigest()=='4ec4fcd5c8a08cebccee728905db4d988eab35ecfa60ecf4a15d98997266e6c6', 'Q04 BASE BAD SHA'
+          with zipfile.ZipFile(io.BytesIO(b)) as z:
+              assert z.testzip() is None
+              z.extractall('q07-ci')
+          PY
+          install -D qa-transfer/q04/Q04WebViewSmokeInstrumentedTest.kt q07-ci/android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q04WebViewSmokeInstrumentedTest.kt
+          install -D qa-transfer/q04/test_q04_legacy_restore_host.py q07-ci/tests/test_q04_legacy_restore_host.py
+          install -D qa-transfer/q04/Q04_v012_GfV3Q04MealFacts.kt q07-ci/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Q04MealFacts.kt
+          install -D qa-transfer/q04/Q04_v012_MainActivity.kt q07-ci/android-app/app/src/main/java/org/glukopapa/v3/m00/MainActivity.kt
+          install -D qa-transfer/q04/Q04_v012_writer_grants_v0.12.json q07-ci/android-app/app/src/main/assets/db/writer_grants_v0.12.json
+          install -D qa-transfer/q04/Q04_v012_Q04NativeDraftsInstrumentedTest.kt q07-ci/android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q04NativeDraftsInstrumentedTest.kt
+          python3 - <<'PY'
+          import base64,hashlib,io,zipfile
+          from pathlib import Path
+          p=sorted(Path('qa-transfer/q05').glob('q05-part-*.b64'))
+          assert len(p)==5, f'Q05 overlay parts {len(p)}'
+          b=base64.b64decode(''.join(''.join(x.read_text().split()) for x in p),validate=True)
+          assert hashlib.sha256(b).hexdigest()=='862e3c9e566c7c7d96cd4ba68fc167c9fbdd3244db7d9eba9c73e84b28c45b0a', 'Q05 OVERRIDE HASH INVALID'
+          with zipfile.ZipFile(io.BytesIO(b)) as z:
+              assert z.testzip() is None
+              assert len(z.namelist())==22
+              z.extractall('q07-ci')
+          print('Q05 OVERLAY SHA',hashlib.sha256(b).hexdigest())
+          PY
+          python3 - <<'PY'
+          import base64,hashlib,io,zipfile
+          from pathlib import Path
+          parts=sorted(Path('qa-transfer/q06-safety-v012').glob('q06-part-*.b64'))
+          assert len(parts)==3, f'Q06 overlay parts {len(parts)}'
+          payload=base64.b64decode(''.join(''.join(p.read_text().split()) for p in parts),validate=True)
+          assert hashlib.sha256(payload).hexdigest()=='8ee0c7f2576bb6bd78e326dd14df9752c63e0e0a454a0c1127133180134a4472', 'Q06_OVERLAY_SHA_MISMATCH'
+          with zipfile.ZipFile(io.BytesIO(payload)) as z:
+              assert z.testzip() is None, 'Q06_OVERLAY_ZIP_BAD'
+              z.extractall('q07-ci')
+          print('Q06_CONTEXT_ONLY_OVERLAY_VERIFIED',hashlib.sha256(payload).hexdigest())
+          PY
+      - name: Apply hash-verified Q07 native-only RinFast overlay (not auto accepted)
+        shell: bash
+        run: |
+          set -euxo pipefail
+          patch -d q07-ci -p0 --batch --forward -i "$GITHUB_WORKSPACE/qa-transfer/q07/Q07_SOURCE_ONLY_OVERLAY_20261124.patch"
+          python3 - <<'PY'
+          from pathlib import Path
+          import json,hashlib
+          m=json.loads(Path('qa-transfer/q07/Q07_QA_MANIFEST_20261124.json').read_text())
+          assert len(m['changes'])==12
+          for f in m['changes']:
+              p=Path('q07-ci')/f['path']
+              assert p.is_file(),p
+              assert hashlib.sha256(p.read_bytes()).hexdigest()==f['after_sha256'],p
+          print('Q07_REPLAY_VERIFIED: 12/12 source SHA', m['status'])
+          PY
+      - name: Apply Q07 QA lifecycle and native integration tests
+        shell: bash
+        run: |
+          set -euxo pipefail
+          echo 'e79ecb4a069c57f77e788840c0c04a235b8811d0b62c46293835a86fc07ef466  qa-transfer/q07/Q07_ANDROID15_QA_ISOLATION_20261124.patch' | sha256sum -c -
+          echo 'b2240e7ae36f9f254343179334c640717eb77df64a6706a8b065519b531d5506  qa-transfer/q07/Q07_ANDROID15_NATIVE_INTEGRATION_TESTS_20261124.patch' | sha256sum -c -
+          patch -d q07-ci -p0 --batch --forward -i "$GITHUB_WORKSPACE/qa-transfer/q07/Q07_ANDROID15_QA_ISOLATION_20261124.patch"
+          patch -d q07-ci -p0 --batch --forward -i "$GITHUB_WORKSPACE/qa-transfer/q07/Q07_ANDROID15_NATIVE_INTEGRATION_TESTS_20261124.patch"
+          echo '26e856ce126bcaca8a57b4b858ee6e2aecb48cdd684ce5140a40d48e72b3acc0  qa-transfer/q07/Q07_ANDROID15_WEBVIEW_AND_OWNER_PATCH_20261124.patch' | sha256sum -c -
+          patch -d q07-ci -p0 --batch --forward -i "$GITHUB_WORKSPACE/qa-transfer/q07/Q07_ANDROID15_WEBVIEW_AND_OWNER_PATCH_20261124.patch"
+          echo 'd9cc724325da755196d1917c9a655b4c5d422b7c8fadf8d489bdd467dd722995  qa-transfer/q07/Q07_RINFAST_OWNER_WRITER_HARDENING_20261124.patch' | sha256sum -c -
+          patch -d q07-ci -p0 --batch --forward -i "$GITHUB_WORKSPACE/qa-transfer/q07/Q07_RINFAST_OWNER_WRITER_HARDENING_20261124.patch"
+          echo 'e8aaad3a29c4c9b584651135ac86312cd2861277074e51d15e390940ee3adb21  qa-transfer/q07/Q07_RUNTIME_EVENT_ID_AND_AUDIT_TEST_FIX_20261124.patch' | sha256sum -c -
+          patch -d q07-ci -p0 --batch --forward -i "$GITHUB_WORKSPACE/qa-transfer/q07/Q07_RUNTIME_EVENT_ID_AND_AUDIT_TEST_FIX_20261124.patch"
+      - name: Apply Q07 explicit native owner activation overlay
+        shell: bash
+        run: |
+          set -euxo pipefail
+          echo 'SHA-verified Q07 owner activation source (never auto-activate at startup)'
+          patch -d q07-ci -p0 --batch --forward -i "$GITHUB_WORKSPACE/qa-transfer/q07/Q07_NATIVE_OWNER_ACTIVATION_v012.patch"
+          python3 - <<'PY'
+          import json,hashlib
+          from pathlib import Path
+          m=json.loads(Path('qa-transfer/q07/Q07_NATIVE_OWNER_ACTIVATION_v012_MANIFEST.json').read_text())
+          assert len(m['sourceSha256'])==5
+          for e in m['sourceSha256']:
+              p=Path('q07-ci')/e['path']
+              assert p.is_file(),p
+              assert hashlib.sha256(p.read_bytes()).hexdigest()==e['sha256'],p
+          print("Q07_OWNER_ACTIVATION_SOURCE_SHA_5of5_PASS")
+          PY
+      - name: Check WebView v0.1.2 activation no-write contract regression
+        shell: bash
+        run: |
+          set -euxo pipefail
+          echo '4454907cfd90b88c487eb2f9217920b298a7a88d048dcb4f8078a2990cd91f09  qa-transfer/q07/Q07_v012_WEBVIEW_PENDING_NATIVE_ACTIVATION_TEST_FIX_20261124.patch' | sha256sum -c -
+          patch -d q07-ci -p0 --batch --forward -i "$GITHUB_WORKSPACE/qa-transfer/q07/Q07_v012_WEBVIEW_PENDING_NATIVE_ACTIVATION_TEST_FIX_20261124.patch"
+          python3 - <<'PY'
+          import json,hashlib
+          from pathlib import Path
+          manifest=json.loads(Path('qa-transfer/q07/Q07_v012_WEBVIEW_TEST_FIX_MANIFEST_20261124.json').read_text())
+          p=Path('q07-ci')/manifest['testFile']
+          assert p.is_file()
+          assert hashlib.sha256(p.read_bytes()).hexdigest()==manifest['updatedSha256']
+          print('Q07_WEBVIEW_V012_VERIFIED',manifest['finding'])
+          PY
+      - name: Q07 Q06 Q05 Q04 Q03 host and source regression
+        shell: bash
+        run: |
+          set -euxo pipefail
+          cd q07-ci
+          mkdir -p ../q07-ci-logs
+          exec > >(tee -a ../q07-ci-logs/host.log) 2>&1
+          python3 tests/test_q05_schema_host.py
+          python3 tests/test_q05_static_contract.py
+          python3 ../qa-transfer/q06/test_q06_ci_contract.py
+          python3 ../qa-transfer/q06-safety-20261124/test_q06_failclosed_static.py
+          python3 tests/test_q06_q04_integration_structure.py
+          python3 tests/test_q04_legacy_restore_host.py
+          python3 tests/test_q04_sqlite_contract.py
+          node tests/test_q04_native_adapter_contract.js
+          cd tests/q03/tests
+          node normalizer_node_tests.js
+          node stress_q03.js
+      - name: Apply SHA-verified Q08 candidate (no registry activation, no live dose calculation)
+        shell: bash
+        run: |
+          set -euxo pipefail
+          echo '48eee3cceeb7bf7c91ce88764727408df9628d89242d6b4d0dc1da864ce5bf7e  qa-transfer/q08/Q08_native_source_only_v042.patch' | sha256sum -c -
+          cd q07-ci
+          git apply --check "$GITHUB_WORKSPACE/qa-transfer/q08/Q08_native_source_only_v042.patch"
+          git apply "$GITHUB_WORKSPACE/qa-transfer/q08/Q08_native_source_only_v042.patch"
+      - name: Apply Q08 v043 native UI and owner confirmation overlay
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat qa-transfer/q08/q08-ui-v043-part-*.patch > /tmp/q08-ui-v043.patch
+          echo '4ffbe56c218265b044c48a314e90939d052770cb1d3d6b5e48bcb32edd14d3e5  /tmp/q08-ui-v043.patch' | sha256sum -c -
+          patch -d q07-ci -p1 --batch --forward --dry-run -i /tmp/q08-ui-v043.patch
+          patch -d q07-ci -p1 --batch --forward -i /tmp/q08-ui-v043.patch
+      - name: Apply v044 indexed CGM history and verify every changed source
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo '52a55c0b85b8f5269d46550c07455654d3db7a871c549e7de9197d0ed4048dbc  qa-transfer/q08/Q08_indexed_history_overlay_v044.patch' | sha256sum -c -
+          patch -d q07-ci -p1 --batch --forward --dry-run -i "$GITHUB_WORKSPACE/qa-transfer/q08/Q08_indexed_history_overlay_v044.patch"
+          patch -d q07-ci -p1 --batch --forward -i "$GITHUB_WORKSPACE/qa-transfer/q08/Q08_indexed_history_overlay_v044.patch"
+          echo '1f977c2ebed00bbf319ab2276b4d1fb902b12ed1c4a65b8870b55b9fce098360  qa-transfer/q08/Q08_v044_SOURCE_SHA.json' | sha256sum -c -
+          python3 - <<'PY'
+          import json,hashlib
+          from pathlib import Path
+          m=json.loads(Path('qa-transfer/q08/Q08_v044_SOURCE_SHA.json').read_text())
+          assert len(m['changes'])==13
+          for x in m['changes']:
+              p=Path('q07-ci')/x['path']
+              assert p.is_file(),p
+              assert hashlib.sha256(p.read_bytes()).hexdigest()==x['sha256'],p
+          print('Q08_V044_SOURCE_SHA_13of13_PASS')
+          PY
+      - name: Apply v045 dialog instrumentation and explicit activation lifecycle regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo '9cfd03f45936fb99965f36c8e64cdfa591723fb305bdf71330066806899d74c6  qa-transfer/q08/Q08_v045_dialog_and_lifecycle.patch' | sha256sum -c -
+          patch -d q07-ci -p1 --batch --forward --dry-run -i "$GITHUB_WORKSPACE/qa-transfer/q08/Q08_v045_dialog_and_lifecycle.patch"
+          patch -d q07-ci -p1 --batch --forward -i "$GITHUB_WORKSPACE/qa-transfer/q08/Q08_v045_dialog_and_lifecycle.patch"
+          echo 'c3d4ea7761fc4db1ef81c2372ae09607fa73a4358281548c27b43eea14b261fe  qa-transfer/q08/Q08_v045_SOURCE_SHA.json' | sha256sum -c -
+          python3 - <<'PY'
+          import json,hashlib
+          from pathlib import Path
+          m=json.loads(Path('qa-transfer/q08/Q08_v045_SOURCE_SHA.json').read_text())
+          assert len(m['changes'])==13
+          for x in m['changes']:
+              p=Path('q07-ci')/x['path']
+              assert p.is_file(),p
+              assert hashlib.sha256(p.read_bytes()).hexdigest()==x['sha256'],p
+          print('Q08_V045_SOURCE_SHA_13of13_PASS')
+          PY
+      - name: Apply v046 additional actual owner queue and profile history timezone
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'd9ec109f79cdee6604b30e942b2907ed9bd5fd2dfcd8bec56f4fb9a7c526b960  qa-transfer/q08/Q08_v046_additional_and_timezone.patch' | sha256sum -c -
+          patch -d q07-ci -p1 --batch --forward --dry-run -i "$GITHUB_WORKSPACE/qa-transfer/q08/Q08_v046_additional_and_timezone.patch"
+          patch -d q07-ci -p1 --batch --forward -i "$GITHUB_WORKSPACE/qa-transfer/q08/Q08_v046_additional_and_timezone.patch"
+          echo '74200d639cd172938df22ebf709dfc400d5feabe70e2bf60eeebc324953d53a8  qa-transfer/q08/Q08_v046_SOURCE_SHA.json' | sha256sum -c -
+          python3 - <<'PY'
+          import json,hashlib
+          from pathlib import Path
+          m=json.loads(Path('qa-transfer/q08/Q08_v046_SOURCE_SHA.json').read_text())
+          assert len(m['changes'])==13
+          for x in m['changes']:
+              p=Path('q07-ci')/x['path']
+              assert p.is_file(),p
+              assert hashlib.sha256(p.read_bytes()).hexdigest()==x['sha256'],p
+          print('Q08_V046_SOURCE_SHA_13of13_PASS')
+          PY
+      - name: Apply v047 related history scoping and verify final sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo '5411b9db26a8ed85e14d3cc57af2795ca7193555e82796376cc89ab67d131e35  qa-transfer/q08/Q08_v047_related_history.patch' | sha256sum -c -
+          patch -d q07-ci -p1 --batch --forward --dry-run -i "$GITHUB_WORKSPACE/qa-transfer/q08/Q08_v047_related_history.patch"
+          patch -d q07-ci -p1 --batch --forward -i "$GITHUB_WORKSPACE/qa-transfer/q08/Q08_v047_related_history.patch"
+          echo 'ae02b43bdff0bca3c872cdd19b36c6dcd37cb26f8f0181652ef5feae516f1247  qa-transfer/q08/Q08_v047_SOURCE_SHA.json' | sha256sum -c -
+          python3 - <<'PY'
+          import json,hashlib
+          from pathlib import Path
+          m=json.loads(Path('qa-transfer/q08/Q08_v047_SOURCE_SHA.json').read_text())
+          assert len(m['changes'])==13
+          for x in m['changes']:
+              p=Path('q07-ci')/x['path']
+              assert p.is_file(),p
+              assert hashlib.sha256(p.read_bytes()).hexdigest()==x['sha256'],p
+          print('Q08_V047_SOURCE_SHA_13of13_PASS')
+          PY
+      - name: Apply v048 terminal receipt queue and explicit version provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'bec10fd07d70e63c91371ae2bc549d3708ec299ef346a5bd32c1e85c5d0848d7  qa-transfer/q08/Q08_v048_terminal_queue_version.patch' | sha256sum -c -
+          patch -d q07-ci -p1 --batch --forward --dry-run -i "$GITHUB_WORKSPACE/qa-transfer/q08/Q08_v048_terminal_queue_version.patch"
+          patch -d q07-ci -p1 --batch --forward -i "$GITHUB_WORKSPACE/qa-transfer/q08/Q08_v048_terminal_queue_version.patch"
+          echo 'b40031da23bfdaf153a2b5de08cd36d8cea0ee11f71a7af89899e68aa379717e  qa-transfer/q08/Q08_v048_SOURCE_SHA.json' | sha256sum -c -
+          python3 - <<'PY'
+          import json,hashlib
+          from pathlib import Path
+          m=json.loads(Path('qa-transfer/q08/Q08_v048_SOURCE_SHA.json').read_text())
+          assert len(m['changes'])==13
+          for x in m['changes']:
+              p=Path('q07-ci')/x['path']
+              assert p.is_file(),p
+              assert hashlib.sha256(p.read_bytes()).hexdigest()==x['sha256'],p
+          print('Q08_V048_SOURCE_SHA_13of13_PASS')
+          PY
+      - name: Apply v049 WebView readiness test-only repair and verify all sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'd9f298b66fa035222197e27a9dd356147f5ae74aa95c8a42be65babee0c63500  qa-transfer/q08/Q08_v049_webview_readiness.patch' | sha256sum -c -
+          patch -d q07-ci -p1 --batch --forward --dry-run -i "$GITHUB_WORKSPACE/qa-transfer/q08/Q08_v049_webview_readiness.patch"
+          patch -d q07-ci -p1 --batch --forward -i "$GITHUB_WORKSPACE/qa-transfer/q08/Q08_v049_webview_readiness.patch"
+          echo 'a4c6ff767d459dd6e49584ff7d0ea95da900f4ce4b1a74a386ea89dcb160e5f4  qa-transfer/q08/Q08_v049_SOURCE_SHA.json' | sha256sum -c -
+          python3 - <<'PY'
+          import json,hashlib
+          from pathlib import Path
+          m=json.loads(Path('qa-transfer/q08/Q08_v049_SOURCE_SHA.json').read_text())
+          assert len(m['changes'])==16
+          for x in m['changes']:
+              p=Path('q07-ci')/x['path']
+              assert p.is_file(),p
+              assert hashlib.sha256(p.read_bytes()).hexdigest()==x['sha256'],p
+          print('Q08_V049_SOURCE_SHA_16of16_PASS')
+          PY
+      - name: Q08 v042 exact UTC and transport regression (synthetic fixtures only)
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --test qa-transfer/q08/v042/tests/test_review.js
+      - name: Apply Q09 v031 native CGM contract and batch writer
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'a210bf847c5efc678055aaf6087bce0d044cfb324fa56077a9dbbfc42b9c350b  qa-transfer/q09/Q09_v031_SOURCE_SHA.json' | sha256sum -c -
+          python3 - <<'PY'
+          import json,hashlib,subprocess
+          from pathlib import Path
+          root=Path('qa-transfer/q09')
+          m=json.loads((root/'Q09_v031_SOURCE_SHA.json').read_text())
+          assert len(m['changes'])==4
+          for x in m['changes']:
+              patch=(root/x['patch']).resolve()
+              assert hashlib.sha256(patch.read_bytes()).hexdigest()==x['patchSha256'],patch
+              subprocess.run(['patch','-d','q07-ci','-p1','--batch','--forward','-i',str(patch)],check=True)
+              assert hashlib.sha256((Path('q07-ci')/x['path']).read_bytes()).hexdigest()==x['sha256'],x['path']
+          print('Q09_V031_SOURCE_SHA_4of4_PASS')
+          PY
+      - name: Apply Q09 v032 local transport, owner controller and approved screen
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import base64,hashlib,io,zipfile,json,subprocess
+          from pathlib import Path
+          root=Path('qa-transfer/q09/v032')
+          parts=sorted(root.glob('q09-v032-part-*.b64'))
+          assert len(parts)==3
+          blob=base64.b64decode(''.join(''.join(p.read_text().split()) for p in parts),validate=True)
+          assert hashlib.sha256(blob).hexdigest()=='6b962422fb10cf5768b1d9969e5ee9b2845012a57190ea79619010e61aee3b19'
+          with zipfile.ZipFile(io.BytesIO(blob)) as z:
+              assert z.testzip() is None
+              assert set(z.namelist())=={'Q09_v032.patch','Q09_v032_SOURCE_SHA.json','Q09_v032_cases.json','verify_q09_v032_xml.py'}
+              z.extractall(root)
+          m=json.loads((root/'Q09_v032_SOURCE_SHA.json').read_text())
+          assert len(m['changes'])==21
+          p=(root/'Q09_v032.patch').resolve()
+          assert hashlib.sha256(p.read_bytes()).hexdigest()==m['patchSha256']
+          subprocess.run(['patch','-d','q07-ci','-p1','--batch','--forward','-i',str(p)],check=True)
+          for x in m['changes']:
+              assert hashlib.sha256((Path('q07-ci')/x['path']).read_bytes()).hexdigest()==x['sha256'],x['path']
+          print('Q09_V032_SOURCE_SHA_21of21_PASS')
+          PY
+      - name: Apply Q09 v033 background catch-up and receipt integrity
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import base64,hashlib,io,zipfile,json,subprocess
+          from pathlib import Path
+          root=Path('qa-transfer/q09/v033')
+          parts=sorted(root.glob('q09-v033-part-*.b64'))
+          assert len(parts)==2
+          blob=base64.b64decode(''.join(''.join(p.read_text().split()) for p in parts),validate=True)
+          assert hashlib.sha256(blob).hexdigest()=='0de98ce1e7d376eb9fedc8ea8d604a50f1d4cea4f1b12ddc2db000723beecec8'
+          with zipfile.ZipFile(io.BytesIO(blob)) as z:
+              assert z.testzip() is None
+              assert set(z.namelist())=={'Q09_v033.patch','Q09_v033_SOURCE_SHA.json','Q09_v033_cases.json','verify_q09_v033_xml.py'}
+              z.extractall(root)
+          m=json.loads((root/'Q09_v033_SOURCE_SHA.json').read_text())
+          assert len(m['changes'])==9
+          p=(root/'Q09_v033.patch').resolve()
+          assert hashlib.sha256(p.read_bytes()).hexdigest()==m['patchSha256']
+          subprocess.run(['patch','-d','q07-ci','-p1','--batch','--forward','-i',str(p)],check=True)
+          for x in m['changes']:
+              assert hashlib.sha256((Path('q07-ci')/x['path']).read_bytes()).hexdigest()==x['sha256'],x['path']
+          print('Q09_V033_SOURCE_SHA_9of9_PASS')
+          PY
+      - name: Apply Q09 v034 scoped native owner dialog lifecycle and regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo '053ac215d58d5c105270e3fe30fb72309c12ac4a71ed383a0928a3ccd8a65444  qa-transfer/q09/v034/Q09_v034_dialog_lifecycle.patch' | sha256sum -c -
+          patch -d q07-ci -p1 --batch --forward -i "$GITHUB_WORKSPACE/qa-transfer/q09/v034/Q09_v034_dialog_lifecycle.patch"
+          echo '44c12b3b51e361f7228c49737dde8cfa7a9fb9d50deb7fb65b03453bb85fdb67  qa-transfer/q09/v034/Q09_v034_SOURCE_SHA.json' | sha256sum -c -
+          python3 - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          m=json.loads(Path('qa-transfer/q09/v034/Q09_v034_SOURCE_SHA.json').read_text())
+          assert len(m['changes'])==3
+          for x in m['changes']:
+              p=Path('q07-ci')/x['path']
+              assert hashlib.sha256(p.read_bytes()).hexdigest()==x['sha256'],p
+          print('Q09_V034_SOURCE_SHA_3of3_PASS')
+          PY
+      - name: Apply Q10 v030 read-only evidence diagnostics (no production activation)
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import base64,hashlib,io,zipfile,json
+          from pathlib import Path
+          root=Path('qa-transfer/q10')
+          blob=base64.b64decode(''.join((root/'Q10_v030_transfer.b64').read_text().split()),validate=True)
+          assert hashlib.sha256(blob).hexdigest()=='f73d795c58727b1d2cf6f8f73e95fcea11be0b960d83357050085d0770405a5e'
+          with zipfile.ZipFile(io.BytesIO(blob)) as z:
+              assert z.testzip() is None
+              m=json.loads(z.read('Q10_v030_SOURCE_SHA.json'))
+              assert len(m)==3
+              assert set(z.namelist())==set(m)|{'Q10_v030_SOURCE_SHA.json','Q10_v030_cases.json','verify_q10_v030_xml.py'}
+              for name,sha in m.items():
+                  assert name.startswith('android-app/app/src/')
+                  p=Path('q07-ci')/name
+                  assert not p.exists(),p
+                  b=z.read(name)
+                  assert hashlib.sha256(b).hexdigest()==sha,p
+                  p.parent.mkdir(parents=True,exist_ok=True)
+                  p.write_bytes(b)
+              for n in ['Q10_v030_cases.json','verify_q10_v030_xml.py','Q10_v030_SOURCE_SHA.json']:
+                  (root/n).write_bytes(z.read(n))
+          print('Q10_V030_SOURCE_SHA_3of3_PASS')
+          PY
+      - name: Apply Q10 v031 read-only native screen and revision lifecycle
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import base64,hashlib,io,zipfile,json,subprocess
+          from pathlib import Path
+          root=Path('qa-transfer/q10/v031')
+          parts=sorted(root.glob('q10-v031-delta-*.b64'))
+          assert len(parts)==2
+          blob=base64.b64decode(''.join(''.join(p.read_text().split()) for p in parts),validate=True)
+          assert hashlib.sha256(blob).hexdigest()=='eab83c61256e7b85aa3790cee067991af13d65a4d15193b3f55428824fe7a766'
+          with zipfile.ZipFile(io.BytesIO(blob)) as z:
+              assert z.testzip() is None
+              assert set(z.namelist())=={'Q10_v031.patch','Q10_v031_cases.json','Q10_v031_SOURCE_SHA.json','verify_q10_v031_xml.py'}
+              z.extractall(root)
+          m=json.loads((root/'Q10_v031_SOURCE_SHA.json').read_text())
+          assert len(m)==12
+          for x in m:
+              p=Path('q07-ci')/x['path']
+              if x['beforeSha256'] is None: assert not p.exists(),p
+              else: assert hashlib.sha256(p.read_bytes()).hexdigest()==x['beforeSha256'],p
+          subprocess.run(['patch','-d','q07-ci','-p1','--batch','--forward','-i',str((root/'Q10_v031.patch').resolve())],check=True)
+          for x in m:
+              p=Path('q07-ci')/x['path']
+              assert hashlib.sha256(p.read_bytes()).hexdigest()==x['afterSha256'],p
+          print('Q10_V031_SOURCE_SHA_12of12_PASS')
+          PY
+      - name: Apply Q10 v032 exact permission denial test
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import base64,hashlib,io,zipfile,json,subprocess
+          from pathlib import Path
+          root=Path('qa-transfer/q10/v032')
+          blob=base64.b64decode(''.join((root/'Q10_v032_transfer.b64').read_text().split()),validate=True)
+          assert hashlib.sha256(blob).hexdigest()=='4f143a7eae351a1810391983a23e6aae1c7c7366a3178ed7ede10afe8b0d8cfa'
+          with zipfile.ZipFile(io.BytesIO(blob)) as z:
+              assert z.testzip() is None
+              assert set(z.namelist())=={'Q10_v032.patch','Q10_v032_cases.json','Q10_v032_SOURCE_SHA.json','verify_q10_v032_xml.py'}
+              z.extractall(root)
+          m=json.loads((root/'Q10_v032_SOURCE_SHA.json').read_text())
+          assert len(m)==1
+          for x in m:
+              p=Path('q07-ci')/x['path']
+              assert hashlib.sha256(p.read_bytes()).hexdigest()==x['beforeSha256'],p
+          subprocess.run(['patch','-d','q07-ci','-p1','--batch','--forward','-i',str((root/'Q10_v032.patch').resolve())],check=True)
+          for x in m:
+              p=Path('q07-ci')/x['path']
+              assert hashlib.sha256(p.read_bytes()).hexdigest()==x['afterSha256'],p
+          print('Q10_V032_SOURCE_SHA_1of1_PASS')
+          PY
+      - name: Apply Q10 v033 scoped research projection and native producer tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import base64,hashlib,io,zipfile,json,subprocess
+          from pathlib import Path
+          root=Path('qa-transfer/q10/v033')
+          blob=base64.b64decode(''.join((root/'Q10_v033_transfer.b64').read_text().split()),validate=True)
+          assert hashlib.sha256(blob).hexdigest()=='797882658395ccb7f8c756e6d6a6725af7adb9cbe387a238ee0e7c32ebfe6593'
+          with zipfile.ZipFile(io.BytesIO(blob)) as z:
+              assert z.testzip() is None
+              assert set(z.namelist())=={'Q10_v033.patch','Q10_v033_cases.json','Q10_v033_SOURCE_SHA.json','verify_q10_v033_xml.py'}
+              z.extractall(root)
+          m=json.loads((root/'Q10_v033_SOURCE_SHA.json').read_text())
+          assert len(m)==4
+          for x in m:
+              p=Path('q07-ci')/x['path']
+              assert hashlib.sha256(p.read_bytes()).hexdigest()==x['beforeSha256'],p
+          subprocess.run(['patch','-d','q07-ci','-p1','--batch','--forward','-i',str((root/'Q10_v033.patch').resolve())],check=True)
+          for x in m:
+              p=Path('q07-ci')/x['path']
+              assert hashlib.sha256(p.read_bytes()).hexdigest()==x['afterSha256'],p
+          print('Q10_V033_SOURCE_SHA_4of4_PASS')
+          PY
+      - name: Install immutable GFSafety donor and strict V3 parity adapter for QA
+        shell: bash
+        run: |
+          set -euxo pipefail
+          node qa-transfer/q10/donor-audit/audit.js
+          node qa-transfer/q10/v034/test_v034.js
+          python3 qa-transfer/q10/v035/install_v035.py
+          python3 qa-transfer/q10/v036/install_v036.py
+          python3 qa-transfer/q10/v037/install_v037.py
+          python3 qa-transfer/q10/v038/install_v038.py
+          python3 qa-transfer/q10/v039/install_v039.py
+          python3 qa-transfer/q10/v040/install_earlier.py
+          python3 qa-transfer/q10/v042/prepare.py integrated
+      - name: Verify and apply Q11 read-only candidate, no registry activation
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p "$RUNNER_TEMP/q11-candidate" qa-results/q11
+          python3 - <<'PY'
+          from pathlib import Path
+          import os,base64,hashlib,zipfile,io
+          t=Path(os.environ['RUNNER_TEMP'])
+          b=base64.b64decode(''.join((t/'q11_candidate.b64').read_text().split()),validate=True)
+          assert hashlib.sha256(b).hexdigest()=='c13f2587dd13708a4b58a21ca6292f450ce0fed3b9f184a7db10572b0c08a5f1'
+          with zipfile.ZipFile(io.BytesIO(b)) as z:
+              assert z.testzip() is None
+              assert set(z.namelist())=={'GfV3Q11ReadContract.kt','GfV3Q11SnapshotReader.kt','GfV3Storage_Q11.fragment.kt','Q11ReadOnlyInstrumentedTest.kt','install_q11_candidate.py'}
+              z.extractall(t/'q11-candidate')
+          PY
+          python3 "$RUNNER_TEMP/q11-candidate/install_q11_candidate.py" q07-ci/android-app | tee qa-results/q11/native_delta_sha.json
+          echo "Q11 candidate source only; no activation, no WebView route, no new medical calculation"
+      - name: Configure test-only Android Test Orchestrator and clear data between tests
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p "$HOME/.gradle/init.d" qa-results/q11
+          cat > "$HOME/.gradle/init.d/q11-qa-isolation.gradle" <<'GROOVY'
+          gradle.beforeProject { p ->
+              p.pluginManager.withPlugin('com.android.application') {
+                  def android = p.extensions.getByName('android')
+                  android.testOptions.execution = 'ANDROIDX_TEST_ORCHESTRATOR'
+                  android.defaultConfig.testInstrumentationRunnerArguments.put('clearPackageData', 'true')
+                  p.dependencies.add('androidTestUtil', 'androidx.test:orchestrator:1.5.1')
+                  p.afterEvaluate {
+                      assert android.testOptions.execution.toString().equalsIgnoreCase('ANDROIDX_TEST_ORCHESTRATOR')
+                      assert android.defaultConfig.testInstrumentationRunnerArguments['clearPackageData'] == 'true'
+                      println('Q11_QA_ORCHESTRATOR_CONFIGURED clearPackageData=true; runtime source unchanged')
+                  }
+              }
+          }
+          GROOVY
+          cp "$HOME/.gradle/init.d/q11-qa-isolation.gradle" qa-results/q11/qa-isolation.gradle
+      - name: Apply verified Q09 fence and scoped Q10 Q11 epoch candidate
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p qa-results/q11
+          python3 - <<'PY'
+          import hashlib,zipfile,base64,os,json,io
+          from pathlib import Path
+          t=Path(os.environ['RUNNER_TEMP']); app=Path('q07-ci/android-app')
+          h=lambda b:hashlib.sha256(b).hexdigest()
+          for name,sha,count in [('restore_fence','673592034765683412415b7da60ca67f8b50a3160ce0bc50327bcae8f504b645',6),('epoch_candidate','58f1d208d74c0a11f9905adde9bc57756a8bec5fc8f9bae32b389e1a63262559',7)]:
+              b=base64.b64decode(''.join((t/(name+'.b64')).read_text().split()),validate=True)
+              assert h(b)==sha,name
+              with zipfile.ZipFile(io.BytesIO(b)) as z:
+                  assert z.testzip() is None
+                  m=json.loads(z.read('manifest.json'))
+                  assert len(m)==count and set(z.namelist())==set(m)|{'manifest.json'}
+                  for n,v in m.items():
+                      p=app/n
+                      assert Path(n).parts[0]=='app' and '..' not in Path(n).parts and n.endswith('.kt')
+                      assert (h(p.read_bytes()) if p.exists() else None)==v['before'],n
+                      assert h(z.read(n))==v['after'],n
+                      p.write_bytes(z.read(n))
+                  Path('qa-results/q11/'+name+'-source-manifest.json').write_text(json.dumps(m,indent=2))
+          PY
+      - name: Install exact WebView harness into androidTest only
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          import base64,hashlib,io,json,os,zipfile
+          from pathlib import Path
+          root=Path('q07-ci/android-app')
+          h=lambda b:hashlib.sha256(b).hexdigest()
+          b=base64.b64decode(''.join((Path(os.environ['RUNNER_TEMP'])/'webview_candidate.b64').read_text().split()),validate=True)
+          assert h(b)=='c23c326621911e99be5d20fa6b819035cf2671085cf8dc3734dac168bae9b63f'
+          with zipfile.ZipFile(io.BytesIO(b)) as z:
+              assert z.testzip() is None
+              m=json.loads(z.read('manifest.json'))
+              assert set(m)=={'app/src/androidTest/java/org/glukopapa/v3/m00/Q11WebViewReadOnlyInstrumentedTest.kt','app/src/androidTest/assets/q11/runtime_readonly_v0121.html'}
+              assert set(z.namelist())==set(m)|{'manifest.json'}
+              for n,v in m.items():
+                  p=root/n
+                  assert not p.exists() and v['before'] is None
+                  assert h(z.read(n))==v['after']
+                  p.parent.mkdir(parents=True,exist_ok=True)
+                  p.write_bytes(z.read(n))
+              Path('qa-results/q11/webview-source-manifest.json').write_text(json.dumps(m,indent=2))
+          PY
+      - name: Apply test-only readiness and exact offline route repair
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          import base64,hashlib,io,json,os,zipfile
+          from pathlib import Path
+          root=Path('q07-ci/android-app'); h=lambda b:hashlib.sha256(b).hexdigest()
+          b=base64.b64decode(''.join((Path(os.environ['RUNNER_TEMP'])/'qa_repair.b64').read_text().split()),validate=True)
+          assert h(b)=='b017920b306e284db2ebe9884467d4eb8ba5a0392eb278caa97c52ebf245bb3f'
+          with zipfile.ZipFile(io.BytesIO(b)) as z:
+              assert z.testzip() is None
+              m=json.loads(z.read('manifest.json'))
+              assert set(m)=={'app/src/androidTest/java/org/glukopapa/v3/m00/Q11WebViewReadOnlyInstrumentedTest.kt','app/src/androidTest/java/org/glukopapa/v3/m00/Q01AndroidRuntimeTest.kt'}
+              assert set(z.namelist())==set(m)|{'manifest.json'}
+              for n,v in m.items():
+                  p=root/n
+                  assert h(p.read_bytes())==v['before'],n
+                  assert h(z.read(n))==v['after'],n
+                  p.write_bytes(z.read(n))
+              Path('qa-results/q11/qa-repair-source-manifest.json').write_text(json.dumps(m,indent=2))
+          PY
+      - name: Apply guarded Q11 shell route candidate, no registry activation
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          import base64,hashlib,io,json,os,zipfile
+          from pathlib import Path
+          root=Path('q07-ci/android-app'); h=lambda b:hashlib.sha256(b).hexdigest()
+          b=base64.b64decode(''.join((Path(os.environ['RUNNER_TEMP'])/'route_candidate.b64').read_text().split()),validate=True)
+          assert h(b)=='238419fa4bf2523e277adf3c70ede5cd52dbedbb045d5f54ac774fc8945532eb'
+          with zipfile.ZipFile(io.BytesIO(b)) as z:
+              assert z.testzip() is None
+              m=json.loads(z.read('manifest.json'))
+              assert len(m)==7 and set(z.namelist())==set(m)|{'manifest.json','index_patch.json'}
+              for n,v in m.items():
+                  p=root/n
+                  assert Path(n).parts[0]=='app' and '..' not in Path(n).parts
+                  assert (h(p.read_bytes()) if p.exists() else None)==v['before'],n
+                  assert h(z.read(n))==v['after'],n
+                  p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(z.read(n))
+              x=json.loads(z.read('index_patch.json'))
+              assert x['path']=='app/src/main/assets/www/index.html'
+              p=root/x['path'];assert h(p.read_bytes())==x['before']
+              s=p.read_bytes().decode();assert s.count(x['old'])==1
+              out=s.replace(x['old'],x['new']).encode();assert h(out)==x['after'];p.write_bytes(out)
+              m[x['path']]={'before':x['before'],'after':x['after']}
+              Path('qa-results/q11/shell-route-source-manifest.json').write_text(json.dumps(m,indent=2))
+          PY
+      - name: Apply native compact home candidate after verified v013 route
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          import base64,hashlib,io,json,os,zipfile
+          from pathlib import Path
+          root=Path('q07-ci/android-app'); h=lambda b:hashlib.sha256(b).hexdigest()
+          b=base64.b64decode(''.join((Path(os.environ['RUNNER_TEMP'])/'compact_candidate.b64').read_text().split()),validate=True)
+          assert h(b)=='5f8e358f00ed1bb5f5b8bbb8d5c11d893a9cb8aa8e5164d1c73ce633e0a40723'
+          with zipfile.ZipFile(io.BytesIO(b)) as z:
+              assert z.testzip() is None
+              m=json.loads(z.read('manifest.json'))
+              assert len(m)==4 and set(z.namelist())==set(m)|{'manifest.json','index_patch.json'}
+              for n,v in m.items():
+                  p=root/n
+                  assert Path(n).parts[0]=='app' and '..' not in Path(n).parts
+                  assert (h(p.read_bytes()) if p.exists() else None)==v['before'],n
+                  assert h(z.read(n))==v['after'],n
+                  p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(z.read(n))
+              x=json.loads(z.read('index_patch.json'))
+              assert x['path']=='app/src/main/assets/www/index.html'
+              p=root/x['path'];assert h(p.read_bytes())==x['before']
+              s=p.read_bytes().decode();assert s.count(x['old'])==1
+              out=s.replace(x['old'],x['new']).encode();assert h(out)==x['after'];p.write_bytes(out)
+              m[x['path']]={'before':x['before'],'after':x['after']}
+              Path('qa-results/q11/compact-home-source-manifest.json').write_text(json.dumps(m,indent=2))
+          PY
+      - name: Apply exact v0132 local document and callback lifecycle repair
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          import base64,hashlib,io,json,os,zipfile
+          from pathlib import Path
+          root=Path('q07-ci/android-app'); h=lambda b:hashlib.sha256(b).hexdigest()
+          b=base64.b64decode(''.join((Path(os.environ['RUNNER_TEMP'])/'route_repair.b64').read_text().split()),validate=True)
+          assert h(b)=='2aacdf01d42335cfba02a554f1e8f1dc4c6875170bbbf079397581ad265c1afe'
+          with zipfile.ZipFile(io.BytesIO(b)) as z:
+              assert z.testzip() is None
+              m=json.loads(z.read('manifest.json'))
+              assert set(m)=={'app/src/main/java/org/glukopapa/v3/m00/MainActivity.kt','app/src/main/java/org/glukopapa/v3/m00/GfV3Q11HomePresenter.kt','app/src/androidTest/java/org/glukopapa/v3/m00/Q11ShellRouteInstrumentedTest.kt'}
+              assert set(z.namelist())==set(m)|{'manifest.json'}
+              for n,v in m.items():
+                  p=root/n
+                  assert h(p.read_bytes())==v['before'],n
+                  assert h(z.read(n))==v['after'],n
+                  p.write_bytes(z.read(n))
+              Path('qa-results/q11/compact-repair-source-manifest.json').write_text(json.dumps(m,indent=2))
+          PY
+      - name: Apply owner-bound five-field display preferences with exact source hashes
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          import base64,hashlib,io,json,os,zipfile
+          from pathlib import Path
+          root=Path('q07-ci/android-app'); h=lambda b:hashlib.sha256(b).hexdigest()
+          b=base64.b64decode(''.join((Path(os.environ['RUNNER_TEMP'])/'preferences_candidate.b64').read_text().split()),validate=True)
+          assert h(b)=='4b868feb4b848adb8c4855d9cfa2474b4298e7dc89ad92db951d6aa3b7d09680'
+          with zipfile.ZipFile(io.BytesIO(b)) as z:
+              assert z.testzip() is None
+              m=json.loads(z.read('manifest.json'))
+              assert len(m)==10 and set(z.namelist())==set(m)|{'manifest.json'}
+              for n,v in m.items():
+                  p=root/n
+                  assert Path(n).parts[0]=='app' and '..' not in Path(n).parts
+                  assert (h(p.read_bytes()) if p.exists() else None)==v['before'],n
+                  assert h(z.read(n))==v['after'],n
+                  p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(z.read(n))
+              Path('qa-results/q11/graph-preferences-source-manifest.json').write_text(json.dumps(m,indent=2))
+          PY
+      - name: Pin Node for immutable Q07 sample generation
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.16.0'
+      - name: Apply exact Q07 display projection candidate and regenerate approved donor samples
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          import base64,hashlib,io,json,os,zipfile
+          from pathlib import Path
+          root=Path('q07-ci/android-app'); h=lambda b:hashlib.sha256(b).hexdigest()
+          b=base64.b64decode(''.join((Path(os.environ['RUNNER_TEMP'])/'rapid_candidate.b64').read_text().split()),validate=True)
+          assert h(b)=='a9cb2bce83fdee1a556c91625ba94f2716ce1f22a2656ea1bcc2069a5af4060a'
+          with zipfile.ZipFile(io.BytesIO(b)) as z:
+              assert z.testzip() is None
+              m=json.loads(z.read('manifest.json'))
+              assert len(m)==8 and set(z.namelist())==set(m)|{'manifest.json','generate_samples.cjs'}
+              for n,v in m.items():
+                  p=root/n
+                  assert Path(n).parts[0]=='app' and '..' not in Path(n).parts
+                  assert (h(p.read_bytes()) if p.exists() else None)==v['before'],n
+                  assert h(z.read(n))==v['after'],n
+                  p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(z.read(n))
+              Path('qa-results/q11/rapid-display-source-manifest.json').write_text(json.dumps(m,indent=2))
+              (Path(os.environ['RUNNER_TEMP'])/'generate_samples.cjs').write_bytes(z.read('generate_samples.cjs'))
+          PY
+          node "$RUNNER_TEMP/generate_samples.cjs" q07-ci/android-app/app/src/main/assets/www/q07/rinfast.html > "$RUNNER_TEMP/verified-samples.kt"
+          cmp "$RUNNER_TEMP/verified-samples.kt" q07-ci/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Q07DisplaySamples.kt
+          sha256sum "$RUNNER_TEMP/verified-samples.kt" | tee qa-results/q11/rapid-donor-samples-sha.txt
+      - name: Apply hash-verified bounded Q07 continuation after historical projection
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          import base64,hashlib,io,json,os,zipfile
+          from pathlib import Path
+          root=Path('q07-ci/android-app'); h=lambda b:hashlib.sha256(b).hexdigest()
+          b=base64.b64decode(''.join((Path(os.environ['RUNNER_TEMP'])/'future_candidate.b64').read_text().split()),validate=True)
+          assert h(b)=='a3a2e00c962de3272465c019c8bbac47f41879a3a43b94eaa27e4f3418c25b5b'
+          with zipfile.ZipFile(io.BytesIO(b)) as z:
+              assert z.testzip() is None
+              m=json.loads(z.read('manifest.json'))
+              assert set(m)=={'app/src/main/java/org/glukopapa/v3/m00/GfV3Q07DisplayProjection.kt','app/src/main/java/org/glukopapa/v3/m00/GfV3Storage.kt','app/src/main/assets/www/q11/chart.html','app/src/androidTest/java/org/glukopapa/v3/m00/Q11ShellRouteInstrumentedTest.kt'}
+              assert set(z.namelist())==set(m)|{'manifest.json'}
+              for n,v in m.items():
+                  p=root/n
+                  assert h(p.read_bytes())==v['before'],n
+                  assert h(z.read(n))==v['after'],n
+                  p.write_bytes(z.read(n))
+              Path('qa-results/q11/rapid-future-source-manifest.json').write_text(json.dumps(m,indent=2))
+          PY
+      - name: Apply exact SHA verified Q01 Q11 display-only bounds candidate
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          import base64,hashlib,io,json,os,zipfile
+          from pathlib import Path
+          root=Path('q07-ci/android-app'); h=lambda b:hashlib.sha256(b).hexdigest()
+          b=base64.b64decode(''.join((Path(os.environ['RUNNER_TEMP'])/'bounds_candidate.b64').read_text().split()),validate=True)
+          assert h(b)=='2faefd31d895a9b5740b92b5703b307d85d7cb3dc713f7711ddffac28812748e'
+          with zipfile.ZipFile(io.BytesIO(b)) as z:
+              assert z.testzip() is None
+              m=json.loads(z.read('manifest.json'))
+              assert set(m)==set(["app/src/main/java/org/glukopapa/v3/m00/GfV3GraphPreferences.kt","app/src/main/assets/www/q01/GFSettingsV3_v0.2.0.js","app/src/main/assets/www/q01/settings_ui_v3.js","app/src/main/assets/www/q01/settings.html","app/src/main/assets/www/q11/chart.html","app/src/androidTest/java/org/glukopapa/v3/m00/Q11ShellRouteInstrumentedTest.kt"])
+              assert set(z.namelist())==set(m)|{'manifest.json'}
+              for n,v in m.items():
+                  p=root/n
+                  assert h(p.read_bytes())==v['before'],n
+                  assert h(z.read(n))==v['after'],n
+                  p.write_bytes(z.read(n))
+              Path('qa-results/q11/display-bounds-source-manifest.json').write_text(json.dumps(m,indent=2))
+          PY
+      - name: Apply exact Q12 native projection without policy, grants or registered route
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          import base64,hashlib,io,json,os,zipfile
+          from pathlib import Path
+          root=Path('q07-ci/android-app'); h=lambda b:hashlib.sha256(b).hexdigest()
+          b=base64.b64decode(''.join((Path(os.environ['RUNNER_TEMP'])/'q12_native_projection.b64').read_text().split()),validate=True)
+          assert h(b)=='e3f40b11d5af91f8ff4c8cf605d9c9369cc8acf54e81e6ab9749bcce0af376ae'
+          with zipfile.ZipFile(io.BytesIO(b)) as z:
+              assert z.testzip() is None
+              m=json.loads(z.read('manifest.json'))
+              assert len(m)==9 and set(z.namelist())==set(m)|{'manifest.json'}
+              assert set(m)==set(['app/src/androidTest/java/org/glukopapa/v3/m00/Q12ObservationNativeInstrumentedTest.kt','app/src/main/java/org/glukopapa/v3/m00/GfV3Storage.kt','app/src/main/java/org/glukopapa/v3/m00/GfV3Q12ObservationReader.kt','app/src/main/java/org/glukopapa/v3/m00/GfV3Q12ReadSession.kt']+['app/src/main/assets/www/q12/'+n for n in ['gf_high_low_v011.js','gf_high_low_v3_adapter.js','q12.html','q12_runtime.js','sha256_ascii.js']])
+              for n,v in m.items():
+                  p=root/n
+                  assert (h(p.read_bytes()) if p.exists() else None)==v['before'],n
+                  assert h(z.read(n))==v['after'],n
+                  p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(z.read(n))
+              Path('qa-results/q11/q12-projection-source-manifest.json').write_text(json.dumps(m,indent=2))
+          PY
+      - name: Apply exact Q12 architecture v024 candidate, no production policy provider or route
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          import base64,hashlib,io,json,os,zipfile
+          from pathlib import Path
+          root=Path('q07-ci/android-app'); h=lambda b:hashlib.sha256(b).hexdigest()
+          b=base64.b64decode(''.join((Path(os.environ['RUNNER_TEMP'])/'q12_architecture.b64').read_text().split()),validate=True)
+          assert h(b)=='3a3e89c1cacb43e1e03275e5e748e0f060394ec33d5b20df6622e4eb5697e17b'
+          with zipfile.ZipFile(io.BytesIO(b)) as z:
+              assert z.testzip() is None
+              m=json.loads(z.read('manifest.json'))
+              assert len(m)==8 and set(z.namelist())==set(m)|{'manifest.json'}
+              assert set(m)==set(['app/src/main/java/org/glukopapa/v3/m00/'+n for n in ['GfV3Storage.kt','GfV3Q12ContextContract.kt','GfV3Q12ContextSqlProjection.kt','GfV3Q12ConditionProjection.kt','GfV3Q12SnapshotComposer.kt']]+['app/src/main/assets/www/q12/'+n for n in ['gf_high_low_v3_adapter.js','q12_runtime.js']]+['app/src/androidTest/java/org/glukopapa/v3/m00/Q12ArchitectureNativeInstrumentedTest.kt'])
+              for n,v in m.items():
+                  p=root/n
+                  assert (h(p.read_bytes()) if p.exists() else None)==v['before'],n
+                  assert h(z.read(n))==v['after'],n
+                  p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(z.read(n))
+              Path('qa-results/q11/q12-architecture-source-manifest.json').write_text(json.dumps(m,indent=2))
+          PY
+      - name: Apply exact Q12 v025 owner policy storage and two offline routes
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          import base64,hashlib,io,json,os,zipfile
+          from pathlib import Path
+          root=Path('q07-ci/android-app'); h=lambda b:hashlib.sha256(b).hexdigest()
+          b=base64.b64decode(''.join((Path(os.environ['RUNNER_TEMP'])/'q12_owner_routes.b64').read_text().split()),validate=True)
+          assert h(b)=='0e9040cd6a8972bec70263c519608237d1cb27233ea856f236d564672fc68b49'
+          with zipfile.ZipFile(io.BytesIO(b)) as z:
+              assert z.testzip() is None
+              m=json.loads(z.read('manifest.json'))
+              assert len(m)==15 and set(z.namelist())==set(m)|{'manifest.json'}
+              assert set(m)==set(['app/src/main/java/org/glukopapa/v3/m00/'+n for n in ['GfV3Storage.kt','MainActivity.kt','GfV3Q12AnalyticsBridge.kt','GfV3Q12OfflineActivity.kt','GfV3Q12PolicyContract.kt','GfV3Q12PolicyOwnerQueue.kt','GfV3Q12PolicyStore.kt','GfV3Q12RoutePolicy.kt']]+['app/src/main/assets/www/q12/'+n for n in ['policy.html','q12.html','q12_runtime.js']]+['app/src/main/AndroidManifest.xml','app/src/main/assets/www/index.html']+['app/src/androidTest/java/org/glukopapa/v3/m00/'+n for n in ['Q12PolicyNativeInstrumentedTest.kt','Q12ShellRouteInstrumentedTest.kt']])
+              for n,v in m.items():
+                  p=root/n
+                  assert (h(p.read_bytes()) if p.exists() else None)==v['before'],n
+                  assert h(z.read(n))==v['after'],n
+                  p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(z.read(n))
+              Path('qa-results/q11/q12-owner-routes-source-manifest.json').write_text(json.dumps(m,indent=2))
+          PY
+      - name: Apply exact Q12 v026 receiver fix and encrypted restore tests
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          import base64,hashlib,io,json,os,zipfile
+          from pathlib import Path
+          root=Path('q07-ci/android-app'); h=lambda b:hashlib.sha256(b).hexdigest()
+          b=base64.b64decode(''.join((Path(os.environ['RUNNER_TEMP'])/'q12_restore.b64').read_text().split()),validate=True)
+          assert h(b)=='d110c598db348f8a5090b7e5463798d82609a66758b52d16ec0753495852e769'
+          with zipfile.ZipFile(io.BytesIO(b)) as z:
+              assert z.testzip() is None
+              m=json.loads(z.read('manifest.json'))
+              assert set(m)=={'app/src/main/java/org/glukopapa/v3/m00/GfV3Q12OfflineActivity.kt','app/src/androidTest/java/org/glukopapa/v3/m00/Q12PolicyNativeInstrumentedTest.kt','app/src/androidTest/java/org/glukopapa/v3/m00/Q12ShellRouteInstrumentedTest.kt'}
+              assert set(z.namelist())==set(m)|{'manifest.json'}
+              for n,v in m.items():
+                  p=root/n
+                  assert h(p.read_bytes())==v['before'],n
+                  assert h(z.read(n))==v['after'],n
+                  p.write_bytes(z.read(n))
+              Path('qa-results/q11/q12-restore-source-manifest.json').write_text(json.dumps(m,indent=2))
+          PY
+      - name: Apply exact Q12 v027 lifecycle and nonempty WebView candidate
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          import base64,hashlib,io,json,os,zipfile
+          from pathlib import Path
+          root=Path('q07-ci/android-app'); h=lambda b:hashlib.sha256(b).hexdigest()
+          b=base64.b64decode(''.join((Path(os.environ['RUNNER_TEMP'])/'q12_ui_lifecycle.b64').read_text().split()),validate=True)
+          assert h(b)=='c82da3bdc404d97e4b57b6212075a6d60f8a2d6fe995c0047765952a2687cdcc'
+          with zipfile.ZipFile(io.BytesIO(b)) as z:
+              assert z.testzip() is None
+              m=json.loads(z.read('manifest.json'))
+              assert set(m)=={'app/src/main/assets/www/q12/policy.html','app/src/androidTest/java/org/glukopapa/v3/m00/Q12ShellRouteInstrumentedTest.kt'}
+              assert set(z.namelist())==set(m)|{'manifest.json'}
+              for n,v in m.items():
+                  p=root/n
+                  assert h(p.read_bytes())==v['before'],n
+                  assert h(z.read(n))==v['after'],n
+                  p.write_bytes(z.read(n))
+              Path('qa-results/q11/q12-ui-lifecycle-source-manifest.json').write_text(json.dumps(m,indent=2))
+          PY
+      - name: Apply exact GFStorage year v01 native reader
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          import base64,hashlib,io,json,os,zipfile
+          from pathlib import Path
+          root=Path('q07-ci/android-app'); h=lambda b:hashlib.sha256(b).hexdigest()
+          b=base64.b64decode(''.join((Path(os.environ['RUNNER_TEMP'])/'gfstorage_year.b64').read_text().split()),validate=True)
+          assert h(b)=='6b788c1ece9e31e12b318c079aa222e2ffc4f4e53b9c39855fe2c90f57eba138'
+          with zipfile.ZipFile(io.BytesIO(b)) as z:
+              assert z.testzip() is None
+              m=json.loads(z.read('manifest.json'))
+              assert set(m)=={'app/src/main/java/org/glukopapa/v3/m00/GfV3Storage.kt','app/src/main/java/org/glukopapa/v3/m00/GfV3YearHistory.kt','app/src/androidTest/java/org/glukopapa/v3/m00/GfV3YearHistoryInstrumentedTest.kt'}
+              assert set(z.namelist())==set(m)|{'manifest.json'}
+              for n,v in m.items():
+                  p=root/n
+                  assert (h(p.read_bytes()) if p.exists() else None)==v['before'],n
+                  assert h(z.read(n))==v['after'],n
+                  p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(z.read(n))
+              Path('qa-results/q11/gfstorage-year-source-manifest.json').write_text(json.dumps(m,indent=2))
+          PY
+          grep -RinE 'DELETE FROM v3_|\.delete\("v3_|retention|minusMonths\(' q07-ci/android-app/app/src/main/java > qa-results/q11/gfstorage-year-retention-review.txt || true
+      - name: Apply exact GFStorage year v02 correction candidate
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          import base64,hashlib,io,json,os,zipfile
+          from pathlib import Path
+          root=Path('q07-ci/android-app'); h=lambda b:hashlib.sha256(b).hexdigest()
+          b=base64.b64decode(''.join((Path(os.environ['RUNNER_TEMP'])/'gfstorage_year_v02.b64').read_text().split()),validate=True)
+          assert h(b)=='0bbde34995710d71077af662ff1f68ea84cce63ed32d4eedfc8e7c69b9a01990'
+          with zipfile.ZipFile(io.BytesIO(b)) as z:
+              assert z.testzip() is None
+              m=json.loads(z.read('manifest.json'))
+              assert set(m)=={'app/src/main/java/org/glukopapa/v3/m00/GfV3Storage.kt','app/src/main/java/org/glukopapa/v3/m00/GfV3YearHistory.kt','app/src/androidTest/java/org/glukopapa/v3/m00/GfV3YearHistoryInstrumentedTest.kt'}
+              assert set(z.namelist())==set(m)|{'manifest.json'}
+              for n,v in m.items():
+                  p=root/n
+                  assert h(p.read_bytes())==v['before'],n
+                  assert h(z.read(n))==v['after'],n
+                  p.write_bytes(z.read(n))
+              Path('qa-results/q11/gfstorage-year-v02-source-manifest.json').write_text(json.dumps(m,indent=2))
+          PY
+      - name: Apply exact GFStorage year v03 chronological candidate
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          import base64,hashlib,io,json,os,zipfile
+          from pathlib import Path
+          root=Path('q07-ci/android-app'); h=lambda b:hashlib.sha256(b).hexdigest()
+          b=base64.b64decode(''.join((Path(os.environ['RUNNER_TEMP'])/'gfstorage_year_v03.b64').read_text().split()),validate=True)
+          assert h(b)=='8f7b2c19882076ae304dcaa862315e970ab7d8d43e64bc3b0dcc0ed6ad7d18ae'
+          with zipfile.ZipFile(io.BytesIO(b)) as z:
+              assert z.testzip() is None
+              m=json.loads(z.read('manifest.json'))
+              assert set(m)=={'app/src/main/java/org/glukopapa/v3/m00/GfV3Storage.kt','app/src/main/java/org/glukopapa/v3/m00/GfV3YearHistory.kt','app/src/androidTest/java/org/glukopapa/v3/m00/GfV3YearHistoryInstrumentedTest.kt'}
+              assert set(z.namelist())==set(m)|{'manifest.json'}
+              for n,v in m.items():
+                  p=root/n
+                  assert h(p.read_bytes())==v['before'],n
+                  assert h(z.read(n))==v['after'],n
+                  p.write_bytes(z.read(n))
+              Path('qa-results/q11/gfstorage-year-v03-source-manifest.json').write_text(json.dumps(m,indent=2))
+          PY
+      - name: Apply exact GFStorage year v04 checked shell candidate
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          import base64,hashlib,io,json,os,zipfile
+          from pathlib import Path
+          root=Path('q07-ci/android-app'); h=lambda b:hashlib.sha256(b).hexdigest()
+          b=base64.b64decode(''.join((Path(os.environ['RUNNER_TEMP'])/'gfstorage_year_v04.b64').read_text().split()),validate=True)
+          assert h(b)=='43d1b9908a05a09714312d64ea9b167a344fb0c1ab800d131bf78076fe9380da'
+          with zipfile.ZipFile(io.BytesIO(b)) as z:
+              assert z.testzip() is None
+              m=json.loads(z.read('manifest.json'))
+              assert set(m)=={'app/src/main/java/org/glukopapa/v3/m00/GfV3Storage.kt','app/src/main/java/org/glukopapa/v3/m00/GfV3Bridge.kt','app/src/main/assets/www/index.html','app/src/androidTest/java/org/glukopapa/v3/m00/GfV3YearHistoryInstrumentedTest.kt'}
+              assert set(z.namelist())==set(m)|{'manifest.json'}
+              for n,v in m.items():
+                  p=root/n
+                  assert h(p.read_bytes())==v['before'],n
+                  assert h(z.read(n))==v['after'],n
+                  p.write_bytes(z.read(n))
+              Path('qa-results/q11/gfstorage-year-v04-source-manifest.json').write_text(json.dumps(m,indent=2))
+          PY
+      - name: Apply exact GFStorage year v05 research guard and native tests
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          import base64,hashlib,io,json,os,zipfile
+          from pathlib import Path
+          root=Path('q07-ci/android-app'); h=lambda b:hashlib.sha256(b).hexdigest()
+          b=base64.b64decode(''.join((Path(os.environ['RUNNER_TEMP'])/'gfstorage_year_v05.b64').read_text().split()),validate=True)
+          assert h(b)=='0fb5b2ab1c1a5e504af2c139a097f2729386bc24cf31acca9669cc01e9100bbf'
+          with zipfile.ZipFile(io.BytesIO(b)) as z:
+              assert z.testzip() is None
+              m=json.loads(z.read('manifest.json'))
+              assert set(m)=={'app/src/main/java/org/glukopapa/v3/m00/GfV3Storage.kt','app/src/androidTest/java/org/glukopapa/v3/m00/GfV3YearHistoryInstrumentedTest.kt'}
+              assert set(z.namelist())==set(m)|{'manifest.json'}
+              for n,v in m.items():
+                  p=root/n
+                  assert h(p.read_bytes())==v['before'],n
+                  assert h(z.read(n))==v['after'],n
+                  p.write_bytes(z.read(n))
+              Path('qa-results/q11/gfstorage-year-v05-source-manifest.json').write_text(json.dumps(m,indent=2))
+          PY
+      - name: Compile GFStorage year v05 candidate
+        shell: bash
+        run: |
+          set -euxo pipefail
+          cd q07-ci/android-app
+          gradle :app:assembleDebug :app:assembleDebugAndroidTest --stacktrace --no-daemon 2>&1 | tee ../../q07-ci-logs/build.log
+      - name: Enable runner KVM acceleration
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Android 15 verify 196 integrated and 8 offline
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_4
+          ram-size: 2048M
+          heap-size: 512M
+          disk-size: 4096M
+          emulator-boot-timeout: 900
+          disable-animations: true
+          script: bash -c 'bash qa-transfer/q10/v042/run.sh; rc=$?; adb logcat -b crash -d > qa-results/q11/crash-buffer.log || exit 90; printf "%s\\n" "$rc" > qa-results/q11/runner-exit.txt; exit "$rc"'
+      - name: Verify exact 196 integrated and 8 offline native test IDs
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p qa-results/q11
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib,os
+          p=Path('qa-transfer/q10/v042/verify.py')
+          b=p.read_bytes()
+          assert hashlib.sha1(b'blob '+str(len(b)).encode()+b'\0'+b).hexdigest()=='f3b37540bad9fec4bcfd32aaf859db483b1a36f7'
+          s=b.decode()
+          a="a=check('integrated',(old|earlier)-{legacy}|{new})"
+          assert s.count(a)==1
+          expected=["org.glukopapa.v3.m00.Q11ReadOnlyInstrumentedTest#q11InactiveMissingRolesAndWrongNativeOwnerDenied","org.glukopapa.v3.m00.Q11ReadOnlyInstrumentedTest#q11ReadsActualProducersWithNoWriteAndUnknownCalculatedLayers","org.glukopapa.v3.m00.Q11ReadOnlyInstrumentedTest#q11StampAndWindowRejectStaleOrForeignContext","org.glukopapa.v3.m00.Q11ReadOnlyInstrumentedTest#q11ArchiveAndSyntheticAndForeignProfileNeverCurrent","org.glukopapa.v3.m00.Q11ReadOnlyInstrumentedTest#q11StoredPayloadMismatchAndFutureObservationFailClosed","org.glukopapa.v3.m00.Q11ReadOnlyInstrumentedTest#q11CorrectionReturnsOneCurrentFactVersion"]
+          expected.extend(['org.glukopapa.v3.m00.Q09ControllerInstrumentedTest#q09BackgroundRejectsSameRevisionRestoreDuringFetch','org.glukopapa.v3.m00.Q09ControllerInstrumentedTest#q09ForegroundRejectsSameRevisionRestoreDuringFetch'])
+          expected.extend(['org.glukopapa.v3.m00.Q10EvidenceNativeInstrumentedTest#q10SameRevisionRestoreInvalidatesCachedEvidence','org.glukopapa.v3.m00.Q11ReadOnlyInstrumentedTest#q11SameRevisionRestoreInvalidatesSnapshotAndReadSession'])
+          expected.extend(['org.glukopapa.v3.m00.Q11WebViewReadOnlyInstrumentedTest#q11ActualWebViewNativeReadsNoFixtureOrWriter','org.glukopapa.v3.m00.Q11WebViewReadOnlyInstrumentedTest#q11ActualWebViewInvalidateRestoreAndPermissionLoss'])
+          expected.extend(['org.glukopapa.v3.m00.Q11ShellRouteInstrumentedTest#q11ActualShellRouteRequiresBothOwnersAndExposesNoWriter','org.glukopapa.v3.m00.Q11ShellRouteInstrumentedTest#q11ActualShellRouteRefreshesEpochAndReopensCleanly'])
+          expected.append('org.glukopapa.v3.m00.Q11ShellRouteInstrumentedTest#q11CompactActualHomeRequiresBothOwnersAndClearsOnNavigation')
+          expected.append('org.glukopapa.v3.m00.Q11ShellRouteInstrumentedTest#q11GraphPreferencesReadFromQ01AndLegacyMergePreservesOtherLines')
+          expected.append('org.glukopapa.v3.m00.Q11ShellRouteInstrumentedTest#q11Q07HistoricalProjectionOwnerCorrectionAndGrantLoss')
+          expected.append('org.glukopapa.v3.m00.Q11ShellRouteInstrumentedTest#q11Q07FutureDisplayOnlyFromConfirmedPastAndHideOnHistory')
+          expected.append('org.glukopapa.v3.m00.Q11ShellRouteInstrumentedTest#q11OwnerDisplayBoundsRoundTripLegacyRestoreAndDenial')
+          expected.extend(['org.glukopapa.v3.m00.Q12ObservationNativeInstrumentedTest#q12DedicatedOwnerAndDependenciesDenyUntilAllAccepted','org.glukopapa.v3.m00.Q12ObservationNativeInstrumentedTest#q12ActualQ09RowsWindowAndMismatchRemainReadOnly','org.glukopapa.v3.m00.Q12ObservationNativeInstrumentedTest#q12SevenDayProjectionRetainsSyntheticBarriersAndIsolatesProfiles','org.glukopapa.v3.m00.Q12ObservationNativeInstrumentedTest#q12SameRevisionRestoreAndClosedSessionInvalidate'])
+          expected.extend(['org.glukopapa.v3.m00.Q12ArchitectureNativeInstrumentedTest#q12HistoricalPolicyMissingOffAndOptionalJournalDenied','org.glukopapa.v3.m00.Q12ArchitectureNativeInstrumentedTest#q12ActualProducerContextRetainsInsulinAndConditionIdentity','org.glukopapa.v3.m00.Q12ArchitectureNativeInstrumentedTest#q12HistoricalReadRestoreAndPermissionFence'])
+          expected.extend(['org.glukopapa.v3.m00.Q12PolicyNativeInstrumentedTest#q12PolicyOwnerSaveReadEditDeleteAndHistory','org.glukopapa.v3.m00.Q12PolicyNativeInstrumentedTest#q12PolicyCancelStaleRestoreGrantLossAndClosedQueue','org.glukopapa.v3.m00.Q12PolicyNativeInstrumentedTest#q12PolicyPersistsAcrossHelperReopenAndCorruptionFailsClosed','org.glukopapa.v3.m00.Q12ShellRouteInstrumentedTest#q12ActualDiarySettingsRoutesNativeConfirmationAndReadOnlySeparation'])
+          expected.append('org.glukopapa.v3.m00.Q12PolicyNativeInstrumentedTest#q12PolicyEncryptedBackupRestoreRetainsExactOwnerRecord')
+          expected.extend(['org.glukopapa.v3.m00.GfV3YearHistoryInstrumentedTest#yearCgmFullTraversalAndBoundaries','org.glukopapa.v3.m00.GfV3YearHistoryInstrumentedTest#yearPortGrantsRevisionAndRestoreEpochFence'])
+          expected.append('org.glukopapa.v3.m00.GfV3YearHistoryInstrumentedTest#yearMultiDomainSessionAndFeedBoundary')
+          expected.append('org.glukopapa.v3.m00.GfV3YearHistoryInstrumentedTest#yearChronologicalSessionExactUtcAndLeastScope')
+          expected.append('org.glukopapa.v3.m00.GfV3YearHistoryInstrumentedTest#yearLegacyShellCheckedPagesAndFeedRejectSameRevisionRestore')
+          expected.extend(['org.glukopapa.v3.m00.GfV3YearHistoryInstrumentedTest#yearAllDomainsEncryptedRestoreAndExactRows','org.glukopapa.v3.m00.GfV3YearHistoryInstrumentedTest#yearScopeMatrixAndLegacyResearchBypassDenied'])
+          assert len(expected)==len(set(expected))==38
+          s=s.replace(a,"a=check('integrated',(old|earlier)-{legacy}|{new}|set("+repr(expected)+"))")
+          s=s.replace("'additional_case_ids':1","'additional_case_ids':39,'gfstorage_year_cases':7,'q12_restore_cases':1,'q12_owner_routes_cases':4,'q12_architecture_cases':3,'q12_projection_cases':4,'q11_cases':16,'restore_fence_cases':2,'epoch_cases':2,'webview_cases':2,'shell_route_cases':2,'compact_cases':1,'preferences_cases':1,'rapid_display_cases':1,'rapid_future_cases':1,'display_bounds_cases':1")
+          (Path(os.environ['RUNNER_TEMP'])/'q11_verify.py').write_text(s)
+          PY
+          python3 "$RUNNER_TEMP/q11_verify.py" | tee qa-results/q11/gate.json
+          test -f qa-results/q11/crash-buffer.log
+          test "$(cat qa-results/q11/runner-exit.txt)" = 0
+          if grep -E 'Cmdline: org\.glukopapa\.v3\.m00|Process: org\.glukopapa\.v3\.m00' qa-results/q11/crash-buffer.log; then
+            echo 'App process crash in emulator crash buffer'; exit 1
+          fi
+      - name: Upload isolated native QA evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gfstorage-year-v05-evidence-attempt-${{ github.run_attempt }}
+          path: |
+            qa-results/v042/
+            qa-results/q11/
+            q07-ci-logs/
+          if-no-files-found: warn
