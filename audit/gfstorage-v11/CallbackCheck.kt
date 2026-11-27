@@ -39,8 +39,15 @@ fun main() {
         adapter.release.countDown()
         val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5)
         while (adapter.writes.get()==0 && System.nanoTime()<deadline) Thread.sleep(1)
-        println("receipt=$receipt adapterWrites=${adapter.writes.get()}")
-        check(receipt == "APPLYING" && adapter.writes.get()==1) { "Late cancellation invalidated accepted work" }
+        var terminal = queue.poll(ticket).getString("state")
+        while (terminal == "APPLYING" && System.nanoTime() < deadline) {
+            Thread.sleep(1)
+            terminal = queue.poll(ticket).getString("state")
+        }
+        println("receipt=$receipt terminal=$terminal adapterWrites=${adapter.writes.get()}")
+        check(receipt == "APPLYING" && terminal == "FINISHED" && adapter.writes.get()==1) {
+            "Late cancellation invalidated accepted work"
+        }
     } finally {
         adapter.release.countDown()
         queue.cancelPendingOnDestroy()

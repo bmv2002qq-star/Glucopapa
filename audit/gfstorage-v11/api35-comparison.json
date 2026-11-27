@@ -1,0 +1,22 @@
+{
+  "sha256": {
+    "baseline.zip": "2bf34a4845a39ad3961c6e1fe18a5f9485233b809b086c0ba87f3da762b3d4b1",
+    "api35.zip": "2dd6adc1a7128c969e5266eae8a19defa311591a5a6a10a74a47df34e5f9afb6"
+  },
+  "integrated": {
+    "before": 207,
+    "after": 207,
+    "added": [],
+    "removed": [],
+    "duplicates": [],
+    "failures": {}
+  },
+  "offline": {
+    "before": 8,
+    "after": 8,
+    "added": [],
+    "removed": [],
+    "duplicates": [],
+    "failures": {}
+  }
+}
