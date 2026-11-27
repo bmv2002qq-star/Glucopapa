@@ -2,7 +2,7 @@ name: Q13 writer current readback API31
 on:
   push:
     branches:
-      - 'qa/v3-q13-native-q09-port'
+      - 'qa/v3-q13-native-js-chain'
     paths:
       - '.github/workflows/q13-writer-current-readback.yml'
   workflow_dispatch:
@@ -26,6 +26,7 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
+          cp android-mvp3/app/src/main/assets/www/modules/GFInjectionAnalytics_v0.2.1/GFInjectionAnalytics_v0.2.1.js "$RUNNER_TEMP/q13-core.js"
           cp qa-transfer/q13/writer-audit/Q13WriterAuditInstrumentedTest.kt "$RUNNER_TEMP/q13-writer-audit.kt"
           cp audit/gfstorage-v11/settings-fixture.patch "$RUNNER_TEMP/settings-fixture.patch"
           cp qa-transfer/q13/preflight/GfV3Q13HistoryPreflight.kt.b64 "$RUNNER_TEMP/q13-preflight.b64"
@@ -1960,6 +1961,127 @@ jobs:
           f.write_text(s.replace(marker,'''        for (point in p) assertTrue(runCatching { verify(listOf(point.observationId)) }.isFailure)
           '''+marker))
           PY
+      - name: Install Q13 trusted host and offline chain test
+        shell: bash
+        run: |
+          set -euo pipefail
+          root=q07-ci/android-app/app/src
+          mkdir -p "$root/androidTest/assets"
+          cp "$RUNNER_TEMP/q13-core.js" "$root/androidTest/assets/q13-core.js"
+          cat > "$root/main/java/org/glukopapa/v3/m00/GfV3Q13CgmHost.kt" <<'KOTLIN'
+          package org.glukopapa.v3.m00
+          
+          import org.json.JSONArray
+          import org.json.JSONObject
+          
+          /** Binds the JS snapshot to the same native history session and persisted observation values. */
+          internal class GfV3Q13CgmHost(
+              private val session: GfV3Storage.NativeYearSession,
+              private val profileId: String,
+              private val revision: Long
+          ) {
+              fun rows(ids: List<String>): JSONArray = JSONArray().apply {
+                  session.verifyQ09CgmSnapshot(ids).forEach { point ->
+                      put(JSONObject().put("observationId",point.observationId)
+                          .put("profileId",profileId).put("sourceDeviceId",point.sourceDeviceId)
+                          .put("ts",point.measured.toString()).put("mmol",point.mmol).put("kind","observed"))
+                  }
+              }
+          
+              fun verify(request: JSONObject): Boolean = try {
+                  val presented=request.getJSONArray("rows")
+                  val ids=(0 until presented.length()).map { presented.getJSONObject(it).getString("observationId") }
+                  if(request.opt("profileId")!=profileId || request.getLong("revision")!=revision) false
+                  else {
+                      val stored=rows(ids)
+                      ids.indices.all { i ->
+                          val supplied=presented.getJSONObject(i)
+                          val expected=stored.getJSONObject(i)
+                          supplied.length()==expected.length() && expected.keys().asSequence().all { key ->
+                              val a=supplied.opt(key)
+                              val b=expected.get(key)
+                              if(a is Number && b is Number) a.toDouble()==b.toDouble() else a==b
+                          }
+                      }
+                  }
+              } catch (_: Exception) { false }
+          }
+          KOTLIN
+          cat > "$RUNNER_TEMP/q13-chain.kt" <<'KOTLIN'
+              class JsReceiptPort internal constructor(private val host:GfV3Q13CgmHost) {
+                  @android.webkit.JavascriptInterface fun verify(raw:String):Boolean =
+                      try { host.verify(JSONObject(raw)) } catch (_:Exception) { false }
+              }
+              private fun checkNativeToJsAndReadback(id:String,rev:Long) {
+                  val instr=InstrumentationRegistry.getInstrumentation()
+                  val session=storage.openNativeYearSession(owner,mapOf("cgm" to "research"),end)
+                  val view=java.util.concurrent.atomic.AtomicReference<android.webkit.WebView>()
+                  val source=GfV3RestoreFence.capture {
+                      helper.readableDatabase.rawQuery("SELECT input_revision FROM v3_meta WHERE id=1",null).use { c ->
+                          check(c.moveToFirst()); c.getLong(0)
+                      }
+                  }.let { GfV3MealTimingSource(profile,it.second,it.first) }
+                  try {
+                      val host=GfV3Q13CgmHost(session,profile,rev)
+                      val snapshot=JSONObject().put("profileId",profile).put("revision",rev)
+                          .put("profile",JSONObject().put("timeZone","UTC"))
+                          .put("cgm",host.rows(listOf(id))).put("events",org.json.JSONArray()).put("mealSessions",org.json.JSONArray())
+                          .put("cgmMetadata",JSONObject().put("sourceType","xdrip_local").put("sourceDeviceId",C.SOURCE))
+                      val core=instr.context.assets.open("q13-core.js").bufferedReader().use { it.readText() }
+                      val js=core+"\n;JSON.stringify((()=>{const s=JSON.parse("+JSONObject.quote(snapshot.toString())+"),q={atIso:"+JSONObject.quote(end.toString())+",context:{sourceRevision:s.revision}},p={getSnapshot:()=>s,getRevision:()=>s.revision,verifyQ09CgmSnapshot:r=>Q13Receipt.verify(JSON.stringify(r))},a=GFInjectionAnalyticsV2.createAnalyzer({connect:()=>p});const good=a.inspect(q);s.cgm[0].mmol+=1;return {good,changed:a.inspect(q)};})())"
+                      val latch=java.util.concurrent.CountDownLatch(1)
+                      val result=java.util.concurrent.atomic.AtomicReference<String>()
+                      instr.runOnMainSync {
+                          val w=android.webkit.WebView(ctx)
+                          view.set(w)
+                          w.settings.javaScriptEnabled=true
+                          w.settings.allowFileAccess=false
+                          w.settings.allowContentAccess=false
+                          w.settings.blockNetworkLoads=true
+                          w.addJavascriptInterface(JsReceiptPort(host),"Q13Receipt")
+                          w.webViewClient=object:android.webkit.WebViewClient(){
+                              override fun onPageFinished(v:android.webkit.WebView,url:String){
+                                  v.evaluateJavascript(js){value->result.set(value);latch.countDown()}
+                              }
+                          }
+                          w.loadDataWithBaseURL(null,"<html><body></body></html>","text/html","UTF-8",null)
+                      }
+                      assertTrue("Q13 JS timed out",latch.await(20,java.util.concurrent.TimeUnit.SECONDS))
+                      val output=JSONObject(org.json.JSONTokener(result.get()).nextValue() as String)
+                      val good=output.getJSONObject("good")
+                      assertEquals("NO_DATA",good.getString("status"))
+                      assertEquals("MEAL_SESSION_NOT_FOUND",good.getString("code"))
+                      assertTrue(good.isNull("descriptiveLagMinutes"))
+                      assertEquals("CGM_PROVENANCE_UNVERIFIED",output.getJSONObject("changed").getString("code"))
+                      helper.writableDatabase.execSQL("UPDATE v3_module_registry SET write_roles_json=?,read_roles_json=? WHERE module_id=?",
+                          arrayOf("[\"mealTimingPublisher\"]","[\"research\",\"mealTiming\"]",owner))
+                      val gateway=GfV3NativeModuleGateway(storage,GfV3NativeWriter(helper),GfV3CorrectionWriter(helper),helper)
+                      val payload=JSONObject().put("timingId","qa-q13-js-no-data").put("profileId",profile)
+                          .put("calculatedAtUtc",Instant.now().toString()).put("resultStatus","INSUFFICIENT_DATA")
+                          .put("sourceRevision",source.inputRevision).put("minutes",JSONObject.NULL)
+                          .put("inputDigest",java.security.MessageDigest.getInstance("SHA-256").digest(snapshot.toString().toByteArray()).joinToString(""){"%02x".format(it)})
+                          .put("reason",good.getString("code"))
+                      val read=checkNotNull(gateway.bindInstalledAdapter(owner).publishMealTimingForReadback("qa-q13-js-no-data",source,payload))
+                      assertEquals("MEAL_SESSION_NOT_FOUND",read().getString("reason"))
+                      assertTrue(read().isNull("minutes"))
+                  } finally {
+                      session.close()
+                      instr.runOnMainSync { view.get()?.destroy() }
+                  }
+              }
+          KOTLIN
+          python3 - <<'PYCHAIN'
+          from pathlib import Path
+          import os
+          f=Path('q07-ci/android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q13CgmEvidenceInstrumentedTest.kt')
+          s=f.read_text()
+          marker='    @Test fun q13NativeReceiptProofPreservesActualQ09IdentityAndIsScoped(){'
+          assert s.count(marker)==1
+          s=s.replace(marker,(Path(os.environ['RUNNER_TEMP'])/'q13-chain.kt').read_text()+marker)
+          anchor='        assertEquals(rev,storage.revision())'
+          assert anchor in s
+          f.write_text(s.replace(anchor,anchor+'\n        checkNativeToJsAndReadback(fresh.observationId,rev)',1))
+          PYCHAIN
       - name: Compile Q13 writer audit candidate
         shell: bash
         run: |
