@@ -1,0 +1,33 @@
+stale draft sent to second profile: true
+unchanged empty plate render requested saves: 1
+node:assert:152
+  throw new AssertionError(obj);
+  ^
+
+AssertionError [ERR_ASSERTION]: UI must reject stale context and rendering an unchanged plate must be read-only
++ actual - expected
+
+  [
++   true,
++   1
+-   false,
+-   0
+  ]
+
+    at Object.<anonymous> (/workspace/scratch/bb3de1e8785f/repo/audit/gfstorage-v11/q04-context.cjs:38:8)
+    at Module._compile (node:internal/modules/cjs/loader:1929:14)
+    at Object..js (node:internal/modules/cjs/loader:2060:10)
+    at Module.load (node:internal/modules/cjs/loader:1651:32)
+    at Module._load (node:internal/modules/cjs/loader:1443:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:261:19)
+    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)
+    at node:internal/main/run_main_module:33:47 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: [ true, 1 ],
+  expected: [ false, 0 ],
+  operator: 'deepStrictEqual',
+  diff: 'simple'
+}
+
+Node.js v24.22.3

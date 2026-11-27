@@ -1,0 +1,4 @@
+receipt=CANCELLED adapterWrites=1
+Exception in thread "main" java.lang.IllegalStateException: Late cancellation invalidated accepted work
+	at org.glukopapa.v3.m00.CallbackCheckKt.main(CallbackCheck.kt:43)
+	at org.glukopapa.v3.m00.CallbackCheckKt.main(CallbackCheck.kt)

@@ -1,0 +1,107 @@
+path	line	source
+main/java/org/glukopapa/v3/m00/GfV3Bridge.kt	8	@JavascriptInterface fun getSchemaVersion(): Int = storage.schemaVersion()
+main/java/org/glukopapa/v3/m00/GfV3Bridge.kt	9	@JavascriptInterface fun getRevision(): Long = storage.revision()
+main/java/org/glukopapa/v3/m00/GfV3Bridge.kt	10	@JavascriptInterface fun readShellPort(role: String): String = try {
+main/java/org/glukopapa/v3/m00/GfV3Bridge.kt	13	@JavascriptInterface fun readChangeFeed(afterRevision: Long): String = try {
+main/java/org/glukopapa/v3/m00/GfV3Bridge.kt	17	@JavascriptInterface fun readShellPage(domain:String,cursor:Long,revision:Long,limit:Int):String = try {
+main/java/org/glukopapa/v3/m00/GfV3Bridge.kt	20	@JavascriptInterface fun readShellStamp():String = try { storage.readShellStamp().toString() } catch(e:Exception){error(e)}
+main/java/org/glukopapa/v3/m00/GfV3Bridge.kt	21	@JavascriptInterface fun readShellPageChecked(domain:String,cursor:Long,revision:Long,inputRevision:Long,profileId:String,epoch:Long,limit:Int):String = try {
+main/java/org/glukopapa/v3/m00/GfV3Bridge.kt	24	@JavascriptInterface fun readChangeFeedChecked(afterRevision:Long,epoch:Long):String = try {
+main/java/org/glukopapa/v3/m00/GfV3Bridge.kt	29	@JavascriptInterface fun requestOwnerEditIntent(rawJson:String):String = try {
+main/java/org/glukopapa/v3/m00/GfV3Bridge.kt	32	@JavascriptInterface fun pollOwnerEditIntent(ticket:String):String = try {
+main/java/org/glukopapa/v3/m00/GfV3Bridge.kt	36	@JavascriptInterface fun requestSettingsOwnerIntent(rawJson:String):String=try {
+main/java/org/glukopapa/v3/m00/GfV3Bridge.kt	39	@JavascriptInterface fun pollSettingsOwnerIntent(ticket:String):String=try {
+main/java/org/glukopapa/v3/m00/GfV3Bridge.kt	42	@JavascriptInterface fun readStatus(): String = try { storage.status().toString() } catch(e:Exception){ error(e) }
+main/java/org/glukopapa/v3/m00/GfV3Bridge.kt	44	@JavascriptInterface fun initializeProfile(timeZone: String, expectedRevision: Long): String = try {
+main/java/org/glukopapa/v3/m00/GfV3CorrectionWriter.kt	109	val db=helper.writableDatabase
+main/java/org/glukopapa/v3/m00/GfV3DomainWriter.kt	55	val db=helper.writableDatabase
+main/java/org/glukopapa/v3/m00/GfV3EncryptedSnapshot.kt	82	val db=helper.writableDatabase
+main/java/org/glukopapa/v3/m00/GfV3EncryptedSnapshot.kt	88	val v=SQLiteDatabase.openDatabase(scratch.absolutePath,null,SQLiteDatabase.OPEN_READONLY)
+main/java/org/glukopapa/v3/m00/GfV3EncryptedSnapshot.kt	137	"require(revision(helper.writableDatabase)==expectedCurrentRevision) {""Q02_CURRENT_REVISION_CONFLICT""}"
+main/java/org/glukopapa/v3/m00/GfV3EncryptedSnapshot.kt	175	val scratch=SQLiteDatabase.openDatabase(stage.absolutePath,null,SQLiteDatabase.OPEN_READWRITE)
+main/java/org/glukopapa/v3/m00/GfV3EncryptedSnapshot.kt	213	val source=SQLiteDatabase.openDatabase(stage.absolutePath,null,SQLiteDatabase.OPEN_READONLY)
+main/java/org/glukopapa/v3/m00/GfV3EncryptedSnapshot.kt	219	val db=helper.writableDatabase
+main/java/org/glukopapa/v3/m00/GfV3NativeModuleGateway.kt	13	internal fun bindInstalledAdapter(compileTimeModuleId: String): BoundPort =
+main/java/org/glukopapa/v3/m00/GfV3NativeWriter.kt	64	val db=helper.writableDatabase
+main/java/org/glukopapa/v3/m00/GfV3NativeWriter.kt	222	val db=helper.writableDatabase
+main/java/org/glukopapa/v3/m00/GfV3OwnerResolver.kt	13	val db=helper.readableDatabase
+main/java/org/glukopapa/v3/m00/GfV3Q02Bridge.kt	8	"@JavascriptInterface fun request(action:String):String = try { JSONObject().put(""ticket"",ui.request(action)).toString() }"
+main/java/org/glukopapa/v3/m00/GfV3Q02Bridge.kt	10	@JavascriptInterface fun poll(ticket:String):String = try {ui.poll(ticket)}catch(e:Exception){error(e)}
+main/java/org/glukopapa/v3/m00/GfV3Q04Bridge.kt	8	@JavascriptInterface fun readDraft():String = try { drafts.read().toString() }
+main/java/org/glukopapa/v3/m00/GfV3Q04Bridge.kt	10	@JavascriptInterface fun saveDraft(raw:String):String = try { drafts.save(raw).toString() }
+main/java/org/glukopapa/v3/m00/GfV3Q04NutritionDrafts.kt	34	val db=helper.readableDatabase
+main/java/org/glukopapa/v3/m00/GfV3Q04NutritionDrafts.kt	137	val db=helper.writableDatabase
+main/java/org/glukopapa/v3/m00/GfV3Q05Bridge.kt	8	@JavascriptInterface fun readState():String=try{queue.snapshot().toString()}catch(e:Exception){error(e)}
+main/java/org/glukopapa/v3/m00/GfV3Q05Bridge.kt	9	@JavascriptInterface fun requestOwnerAction(raw:String):String=try{queue.enqueue(raw).toString()}catch(e:Exception){error(e)}
+main/java/org/glukopapa/v3/m00/GfV3Q05Bridge.kt	10	@JavascriptInterface fun pollOwnerAction(ticket:String):String=try{queue.poll(ticket).toString()}catch(e:Exception){error(e)}
+main/java/org/glukopapa/v3/m00/GfV3Q06Bridge.kt	8	@JavascriptInterface fun readContext():String=try{adapter.readNow().toString()}
+main/java/org/glukopapa/v3/m00/GfV3Q07Bridge.kt	8	@JavascriptInterface fun readState(): String = try { owner.snapshot().toString() } catch(e:Exception) { fail(e) }
+main/java/org/glukopapa/v3/m00/GfV3Q07Bridge.kt	9	@JavascriptInterface fun requestOwnerAction(raw: String): String = try { owner.enqueue(raw).toString() } catch(e:Exception) { fail(e) }
+main/java/org/glukopapa/v3/m00/GfV3Q07Bridge.kt	10	@JavascriptInterface fun pollOwnerAction(ticket: String): String = try { owner.poll(ticket).toString() } catch(e:Exception) { fail(e) }
+main/java/org/glukopapa/v3/m00/GfV3Q07ModuleInstaller.kt	21	val db = helper.writableDatabase
+main/java/org/glukopapa/v3/m00/GfV3Q08Bridge.kt	8	@JavascriptInterface fun readStatus():String=wrap{queue.status()}
+main/java/org/glukopapa/v3/m00/GfV3Q08Bridge.kt	9	@JavascriptInterface fun readState():String=wrap{queue.snapshot()}
+main/java/org/glukopapa/v3/m00/GfV3Q08Bridge.kt	10	@JavascriptInterface fun resolveLocalTime(raw:String):String=wrap{queue.resolveLocalTime(raw)}
+main/java/org/glukopapa/v3/m00/GfV3Q08Bridge.kt	11	@JavascriptInterface fun requestOwnerAction(raw:String):String=wrap{queue.enqueue(raw)}
+main/java/org/glukopapa/v3/m00/GfV3Q08Bridge.kt	12	@JavascriptInterface fun pollOwnerAction(ticket:String):String=wrap{queue.poll(ticket)}
+main/java/org/glukopapa/v3/m00/GfV3Q08ModuleInstaller.kt	21	val db = helper.writableDatabase
+main/java/org/glukopapa/v3/m00/GfV3Q09Background.kt	65	val refresh=GfV3Q09BackgroundRefresh(gateway.bindInstalledAdapter(GfV3Q09Contract.OWNER),source::fetch)
+main/java/org/glukopapa/v3/m00/GfV3Q09Bridge.kt	8	@JavascriptInterface fun readState():String=wrap{controller.snapshot()}
+main/java/org/glukopapa/v3/m00/GfV3Q09Bridge.kt	9	@JavascriptInterface fun requestCheck():String=wrap{controller.requestCheck()}
+main/java/org/glukopapa/v3/m00/GfV3Q09Bridge.kt	10	@JavascriptInterface fun requestAuto(enabled:Boolean):String=wrap{controller.requestAuto(enabled)}
+main/java/org/glukopapa/v3/m00/GfV3Q09ModuleInstaller.kt	21	val db = helper.writableDatabase
+main/java/org/glukopapa/v3/m00/GfV3Q10Bridge.kt	7	@JavascriptInterface fun requestCheck():String=wrap{controller.requestCheck()}
+main/java/org/glukopapa/v3/m00/GfV3Q10Bridge.kt	8	@JavascriptInterface fun readState():String=wrap{controller.readState()}
+main/java/org/glukopapa/v3/m00/GfV3Q10ModuleInstaller.kt	14	val db=helper.writableDatabase;db.beginTransaction()
+main/java/org/glukopapa/v3/m00/GfV3Q10ReadAdapter.kt	12	private val port=gateway.bindInstalledAdapter(E.OWNER)
+main/java/org/glukopapa/v3/m00/GfV3Q11ChartActivity.kt	18	private val q10=gateway.bindInstalledAdapter(GfV3Q10Evidence.OWNER)
+main/java/org/glukopapa/v3/m00/GfV3Q11ChartActivity.kt	34	@JavascriptInterface fun readStamp():String=read{session.readStamp(includeRapid)}
+main/java/org/glukopapa/v3/m00/GfV3Q11ChartActivity.kt	35	@JavascriptInterface fun readSnapshot():String=read{session.readSnapshot(includeRapid)}
+main/java/org/glukopapa/v3/m00/GfV3Q11ReadSession.kt	11	private val port=gateway.bindInstalledAdapter(GfV3Q11ReadContract.OWNER)
+main/java/org/glukopapa/v3/m00/GfV3Q11ReadSession.kt	12	private val q07=gateway.bindInstalledAdapter(GfV3Q07DisplayProjection.OWNER)
+main/java/org/glukopapa/v3/m00/GfV3Q12AnalyticsBridge.kt	15	@JavascriptInterface fun readEndUtc():String=synchronized(lock){
+main/java/org/glukopapa/v3/m00/GfV3Q12AnalyticsBridge.kt	18	@JavascriptInterface fun readStamp():String=synchronized(lock){if(closed)fail() else try{storage.q12AccessStamp().toString()}catch(_:Exception){fail()}}
+main/java/org/glukopapa/v3/m00/GfV3Q12AnalyticsBridge.kt	19	@JavascriptInterface fun readSnapshot(request:String,expected:String):String=synchronized(lock){
+main/java/org/glukopapa/v3/m00/GfV3Q12OfflineActivity.kt	69	@JavascriptInterface fun read():String=safe(queue::read)
+main/java/org/glukopapa/v3/m00/GfV3Q12OfflineActivity.kt	70	@JavascriptInterface fun enqueue(request:String):String=safe{queue.enqueue(request)}
+main/java/org/glukopapa/v3/m00/GfV3Q12OfflineActivity.kt	71	@JavascriptInterface fun poll(ticket:String):String=safe{queue.poll(ticket)}
+main/java/org/glukopapa/v3/m00/GfV3Storage.kt	19	val db = helper.writableDatabase
+main/java/org/glukopapa/v3/m00/GfV3Storage.kt	126	fun revision(): Long = synchronized(lock) { meta(helper.readableDatabase).revision }
+main/java/org/glukopapa/v3/m00/GfV3Storage.kt	157	val db=helper.readableDatabase
+main/java/org/glukopapa/v3/m00/GfV3Storage.kt	309	val db=helper.readableDatabase;db.beginTransactionNonExclusive()
+main/java/org/glukopapa/v3/m00/GfV3Storage.kt	321	val db=helper.readableDatabase;db.beginTransactionNonExclusive()
+main/java/org/glukopapa/v3/m00/GfV3Storage.kt	344	val db=helper.readableDatabase;db.beginTransactionNonExclusive()
+main/java/org/glukopapa/v3/m00/GfV3Storage.kt	368	val db=helper.readableDatabase;db.beginTransactionNonExclusive()
+main/java/org/glukopapa/v3/m00/GfV3Storage.kt	428	val db=helper.readableDatabase;db.beginTransactionNonExclusive()
+main/java/org/glukopapa/v3/m00/GfV3Storage.kt	467	val db=helper.readableDatabase
+main/java/org/glukopapa/v3/m00/GfV3Storage.kt	520	val db=helper.readableDatabase;db.beginTransactionNonExclusive()
+main/java/org/glukopapa/v3/m00/GfV3Storage.kt	539	val db=helper.readableDatabase;db.beginTransactionNonExclusive()
+main/java/org/glukopapa/v3/m00/GfV3Storage.kt	552	val db=helper.readableDatabase
+main/java/org/glukopapa/v3/m00/GfV3Storage.kt	570	val db=helper.readableDatabase
+main/java/org/glukopapa/v3/m00/GfV3Storage.kt	590	val db=helper.readableDatabase; db.beginTransactionNonExclusive()
+main/java/org/glukopapa/v3/m00/GfV3Storage.kt	597	val db=helper.readableDatabase; db.beginTransactionNonExclusive()
+main/java/org/glukopapa/v3/m00/GfV3Storage.kt	612	val db=helper.readableDatabase;db.beginTransactionNonExclusive()
+main/java/org/glukopapa/v3/m00/GfV3Storage.kt	628	val db=helper.readableDatabase;db.beginTransactionNonExclusive()
+main/java/org/glukopapa/v3/m00/GfV3Storage.kt	650	val db=helper.writableDatabase;db.beginTransaction()
+main/java/org/glukopapa/v3/m00/GfV3Storage.kt	664	val db=helper.readableDatabase;db.beginTransactionNonExclusive()
+main/java/org/glukopapa/v3/m00/GfV3Storage.kt	693	val db=helper.readableDatabase;db.beginTransactionNonExclusive()
+main/java/org/glukopapa/v3/m00/GfV3Storage.kt	697	val db=helper.readableDatabase;db.beginTransactionNonExclusive()
+main/java/org/glukopapa/v3/m00/GfV3Storage.kt	719	val db=helper.readableDatabase;db.beginTransactionNonExclusive()
+main/java/org/glukopapa/v3/m00/GfV3Storage.kt	742	val db=helper.readableDatabase
+main/java/org/glukopapa/v3/m00/GfV3Storage.kt	760	val db=helper.readableDatabase
+main/java/org/glukopapa/v3/m00/GfV3Storage.kt	787	val db=helper.readableDatabase
+main/java/org/glukopapa/v3/m00/GfV3Storage.kt	823	val db=helper.writableDatabase
+main/java/org/glukopapa/v3/m00/GfV3Storage.kt	850	val db=helper.readableDatabase
+main/java/org/glukopapa/v3/m00/GfV3Storage.kt	875	val db=helper.readableDatabase
+main/java/org/glukopapa/v3/m00/GfV3TrustedJournalEdit.kt	164	val db=helper.readableDatabase
+main/java/org/glukopapa/v3/m00/MainActivity.kt	83	"nativeModuleGateway.bindInstalledAdapter(""GFSport"").correctJournalIntent(intent)"
+main/java/org/glukopapa/v3/m00/MainActivity.kt	86	"nativeModuleGateway.bindInstalledAdapter(""GFIllness"").correctJournalIntent(intent)"
+main/java/org/glukopapa/v3/m00/MainActivity.kt	89	"nativeModuleGateway.bindInstalledAdapter(""GFInjectionFact"").correctJournalIntent(intent)"
+main/java/org/glukopapa/v3/m00/MainActivity.kt	92	"nativeModuleGateway.bindInstalledAdapter(""GFLevemirReview"").correctJournalIntent(intent)"
+main/java/org/glukopapa/v3/m00/MainActivity.kt	96	"val settingsAdapter=GfV3SettingsTrustedAdapter(nativeModuleGateway.bindInstalledAdapter(""GFSettings""))"
+main/java/org/glukopapa/v3/m00/MainActivity.kt	109	"nativeModuleGateway.bindInstalledAdapter(""GFSport""),"
+main/java/org/glukopapa/v3/m00/MainActivity.kt	110	"nativeModuleGateway.bindInstalledAdapter(""GFIllness""),"
+main/java/org/glukopapa/v3/m00/MainActivity.kt	111	"nativeModuleGateway.bindInstalledAdapter(""GFSettings""))"
+main/java/org/glukopapa/v3/m00/MainActivity.kt	121	"GfV3Q07InjectionFacts(nativeModuleGateway.bindInstalledAdapter(""GFInjectionFact"")),v3,"
+main/java/org/glukopapa/v3/m00/MainActivity.kt	126	"val basalPort=nativeModuleGateway.bindInstalledAdapter(""GFLevemirReview"")"
+main/java/org/glukopapa/v3/m00/MainActivity.kt	131	cgmController=GfV3Q09Controller(nativeModuleGateway.bindInstalledAdapter(GfV3Q09Contract.OWNER),settingsAdapter,GfV3Q09ModuleInstaller(helper),q09Transport::fetch,q09Transport::close,confirm={msg,finish->

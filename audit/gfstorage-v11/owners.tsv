@@ -1,0 +1,97 @@
+moduleId	systemId	declaredWriterRoles	status in this matrix
+GFMainCGM	SYS-05		catalog; runtime registry and feature gate required
+GFCgmSource	SYS-06	cgmAdapter	catalog; runtime registry and feature gate required
+GFLOW	SYS-01	actionWriter	catalog; runtime registry and feature gate required
+GFHIGH	SYS-02	actionWriter,forecastWriter	catalog; runtime registry and feature gate required
+GFInjectionEntry	SYS-21	actionWriter	catalog; runtime registry and feature gate required
+GFSport	SYS-09	conditionWriter	catalog; runtime registry and feature gate required
+GFIllness	SYS-10	conditionWriter	catalog; runtime registry and feature gate required
+GFMainNutrition	SYS-22		catalog; runtime registry and feature gate required
+GFJournal	SYS-04		catalog; runtime registry and feature gate required
+GFJournalSummary	SYS-04		catalog; runtime registry and feature gate required
+GFNutrition	SYS-03	actionWriter,mealFlow	catalog; runtime registry and feature gate required
+GFFridge	SYS-03		catalog; runtime registry and feature gate required
+GFFoodBalance	SYS-03		catalog; runtime registry and feature gate required
+GFMealCalc	SYS-13		catalog; runtime registry and feature gate required
+GFMealFlow	SYS-13	actionWriter,mealFlow	catalog; runtime registry and feature gate required
+GFCoefficients	SYS-11		catalog; runtime registry and feature gate required
+GFParameterSummary	SYS-10		catalog; runtime registry and feature gate required
+GFModelSelect	SYS-29		catalog; runtime registry and feature gate required
+GFActivitySettings	SYS-12		catalog; runtime registry and feature gate required
+GFSettings	SYS-10	coefficientWriter,settingsWriter	catalog; runtime registry and feature gate required
+GFNutritionNorms	SYS-10		catalog; runtime registry and feature gate required
+GFAllergens	SYS-03		catalog; runtime registry and feature gate required
+GFSync	SYS-19	syncWriter	catalog; runtime registry and feature gate required
+GFAuditExport	SYS-15		catalog; runtime registry and feature gate required
+GFCoefficientReview	SYS-11		catalog; runtime registry and feature gate required
+GFConnectionSettings	SYS-19		catalog; runtime registry and feature gate required
+SYS-01	SYS-01		catalog; runtime registry and feature gate required
+SYS-02	SYS-02		catalog; runtime registry and feature gate required
+SYS-03	SYS-03		catalog; runtime registry and feature gate required
+SYS-04	SYS-04		catalog; runtime registry and feature gate required
+SYS-05	SYS-05		catalog; runtime registry and feature gate required
+SYS-06	SYS-06		catalog; runtime registry and feature gate required
+SYS-07	SYS-07		catalog; runtime registry and feature gate required
+SYS-08	SYS-08		catalog; runtime registry and feature gate required
+SYS-09	SYS-09		catalog; runtime registry and feature gate required
+SYS-10	SYS-10		catalog; runtime registry and feature gate required
+SYS-11	SYS-11		catalog; runtime registry and feature gate required
+SYS-12	SYS-12		catalog; runtime registry and feature gate required
+SYS-13	SYS-13		catalog; runtime registry and feature gate required
+SYS-14	SYS-14		catalog; runtime registry and feature gate required
+SYS-15	SYS-15		catalog; runtime registry and feature gate required
+SYS-16	SYS-16		catalog; runtime registry and feature gate required
+SYS-17	SYS-17		catalog; runtime registry and feature gate required
+SYS-18	SYS-18		catalog; runtime registry and feature gate required
+SYS-19	SYS-19		catalog; runtime registry and feature gate required
+SYS-20	SYS-20		catalog; runtime registry and feature gate required
+SYS-21	SYS-21		catalog; runtime registry and feature gate required
+SYS-22	SYS-22		catalog; runtime registry and feature gate required
+SYS-23	SYS-23		catalog; runtime registry and feature gate required
+SYS-24	SYS-24		catalog; runtime registry and feature gate required
+SYS-25	SYS-25		catalog; runtime registry and feature gate required
+SYS-26	SYS-26		catalog; runtime registry and feature gate required
+SYS-27	SYS-27		catalog; runtime registry and feature gate required
+SYS-28	SYS-28		catalog; runtime registry and feature gate required
+SYS-29	SYS-29		catalog; runtime registry and feature gate required
+GFActionWriter	SYS-21		catalog; runtime registry and feature gate required
+GFTimeGrid	SYS-11		catalog; runtime registry and feature gate required
+GFActivityGuidance	SYS-12		catalog; runtime registry and feature gate required
+GFPhysioActivity	SYS-09		catalog; runtime registry and feature gate required
+GFInjectionFact	SYS-08	actionWriter	catalog; runtime registry and feature gate required
+GFMealTimingService	SYS-14	mealTimingPublisher	catalog; runtime registry and feature gate required
+GFInjectionTimingStorage	SYS-14		catalog; runtime registry and feature gate required
+GFMealWorkflowView	SYS-13	actionWriter	catalog; runtime registry and feature gate required
+GFMealActualPanel	SYS-03	actionWriter	catalog; runtime registry and feature gate required
+GFMealCoverageStudy	SYS-29		catalog; runtime registry and feature gate required
+GFAutoCOBProfile	SYS-29		catalog; runtime registry and feature gate required
+GFCOBResearch	SYS-29		catalog; runtime registry and feature gate required
+GFHighLowInputGate	SYS-20		catalog; runtime registry and feature gate required
+GFCgmEvidencePolicy	SYS-06		catalog; runtime registry and feature gate required
+GFProviderCgm	SYS-06	cgmAdapter	catalog; runtime registry and feature gate required
+GFGraphFourLines	SYS-05		catalog; runtime registry and feature gate required
+GFResearchForecastRun	SYS-17	forecastWriter	catalog; runtime registry and feature gate required
+GFInsulinEvidenceGate	SYS-08		catalog; runtime registry and feature gate required
+GFLevemirReview	SYS-07	actionWriter	catalog; runtime registry and feature gate required
+GFSettingsPanel	SYS-10		catalog; runtime registry and feature gate required
+GFJournalPresentation	SYS-04		catalog; runtime registry and feature gate required
+GFAuditExportStorageAdapter	SYS-15		catalog; runtime registry and feature gate required
+GFSyncStorageAdapter	SYS-19	syncWriter	catalog; runtime registry and feature gate required
+GFModuleHub	SYS-28		catalog; runtime registry and feature gate required
+GFModuleDirectory	SYS-22		catalog; runtime registry and feature gate required
+GFMainScreen	SYS-22		catalog; runtime registry and feature gate required
+GFNormalizedFacts	SYS-28		catalog; runtime registry and feature gate required
+GFReplayLab	SYS-27		catalog; runtime registry and feature gate required
+GFPhysioProfiles	SYS-26		catalog; runtime registry and feature gate required
+GFSafetyBridge	SYS-20		catalog; runtime registry and feature gate required
+GFGraphEvidenceBridge	SYS-05		catalog; runtime registry and feature gate required
+GFLOWStorage	SYS-01	actionWriter	catalog; runtime registry and feature gate required
+GFHighTargetStorage	SYS-02		catalog; runtime registry and feature gate required
+GFHighLowReadOnlyAdapter	SYS-16		catalog; runtime registry and feature gate required
+GFAPSSensitivity	SYS-25		catalog; runtime registry and feature gate required
+GFModuleUI	SYS-22		catalog; runtime registry and feature gate required
+GFJournalBackup	SYS-15		catalog; runtime registry and feature gate required
+GFAPSEnhancer	SYS-24	forecastWriter	catalog; runtime registry and feature gate required
+GFForecast	SYS-17	forecastWriter	catalog; runtime registry and feature gate required
+GFConsensus	SYS-24	forecastWriter	catalog; runtime registry and feature gate required
+GFAAPSResearch	SYS-25	forecastWriter	catalog; runtime registry and feature gate required

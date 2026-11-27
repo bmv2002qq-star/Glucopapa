@@ -1,0 +1,6 @@
+org.junit.ComparisonFailure: expected:<[FINISH]ED> but was:<[REJECT]ED>
+at org.junit.Assert.assertEquals(Assert.java:117)
+at org.junit.Assert.assertEquals(Assert.java:146)
+at org.glukopapa.v3.m00.GfV3LegacyOwnerEpochInstrumentedTest.sameRevisionRoundTrip(GfV3LegacyOwnerEpochInstrumentedTest.kt:47)
+at org.glukopapa.v3.m00.GfV3LegacyOwnerEpochInstrumentedTest.sameRevisionRoundTrip$default(GfV3LegacyOwnerEpochInstrumentedTest.kt:39)
+at org.glukopapa.v3.m00.GfV3LegacyOwnerEpochInstrumentedTest.settingsPendingOwnerConsentCannotCrossRestore(GfV3LegacyOwnerEpochInstrumentedTest.kt:53)
