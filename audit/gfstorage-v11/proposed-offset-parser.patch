@@ -1,0 +1,23 @@
+--- a/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3YearHistory.kt
++++ b/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3YearHistory.kt
+@@ -7,2 +7,4 @@
+ import java.time.Instant
++import java.time.OffsetDateTime
++import java.time.format.DateTimeParseException
+ import java.time.ZoneOffset
+@@ -52,3 +54,14 @@
+     data class Page(val data:JSONObject,val next:Token?)
+-    private fun parse(raw:String?):Instant?=try { raw?.let{Instant.parse(it)} }catch(_:Exception){null}
++    private fun parse(raw: String?): Instant? {
++        if (raw == null) return null
++        return try {
++            Instant.parse(raw)
++        } catch (_: DateTimeParseException) {
++            try {
++                OffsetDateTime.parse(raw).toInstant()
++            } catch (_: DateTimeParseException) {
++                null
++            }
++        }
++    }
+     private fun str(o:JSONObject,k:String):String?=o.opt(k) as? String

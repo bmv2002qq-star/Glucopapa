@@ -1,0 +1,3 @@
+{"heapUsedAtEndBytes":66358648,"p50PageMs":1.422344,"p99PageMs":9.093443,"days":1,"indexBuildMs":60.142705,"p95PageMs":4.270107,"rows":288}
+{"heapUsedAtEndBytes":20899656,"p50PageMs":2.242094,"p99PageMs":6.160032,"days":30,"indexBuildMs":172.054346,"p95PageMs":3.831328,"rows":8640}
+{"heapUsedAtEndBytes":87268304,"p50PageMs":11.991081,"p99PageMs":23.605978,"days":365,"indexBuildMs":677.229753,"p95PageMs":14.584993,"rows":105120}

@@ -1,0 +1,11 @@
+--- a/android-app/app/src/androidTest/java/org/glukopapa/v3/m00/GfV3LegacyOwnerEpochInstrumentedTest.kt
++++ b/android-app/app/src/androidTest/java/org/glukopapa/v3/m00/GfV3LegacyOwnerEpochInstrumentedTest.kt
+@@ -50,7 +50,7 @@
+     }
+     @Test fun settingsPendingOwnerConsentCannotCrossRestore(){
+         val dialog=Dialog();val queue=GfV3SettingsOwnerIntentQueue(GfV3SettingsTrustedAdapter(gateway.bindInstalledAdapter("GFSettings")),dialog::show)
+-        try{sameRevisionRoundTrip({queue.enqueue(JSONObject().put("type","GFSETTINGS_V3_OWNER_INTENT").put("ownerConfirmed",true).put("command","setting").put("role","settingsWriter").put("profileId",profile).put("expectedRevision",rev()).put("idempotencyKey","qa-setting-${UUID.randomUUID()}").put("payload",JSONObject().put("settingKey","target").put("value",JSONObject().put("mmolL",6.0).put("source","OWNER_MANUAL"))).toString())},queue::poll,dialog,"v3_setting_history")}
++        try{sameRevisionRoundTrip({queue.enqueue(JSONObject().put("type","GFSETTINGS_V3_OWNER_INTENT").put("ownerConfirmed",true).put("command","setting").put("role","settingsWriter").put("profileId",profile).put("expectedRevision",rev()).put("idempotencyKey","qa-setting-${UUID.randomUUID()}").put("payload",JSONObject().put("settingChangeId","qa-setting-change-${UUID.randomUUID()}").put("settingKey","target").put("value",JSONObject().put("mmolL",6.0).put("source","OWNER_MANUAL"))).toString())},queue::poll,dialog,"v3_setting_history")}
+         finally{queue.cancelPendingOnDestroy()}
+     }
+     @Test fun activityPendingOwnerConsentCannotCrossRestore(){

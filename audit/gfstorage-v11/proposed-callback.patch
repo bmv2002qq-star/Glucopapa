@@ -1,0 +1,33 @@
+--- a/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3SettingsOwnerIntentQueue.kt
++++ b/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3SettingsOwnerIntentQueue.kt
+@@ -64,7 +64,7 @@
+         return JSONObject().put("ticket",ticket).put("state","PENDING")
+     }
+     private fun finish(ticket:String,state:String,result:JSONObject)=synchronized(lock) {
+-        pending[ticket]?.let{if(!destroyed && it.state in setOf("PENDING","APPLYING")){it.state=state;it.result=result}}
++        pending[ticket]?.let{if(!destroyed && ((state=="CANCELLED" && it.state=="PENDING") || (state in setOf("FINISHED","REJECTED") && it.state=="APPLYING"))){it.state=state;it.result=result}}
+     }
+     fun poll(ticket:String):JSONObject=synchronized(lock) {
+         require(ticket.length in 10..128) {"SETTINGS_TICKET_INVALID"}
+--- a/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Q05OwnerQueue.kt
++++ b/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3Q05OwnerQueue.kt
+@@ -111,7 +111,7 @@
+             else->throw SecurityException("Q05_COMMAND_DENIED")
+         }
+     }
+-    private fun finish(ticket:String,state:String,result:JSONObject)=synchronized(lock){waiting[ticket]?.let{if(!destroyed&&it.state in setOf("PENDING","APPLYING")){it.state=state;it.result=result}}}
++    private fun finish(ticket:String,state:String,result:JSONObject)=synchronized(lock){waiting[ticket]?.let{if(!destroyed&&((state=="CANCELLED" && it.state=="PENDING") || (state in setOf("FINISHED","REJECTED") && it.state=="APPLYING"))){it.state=state;it.result=result}}}
+     fun poll(ticket:String):JSONObject=synchronized(lock){
+         require(ticket.length in 10..128){"Q05_TICKET_INVALID"}
+         val p=waiting[ticket]?:return@synchronized JSONObject().put("state","UNKNOWN_TICKET")
+--- a/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3EditIntentQueue.kt
++++ b/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3EditIntentQueue.kt
+@@ -84,7 +84,7 @@
+         return JSONObject().put("ticket",ticket).put("state","PENDING")
+     }
+     private fun finish(ticket:String,state:String,result:JSONObject) = synchronized(lock) {
+-        active[ticket]?.let{if(it.state=="PENDING"||it.state=="APPLYING"){it.state=state;it.result=result}}
++        active[ticket]?.let{if(((state=="CANCELLED" && it.state=="PENDING") || (state in setOf("FINISHED","REJECTED") && it.state=="APPLYING"))){it.state=state;it.result=result}}
+     }
+     fun poll(ticket:String):JSONObject=synchronized(lock){
+         val t=active[ticket]?:return@synchronized JSONObject().put("state","UNKNOWN_TICKET")

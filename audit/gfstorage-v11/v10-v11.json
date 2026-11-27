@@ -1,0 +1,33 @@
+{
+  "sha256": {
+    "v10.zip": "2ed5757815e1e9f9953dc626f24be3534ba03e5260fe3f035d01f72303221d89",
+    "baseline.zip": "2bf34a4845a39ad3961c6e1fe18a5f9485233b809b086c0ba87f3da762b3d4b1"
+  },
+  "integrated": {
+    "before": 203,
+    "after": 207,
+    "added": [
+      "org.glukopapa.v3.m00.GfV3LegacyOwnerEpochInstrumentedTest#activityPendingOwnerConsentCannotCrossRestore",
+      "org.glukopapa.v3.m00.GfV3LegacyOwnerEpochInstrumentedTest#journalPendingOwnerConsentCannotCrossRestore",
+      "org.glukopapa.v3.m00.GfV3LegacyOwnerEpochInstrumentedTest#rapidPendingOwnerConsentCannotCrossRestore",
+      "org.glukopapa.v3.m00.GfV3LegacyOwnerEpochInstrumentedTest#settingsPendingOwnerConsentCannotCrossRestore"
+    ],
+    "removed": [],
+    "duplicates": [],
+    "failures": {
+      "org.glukopapa.v3.m00.GfV3LegacyOwnerEpochInstrumentedTest#settingsPendingOwnerConsentCannotCrossRestore": {
+        "state": "failure",
+        "message": null,
+        "stack": "org.junit.ComparisonFailure: expected:<[FINISH]ED> but was:<[REJECT]ED>\nat org.junit.Assert.assertEquals(Assert.java:117)\nat org.junit.Assert.assertEquals(Assert.java:146)\nat org.glukopapa.v3.m00.GfV3LegacyOwnerEpochInstrumentedTest.sameRevisionRoundTrip(GfV3LegacyOwnerEpochInstrumentedTest.kt:47)\nat org.glukopapa.v3.m00.GfV3LegacyOwnerEpochInstrumentedTest.sameRevisionRoundTrip$default(GfV3LegacyOwnerEpochInstrumentedTest.kt:39)\nat org.glukopapa.v3.m00.GfV3LegacyOwnerEpochInstrumentedTest.settingsPendingOwnerConsentCannotCrossRestore(GfV3LegacyOwnerEpochInstrumentedTest.kt:53)\n"
+      }
+    }
+  },
+  "offline": {
+    "before": 8,
+    "after": 8,
+    "added": [],
+    "removed": [],
+    "duplicates": [],
+    "failures": {}
+  }
+}
