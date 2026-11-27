@@ -1275,6 +1275,16 @@ jobs:
           d=json.loads(b);assert set(d)=={'apply.py','compat.js','test_compat.cjs','TimeHost.kt','test_q08_filter.py'}
           out=p/'compat-v12';out.mkdir(exist_ok=False)
           for n,s in d.items():(out/n).write_text(s)
+          # Audit prose reported 172; authoritative manifest contains 173 unique paths.
+          lines=(p/'v11-audit-source.sha256').read_text().splitlines()
+          names=[x.split()[1] for x in lines if x.strip()]
+          assert len(names)==len(set(names))==173
+          assert sum(n.startswith('main/') for n in names)==136
+          assert sum(n.startswith('androidTest/') for n in names)==37
+          script=out/'apply.py';t=script.read_text();a='assert len(known)==172,len(known)'
+          assert t.count(a)==1
+          script.write_text(t.replace(a,'assert len(known)==173,len(known)'))
+          print('Verified actual manifest cardinality: 173 unique entries (136 main, 37 test)')
           PY
           node "$RUNNER_TEMP/compat-v12/test_compat.cjs" | tee qa-results/q11/compat-js.log
           python3 "$RUNNER_TEMP/compat-v12/test_q08_filter.py" | tee qa-results/q11/compat-q08-model.log
