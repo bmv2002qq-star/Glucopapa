@@ -1911,7 +1911,7 @@ jobs:
                   val d=domain("cgm","research")
                   val columns=d.columns+extraColumns("cgm",stamp.moduleId,stamp.role)
                   return ids.map { id ->
-                      val row=db.rawQuery("SELECT $columns FROM v3_cgm WHERE profile_id=? AND observation_id=?",arrayOf(stamp.profile,id)).use { c ->
+                      val row=db.rawQuery("SELECT rowid,$columns FROM v3_cgm WHERE profile_id=? AND observation_id=?",arrayOf(stamp.profile,id)).use { c ->
                           check(c.moveToFirst()){"Q13_CGM_OBSERVATION_MISSING"}
                           readRow(c)
                       }
