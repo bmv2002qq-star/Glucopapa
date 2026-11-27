@@ -1,4 +1,4 @@
-name: GFStorage v14 final engineering matrix
+name: GFStorage v14.1 final engineering matrix
 on:
   push:
     branches:
@@ -1373,7 +1373,27 @@ jobs:
           (out/'gfstorage-v14-new-ids.json').write_text(json.dumps(d['new_ids'],indent=2))
           print('Exact v14 lifecycle + chunked history + Q04 fixture applied; all prior IDs retained')
           PY
-      - name: Compile GFStorage year v14 candidate
+      - name: Correct v14.1 test-only owner scope and assert Q08 denial
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib,json,re
+          f=Path('q07-ci/android-app/app/src/androidTest/java/org/glukopapa/v3/m00/GfV3StorageLifecycleInstrumentedTest.kt')
+          h=lambda b:hashlib.sha256(b).hexdigest()
+          b=f.read_bytes();assert h(b)=='5153d633fa6e8193cd743c876bd8e009d07e6657ebb85cbe1469985318ed207d'
+          s=b.decode()
+          changes=json.loads(r'''[["private fun accept(helper:GfDbHelper){","private fun accept(helper:GfDbHelper,moduleId:String=GfV3Q08Rules.OWNER){"],["arrayOf(GfV3Q08Rules.OWNER))","arrayOf(moduleId))"],["val storage=GfV3Storage(helper,catalog(),grants().toString());val profile=\"qa-year-chunk\"\n            storage.initializeProfile(profile,\"UTC\",storage.revision());accept(helper)","val storage=GfV3Storage(helper,catalog(),grants().toString());val profile=\"qa-year-chunk\"\n            val owner=\"GFHighLowReadOnlyAdapter\"\n            storage.initializeProfile(profile,\"UTC\",storage.revision());accept(helper,owner)\n            try{storage.openNativeYearHistory(GfV3Q08Rules.OWNER,\"research\",\"cgm\");fail(\"Q08 must not obtain year research scope\")}catch(e:SecurityException){assertEquals(\"YEAR_HISTORY_RESEARCH_SCOPE_DENIED\",e.message)}"],["storage.openNativeYearHistory(GfV3Q08Rules.OWNER,\"research\",\"cgm\",end)","storage.openNativeYearHistory(owner,\"research\",\"cgm\",end)"],["storage.openNativeYearSession(GfV3Q08Rules.OWNER,mapOf(\"cgm\" to \"research\"),end)","storage.openNativeYearSession(owner,mapOf(\"cgm\" to \"research\"),end)"]]''')
+          for old,new in changes:
+              assert s.count(old)==1,(old,s.count(old))
+              s=s.replace(old,new)
+          assert re.findall(r'@Test fun (\w+)',b.decode())==re.findall(r'@Test fun (\w+)',s)
+          assert h(s.encode())=='f7c10670cb08b05137df57c42d650cd381604ddc55d70ab80c4ed3509ec9c158'
+          f.write_text(s)
+          Path('qa-results/q11/gfstorage-v141-fixture.json').write_text(json.dumps({'before':h(b),'after':h(s.encode()),'testOwner':'GFHighLowReadOnlyAdapter','Q08':'explicit deny'},indent=2))
+          PY
+      - name: Compile GFStorage year v14.1 candidate
         shell: bash
         run: |
           set -euxo pipefail
@@ -1454,7 +1474,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: gfstorage-year-v14-api-${{ matrix.api }}-attempt-${{ github.run_attempt }}
+          name: gfstorage-year-v141-api-${{ matrix.api }}-attempt-${{ github.run_attempt }}
           path: |
             qa-results/v042/
             qa-results/q11/
