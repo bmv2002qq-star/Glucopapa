@@ -1,0 +1,77 @@
+logcat-org.glukopapa.v3.m00.Q01AndroidRuntimeTest-q01SettingsReachM02AndM01FromOneNativeRevision.txt
+11-27 14:08:09.002  7604  7618 E TestRunner: java.lang.AssertionError: Settings iframe must render saved profile: {"route":"#settings","visible":true,"url":"https://appassets.androidplatform.net/q01/settings.html","loaded":"complete","profile":"","notice":"Q01: Object.hasOwn is not a function","warning":"Нативный GFStorage V3 пока не готов к отображению настроек.","GFSettings":"object","ui":"object"}
+logcat-org.glukopapa.v3.m00.Q08LevemirNativeInstrumentedTest-additionalActualOwnerQueueRequiresSeparateConsentAndReason.txt
+11-27 14:09:51.835 13729 13743 E SQLiteLog: (1) no such function: json_valid in "SELECT json_valid('{}'),json_extract('{"x":1}','$.x')"
+11-27 14:09:51.837 13729 13743 E SQLiteLog: (1) no such function: json_valid in "SELECT json_valid('{}'),json_extract('{"x":1}','$.x')"
+logcat-org.glukopapa.v3.m00.Q08LevemirNativeInstrumentedTest-explicitActivationPersistsAcrossReopenAndEncryptedRestore.txt
+11-27 14:09:57.254 14146 14161 E SQLiteLog: (1) no such function: json_valid in "SELECT json_valid('{}'),json_extract('{"x":1}','$.x')"
+11-27 14:09:57.255 14146 14161 E SQLiteLog: (1) no such function: json_valid in "SELECT json_valid('{}'),json_extract('{"x":1}','$.x')"
+11-27 14:09:58.614 14146 14161 E SQLiteLog: (1) no such function: json_valid in "SELECT json_valid('{}'),json_extract('{"x":1}','$.x')"
+11-27 14:09:58.616 14146 14161 E SQLiteLog: (1) no such function: json_valid in "SELECT json_valid('{}'),json_extract('{"x":1}','$.x')"
+logcat-org.glukopapa.v3.m00.Q08LevemirNativeInstrumentedTest-historyReadsMoreThanTwoThousandAndNeverClaimsSensorCoverage.txt
+11-27 14:10:05.427 14617 14632 E SQLiteLog: (1) no such function: json_valid in "SELECT json_valid('{}'),json_extract('{"x":1}','$.x')"
+11-27 14:10:05.428 14617 14632 E SQLiteLog: (1) no such function: json_valid in "SELECT json_valid('{}'),json_extract('{"x":1}','$.x')"
+logcat-org.glukopapa.v3.m00.Q08LevemirNativeInstrumentedTest-indexedHistorySkipsOldCgmAndEnforcesBoundOwner.txt
+11-27 14:10:02.988 14405 14420 E SQLiteLog: (1) no such function: json_valid in "SELECT json_valid('{}'),json_extract('{"x":1}','$.x')"
+11-27 14:10:02.989 14405 14420 E SQLiteLog: (1) no such function: json_valid in "SELECT json_valid('{}'),json_extract('{"x":1}','$.x')"
+logcat-org.glukopapa.v3.m00.Q08LevemirNativeInstrumentedTest-ownerQueueRejectsForgedConsentAndSeparatesCancelActivateActualReplay.txt
+11-27 14:09:50.810 13622 13637 E SQLiteLog: (1) no such function: json_valid in "SELECT json_valid('{}'),json_extract('{"x":1}','$.x')"
+11-27 14:09:50.812 13622 13637 E SQLiteLog: (1) no such function: json_valid in "SELECT json_valid('{}'),json_extract('{"x":1}','$.x')"
+logcat-org.glukopapa.v3.m00.Q08LevemirNativeInstrumentedTest-sameRevisionRestoreInvalidatesQ08HistoryAndPendingNativeConfirmation.txt
+11-27 14:09:53.296 13885 13900 E SQLiteLog: (1) no such function: json_valid in "SELECT json_valid('{}'),json_extract('{"x":1}','$.x')"
+11-27 14:09:53.297 13885 13900 E SQLiteLog: (1) no such function: json_valid in "SELECT json_valid('{}'),json_extract('{"x":1}','$.x')"
+11-27 14:09:54.690 13885 13900 E SQLiteLog: (1) no such function: json_valid in "SELECT json_valid('{}'),json_extract('{"x":1}','$.x')"
+11-27 14:09:54.692 13885 13900 E SQLiteLog: (1) no such function: json_valid in "SELECT json_valid('{}'),json_extract('{"x":1}','$.x')"
+logcat-org.glukopapa.v3.m00.Q08LevemirNativeInstrumentedTest-scopedRelatedHistoryRetainsBasalAndUnknownMealsWithoutLifetimeNoise.txt
+11-27 14:10:03.542 14458 14473 E SQLiteLog: (1) no such function: json_valid in "SELECT json_valid('{}'),json_extract('{"x":1}','$.x')"
+11-27 14:10:03.580 14458 14473 E SQLiteLog: (1) no such function: json_valid in "SELECT json_valid('{}'),json_extract('{"x":1}','$.x')"
+11-27 14:10:03.586 14458 14473 E SQLiteLog: (1) no such function: json_valid in "SELECT json_valid('{}'),json_extract('{"x":1}','$.x')"
+11-27 14:10:03.610 14458 14473 E SQLiteLog: (1) no such function: json_valid in "SELECT json_valid('{}'),json_extract('{"x":1}','$.x')"
+11-27 14:10:03.623 14458 14473 E SQLiteLog: (1) no such function: json_valid in "SELECT json_valid('{}'),json_extract('{"x":1}','$.x')"
+logcat-org.glukopapa.v3.m00.Q08LevemirWebViewInstrumentedTest-approvedScreenNativeActivationAndActualConfirmationAreSeparate.txt
+11-27 14:10:10.359 14669 14754 E SQLiteLog: (1) no such function: json_valid in "SELECT json_valid('{}'),json_extract('{"x":1}','$.x')"
+11-27 14:10:10.361 14669 14754 E SQLiteLog: (1) no such function: json_valid in "SELECT json_valid('{}'),json_extract('{"x":1}','$.x')"
+11-27 14:10:10.448 14669 14754 E SQLiteLog: (1) no such function: json_valid in "SELECT json_valid('{}'),json_extract('{"x":1}','$.x')"
+11-27 14:10:10.449 14669 14754 E SQLiteLog: (1) no such function: json_valid in "SELECT json_valid('{}'),json_extract('{"x":1}','$.x')"
+11-27 14:10:11.227 14669 14754 E SQLiteLog: (1) no such function: json_valid in "SELECT json_valid('{}'),json_extract('{"x":1}','$.x')"
+11-27 14:10:11.228 14669 14754 E SQLiteLog: (1) no such function: json_valid in "SELECT json_valid('{}'),json_extract('{"x":1}','$.x')"
+11-27 14:10:11.315 14669 14754 E SQLiteLog: (1) no such function: json_valid in "SELECT json_valid('{}'),json_extract('{"x":1}','$.x')"
+11-27 14:10:11.316 14669 14754 E SQLiteLog: (1) no such function: json_valid in "SELECT json_valid('{}'),json_extract('{"x":1}','$.x')"
+logcat-org.glukopapa.v3.m00.Q09CgmNativeInstrumentedTest-q09Q08HistoryReadsNativeCgmWithoutInventedCoverage.txt
+11-27 14:10:14.367 15018 15033 E SQLiteLog: (1) no such function: json_valid in "SELECT json_valid('{}'),json_extract('{"x":1}','$.x')"
+11-27 14:10:14.368 15018 15033 E SQLiteLog: (1) no such function: json_valid in "SELECT json_valid('{}'),json_extract('{"x":1}','$.x')"
+logcat-org.glukopapa.v3.m00.Q11ShellRouteInstrumentedTest-q11ActualShellRouteRefreshesEpochAndReopensCleanly.txt
+11-27 14:13:00.759 18839 18839 I chromium: [INFO:CONSOLE(72)] "Uncaught TypeError: rows.at is not a function", source: https://appassets.androidplatform.net/q11/chart.html (72)
+11-27 14:13:00.779 18839 18839 I chromium: [INFO:CONSOLE(72)] "Uncaught TypeError: rows.at is not a function", source: https://appassets.androidplatform.net/q11/chart.html (72)
+11-27 14:13:00.892 18839 18839 I chromium: [INFO:CONSOLE(72)] "Uncaught TypeError: rows.at is not a function", source: https://appassets.androidplatform.net/q11/chart.html (72)
+logcat-org.glukopapa.v3.m00.Q11ShellRouteInstrumentedTest-q11ActualShellRouteRequiresBothOwnersAndExposesNoWriter.txt
+11-27 14:11:44.832 18168 18168 I chromium: [INFO:CONSOLE(72)] "Uncaught TypeError: rows.at is not a function", source: https://appassets.androidplatform.net/q11/chart.html (72)
+11-27 14:11:44.833 18168 18168 I chromium: [INFO:CONSOLE(72)] "Uncaught TypeError: rows.at is not a function", source: https://appassets.androidplatform.net/q11/chart.html (72)
+11-27 14:11:44.878 18168 18168 I chromium: [INFO:CONSOLE(72)] "Uncaught TypeError: rows.at is not a function", source: https://appassets.androidplatform.net/q11/chart.html (72)
+11-27 14:11:44.888 18168 18168 I chromium: [INFO:CONSOLE(72)] "Uncaught TypeError: rows.at is not a function", source: https://appassets.androidplatform.net/q11/chart.html (72)
+logcat-org.glukopapa.v3.m00.Q11ShellRouteInstrumentedTest-q11GraphPreferencesReadFromQ01AndLegacyMergePreservesOtherLines.txt
+11-27 14:13:25.797 18994 18994 I chromium: [INFO:CONSOLE(72)] "Uncaught TypeError: rows.at is not a function", source: https://appassets.androidplatform.net/q11/chart.html (72)
+11-27 14:13:25.856 18994 18994 I chromium: [INFO:CONSOLE(72)] "Uncaught TypeError: rows.at is not a function", source: https://appassets.androidplatform.net/q11/chart.html (72)
+11-27 14:13:25.878 18994 18994 I chromium: [INFO:CONSOLE(72)] "Uncaught TypeError: rows.at is not a function", source: https://appassets.androidplatform.net/q11/chart.html (72)
+logcat-org.glukopapa.v3.m00.Q11ShellRouteInstrumentedTest-q11OwnerDisplayBoundsRoundTripLegacyRestoreAndDenial.txt
+11-27 14:12:10.596 18367 18367 I chromium: [INFO:CONSOLE(72)] "Uncaught TypeError: rows.at is not a function", source: https://appassets.androidplatform.net/q11/chart.html (72)
+11-27 14:12:10.706 18367 18367 I chromium: [INFO:CONSOLE(72)] "Uncaught TypeError: rows.at is not a function", source: https://appassets.androidplatform.net/q11/chart.html (72)
+11-27 14:12:10.784 18367 18367 I chromium: [INFO:CONSOLE(72)] "Uncaught TypeError: rows.at is not a function", source: https://appassets.androidplatform.net/q11/chart.html (72)
+logcat-org.glukopapa.v3.m00.Q11ShellRouteInstrumentedTest-q11Q07FutureDisplayOnlyFromConfirmedPastAndHideOnHistory.txt
+11-27 14:11:19.584 18025 18025 I chromium: [INFO:CONSOLE(72)] "Uncaught TypeError: rows.at is not a function", source: https://appassets.androidplatform.net/q11/chart.html (72)
+11-27 14:11:19.630 18025 18025 I chromium: [INFO:CONSOLE(72)] "Uncaught TypeError: rows.at is not a function", source: https://appassets.androidplatform.net/q11/chart.html (72)
+11-27 14:11:19.663 18025 18025 I chromium: [INFO:CONSOLE(72)] "Uncaught TypeError: rows.at is not a function", source: https://appassets.androidplatform.net/q11/chart.html (72)
+logcat-org.glukopapa.v3.m00.Q11WebViewReadOnlyInstrumentedTest-q11ActualWebViewInvalidateRestoreAndPermissionLoss.txt
+11-27 14:13:48.562 19144 19144 I Q11QAConsole: ERROR https://appassets.androidplatform.net/q11/qa-only.html:46 Uncaught TypeError: rows.at is not a function
+11-27 14:13:48.583 19144 19144 I Q11QAConsole: ERROR https://appassets.androidplatform.net/q11/qa-only.html:46 Uncaught TypeError: rows.at is not a function
+11-27 14:13:49.342 19144 19144 I Q11QAConsole: ERROR https://appassets.androidplatform.net/q11/qa-only.html:46 Uncaught TypeError: rows.at is not a function
+logcat-org.glukopapa.v3.m00.Q11ShellRouteInstrumentedTest-q11Q07HistoricalProjectionOwnerCorrectionAndGrantLoss.txt
+11-27 14:12:35.566 18680 18680 I chromium: [INFO:CONSOLE(72)] "Uncaught TypeError: rows.at is not a function", source: https://appassets.androidplatform.net/q11/chart.html (72)
+11-27 14:12:35.629 18680 18680 I chromium: [INFO:CONSOLE(72)] "Uncaught TypeError: rows.at is not a function", source: https://appassets.androidplatform.net/q11/chart.html (72)
+11-27 14:12:35.663 18680 18680 I chromium: [INFO:CONSOLE(72)] "Uncaught TypeError: rows.at is not a function", source: https://appassets.androidplatform.net/q11/chart.html (72)
+logcat-org.glukopapa.v3.m00.Q11WebViewReadOnlyInstrumentedTest-q11ActualWebViewNativeReadsNoFixtureOrWriter.txt
+11-27 14:14:11.769 19290 19290 I Q11QAConsole: ERROR https://appassets.androidplatform.net/q11/qa-only.html:46 Uncaught TypeError: rows.at is not a function
+11-27 14:14:11.777 19290 19290 I Q11QAConsole: ERROR https://appassets.androidplatform.net/q11/qa-only.html:46 Uncaught TypeError: rows.at is not a function
+11-27 14:14:11.813 19290 19290 I Q11QAConsole: ERROR https://appassets.androidplatform.net/q11/qa-only.html:46 Uncaught TypeError: rows.at is not a function
+logcat-org.glukopapa.v3.m00.Q12ShellRouteInstrumentedTest-q12ActualDiarySettingsRoutesNativeConfirmationAndReadOnlySeparation.txt
+11-27 14:14:50.200 20016 20016 I chromium: [INFO:CONSOLE(1)] "Uncaught TypeError: Cannot read property 'hidden' of null", source: https://appassets.androidplatform.net/q12/policy.html (1)

@@ -1,0 +1,98 @@
+{
+  "sha256": {
+    "baseline.zip": "2bf34a4845a39ad3961c6e1fe18a5f9485233b809b086c0ba87f3da762b3d4b1",
+    "api31.zip": "f2a8a03f2fb7105d2a5093afd08cddbce368d0d92cc5472390c5b600c5523f37"
+  },
+  "integrated": {
+    "before": 207,
+    "after": 207,
+    "added": [],
+    "removed": [],
+    "duplicates": [],
+    "failures": {
+      "org.glukopapa.v3.m00.GfV3YearHistoryInstrumentedTest#yearChronologicalSessionExactUtcAndLeastScope": {
+        "state": "failure",
+        "message": null,
+        "stack": "java.lang.AssertionError: expected:<[same-a, same-b, later]> but was:<[same-b, later]>\nat org.junit.Assert.fail(Assert.java:89)\nat org.junit.Assert.failNotEquals(Assert.java:835)\nat org.junit.Assert.assertEquals(Assert.java:120)\nat org.junit.Assert.assertEquals(Assert.java:146)\nat org.glukopapa.v3.m00.GfV3YearHistoryInstrumentedTest.yearChronologicalSessionExactUtcAndLeastScope$lambda$23(GfV3YearHistoryInstrumentedTest.kt:128)\nat org.glukopapa.v3.m00.GfV3YearHistoryInstrumentedTest.$r8$lambda$rReVB7DZkOpcObrWIkwGR1j3gCs(Unknown Source:0)\nat org.glukopapa.v3.m00.GfV3YearHistoryInstrumentedTest$$ExternalSyntheticLambda37.invoke(D8$$SyntheticClass:0)\nat org.glukopapa.v3.m00.GfV3YearHistoryInstrumentedTest.fixture(GfV3YearHistoryInstrumentedTest.kt:22)\nat org.glukopapa.v3.m00.GfV3YearHistoryInstrumentedTest.yearChronologicalSessionExactUtcAndLeastScope(GfV3YearHistoryInstrumentedTest.kt:115)\n"
+      },
+      "org.glukopapa.v3.m00.Q01AndroidRuntimeTest#q01SettingsReachM02AndM01FromOneNativeRevision": {
+        "state": "failure",
+        "message": null,
+        "stack": "java.lang.AssertionError: Settings iframe must render saved profile: {\"route\":\"#settings\",\"visible\":true,\"url\":\"https://appassets.androidplatform.net/q01/settings.html\",\"loaded\":\"complete\",\"profile\":\"\",\"notice\":\"Q01: Object.hasOwn is not a function\",\"warning\":\"Нативный GFStorage V3 пока не готов к отображению настроек.\",\"GFSettings\":\"object\",\"ui\":\"object\"}\nat org.junit.Assert.fail(Assert.java:89)\nat org.junit.Assert.assertTrue(Assert.java:42)\nat org.glukopapa.v3.m00.Q01AndroidRuntimeTest.q01SettingsReachM02AndM01FromOneNativeRevision(Q01AndroidRuntimeTest.kt:294)\n"
+      },
+      "org.glukopapa.v3.m00.Q08LevemirNativeInstrumentedTest#scopedRelatedHistoryRetainsBasalAndUnknownMealsWithoutLifetimeNoise": {
+        "state": "failure",
+        "message": null,
+        "stack": "org.junit.ComparisonFailure: expected:<[BASAL_HISTORY]> but was:<[UNFILTERED_FALLBACK]>\nat org.junit.Assert.assertEquals(Assert.java:117)\nat org.junit.Assert.assertEquals(Assert.java:146)\nat org.glukopapa.v3.m00.Q08LevemirNativeInstrumentedTest.scopedRelatedHistoryRetainsBasalAndUnknownMealsWithoutLifetimeNoise(Q08LevemirNativeInstrumentedTest.kt:206)\n"
+      },
+      "org.glukopapa.v3.m00.Q10EvidenceNativeInstrumentedTest#q10ExactDonorMapsActualProducerFactsReadOnly": {
+        "state": "failure",
+        "message": null,
+        "stack": "org.junit.ComparisonFailure: expected:<[OBSERVED_ONLY]> but was:<[BLOCKED]>\nat org.junit.Assert.assertEquals(Assert.java:117)\nat org.junit.Assert.assertEquals(Assert.java:146)\nat org.glukopapa.v3.m00.Q10EvidenceNativeInstrumentedTest.assertExactDonorParity(Q10EvidenceNativeInstrumentedTest.kt:190)\nat org.glukopapa.v3.m00.Q10EvidenceNativeInstrumentedTest.q10ExactDonorMapsActualProducerFactsReadOnly(Q10EvidenceNativeInstrumentedTest.kt:153)\n"
+      },
+      "org.glukopapa.v3.m00.Q10EvidenceNativeInstrumentedTest#q10ExactDonorRunsOnRealNativeSnapshotReadOnly": {
+        "state": "failure",
+        "message": null,
+        "stack": "org.junit.ComparisonFailure: expected:<[OBSERVED_ONLY]> but was:<[BLOCKED]>\nat org.junit.Assert.assertEquals(Assert.java:117)\nat org.junit.Assert.assertEquals(Assert.java:146)\nat org.glukopapa.v3.m00.Q10EvidenceNativeInstrumentedTest.assertExactDonorParity(Q10EvidenceNativeInstrumentedTest.kt:190)\nat org.glukopapa.v3.m00.Q10EvidenceNativeInstrumentedTest.q10ExactDonorRunsOnRealNativeSnapshotReadOnly(Q10EvidenceNativeInstrumentedTest.kt:139)\n"
+      },
+      "org.glukopapa.v3.m00.Q10EvidenceNativeInstrumentedTest#q10ActualReadAdapterInvokesOfflineDonorAndPolicy": {
+        "state": "failure",
+        "message": null,
+        "stack": "org.junit.ComparisonFailure: expected:<[CHECK]ED> but was:<[INPUT_REJECT]ED>\nat org.junit.Assert.assertEquals(Assert.java:117)\nat org.junit.Assert.assertEquals(Assert.java:146)\nat org.glukopapa.v3.m00.Q10EvidenceNativeInstrumentedTest.q10ActualReadAdapterInvokesOfflineDonorAndPolicy(Q10EvidenceNativeInstrumentedTest.kt:221)\n"
+      },
+      "org.glukopapa.v3.m00.Q11ShellRouteInstrumentedTest#q11Q07FutureDisplayOnlyFromConfirmedPastAndHideOnHistory": {
+        "state": "failure",
+        "message": null,
+        "stack": "java.lang.AssertionError: Q11 shell condition failed: document.querySelectorAll('#plot [data-provenance=observed]').length===1 && document.querySelectorAll('[data-injection-marker=actual]').length===1; actual=false\nat org.junit.Assert.fail(Assert.java:89)\nat org.glukopapa.v3.m00.Q11ShellRouteInstrumentedTest.until(Q11ShellRouteInstrumentedTest.kt:35)\nat org.glukopapa.v3.m00.Q11ShellRouteInstrumentedTest.q11Q07FutureDisplayOnlyFromConfirmedPastAndHideOnHistory$lambda$22(Q11ShellRouteInstrumentedTest.kt:228)\nat org.glukopapa.v3.m00.Q11ShellRouteInstrumentedTest.$r8$lambda$0MKHZYu4OpmnbFrimdyZdoukVoY(Unknown Source:0)\nat org.glukopapa.v3.m00.Q11ShellRouteInstrumentedTest$$ExternalSyntheticLambda11.invoke(D8$$SyntheticClass:0)\nat org.glukopapa.v3.m00.Q11ShellRouteInstrumentedTest.screen(Q11ShellRouteInstrumentedTest.kt:70)\nat org.glukopapa.v3.m00.Q11ShellRouteInstrumentedTest.q11Q07FutureDisplayOnlyFromConfirmedPastAndHideOnHistory(Q11ShellRouteInstrumentedTest.kt:224)\n"
+      },
+      "org.glukopapa.v3.m00.Q11ShellRouteInstrumentedTest#q11ActualShellRouteRequiresBothOwnersAndExposesNoWriter": {
+        "state": "failure",
+        "message": null,
+        "stack": "java.lang.AssertionError: Q11 shell condition failed: document.querySelectorAll('#plot [data-provenance=observed]').length===1 && document.querySelectorAll('[data-injection-marker=actual]').length===1; actual=false\nat org.junit.Assert.fail(Assert.java:89)\nat org.glukopapa.v3.m00.Q11ShellRouteInstrumentedTest.until(Q11ShellRouteInstrumentedTest.kt:35)\nat org.glukopapa.v3.m00.Q11ShellRouteInstrumentedTest.q11ActualShellRouteRequiresBothOwnersAndExposesNoWriter$lambda$12(Q11ShellRouteInstrumentedTest.kt:83)\nat org.glukopapa.v3.m00.Q11ShellRouteInstrumentedTest.$r8$lambda$Lq7mpLFfd6bmc6XlDwmGx_qZnQM(Unknown Source:0)\nat org.glukopapa.v3.m00.Q11ShellRouteInstrumentedTest$$ExternalSyntheticLambda12.invoke(D8$$SyntheticClass:0)\nat org.glukopapa.v3.m00.Q11ShellRouteInstrumentedTest.screen(Q11ShellRouteInstrumentedTest.kt:70)\nat org.glukopapa.v3.m00.Q11ShellRouteInstrumentedTest.q11ActualShellRouteRequiresBothOwnersAndExposesNoWriter(Q11ShellRouteInstrumentedTest.kt:75)\n"
+      },
+      "org.glukopapa.v3.m00.Q11ShellRouteInstrumentedTest#q11OwnerDisplayBoundsRoundTripLegacyRestoreAndDenial": {
+        "state": "failure",
+        "message": null,
+        "stack": "java.lang.AssertionError: Q11 shell condition failed: document.querySelectorAll('#plot [data-provenance=observed]').length===1 && document.querySelectorAll('[data-injection-marker=actual]').length===1; actual=false\nat org.junit.Assert.fail(Assert.java:89)\nat org.glukopapa.v3.m00.Q11ShellRouteInstrumentedTest.until(Q11ShellRouteInstrumentedTest.kt:35)\nat org.glukopapa.v3.m00.Q11ShellRouteInstrumentedTest.q11OwnerDisplayBoundsRoundTripLegacyRestoreAndDenial$lambda$16(Q11ShellRouteInstrumentedTest.kt:147)\nat org.glukopapa.v3.m00.Q11ShellRouteInstrumentedTest.$r8$lambda$4oetrFmZZ2oYh6Nby6q3ZhxndJs(Unknown Source:0)\nat org.glukopapa.v3.m00.Q11ShellRouteInstrumentedTest$$ExternalSyntheticLambda2.invoke(D8$$SyntheticClass:0)\nat org.glukopapa.v3.m00.Q11ShellRouteInstrumentedTest.screen(Q11ShellRouteInstrumentedTest.kt:70)\nat org.glukopapa.v3.m00.Q11ShellRouteInstrumentedTest.q11OwnerDisplayBoundsRoundTripLegacyRestoreAndDenial(Q11ShellRouteInstrumentedTest.kt:130)\n"
+      },
+      "org.glukopapa.v3.m00.Q11ShellRouteInstrumentedTest#q11Q07HistoricalProjectionOwnerCorrectionAndGrantLoss": {
+        "state": "failure",
+        "message": null,
+        "stack": "java.lang.AssertionError: Q11 shell condition failed: document.querySelectorAll('#plot [data-provenance=observed]').length===1 && document.querySelectorAll('[data-injection-marker=actual]').length===1; actual=false\nat org.junit.Assert.fail(Assert.java:89)\nat org.glukopapa.v3.m00.Q11ShellRouteInstrumentedTest.until(Q11ShellRouteInstrumentedTest.kt:35)\nat org.glukopapa.v3.m00.Q11ShellRouteInstrumentedTest.q11Q07HistoricalProjectionOwnerCorrectionAndGrantLoss$lambda$21(Q11ShellRouteInstrumentedTest.kt:213)\nat org.glukopapa.v3.m00.Q11ShellRouteInstrumentedTest.$r8$lambda$krw9w6Jm50haV9Jb9u3txI8s-9g(Unknown Source:0)\nat org.glukopapa.v3.m00.Q11ShellRouteInstrumentedTest$$ExternalSyntheticLambda13.invoke(D8$$SyntheticClass:0)\nat org.glukopapa.v3.m00.Q11ShellRouteInstrumentedTest.screen(Q11ShellRouteInstrumentedTest.kt:70)\nat org.glukopapa.v3.m00.Q11ShellRouteInstrumentedTest.q11Q07HistoricalProjectionOwnerCorrectionAndGrantLoss(Q11ShellRouteInstrumentedTest.kt:200)\n"
+      },
+      "org.glukopapa.v3.m00.Q11ShellRouteInstrumentedTest#q11ActualShellRouteRefreshesEpochAndReopensCleanly": {
+        "state": "failure",
+        "message": null,
+        "stack": "java.lang.AssertionError: Q11 shell condition failed: document.querySelectorAll('#plot [data-provenance=observed]').length===1 && document.querySelectorAll('[data-injection-marker=actual]').length===1; actual=false\nat org.junit.Assert.fail(Assert.java:89)\nat org.glukopapa.v3.m00.Q11ShellRouteInstrumentedTest.until(Q11ShellRouteInstrumentedTest.kt:35)\nat org.glukopapa.v3.m00.Q11ShellRouteInstrumentedTest.q11ActualShellRouteRefreshesEpochAndReopensCleanly$lambda$13(Q11ShellRouteInstrumentedTest.kt:93)\nat org.glukopapa.v3.m00.Q11ShellRouteInstrumentedTest.$r8$lambda$KIUjMDSJ0l8JybPbzoPloZ2wfZk(Unknown Source:0)\nat org.glukopapa.v3.m00.Q11ShellRouteInstrumentedTest$$ExternalSyntheticLambda1.invoke(D8$$SyntheticClass:0)\nat org.glukopapa.v3.m00.Q11ShellRouteInstrumentedTest.screen(Q11ShellRouteInstrumentedTest.kt:70)\nat org.glukopapa.v3.m00.Q11ShellRouteInstrumentedTest.q11ActualShellRouteRefreshesEpochAndReopensCleanly(Q11ShellRouteInstrumentedTest.kt:89)\n"
+      },
+      "org.glukopapa.v3.m00.Q11ShellRouteInstrumentedTest#q11GraphPreferencesReadFromQ01AndLegacyMergePreservesOtherLines": {
+        "state": "failure",
+        "message": null,
+        "stack": "java.lang.AssertionError: Q11 shell condition failed: document.querySelectorAll('#plot [data-provenance=observed]').length===1 && document.querySelectorAll('[data-injection-marker=actual]').length===1; actual=false\nat org.junit.Assert.fail(Assert.java:89)\nat org.glukopapa.v3.m00.Q11ShellRouteInstrumentedTest.until(Q11ShellRouteInstrumentedTest.kt:35)\nat org.glukopapa.v3.m00.Q11ShellRouteInstrumentedTest.q11GraphPreferencesReadFromQ01AndLegacyMergePreservesOtherLines$lambda$14(Q11ShellRouteInstrumentedTest.kt:114)\nat org.glukopapa.v3.m00.Q11ShellRouteInstrumentedTest.$r8$lambda$cUdMEvEBRqmAYO0pTN2P0Sj980s(Unknown Source:0)\nat org.glukopapa.v3.m00.Q11ShellRouteInstrumentedTest$$ExternalSyntheticLambda9.invoke(D8$$SyntheticClass:0)\nat org.glukopapa.v3.m00.Q11ShellRouteInstrumentedTest.screen(Q11ShellRouteInstrumentedTest.kt:70)\nat org.glukopapa.v3.m00.Q11ShellRouteInstrumentedTest.q11GraphPreferencesReadFromQ01AndLegacyMergePreservesOtherLines(Q11ShellRouteInstrumentedTest.kt:102)\n"
+      },
+      "org.glukopapa.v3.m00.Q11WebViewReadOnlyInstrumentedTest#q11ActualWebViewInvalidateRestoreAndPermissionLoss": {
+        "state": "failure",
+        "message": null,
+        "stack": "java.lang.AssertionError: Q11 WebView condition failed: document.querySelectorAll('#plot [data-provenance=observed]').length===1 && document.querySelectorAll('[data-injection-marker=actual]').length===1; actual=false; state=\"{\\\"url\\\":\\\"https://appassets.androidplatform.net/q11/qa-only.html\\\",\\\"ready\\\":\\\"complete\\\",\\\"visibility\\\":\\\"visible\\\",\\\"refresh\\\":\\\"function\\\",\\\"bridge\\\":\\\"object\\\",\\\"body\\\":\\\"ГлюкоПапа\\\\nГрафик сахара · A\\\\nQ11 · v0.12.1 QA\\\\nПоследнее наблюдение\\\\n— ммоль/л\\\\nТренд неизвестен\\\\nИсточник недоступен\\\\n\\\\nКачество не подтверждено\\\\n6 ч\\\\n12 ч\\\\n24 ч\\\\nКонец д\\\"}\"\nat org.junit.Assert.fail(Assert.java:89)\nat org.glukopapa.v3.m00.Q11WebViewReadOnlyInstrumentedTest.until(Q11WebViewReadOnlyInstrumentedTest.kt:50)\nat org.glukopapa.v3.m00.Q11WebViewReadOnlyInstrumentedTest.screen(Q11WebViewReadOnlyInstrumentedTest.kt:124)\nat org.glukopapa.v3.m00.Q11WebViewReadOnlyInstrumentedTest.q11ActualWebViewInvalidateRestoreAndPermissionLoss(Q11WebViewReadOnlyInstrumentedTest.kt:144)\n"
+      },
+      "org.glukopapa.v3.m00.Q11WebViewReadOnlyInstrumentedTest#q11ActualWebViewNativeReadsNoFixtureOrWriter": {
+        "state": "failure",
+        "message": null,
+        "stack": "java.lang.AssertionError: Q11 WebView condition failed: document.querySelectorAll('#plot [data-provenance=observed]').length===1 && document.querySelectorAll('[data-injection-marker=actual]').length===1; actual=false; state=\"{\\\"url\\\":\\\"https://appassets.androidplatform.net/q11/qa-only.html\\\",\\\"ready\\\":\\\"complete\\\",\\\"visibility\\\":\\\"visible\\\",\\\"refresh\\\":\\\"function\\\",\\\"bridge\\\":\\\"object\\\",\\\"body\\\":\\\"ГлюкоПапа\\\\nГрафик сахара · A\\\\nQ11 · v0.12.1 QA\\\\nПоследнее наблюдение\\\\n— ммоль/л\\\\nТренд неизвестен\\\\nИсточник недоступен\\\\n\\\\nКачество не подтверждено\\\\n6 ч\\\\n12 ч\\\\n24 ч\\\\nКонец д\\\"}\"\nat org.junit.Assert.fail(Assert.java:89)\nat org.glukopapa.v3.m00.Q11WebViewReadOnlyInstrumentedTest.until(Q11WebViewReadOnlyInstrumentedTest.kt:50)\nat org.glukopapa.v3.m00.Q11WebViewReadOnlyInstrumentedTest.screen(Q11WebViewReadOnlyInstrumentedTest.kt:124)\nat org.glukopapa.v3.m00.Q11WebViewReadOnlyInstrumentedTest.q11ActualWebViewNativeReadsNoFixtureOrWriter(Q11WebViewReadOnlyInstrumentedTest.kt:137)\n"
+      },
+      "org.glukopapa.v3.m00.Q12ShellRouteInstrumentedTest#q12ActualDiarySettingsRoutesNativeConfirmationAndReadOnlySeparation": {
+        "state": "failure",
+        "message": null,
+        "stack": "java.lang.AssertionError: Q12 UI condition document.querySelector('#quality').textContent.includes('История неполная') && document.querySelector('#hc').textContent==='1' && document.querySelector('#lc').textContent==='1' && document.querySelectorAll('#episodes details.ep').length===2: false\nat org.junit.Assert.fail(Assert.java:89)\nat org.glukopapa.v3.m00.Q12ShellRouteInstrumentedTest.until(Q12ShellRouteInstrumentedTest.kt:26)\nat org.glukopapa.v3.m00.Q12ShellRouteInstrumentedTest.q12ActualDiarySettingsRoutesNativeConfirmationAndReadOnlySeparation(Q12ShellRouteInstrumentedTest.kt:68)\n"
+      }
+    }
+  },
+  "offline": {
+    "before": 8,
+    "after": 8,
+    "added": [],
+    "removed": [],
+    "duplicates": [],
+    "failures": {}
+  }
+}

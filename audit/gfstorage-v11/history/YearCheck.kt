@@ -24,6 +24,9 @@ fun main(args:Array<String>) {
         }
         insert("z",end);insert("past",base.start.minusNanos(1));insert("start",base.start)
         insert("a",end);insert("future",end.plusNanos(1));insert("foreign",end,"other")
+        conn.createStatement().use { q ->
+            q.executeUpdate("UPDATE v3_cgm SET measured_at_utc='2024-10-27T02:30:00+01:00' WHERE observation_id='a'")
+        }
         val index=GfV3YearHistory.buildOrder(db,base,3){}
         check(index.scanned==5L)
         val ids=mutableListOf<String>()
