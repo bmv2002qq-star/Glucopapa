@@ -1919,6 +1919,24 @@ jobs:
             adb shell dumpsys webviewupdate
             adb shell locksettings get-disabled
           } > "$log" 2>&1
+          # Recover the test launcher from its boot-time ANR modal.
+          adb shell am force-stop com.google.android.apps.nexuslauncher >> "$log" 2>&1
+          adb shell am start -W -a android.intent.action.MAIN -c android.intent.category.HOME >> "$log" 2>&1
+          launcher_ready=false
+          for attempt in $(seq 1 20); do
+            focus=$(adb shell dumpsys window | awk '/mCurrentFocus/{print}')
+            printf '%s\n' "$focus" >> "$log"
+            if [[ "$focus" == *NexusLauncherActivity* && "$focus" != *"Application Not Responding"* ]]; then
+              launcher_ready=true
+              break
+            fi
+            sleep 1
+          done
+          if [[ "$launcher_ready" != true ]]; then
+            echo "Android emulator launcher did not acquire focus after restart" >&2
+            exit 91
+          fi
+          echo "Launcher preflight passed" >> "$log"
           (
             while true; do
               date -u
