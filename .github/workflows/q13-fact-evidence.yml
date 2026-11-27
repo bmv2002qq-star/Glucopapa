@@ -1515,7 +1515,37 @@ jobs:
           out=Path('qa-results/q11/q13-fact-fixture-fix.json')
           out.write_text(json.dumps({'before':h(before),'after':h(after),'scope':'androidTest only','reason':'YEAR_HISTORY_FUTURE_END','assertions_preserved':True},indent=2))
           PY
-      - name: Compile Q13 fact evidence candidate
+      - name: Install exact Q13 historical context diagnostics in androidTest only
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          import base64,gzip,hashlib,json,re
+          from pathlib import Path
+          root=Path('q07-ci/android-app/app/src')
+          k=Path('java/org/glukopapa/v3/m00')
+          out=Path('qa-results/q11')
+          h=lambda b:hashlib.sha256(b).hexdigest()
+          z=base64.b64decode('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',validate=True)
+          assert h(z)=='3fc90840986c82e4eaab48dc9d6088f46716e6eefaf60ff90ae8ad500d8931c9'
+          raw=gzip.decompress(z);assert h(raw)=='a74749b3dbe42efbbc43d6583b80b55b73d3de0e098068759132bd72b80416f2'
+          d=json.loads(raw);m=d['manifest'];files=d['files']
+          expected={'Q13ContextEvidenceInstrumentedTest.kt':'17bcf90c705466a8824e00d36c4454332f8b9da4bd46e9bfb4f890f3880c9472','GfV3Q13ContextEvidence.kt':'f73605a0be7db1b283a85350c8cd08cfaff30b7e00f4fbcfb0795eec1716835a'}
+          src={'GfV3Q05ActivityFacts.kt':'613d5993a2f9bb3e981704d4cbf4302e481935919992aaba9495555a1e0c4d5a','GfV3Q05ContextResolver.kt':'5d6bf4f220bcc80158a7d68d13f702fd7fbf38df09f56ec2c67ffc2b243ceabe','GfV3Q07InjectionFacts.kt':'2b70d19f63063fe973b61db168255d2d1860078a9447661a3b098bb9a97c348b','GfV3WriteContract.kt':'b7b212d5bf2737c6f0dd409557c2fc705a8f683a30ebb450827db16af1aa29cd','GfV3PortContract.kt':'f02a8f2662258a20dc246a0337e728fc8b3f455488800c1a4e0956f4bf044161','GfV3DomainWriter.kt':'3ab017497200c6c23b27d255d2f570f8c6d2c76390579a878266752a4b00b2e7','GfV3SettingsModeContract.kt':'5959f0b96cf1b2dc0a3be394d18b2ba9d055c369aecdfd36ed2984ca39d8707d','GfV3SettingsTrustedAdapter.kt':'02e7657970d95ecd3146a1fdff724dc54489b1651f128d8262b538a7112585d3','GfV3YearHistory.kt':'1ffea445f263cf548485085ea176c423c5355848b5e9ec5329f6d930b03ba462'}
+          assert m['requiredNativeSourceHashes']==src and m['testOnly']==expected and set(files)==set(expected)
+          for n,v in src.items():assert h((root/'main'/k/n).read_bytes())==v,n
+          t=files['Q13ContextEvidenceInstrumentedTest.kt']
+          old='val at=Instant.now();val end=at;val rev=storage.revision()'
+          new='val at=Instant.now();val end=at.plusSeconds(1);val rev=storage.revision()'
+          assert t.count(old)==1 and h(t.replace(old,new).encode())=='0731c776064ea30a04cdf118b877ca656b3ac9f366d369485a9e0d6b21c629bd'
+          assert re.findall(r'@Test\s+fun\s+(\w+)',t)==['q13HistoricalContextUsesActualSettingsAndPeriodsWithoutInferringPhysiology']
+          for n,t in files.items():
+           f=root/'androidTest'/k/n
+           assert not f.exists() and not (root/'main'/k/n).exists() and h(t.encode())==expected[n]
+           f.write_bytes(t.encode())
+          (out/'q13-context-evidence-manifest.json').write_text(json.dumps({'unchanged':src,'testOnly':expected,'fixtureRepair':'at==end; original test SHA verified','productionActivation':False},indent=2))
+          PY
+      - name: Compile Q13 context evidence candidate
         shell: bash
         run: |
           set -euxo pipefail
@@ -1559,7 +1589,7 @@ jobs:
           exit "$rc"
           BASH
           bash -n "$RUNNER_TEMP/gfstorage-focus-runner.sh"
-      - name: Android API ${{ matrix.api }} verify 220 integrated and 8 offline
+      - name: Android API ${{ matrix.api }} verify 221 integrated and 8 offline
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: ${{ matrix.api }}
@@ -1572,7 +1602,7 @@ jobs:
           emulator-boot-timeout: 900
           disable-animations: true
           script: bash "$RUNNER_TEMP/gfstorage-focus-runner.sh"
-      - name: Verify exact 220 integrated and 8 offline native test IDs
+      - name: Verify exact 221 integrated and 8 offline native test IDs
         if: always()
         shell: bash
         run: |
@@ -1617,9 +1647,10 @@ jobs:
           expected.extend(["org.glukopapa.v3.m00.Q13HistoryPreflightInstrumentedTest#q13NativePreflightKeepsSixMonthBoundaryAcrossPagesAndExcludesForeignProfile","org.glukopapa.v3.m00.Q13HistoryPreflightInstrumentedTest#q13NativePreflightRejectsMissingGrantAndSameRevisionRestoreBetweenDomains"])
           expected.extend(["org.glukopapa.v3.m00.Q13CgmEvidenceInstrumentedTest#q13NativeReceiptProofPreservesActualQ09IdentityAndIsScoped","org.glukopapa.v3.m00.Q13CgmEvidenceInstrumentedTest#q13NativeMissingTamperedAndForeignReceiptsNeverVerify"])
           expected.append('org.glukopapa.v3.m00.Q13FactEvidenceInstrumentedTest#q13ActualQ04Q07FactsStayIndependentAndRejectAmbiguousRows')
-          assert len(expected)==len(set(expected))==62
+          expected.append('org.glukopapa.v3.m00.Q13ContextEvidenceInstrumentedTest#q13HistoricalContextUsesActualSettingsAndPeriodsWithoutInferringPhysiology')
+          assert len(expected)==len(set(expected))==63
           s=s.replace(a,"a=check('integrated',(old|earlier)-{legacy}|{new}|set("+repr(expected)+"))")
-          s=s.replace("'additional_case_ids':1","'additional_case_ids':63,'q13_fact_evidence_cases':1,'q13_cgm_evidence_cases':2,'q13_preflight_cases':2,'block3_native_cases':2,'block2_native_cases':6,'gfstorage_year_cases':13,'legacy_owner_epoch_cases':4,'q08_epoch_cases':1,'q12_restore_cases':1,'q12_owner_routes_cases':4,'q12_architecture_cases':3,'q12_projection_cases':4,'q11_cases':16,'restore_fence_cases':2,'epoch_cases':2,'webview_cases':2,'shell_route_cases':2,'compact_cases':1,'preferences_cases':1,'rapid_display_cases':1,'rapid_future_cases':1,'display_bounds_cases':1")
+          s=s.replace("'additional_case_ids':1","'additional_case_ids':64,'q13_context_evidence_cases':1,'q13_fact_evidence_cases':1,'q13_cgm_evidence_cases':2,'q13_preflight_cases':2,'block3_native_cases':2,'block2_native_cases':6,'gfstorage_year_cases':13,'legacy_owner_epoch_cases':4,'q08_epoch_cases':1,'q12_restore_cases':1,'q12_owner_routes_cases':4,'q12_architecture_cases':3,'q12_projection_cases':4,'q11_cases':16,'restore_fence_cases':2,'epoch_cases':2,'webview_cases':2,'shell_route_cases':2,'compact_cases':1,'preferences_cases':1,'rapid_display_cases':1,'rapid_future_cases':1,'display_bounds_cases':1")
           (Path(os.environ['RUNNER_TEMP'])/'q11_verify.py').write_text(s)
           PY
           python3 "$RUNNER_TEMP/q11_verify.py" | tee qa-results/q11/gate.json
@@ -1632,7 +1663,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: q13-fact-evidence-api-${{ matrix.api }}-attempt-${{ github.run_attempt }}
+          name: q13-context-evidence-api-${{ matrix.api }}-attempt-${{ github.run_attempt }}
           path: |
             qa-results/v042/
             qa-results/q11/
