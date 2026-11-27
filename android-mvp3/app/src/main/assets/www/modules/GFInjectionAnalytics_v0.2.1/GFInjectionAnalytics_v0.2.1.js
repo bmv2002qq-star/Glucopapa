@@ -156,6 +156,10 @@
     };
   }
   function buildIndex(snapshot, opts={}) {
+    return buildVerifiedIndex(snapshot, opts);
+  }
+
+  function buildVerifiedIndex(snapshot, opts, verifiedQ09Rows) {
     const asOf=validTime(opts.asOf??Date.now());if(!finite(asOf))throw Error('AS_OF_INVALID');
     if(!snapshot||!Array.isArray(snapshot.events)||!Array.isArray(snapshot.mealSessions)||!Array.isArray(snapshot.cgm))throw Error('GFSTORAGE_SNAPSHOT_INCOMPLETE');
     if(snapshot.events.length>MAX_EVENTS)throw Error('EVENT_LIMIT');
@@ -168,7 +172,8 @@
     const meta=snapshot.cgmMetadata;
     if(meta.sourceType==='synthetic')
       return deepFreeze({version:VERSION,status:'CGM_SOURCE_SYNTHETIC',revision:snapshot.revision,meals:[],corrections:[],rejected:{synthetic_source:1}});
-    if((meta.sourceType==='xdrip_local'&&meta.sourceDeviceId!=='xdrip-local-provider') ||
+    if((meta.sourceType==='xdrip_local'&&meta.sourceDeviceId!=='xdrip-local-provider' &&
+        !(meta.sourceDeviceId==='xdrip-local-follower' && snapshot.cgm===verifiedQ09Rows)) ||
        (meta.sourceType==='device_recorded'&&(![5,10].includes(meta.samplingMinutes)||!finite(meta.qualityScore)||meta.qualityScore<.8)))
       return deepFreeze({version:VERSION,status:'CGM_PROVENANCE_UNVERIFIED',revision:snapshot.revision,meals:[],corrections:[],rejected:{cgm_provenance_unverified:1}});
     const cgm=normalizeCGM(snapshot.cgm,snapshot.cgmMetadata,asOf);
@@ -307,7 +312,12 @@
       clinicalUse:false,automaticInjectionTiming:false,usedForwardModels:false,usedDrugKinetics:false});
   }
   function analyzeSnapshot(snapshot,request){
-    const index=buildIndex(snapshot,{asOf:request?.atIso});
+    return analyzeVerifiedSnapshot(snapshot, request);
+  }
+
+  function analyzeVerifiedSnapshot(snapshot, request, verifiedQ09Rows) {
+    const index=buildVerifiedIndex(snapshot,{asOf:request?.atIso},verifiedQ09Rows);
+    if(index.status==='CGM_PROVENANCE_UNVERIFIED' && snapshot.cgmMetadata?.sourceDeviceId==='xdrip-local-follower') return noData(index.status);
     const at=validTime(request?.atIso||index.asOf);
     const rows=normalizeCGM(snapshot.cgm,snapshot.cgmMetadata,at);
     const actual=observedContext(rows,at);
@@ -328,7 +338,26 @@
       // never a fabricated value or an unversioned UI placeholder.
       if(request?.context?.sourceRevision!==first.revision)return noData('CONTEXT_REVISION_UNVERIFIED');
       const snapshot={...second,events:first.events,cgm:first.cgm,cgmMetadata:first.cgmMetadata};
-      const result=analyzeSnapshot(snapshot,{...request,atIso:request?.atIso||clock()});
+      let verifiedQ09Rows;
+      if(first.cgmMetadata?.sourceType==='xdrip_local' && first.cgmMetadata.sourceDeviceId==='xdrip-local-follower') {
+        // The storage port must validate each receipt against its persisted
+        // observation, profile and snapshot revision. JSON claims carry no authority.
+        const profileId=first.profileId;
+        if(typeof profileId!=='string' || !profileId || second.profileId!==profileId ||
+           !Array.isArray(first.cgm) || first.cgm.length===0 || first.cgm.length>MAX_CGM ||
+           typeof analyticsPort.verifyQ09CgmSnapshot!=='function')
+          return noData('CGM_PROVENANCE_UNVERIFIED');
+        try {
+          const rows=first.cgm.map(row=>Object.freeze({...row}));
+          if(rows.some(row=>row.profileId!==profileId || row.sourceDeviceId!=='xdrip-local-follower') ||
+             analyticsPort.verifyQ09CgmSnapshot({profileId, revision:first.revision, rows:Object.freeze(rows)})!==true)
+            return noData('CGM_PROVENANCE_UNVERIFIED');
+          snapshot.cgm=verifiedQ09Rows=rows;
+        } catch {
+          return noData('CGM_PROVENANCE_UNVERIFIED');
+        }
+      }
+      const result=analyzeVerifiedSnapshot(snapshot,{...request,atIso:request?.atIso||clock()},verifiedQ09Rows);
       return analyticsPort.getRevision()===first.revision&&researchPort.getRevision()===first.revision?result:noData('REVISION_CHANGED');
     };
     return Object.freeze({inspect});
