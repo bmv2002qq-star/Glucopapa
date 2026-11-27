@@ -1,17 +1,11 @@
 --- a/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3YearHistory.kt
 +++ b/android-app/app/src/main/java/org/glukopapa/v3/m00/GfV3YearHistory.kt
-@@ -5,6 +5,8 @@
- import org.json.JSONArray
- import org.json.JSONObject
+@@ -7,2 +7,4 @@
  import java.time.Instant
 +import java.time.OffsetDateTime
 +import java.time.format.DateTimeParseException
  import java.time.ZoneOffset
- 
- /** Native GFStorage-owned history traversal, not a certificate of source coverage.
-@@ -50,7 +52,18 @@
-     }
-     data class Token(val stamp:Stamp,val afterRowId:Long?=null)
+@@ -52,3 +54,14 @@
      data class Page(val data:JSONObject,val next:Token?)
 -    private fun parse(raw:String?):Instant?=try { raw?.let{Instant.parse(it)} }catch(_:Exception){null}
 +    private fun parse(raw: String?): Instant? {
@@ -27,5 +21,3 @@
 +        }
 +    }
      private fun str(o:JSONObject,k:String):String?=o.opt(k) as? String
-     private fun rowTime(row:JSONObject,d:Domain):Instant? {
-         // No trusted time field exists in the proposal schema. Never infer a date from revision or arbitrary payload.

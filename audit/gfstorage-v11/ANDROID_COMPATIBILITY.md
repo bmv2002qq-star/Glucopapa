@@ -5,11 +5,11 @@ CI повторяет 207 интегрированных и 8 offline тесто
 | API | Интегрированные | Offline | Решение |
 |---|---:|---:|---|
 | 31 / Android 12 | 192/207 | 8/8 | Приёмка для Android 12 заблокирована |
-| 34 / Android 14 | выполняется | выполняется | Ожидается артефакт |
+| 34 / Android 14 | 207/207 | 8/8 | Gate пройден |
 | 35 / Android 15 | 207/207 | 8/8 | Gate пройден |
 | 36 / Android 16 | 207/207 | 8/8 | Gate пройден |
 
-API 31 artifact 15205386449 SHA256 f2a8a03f2fb7105d2a5093afd08cddbce368d0d92cc5472390c5b600c5523f37. API 36 artifact 15204642270 SHA256 ef0431db7ae8c65eb89f3589f3693516481baeeff3aff37dd28de027e2331b2f. Проверены SHA256, CRC ZIP и все testcase ID. [Матрица CI](https://github.com/bmv2002qq-star/Glucopapa/actions/runs/46012322617).
+API 31 artifact 15205386449 SHA256 f2a8a03f2fb7105d2a5093afd08cddbce368d0d92cc5472390c5b600c5523f37. API 34 artifact 15204693379 SHA256 eecfa00b856a2004e5e05cfe25f192df687cd2cf2a0ee56e82604ad85c6f6054. API 36 artifact 15204642270 SHA256 ef0431db7ae8c65eb89f3589f3693516481baeeff3aff37dd28de027e2331b2f. Проверены SHA256, CRC ZIP и все testcase ID. [Матрица CI](https://github.com/bmv2002qq-star/Glucopapa/actions/runs/46012322617).
 
 ## 15 отказов API 31
 
