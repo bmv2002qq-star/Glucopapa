@@ -1,8 +1,8 @@
-name: Q14 schema11 targeted matrix
+name: Q14 schema11 full regression
 on:
   push:
     branches:
-      - 'qa/v3-q14-schema11-20261128'
+      - 'qa/v3-q14-schema11-regression'
     paths:
       - '.github/workflows/q14-schema11.yml'
   workflow_dispatch:
@@ -2127,7 +2127,36 @@ jobs:
           set -euxo pipefail
           install -D "$RUNNER_TEMP/q14-test.kt" q07-ci/android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q14NativeDiagnosticInstrumentedTest.kt
           install -D "$RUNNER_TEMP/q14-schema-test.kt" q07-ci/android-app/app/src/androidTest/java/org/glukopapa/v3/m00/Q14Schema11InstrumentedTest.kt
-      - name: Compile baseline and Q14 QA test
+      - name: Update live-schema assertions for the v11 candidate
+        shell: bash
+        run: |
+          python3 - <<'PYTEST'
+          from pathlib import Path
+          import re
+          d=Path('q07-ci/android-app/app/src/androidTest/java/org/glukopapa/v3/m00')
+          names=['Q01AndroidRuntimeTest','Q04NativeDraftsInstrumentedTest','Q05ActivityInstrumentedTest','Q07RinFastNativeIntegrationInstrumentedTest','Q08LevemirNativeInstrumentedTest','GfV3Schema10InstrumentedTest','GfV3Schema10UpgradeInstrumentedTest']
+          for name in names:
+              f=d/(name+'.kt')
+              s,n=re.subn(r'assertEquals\(10,([^;\n]*?\.(?:dbVersion|version))\)',r'assertEquals(11,\1)',f.read_text())
+              assert n>0,name
+              if name=='GfV3Schema10UpgradeInstrumentedTest':
+                  def change(x,y,count):
+                      global s
+                      assert s.count(x)>=count,x
+                      s=s.replace(x,y,count)
+                  change('assertEquals(rows,allData(db))','assertEquals(rows,allData(db).filterKeys{it!="v3_meal_absorption"})',2)
+                  change('assertEquals(rows,allData(next))','assertEquals(rows,allData(next).filterKeys{it!="v3_meal_absorption"})',1)
+                  change('assertTrue(upgraded.containsAll(old));assertEquals(6,upgraded.size-old.size)','''
+                      val replaced=setOf("v3_extended_receipts","v3_extended_change_feed")
+                      assertTrue(upgraded.containsAll(old.filter{JSONArray(it).getString(1) !in replaced}))
+                      assertEquals(8,upgraded.size-old.size)
+                      assertEquals(0L,db.rawQuery("SELECT COUNT(*) FROM v3_meal_absorption",null).use{c->check(c.moveToFirst());c.getLong(0)})
+                  '''.strip(),1)
+                  change('assertEquals(expectedIndexes(),added)','assertEquals(expectedIndexes()+replaced+setOf("v3_meal_absorption","idx_v3_absorption_profile_revision"),added)',1)
+              f.write_text(s)
+          PYTEST
+      - name: Compile Q13 writer audit candidate
+        shell: bash
         run: |
           set -euxo pipefail
           cd q07-ci/android-app
@@ -2137,37 +2166,58 @@ jobs:
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
-      - name: Prepare targeted instrumentation
+      - name: Prepare Bash runner and focus diagnostics
         shell: bash
         run: |
-          cat > "$RUNNER_TEMP/q14-run.sh" <<'BASH'
+          cat > "$RUNNER_TEMP/gfstorage-focus-runner.sh" <<'BASH'
           set -euo pipefail
-          mkdir -p qa-results/q14
+          mkdir -p qa-results/q11
+          log=qa-results/q11/window-focus.log
           adb shell settings put system screen_off_timeout 2147483647
           adb shell svc power stayon true
+          adb shell locksettings set-disabled true
           adb shell input keyevent KEYCODE_WAKEUP
           adb shell wm dismiss-keyguard
-          app=q07-ci/android-app/app/build/outputs/apk/debug/app-debug.apk
-          test=q07-ci/android-app/app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
-          adb install -r "$app"
-          adb install -r "$test"
-          adb shell pm list instrumentation | tee qa-results/q14/runner.txt
-          runner=$(sed -n 's/^instrumentation:\([^ ]*\) (target=org.glukopapa.v3.m00.q06qa).*$/\1/p' qa-results/q14/runner.txt | tr -d '\r')
-          test -n "$runner"
-          adb shell am instrument -w -r -e class org.glukopapa.v3.m00.Q14NativeDiagnosticInstrumentedTest,org.glukopapa.v3.m00.Q14Schema11InstrumentedTest "$runner" | tee qa-results/q14/instrumentation.txt
-          python3 - <<'PY'
-          from pathlib import Path
-          import re,json
-          s=Path("qa-results/q14/instrumentation.txt").read_text()
-          expected={"q14DiagnosticAtomicReplayAndNoMedicalWrite","q14RealSettingsChangeInvalidatesDiagnostic","q14EncryptedRoundtripInvalidatesEvenAtSameRevision","q14NoProductionRoleOrClinicalWrite","q14Schema11RealFileUpgradeAndReopen","q14Schema11CollisionRollback","q14Schema11AuthenticatedV10AndV11Roundtrip","q14Schema11NoNumericAndSharedReceiptNamespace"}
-          actual=set(re.findall(r"INSTRUMENTATION_STATUS: test=(\w+)",s))
-          assert actual==expected,(actual,expected)
-          assert re.search(r"OK \(8 tests\)",s),s
-          assert "FAILURES!!!" not in s and "INSTRUMENTATION_FAILED" not in s
-          Path("qa-results/q14/gate.json").write_text(json.dumps({"passed":8,"expected":sorted(expected),"scope":"schema11-and-diagnostic-only"},indent=2))
-          PY
+          {
+            adb shell getprop ro.build.fingerprint
+            adb shell dumpsys webviewupdate
+            adb shell locksettings get-disabled
+          } > "$log" 2>&1
+          # Recover the test launcher from its boot-time ANR modal.
+          adb shell am force-stop com.google.android.apps.nexuslauncher >> "$log" 2>&1
+          adb shell am start -W -a android.intent.action.MAIN -c android.intent.category.HOME >> "$log" 2>&1
+          launcher_ready=false
+          for attempt in $(seq 1 20); do
+            focus=$(adb shell dumpsys window | awk '/mCurrentFocus/{print}')
+            printf '%s\n' "$focus" >> "$log"
+            if [[ "$focus" == *NexusLauncherActivity* && "$focus" != *"Application Not Responding"* ]]; then
+              launcher_ready=true
+              break
+            fi
+            sleep 1
+          done
+          if [[ "$launcher_ready" != true ]]; then
+            echo "Android emulator launcher did not acquire focus after restart" >&2
+            exit 91
+          fi
+          echo "Launcher preflight passed" >> "$log"
+          (
+            while true; do
+              date -u
+              timeout 4 adb shell dumpsys window | awk '/mCurrentFocus|mFocusedApp|mTopFocusedDisplayId|mShowingLockscreen|mKeyguardShowing/'
+              sleep 3
+            done
+          ) >> "$log" 2>&1 &
+          monitor=$!
+          trap 'kill "$monitor" 2>/dev/null || true' EXIT
+          rc=0
+          bash qa-transfer/q10/v042/run.sh || rc=$?
+          adb logcat -b crash -d > qa-results/q11/crash-buffer.log
+          printf '%s\n' "$rc" > qa-results/q11/runner-exit.txt
+          exit "$rc"
           BASH
-      - name: Targeted Q14 Android instrumentation
+          bash -n "$RUNNER_TEMP/gfstorage-focus-runner.sh"
+      - name: Android API ${{ matrix.api }} verify 231 integrated and 8 offline
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: ${{ matrix.api }}
@@ -2179,13 +2229,73 @@ jobs:
           disk-size: 4096M
           emulator-boot-timeout: 900
           disable-animations: true
-          script: bash "$RUNNER_TEMP/q14-run.sh"
-      - name: Upload Q14 evidence
+          script: bash "$RUNNER_TEMP/gfstorage-focus-runner.sh"
+      - name: Verify exact 231 integrated and 8 offline native test IDs
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p qa-results/q11
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib,os
+          p=Path('qa-transfer/q10/v042/verify.py')
+          b=p.read_bytes()
+          assert hashlib.sha1(b'blob '+str(len(b)).encode()+b'\0'+b).hexdigest()=='f3b37540bad9fec4bcfd32aaf859db483b1a36f7'
+          s=b.decode()
+          a="a=check('integrated',(old|earlier)-{legacy}|{new})"
+          assert s.count(a)==1
+          expected=["org.glukopapa.v3.m00.Q11ReadOnlyInstrumentedTest#q11InactiveMissingRolesAndWrongNativeOwnerDenied","org.glukopapa.v3.m00.Q11ReadOnlyInstrumentedTest#q11ReadsActualProducersWithNoWriteAndUnknownCalculatedLayers","org.glukopapa.v3.m00.Q11ReadOnlyInstrumentedTest#q11StampAndWindowRejectStaleOrForeignContext","org.glukopapa.v3.m00.Q11ReadOnlyInstrumentedTest#q11ArchiveAndSyntheticAndForeignProfileNeverCurrent","org.glukopapa.v3.m00.Q11ReadOnlyInstrumentedTest#q11StoredPayloadMismatchAndFutureObservationFailClosed","org.glukopapa.v3.m00.Q11ReadOnlyInstrumentedTest#q11CorrectionReturnsOneCurrentFactVersion"]
+          expected.extend(['org.glukopapa.v3.m00.Q09ControllerInstrumentedTest#q09BackgroundRejectsSameRevisionRestoreDuringFetch','org.glukopapa.v3.m00.Q09ControllerInstrumentedTest#q09ForegroundRejectsSameRevisionRestoreDuringFetch'])
+          expected.extend(['org.glukopapa.v3.m00.Q10EvidenceNativeInstrumentedTest#q10SameRevisionRestoreInvalidatesCachedEvidence','org.glukopapa.v3.m00.Q11ReadOnlyInstrumentedTest#q11SameRevisionRestoreInvalidatesSnapshotAndReadSession'])
+          expected.extend(['org.glukopapa.v3.m00.Q11WebViewReadOnlyInstrumentedTest#q11ActualWebViewNativeReadsNoFixtureOrWriter','org.glukopapa.v3.m00.Q11WebViewReadOnlyInstrumentedTest#q11ActualWebViewInvalidateRestoreAndPermissionLoss'])
+          expected.extend(['org.glukopapa.v3.m00.Q11ShellRouteInstrumentedTest#q11ActualShellRouteRequiresBothOwnersAndExposesNoWriter','org.glukopapa.v3.m00.Q11ShellRouteInstrumentedTest#q11ActualShellRouteRefreshesEpochAndReopensCleanly'])
+          expected.append('org.glukopapa.v3.m00.Q11ShellRouteInstrumentedTest#q11CompactActualHomeRequiresBothOwnersAndClearsOnNavigation')
+          expected.append('org.glukopapa.v3.m00.Q11ShellRouteInstrumentedTest#q11GraphPreferencesReadFromQ01AndLegacyMergePreservesOtherLines')
+          expected.append('org.glukopapa.v3.m00.Q11ShellRouteInstrumentedTest#q11Q07HistoricalProjectionOwnerCorrectionAndGrantLoss')
+          expected.append('org.glukopapa.v3.m00.Q11ShellRouteInstrumentedTest#q11Q07FutureDisplayOnlyFromConfirmedPastAndHideOnHistory')
+          expected.append('org.glukopapa.v3.m00.Q11ShellRouteInstrumentedTest#q11OwnerDisplayBoundsRoundTripLegacyRestoreAndDenial')
+          expected.extend(['org.glukopapa.v3.m00.Q12ObservationNativeInstrumentedTest#q12DedicatedOwnerAndDependenciesDenyUntilAllAccepted','org.glukopapa.v3.m00.Q12ObservationNativeInstrumentedTest#q12ActualQ09RowsWindowAndMismatchRemainReadOnly','org.glukopapa.v3.m00.Q12ObservationNativeInstrumentedTest#q12SevenDayProjectionRetainsSyntheticBarriersAndIsolatesProfiles','org.glukopapa.v3.m00.Q12ObservationNativeInstrumentedTest#q12SameRevisionRestoreAndClosedSessionInvalidate'])
+          expected.extend(['org.glukopapa.v3.m00.Q12ArchitectureNativeInstrumentedTest#q12HistoricalPolicyMissingOffAndOptionalJournalDenied','org.glukopapa.v3.m00.Q12ArchitectureNativeInstrumentedTest#q12ActualProducerContextRetainsInsulinAndConditionIdentity','org.glukopapa.v3.m00.Q12ArchitectureNativeInstrumentedTest#q12HistoricalReadRestoreAndPermissionFence'])
+          expected.extend(['org.glukopapa.v3.m00.Q12PolicyNativeInstrumentedTest#q12PolicyOwnerSaveReadEditDeleteAndHistory','org.glukopapa.v3.m00.Q12PolicyNativeInstrumentedTest#q12PolicyCancelStaleRestoreGrantLossAndClosedQueue','org.glukopapa.v3.m00.Q12PolicyNativeInstrumentedTest#q12PolicyPersistsAcrossHelperReopenAndCorruptionFailsClosed','org.glukopapa.v3.m00.Q12ShellRouteInstrumentedTest#q12ActualDiarySettingsRoutesNativeConfirmationAndReadOnlySeparation'])
+          expected.append('org.glukopapa.v3.m00.Q12PolicyNativeInstrumentedTest#q12PolicyEncryptedBackupRestoreRetainsExactOwnerRecord')
+          expected.extend(['org.glukopapa.v3.m00.GfV3YearHistoryInstrumentedTest#yearCgmFullTraversalAndBoundaries','org.glukopapa.v3.m00.GfV3YearHistoryInstrumentedTest#yearPortGrantsRevisionAndRestoreEpochFence'])
+          expected.append('org.glukopapa.v3.m00.GfV3YearHistoryInstrumentedTest#yearMultiDomainSessionAndFeedBoundary')
+          expected.append('org.glukopapa.v3.m00.GfV3YearHistoryInstrumentedTest#yearChronologicalSessionExactUtcAndLeastScope')
+          expected.append('org.glukopapa.v3.m00.GfV3YearHistoryInstrumentedTest#yearLegacyShellCheckedPagesAndFeedRejectSameRevisionRestore')
+          expected.extend(['org.glukopapa.v3.m00.GfV3YearHistoryInstrumentedTest#yearAllDomainsEncryptedRestoreAndExactRows','org.glukopapa.v3.m00.GfV3YearHistoryInstrumentedTest#yearScopeMatrixAndLegacyResearchBypassDenied'])
+          expected.append('org.glukopapa.v3.m00.GfV3YearHistoryInstrumentedTest#yearProposalAndSyncHistoryPreserveUnknownTimeAndOwnerScope')
+          expected.append('org.glukopapa.v3.m00.GfV3YearHistoryInstrumentedTest#yearNewDomainsEncryptedRestoreExactRowsAndScopes')
+          expected.extend(['org.glukopapa.v3.m00.GfV3YearBudgetInstrumentedTest#sharedYearBudgetSessionCapAndRelease','org.glukopapa.v3.m00.GfV3Schema10InstrumentedTest#schema10RestoresAuthenticatedV9AndV10'])
+          expected.extend(['org.glukopapa.v3.m00.GfV3Schema10UpgradeInstrumentedTest#schema10UpgradesExistingV9FileWithoutChangingRows','org.glukopapa.v3.m00.GfV3Schema10UpgradeInstrumentedTest#schema10UpgradeCollisionRollsBackAndCanRetry'])
+          expected.append('org.glukopapa.v3.m00.Q08LevemirNativeInstrumentedTest#sameRevisionRestoreInvalidatesQ08HistoryAndPendingNativeConfirmation')
+          expected.extend(['org.glukopapa.v3.m00.GfV3LegacyOwnerEpochInstrumentedTest#settingsPendingOwnerConsentCannotCrossRestore','org.glukopapa.v3.m00.GfV3LegacyOwnerEpochInstrumentedTest#activityPendingOwnerConsentCannotCrossRestore','org.glukopapa.v3.m00.GfV3LegacyOwnerEpochInstrumentedTest#rapidPendingOwnerConsentCannotCrossRestore','org.glukopapa.v3.m00.GfV3LegacyOwnerEpochInstrumentedTest#journalPendingOwnerConsentCannotCrossRestore'])
+          expected.extend(["org.glukopapa.v3.m00.Q04WebViewSmokeInstrumentedTest#openPlateIsReadOnlyAndRejectsSaveAfterSameRevisionEncryptedRestore","org.glukopapa.v3.m00.Q04NativeDraftsInstrumentedTest#sameRevisionRestoreAndProfileSwitchRejectOldDraftCommands","org.glukopapa.v3.m00.GfV3Q10ProvenanceRestoreInstrumentedTest#q10ObservedRowsSurviveSyntheticFloodAndEncryptedRestore","org.glukopapa.v3.m00.GfV3OwnerCallbackInstrumentedTest#settingsDuplicateCallbacksDoNotCancelCommittedWrite","org.glukopapa.v3.m00.GfV3OwnerCallbackInstrumentedTest#activityDuplicateCallbacksDoNotCancelCommittedWrite","org.glukopapa.v3.m00.GfV3OwnerCallbackInstrumentedTest#journalDuplicateCallbacksDoNotCancelCommittedWrite"])
+          expected.extend(["org.glukopapa.v3.m00.GfV3StorageLifecycleInstrumentedTest#q08UiDrainDoesNotWaitAndKeepsAcceptedWriteUntilHelperClose","org.glukopapa.v3.m00.GfV3StorageLifecycleInstrumentedTest#yearChunkedOrderPreservesNativeRowsAndRejectsRestoreBetweenChunks"])
+          expected.extend(["org.glukopapa.v3.m00.Q13HistoryPreflightInstrumentedTest#q13NativePreflightKeepsSixMonthBoundaryAcrossPagesAndExcludesForeignProfile","org.glukopapa.v3.m00.Q13HistoryPreflightInstrumentedTest#q13NativePreflightRejectsMissingGrantAndSameRevisionRestoreBetweenDomains"])
+          expected.extend(["org.glukopapa.v3.m00.Q13CgmEvidenceInstrumentedTest#q13NativeReceiptProofPreservesActualQ09IdentityAndIsScoped","org.glukopapa.v3.m00.Q13CgmEvidenceInstrumentedTest#q13NativeMissingTamperedAndForeignReceiptsNeverVerify"])
+          expected.append('org.glukopapa.v3.m00.Q13FactEvidenceInstrumentedTest#q13ActualQ04Q07FactsStayIndependentAndRejectAmbiguousRows')
+          expected.append('org.glukopapa.v3.m00.Q13ContextEvidenceInstrumentedTest#q13HistoricalContextUsesActualSettingsAndPeriodsWithoutInferringPhysiology')
+          expected.extend(['org.glukopapa.v3.m00.Q13WriterAuditInstrumentedTest#q13WriterNativeAuthorizationAndAtomicRevisionContract','org.glukopapa.v3.m00.Q13WriterAuditInstrumentedTest#q13WriterLegacyMissingContextAndStaleReplayReproduced'])
+          expected.extend(['org.glukopapa.v3.m00.Q14NativeDiagnosticInstrumentedTest#q14DiagnosticAtomicReplayAndNoMedicalWrite', 'org.glukopapa.v3.m00.Q14NativeDiagnosticInstrumentedTest#q14RealSettingsChangeInvalidatesDiagnostic', 'org.glukopapa.v3.m00.Q14NativeDiagnosticInstrumentedTest#q14EncryptedRoundtripInvalidatesEvenAtSameRevision', 'org.glukopapa.v3.m00.Q14NativeDiagnosticInstrumentedTest#q14NoProductionRoleOrClinicalWrite', 'org.glukopapa.v3.m00.Q14Schema11InstrumentedTest#q14Schema11RealFileUpgradeAndReopen', 'org.glukopapa.v3.m00.Q14Schema11InstrumentedTest#q14Schema11CollisionRollback', 'org.glukopapa.v3.m00.Q14Schema11InstrumentedTest#q14Schema11AuthenticatedV10AndV11Roundtrip', 'org.glukopapa.v3.m00.Q14Schema11InstrumentedTest#q14Schema11NoNumericAndSharedReceiptNamespace'])
+          assert len(expected)==len(set(expected))==73
+          s=s.replace(a,"a=check('integrated',(old|earlier)-{legacy}|{new}|set("+repr(expected)+"))")
+          s=s.replace("'additional_case_ids':1","'additional_case_ids':74,'q14_cases':8,'q13_writer_audit_cases':2,'q13_context_evidence_cases':1,'q13_fact_evidence_cases':1,'q13_cgm_evidence_cases':2,'q13_preflight_cases':2,'block3_native_cases':2,'block2_native_cases':6,'gfstorage_year_cases':13,'legacy_owner_epoch_cases':4,'q08_epoch_cases':1,'q12_restore_cases':1,'q12_owner_routes_cases':4,'q12_architecture_cases':3,'q12_projection_cases':4,'q11_cases':16,'restore_fence_cases':2,'epoch_cases':2,'webview_cases':2,'shell_route_cases':2,'compact_cases':1,'preferences_cases':1,'rapid_display_cases':1,'rapid_future_cases':1,'display_bounds_cases':1")
+          (Path(os.environ['RUNNER_TEMP'])/'q11_verify.py').write_text(s)
+          PY
+          python3 "$RUNNER_TEMP/q11_verify.py" | tee qa-results/q11/gate.json
+          test -f qa-results/q11/crash-buffer.log
+          test "$(cat qa-results/q11/runner-exit.txt)" = 0
+          if grep -E 'Cmdline: org\.glukopapa\.v3\.m00|Process: org\.glukopapa\.v3\.m00' qa-results/q11/crash-buffer.log; then
+            echo 'App process crash in emulator crash buffer'; exit 1
+          fi
+      - name: Upload isolated native QA evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: q14-schema11-api-${{ matrix.api }}-attempt-${{ github.run_attempt }}
+          name: q14-schema11-regression-api-${{ matrix.api }}-attempt-${{ github.run_attempt }}
           path: |
-            qa-results/q14/
+            qa-results/v042/
+            qa-results/q11/
             q07-ci-logs/
           if-no-files-found: warn
