@@ -2160,7 +2160,7 @@ jobs:
         run: |
           python3 - <<'PYMAVEN'
           from pathlib import Path
-          p=Path('q07-ci/android-app/settings.gradle')
+          p=Path('q07-ci/android-app/settings.gradle.kts')
           s=p.read_text()
           assert s.count('mavenCentral()')==2
           p.write_text(s.replace('mavenCentral()', 'maven { url = uri("https://repo1.maven.org/maven2") }; mavenCentral()'))
