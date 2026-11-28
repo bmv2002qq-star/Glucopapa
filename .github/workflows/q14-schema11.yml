@@ -2155,6 +2155,16 @@ jobs:
                   change('assertEquals(expectedIndexes(),added)','assertEquals(expectedIndexes()+replaced+setOf("v3_meal_absorption","idx_v3_absorption_profile_revision"),added)',1)
               f.write_text(s)
           PYTEST
+      - name: Select alternate Maven Central endpoint for QA
+        shell: bash
+        run: |
+          python3 - <<'PYMAVEN'
+          from pathlib import Path
+          p=Path('q07-ci/android-app/settings.gradle')
+          s=p.read_text()
+          assert s.count('mavenCentral()')==2
+          p.write_text(s.replace('mavenCentral()', 'maven { url = uri("https://repo1.maven.org/maven2") }; mavenCentral()'))
+          PYMAVEN
       - name: Compile Q13 writer audit candidate
         shell: bash
         run: |
